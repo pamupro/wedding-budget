@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WedgetBudget — Wedding Budget Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#0f0d0a; --cream:#fdf9f3; --warm:#f5ede0; --gold:#c8933a;
+  --gold-light:#e8b96a; --gold-pale:#fdf0d8; --rose:#b85c6e;
+  --rose-pale:#fde8ed; --sage:#5a7a5a; --sage-pale:#e8f0e8;
+  --muted:#8a7968; --border:#e8ddd0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(253,249,243,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:22px;color:var(--ink);text-decoration:none;}
+.nav-logo span{color:var(--gold);font-style:italic;}
+.nav-links{display:flex;align-items:center;gap:32px;}
+.nav-links a{font-size:14px;color:var(--muted);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.nav-links a:hover{color:var(--ink);}
+.nav-cta{background:var(--ink);color:var(--cream);padding:10px 24px;border-radius:99px;font-size:14px;font-weight:500;text-decoration:none;transition:all 0.2s;}
+.nav-cta:hover{background:var(--gold);}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(200,147,58,0.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 20% 80%,rgba(184,92,110,0.08) 0%,transparent 50%);pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--gold-pale);border:1px solid rgba(200,147,58,0.3);border-radius:99px;padding:6px 16px;font-size:12px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:32px;animation:fadeUp 0.6s ease both;}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(48px,8vw,90px);line-height:1.05;color:var(--ink);margin-bottom:24px;animation:fadeUp 0.6s 0.1s ease both;}
+.hero-title em{color:var(--gold);font-style:italic;}
+.hero-sub{font-size:clamp(15px,2vw,19px);color:var(--muted);line-height:1.7;max-width:540px;margin:0 auto 48px;animation:fadeUp 0.6s 0.2s ease both;}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp 0.6s 0.3s ease both;}
+.btn-primary{background:var(--ink);color:var(--cream);padding:16px 36px;border-radius:99px;font-size:15px;font-weight:600;text-decoration:none;transition:all 0.25s;border:2px solid var(--ink);}
+.btn-primary:hover{background:var(--gold);border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 30px rgba(200,147,58,0.35);}
+.btn-secondary{background:transparent;color:var(--ink);padding:16px 36px;border-radius:99px;font-size:15px;font-weight:500;text-decoration:none;border:2px solid var(--border);transition:all 0.25s;}
+.btn-secondary:hover{border-color:var(--ink);transform:translateY(-2px);}
+.hero-note{margin-top:20px;font-size:13px;color:var(--muted);animation:fadeUp 0.6s 0.4s ease both;}
+.hero-visual{margin-top:56px;width:100%;max-width:860px;background:white;border-radius:18px;border:1px solid var(--border);box-shadow:0 40px 80px rgba(0,0,0,0.12);overflow:hidden;animation:fadeUp 0.8s 0.5s ease both;}
+.mock-header{background:linear-gradient(135deg,#1a1209,#2d2416);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;}
+.mock-dots{display:flex;gap:6px;}
+.mock-dot{width:10px;height:10px;border-radius:50%;}
+.mock-dot:nth-child(1){background:#ff6b6b;}.mock-dot:nth-child(2){background:#ffd93d;}.mock-dot:nth-child(3){background:#6bcb77;}
+.mock-title{font-family:'Playfair Display',serif;font-size:15px;color:#e8c97a;font-style:italic;}
+.mock-body{padding:20px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.mock-card{border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--cream);}
+.mock-card-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.mock-icon{font-size:16px;}
+.mock-cat{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;}
+.mock-name{font-size:12px;font-weight:600;color:var(--ink);}
+.mock-amounts{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.mock-amt{background:var(--warm);border-radius:5px;padding:5px 7px;text-align:center;}
+.mock-amt-label{font-size:7px;color:var(--muted);text-transform:uppercase;}
+.mock-amt-val{font-size:11px;font-weight:600;color:var(--ink);}
+.mock-amt-val.g{color:var(--sage);}.mock-amt-val.r{color:var(--rose);}
+.mock-badge{display:inline-flex;align-items:center;gap:3px;margin-top:7px;padding:2px 7px;border-radius:99px;font-size:8px;font-weight:700;text-transform:uppercase;}
+.mock-badge.paid{background:var(--sage-pale);color:var(--sage);}
+.mock-badge.partial{background:var(--rose-pale);color:var(--rose);}
+.mock-badge.pending{background:var(--gold-pale);color:var(--gold);}
+.features{padding:100px 24px;max-width:1100px;margin:0 auto;}
+.section-tag{font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;text-align:center;}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(34px,5vw,54px);text-align:center;margin-bottom:14px;line-height:1.15;}
+.section-title em{color:var(--gold);font-style:italic;}
+.section-sub{font-size:17px;color:var(--muted);text-align:center;max-width:480px;margin:0 auto 60px;line-height:1.6;}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;}
+.feature-card{background:white;border:1px solid var(--border);border-radius:18px;padding:30px;transition:all 0.25s;}
+.feature-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,0.08);border-color:var(--gold-light);}
+.feature-icon{font-size:30px;margin-bottom:14px;}
+.feature-title{font-family:'Playfair Display',serif;font-size:19px;margin-bottom:8px;}
+.feature-desc{font-size:14px;color:var(--muted);line-height:1.7;}
+.feature-new{display:inline-block;background:var(--rose-pale);color:var(--rose);font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:0.1em;margin-left:7px;vertical-align:middle;}
+.how{padding:100px 24px;background:var(--ink);color:var(--cream);}
+.how-inner{max-width:900px;margin:0 auto;}
+.how .section-tag{color:var(--gold-light);}
+.how .section-title{color:var(--cream);}
+.how .section-sub{color:rgba(253,249,243,0.55);}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:32px;margin-top:60px;}
+.step{text-align:center;}
+.step-num{width:52px;height:52px;border-radius:50%;border:2px solid rgba(200,147,58,0.4);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:20px;color:var(--gold-light);margin:0 auto 18px;}
+.step-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--cream);margin-bottom:8px;}
+.step-desc{font-size:13px;color:rgba(253,249,243,0.5);line-height:1.7;}
+.share-section{padding:80px 24px;background:linear-gradient(135deg,var(--rose-pale),var(--gold-pale));}
+.share-inner{max-width:880px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.share-text .section-tag{text-align:left;}
+.share-text .section-title{text-align:left;font-size:36px;}
+.share-text .section-sub{text-align:left;margin:0 0 30px;}
+.share-visual{display:flex;flex-direction:column;gap:10px;}
+.share-card{background:white;border-radius:12px;padding:14px 18px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px rgba(0,0,0,0.06);}
+.share-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.share-avatar.couple{background:var(--gold-pale);}
+.share-avatar.planner{background:var(--sage-pale);}
+.share-avatar.view-only{background:var(--rose-pale);}
+.share-info{flex:1;}
+.share-role{font-size:9px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted);}
+.share-name{font-size:13px;font-weight:600;color:var(--ink);}
+.share-access{font-size:10px;padding:3px 10px;border-radius:99px;font-weight:600;}
+.share-access.full{background:var(--sage-pale);color:var(--sage);}
+.share-access.view{background:var(--gold-pale);color:var(--gold);}
+.pricing{padding:100px 24px;max-width:840px;margin:0 auto;}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;margin-top:48px;}
+.price-card{border:2px solid var(--border);border-radius:22px;padding:34px 30px;background:white;position:relative;transition:all 0.25s;}
+.price-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.1);}
+.price-card.featured{border-color:var(--gold);background:linear-gradient(135deg,#fffcf5,#fff8ec);}
+.price-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--gold);color:white;padding:3px 14px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;}
+.price-name{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:6px;}
+.price-amount{font-family:'Playfair Display',serif;font-size:46px;color:var(--gold);margin:14px 0 3px;line-height:1;}
+.price-amount sup{font-size:18px;vertical-align:top;margin-top:10px;display:inline-block;}
+.price-per{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.price-features{list-style:none;margin-bottom:28px;display:flex;flex-direction:column;gap:9px;}
+.price-features li{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:9px;}
+.price-features li::before{content:'✓';color:var(--sage);font-weight:700;flex-shrink:0;}
+.price-btn{display:block;text-align:center;padding:12px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;transition:all 0.2s;border:2px solid var(--ink);color:var(--ink);}
+.price-card.featured .price-btn{background:var(--ink);color:var(--cream);}
+.price-btn:hover{background:var(--gold);border-color:var(--gold);color:white;}
+footer{background:var(--ink);color:rgba(253,249,243,0.5);padding:48px 24px;text-align:center;}
+.footer-logo{font-family:'Playfair Display',serif;font-size:26px;color:var(--cream);margin-bottom:10px;}
+.footer-logo span{color:var(--gold);font-style:italic;}
+footer p{font-size:13px;margin-top:6px;}
+footer a{color:var(--gold-light);text-decoration:none;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+@media(max-width:700px){nav{padding:14px 20px;}.nav-links{display:none;}.mock-body{grid-template-columns:1fr;}.share-inner{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">Wedget<span>Budget</span></a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <a href="app.html" class="nav-cta">Start Planning →</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-tag">💍 For Couples in Love</div>
+  <h1 class="hero-title">Plan your wedding<br><em>budget beautifully</em></h1>
+  <p class="hero-sub">Track every vendor, every payment, every due date — all in one elegant planner. Share with your wedding planner in one click.</p>
+  <div class="hero-actions">
+    <a href="app.html" class="btn-primary">✨ Start for free</a>
+    <a href="#features" class="btn-secondary">See features</a>
+  </div>
+  <p class="hero-note">No credit card needed · Takes 2 minutes · Works on all devices</p>
+  <div class="hero-visual">
+    <div class="mock-header">
+      <div class="mock-dots"><div class="mock-dot"></div><div class="mock-dot"></div><div class="mock-dot"></div></div>
+      <div class="mock-title">Chamo & Pamu — Wedding Budget</div>
+      <div style="font-size:11px;color:rgba(232,201,122,0.5)">LKR 2,450,000 / 3,500,000</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-card">
+        <div class="mock-card-top"><div class="mock-icon">📸</div><div><div class="mock-cat">Photographer</div><div class="mock-name">Silva Studios</div></div></div>
+        <div class="mock-amounts"><div class="mock-amt"><div class="mock-amt-label">Total</div><div class="mock-amt-val">180,000</div></div><div class="mock-amt"><div class="mock-amt-label">Paid</div><div class="mock-amt-val g">90,000</div></div></div>
+        <div class="mock-badge partial">⏳ Partial</div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-card-top"><div class="mock-icon">💐</div><div><div class="mock-cat">Florist</div><div class="mock-name">Bloom & Co.</div></div></div>
+        <div class="mock-amounts"><div class="mock-amt"><div class="mock-amt-label">Total</div><div class="mock-amt-val">95,000</div></div><div class="mock-amt"><div class="mock-amt-label">Due</div><div class="mock-amt-val r">95,000</div></div></div>
+        <div class="mock-badge pending">📅 Due Jan 15</div>
+      </div>
+      <div class="mock-card">
+        <div class="mock-card-top"><div class="mock-icon">🎵</div><div><div class="mock-cat">Band</div><div class="mock-name">Harmony Band</div></div></div>
+        <div class="mock-amounts"><div class="mock-amt"><div class="mock-amt-label">Total</div><div class="mock-amt-val">120,000</div></div><div class="mock-amt"><div class="mock-amt-label">Paid</div><div class="mock-amt-val g">120,000</div></div></div>
+        <div class="mock-badge paid">✓ Fully Paid</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="section-tag">Everything you need</div>
+  <h2 class="section-title">Built for <em>real weddings</em></h2>
+  <p class="section-sub">Every feature you'll actually use — nothing you won't.</p>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">💳</div><div class="feature-title">Payment History <span class="feature-new">New</span></div><div class="feature-desc">Log every single payment with date, method and reference. Never lose track of a receipt again.</div></div>
+    <div class="feature-card"><div class="feature-icon">📅</div><div class="feature-title">Due Dates <span class="feature-new">New</span></div><div class="feature-desc">Set optional due dates and due amounts per vendor. See at a glance what's owed and when.</div></div>
+    <div class="feature-card"><div class="feature-icon">🔗</div><div class="feature-title">Share with Planner <span class="feature-new">New</span></div><div class="feature-desc">Generate a read-only link for your wedding planner. They see everything, can't change anything.</div></div>
+    <div class="feature-card"><div class="feature-icon">🔒</div><div class="feature-title">Private Accounts <span class="feature-new">New</span></div><div class="feature-desc">Each couple gets their own secure login. Your data is 100% private.</div></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Budget Overview</div><div class="feature-desc">Total cost, total paid, remaining balance and spend limit — all at a glance on one screen.</div></div>
+    <div class="feature-card"><div class="feature-icon">✅</div><div class="feature-title">Wedding Checklist</div><div class="feature-desc">A full prep checklist you can customise, tick off and add to as your big day gets closer.</div></div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="section-tag">Simple by design</div>
+    <h2 class="section-title" style="color:var(--cream)">How it <em style="color:var(--gold-light)">works</em></h2>
+    <p class="section-sub">From sign-up to fully organised in under 5 minutes.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-title">Create your account</div><div class="step-desc">Sign up with your email. Private and secure from the start.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-title">Add your vendors</div><div class="step-desc">Pre-loaded with all key vendors. Add names, costs and due dates.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-title">Log every payment</div><div class="step-desc">Record each payment with amount, date and method. Balance updates instantly.</div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-title">Share & relax</div><div class="step-desc">One-click share link for your planner. Your budget is handled.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="share-section">
+  <div class="share-inner">
+    <div class="share-text">
+      <div class="section-tag">Collaboration</div>
+      <h2 class="section-title">Share with your <em>wedding planner</em></h2>
+      <p class="section-sub">Give your planner a read-only view of your entire budget. They stay informed, you stay in control.</p>
+      <a href="app.html" class="btn-primary">Get started free →</a>
+    </div>
+    <div class="share-visual">
+      <div class="share-card"><div class="share-avatar couple">👰</div><div class="share-info"><div class="share-role">The Couple</div><div class="share-name">Chamo & Pamu</div></div><span class="share-access full">Full Access</span></div>
+      <div class="share-card"><div class="share-avatar planner">📋</div><div class="share-info"><div class="share-role">Wedding Planner</div><div class="share-name">Shanali Perera</div></div><span class="share-access view">View Only</span></div>
+      <div class="share-card"><div class="share-avatar view-only">👁</div><div class="share-info"><div class="share-role">Anyone with link</div><div class="share-name">Read-only access</div></div><span class="share-access view">View Only</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="pricing">
+  <div class="section-tag">Simple pricing</div>
+  <h2 class="section-title">One price. <em>Everything included.</em></h2>
+  <p class="section-sub">No subscriptions. Pay once, use it for your whole wedding journey.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Free</div>
+      <div class="price-amount"><sup>$</sup>0</div>
+      <div class="price-per">forever</div>
+      <ul class="price-features"><li>Up to 5 vendors</li><li>Payment tracking</li><li>Budget overview</li><li>Checklist</li></ul>
+      <a href="app.html" class="price-btn">Get started</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-tag">Most popular</div>
+      <div class="price-name">Couple</div>
+      <div class="price-amount"><sup>$</sup>12</div>
+      <div class="price-per">one-time · per couple</div>
+      <ul class="price-features"><li>Unlimited vendors</li><li>Full payment history</li><li>Due dates & alerts</li><li>Planner share link</li><li>Export to PDF</li><li>All devices</li></ul>
+      <a href="app.html" class="price-btn">Start planning</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Wedget<span>Budget</span></div>
+  <p>Made with 💍 for couples everywhere</p>
+  <p style="margin-top:14px"><a href="app.html">Launch App</a> · <a href="mailto:hello@wedgetbudget.com">Contact</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Budget — Shared View</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+.share-banner {
+  background:linear-gradient(135deg,var(--charcoal),var(--deep));
+  color:var(--gold-light); padding:12px 24px;
+  text-align:center; font-size:12px; letter-spacing:0.1em;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.share-header { text-align:center; padding:48px 24px 32px; border-bottom:1px solid var(--border); }
+.share-names { font-family:'Cormorant Garamond',serif; font-size:clamp(36px,6vw,72px); font-weight:300; font-style:italic; color:var(--charcoal); }
+.share-names span { color:var(--gold); }
+.share-sub { font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); margin-top:8px; }
+.readonly-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.25);
+  border-radius:99px; padding:5px 14px; font-size:10px;
+  letter-spacing:0.15em; text-transform:uppercase; color:var(--gold-dark);
+  margin-top:12px;
+}
+.error-state { text-align:center; padding:80px 24px; }
+.error-state h2 { font-family:'Cormorant Garamond',serif; font-size:32px; color:var(--charcoal); margin-bottom:12px; }
+.error-state p { color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+
+<div class="share-banner">
+  👁️ Read-only view shared by the couple · You cannot edit or delete anything
+</div>
+
+<div id="loadingState" style="text-align:center;padding:80px 24px">
+  <div style="font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--muted)">Loading shared budget…</div>
+</div>
+
+<div id="errorState" class="error-state" style="display:none">
+  <h2>Link not available</h2>
+  <p>This share link may have been disabled by the couple or the link is incorrect.</p>
+</div>
+
+<div id="mainContent" style="display:none">
+  <div class="share-header">
+    <div class="share-names" id="shareNames">Wedding Budget</div>
+    <div class="share-sub" id="shareSubtitle"></div>
+    <div class="readonly-badge">👁️ Read-Only View</div>
+  </div>
+
+  <main>
+    <!-- OVERVIEW -->
+    <div class="section-block">
+      <div class="budget-overview">
+        <div class="budget-overview-title">💰 Budget Overview</div>
+        <div class="budget-grid">
+          <div class="budget-stat"><div class="budget-stat-label">Total Wedding Cost</div><div class="budget-stat-value" id="stat-total">LKR 0</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Total Paid</div><div class="budget-stat-value success" id="stat-paid">LKR 0</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Total Remaining</div><div class="budget-stat-value rose" id="stat-remaining">LKR 0</div></div>
+          <div class="budget-stat"><div class="budget-stat-label">Vendors</div><div class="budget-stat-value" id="stat-count">0</div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Budget Used</span><span id="progress-pct">0%</span></div>
+          <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENDORS -->
+    <div class="section-block">
+      <div class="section-title">Vendors</div>
+      <div class="section-subtitle">All vendors and payment history</div>
+      <div id="vendorsGrid" class="vendors-grid"></div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="section-block">
+      <div class="summary-section">
+        <div class="summary-title">Financial Summary</div>
+        <div class="summary-sub">Complete overview</div>
+        <div class="summary-grid">
+          <div class="summary-card"><div class="summary-card-icon">💍</div><div class="summary-card-label">Total Cost</div><div class="summary-card-value gold" id="sum-total">LKR 0</div></div>
+          <div class="summary-card"><div class="summary-card-icon">✅</div><div class="summary-card-label">Total Paid</div><div class="summary-card-value green" id="sum-paid">LKR 0</div></div>
+          <div class="summary-card"><div class="summary-card-icon">⏳</div><div class="summary-card-label">Still to Pay</div><div class="summary-card-value rose" id="sum-remaining">LKR 0</div></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="db.js"></script>
+<script>
+async function loadSharedData() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if (!token) { showError(); return; }
+
+  try {
+    // Get settings to verify share is enabled and find user
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.share_token&value=eq.${token}&select=user_id`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const rows = await r.json();
+    if (!rows.length) { showError(); return; }
+    const userId = rows[0].user_id;
+
+    // Check sharing is enabled
+    const r2 = await fetch(`${SUPABASE_URL}/rest/v1/settings?user_id=eq.${userId}&key=eq.share_enabled&select=value`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const enabledRows = await r2.json();
+    if (!enabledRows.length || enabledRows[0].value !== 'true') { showError(); return; }
+
+    // Load profile
+    const profileRows = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}&select=*`, {
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    }).then(r=>r.json());
+    const profile = profileRows[0] || {};
+    const n1 = profile.name1||'', n2 = profile.name2||'';
+    if (n1 || n2) document.getElementById('shareNames').innerHTML = n1&&n2 ? `${escHtml(n1)} <span>&</span> ${escHtml(n2)}` : escHtml(n1||n2);
+    if (profile.wedding_date) document.getElementById('shareSubtitle').textContent = 'Wedding: ' + new Date(profile.wedding_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+    // Load vendors & payments
+    const [vendors, payments, limitRows] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/vendors?user_id=eq.${userId}&order=created_at.asc`, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }).then(r=>r.json()),
+      fetch(`${SUPABASE_URL}/rest/v1/payments?user_id=eq.${userId}&order=payment_date.asc`, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }).then(r=>r.json()),
+      fetch(`${SUPABASE_URL}/rest/v1/settings?user_id=eq.${userId}&key=eq.spend_limit&select=value`, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }).then(r=>r.json()),
+    ]);
+
+    const spendLimit = parseFloat(limitRows[0]?.value||0)||0;
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+
+    renderVendors(vendors, payments);
+    updateStats(vendors, payments, spendLimit);
+  } catch(e) {
+    console.error(e); showError();
+  }
+}
+
+function showError() {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('errorState').style.display = 'block';
+}
+
+function renderVendors(vendors, payments) {
+  const grid = document.getElementById('vendorsGrid'); if (!grid) return;
+  grid.innerHTML = '';
+  vendors.forEach((v, idx) => {
+    const vPayments = payments.filter(p => p.vendor_id === v.id);
+    const totalPaid = vPayments.reduce((s,p) => s+parseFloat(p.amount||0), 0);
+    const remaining = Math.max(0, (v.total_cost||0) - totalPaid);
+    let statusClass='status-pending', statusText='Not Paid';
+    if (v.total_cost>0 && totalPaid>=v.total_cost){statusClass='status-paid';statusText='Fully Paid';}
+    else if (totalPaid>0){statusClass='status-partial';statusText='Partially Paid';}
+    let pmtRows = vPayments.length
+      ? vPayments.map(p=>`<div class="payment-item"><span class="payment-item-amount">LKR ${fmtNum(p.amount)}</span><span class="payment-item-date">${formatDate(p.payment_date)}</span><span class="payment-item-method">${escHtml(p.method||'')}</span><span class="payment-item-note">${escHtml(p.note||'')}</span></div>`).join('')
+      : '<div class="no-payments">No payments yet.</div>';
+
+    let duePanelHtml = '';
+    if (v.due_date) {
+      const dueAmt = v.due_amount ? parseFloat(v.due_amount) : remaining;
+      if (dueAmt > 0 && totalPaid < (v.total_cost||0)) {
+        duePanelHtml = `<div style="background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;"><div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Due Payment</div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--charcoal);font-weight:600;">LKR ${fmtNum(dueAmt)}</div><div style="font-size:12px;color:var(--muted);">by ${formatDate(v.due_date)}</div></div></div>`;
+      }
+    }
+
+    const card = document.createElement('div');
+    card.className='vendor-card'; card.style.animationDelay=(idx*0.03)+'s';
+    card.innerHTML=`<div class="vendor-card-header"><div class="vendor-icon">${v.icon||'💒'}</div><div class="vendor-name-wrap"><div class="vendor-category">${escHtml(v.category||'')}</div><div class="vendor-name-display">${v.name?escHtml(v.name):'<span style="color:var(--muted);font-style:italic;font-size:14px">TBD</span>'}</div></div></div><div class="vendor-card-body"><div class="vendor-amounts-row"><div class="amount-badge"><div class="amount-badge-label">Total Cost</div><div class="amount-badge-value">LKR ${fmtNum(v.total_cost)}</div></div><div class="amount-badge"><div class="amount-badge-label">Paid</div><div class="amount-badge-value paid-color">LKR ${fmtNum(totalPaid)}</div></div><div class="amount-badge"><div class="amount-badge-label">Remaining</div><div class="amount-badge-value remain-color">LKR ${fmtNum(remaining)}</div></div></div>${duePanelHtml}<div class="payments-section"><div class="payments-title">📜 Payment History (${vPayments.length})</div><div class="payments-list">${pmtRows}</div></div></div><div class="vendor-card-footer"><div class="vendor-status ${statusClass}"><div class="status-dot"></div>${statusText}</div></div>`;
+    grid.appendChild(card);
+  });
+}
+
+function updateStats(vendors, payments, spendLimit) {
+  let totalCost=0, totalPaid=0;
+  vendors.forEach(v => {
+    totalCost+=parseFloat(v.total_cost||0);
+    totalPaid+=payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+  });
+  const remaining = totalCost - totalPaid;
+  const pct = spendLimit>0?Math.min(100,Math.round((totalCost/spendLimit)*100)):0;
+  setText('stat-total',fmt(totalCost)); setText('stat-paid',fmt(totalPaid));
+  setText('stat-remaining',fmt(remaining)); setText('stat-count',vendors.filter(v=>v.name).length);
+  setText('sum-total',fmt(totalCost)); setText('sum-paid',fmt(totalPaid)); setText('sum-remaining',fmt(remaining));
+  const fill=document.getElementById('progress-fill');
+  if(fill){fill.style.width=pct+'%';fill.classList.toggle('danger',pct>=90);}
+  setText('progress-pct',pct+'%');
+}
+
+function fmt(n){return 'LKR '+fmtNum(n);}
+function fmtNum(n){return Number(n||0).toLocaleString('en-LK');}
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function formatDate(d){if(!d)return '';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+
+loadSharedData();
+</script>
+</body>
+</html>

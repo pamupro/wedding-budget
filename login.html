@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — WeddingLedger</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#c9a84c;--gold-light:#e8c97a;--gold-dark:#9a7535;--charcoal:#2d2416;--deep:#1a1209;--cream:#faf7f2;--text:#3d3020;--muted:#8a7a60;--border:#e8dcc8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;}
+.L{flex:1;background:linear-gradient(135deg,var(--charcoal),var(--deep));display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 48px;position:relative;overflow:hidden;}
+.L::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 80% at 30% 40%,rgba(201,168,76,0.1),transparent);}
+.L-float{position:absolute;font-size:200px;opacity:0.03;bottom:-40px;right:-40px;}
+.brand{font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:var(--gold-light);margin-bottom:48px;position:relative;z-index:1;}
+.brand span{color:rgba(255,255,255,0.5);}
+.tagline{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:var(--gold-light);line-height:1.2;margin-bottom:20px;position:relative;z-index:1;}
+.tagline em{font-style:italic;}
+.tsub{font-size:14px;color:rgba(255,255,255,0.35);line-height:1.6;max-width:320px;font-weight:300;position:relative;z-index:1;}
+.feats{margin-top:40px;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1;}
+.feat{display:flex;align-items:center;gap:12px;font-size:13px;color:rgba(255,255,255,0.5);}
+.feat-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+.R{width:480px;display:flex;align-items:center;justify-content:center;padding:48px 40px;}
+.wrap{width:100%;max-width:380px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:32px;}
+.tab{flex:1;padding:12px;text-align:center;cursor:pointer;font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;font-family:'Jost',sans-serif;}
+.tab.active{color:var(--charcoal);border-bottom-color:var(--gold);font-weight:500;}
+.ttl{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--charcoal);margin-bottom:6px;}
+.sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5;font-weight:300;}
+.fg{margin-bottom:18px;}
+.fl{display:block;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.fi{width:100%;background:white;border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:'Jost',sans-serif;font-size:14px;color:var(--text);outline:none;transition:all 0.2s;}
+.fi:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.1);}
+.fi::placeholder{color:rgba(138,122,96,0.5);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sbtn{width:100%;background:linear-gradient(135deg,var(--gold-dark),var(--gold));color:white;border:none;border-radius:99px;padding:14px;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;cursor:pointer;font-weight:500;transition:all 0.2s;box-shadow:0 4px 18px rgba(154,117,53,0.3);margin-top:8px;}
+.sbtn:hover{transform:translateY(-1px);}
+.sbtn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+.err{background:#fef0f0;border:1px solid #f5c0c0;border-radius:8px;padding:10px 14px;font-size:13px;color:#c04040;margin-bottom:16px;display:none;}
+.ok{background:#f0faf0;border:1px solid #a0d0a0;border-radius:8px;padding:10px 14px;font-size:13px;color:#306030;margin-bottom:16px;display:none;}
+.bk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);text-decoration:none;margin-bottom:28px;}
+.bk:hover{color:var(--charcoal);}
+.foot{text-align:center;font-size:12px;color:var(--muted);margin-top:20px;}
+.foot a{color:var(--gold-dark);text-decoration:none;font-weight:500;}
+@media(max-width:768px){.L{display:none;}.R{width:100%;padding:36px 24px;}}
+</style>
+</head>
+<body>
+<div class="L">
+  <div class="brand">Wedding<span>Ledger</span></div>
+  <div class="tagline">Plan your<br><em>perfect day</em><br>together</div>
+  <p class="tsub">Track every vendor, every payment, every penny. Share with your planner. Stay in control.</p>
+  <div class="feats">
+    <div class="feat"><div class="feat-dot"></div>Vendor payment tracking with dates</div>
+    <div class="feat"><div class="feat-dot"></div>Due dates &amp; upcoming payment alerts</div>
+    <div class="feat"><div class="feat-dot"></div>Share read-only link with your planner</div>
+    <div class="feat"><div class="feat-dot"></div>Private &amp; secure — just for you two</div>
+  </div>
+  <div class="L-float">💍</div>
+</div>
+<div class="R">
+  <div class="wrap">
+    <a href="index.html" class="bk">← Back to home</a>
+    <div class="tabs">
+      <button class="tab active" id="tLogin" onclick="sw('login')">Sign In</button>
+      <button class="tab" id="tSignup" onclick="sw('signup')">Create Account</button>
+    </div>
+    <div id="fLogin">
+      <div class="ttl">Welcome back 💍</div>
+      <div class="sub">Sign in to continue planning your wedding</div>
+      <div class="err" id="eLogin"></div><div class="ok" id="okLogin"></div>
+      <div class="fg"><label class="fl">Email Address</label><input type="email" class="fi" id="lEmail" placeholder="your@email.com"></div>
+      <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="lPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="sbtn" id="lBtn" onclick="doLogin()">Sign In →</button>
+      <div class="foot" style="margin-top:16px">Forgot password? <a href="#" onclick="doReset()">Reset it</a></div>
+    </div>
+    <div id="fSignup" style="display:none">
+      <div class="ttl">Start planning 🌸</div>
+      <div class="sub">Create your free wedding budget account</div>
+      <div class="err" id="eSignup"></div><div class="ok" id="okSignup"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Your Name</label><input type="text" class="fi" id="sN1" placeholder="e.g. Chamo"></div>
+        <div class="fg"><label class="fl">Partner's Name</label><input type="text" class="fi" id="sN2" placeholder="e.g. Pamu"></div>
+      </div>
+      <div class="fg"><label class="fl">Email Address</label><input type="email" class="fi" id="sEmail" placeholder="your@email.com"></div>
+      <div class="fg"><label class="fl">Password (min 6 chars)</label><input type="password" class="fi" id="sPass" placeholder="••••••••"></div>
+      <div class="fg"><label class="fl">Wedding Date (optional)</label><input type="date" class="fi" id="sDate"></div>
+      <button class="sbtn" id="sBtn" onclick="doSignup()">Create My Account →</button>
+    </div>
+  </div>
+</div>
+<script src="db.js"></script>
+<script>
+function sw(t){
+  document.getElementById('fLogin').style.display=t==='login'?'block':'none';
+  document.getElementById('fSignup').style.display=t==='signup'?'block':'none';
+  document.getElementById('tLogin').className='tab'+(t==='login'?' active':'');
+  document.getElementById('tSignup').className='tab'+(t==='signup'?' active':'');
+}
+function se(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',5000);}
+function so(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
+async function doLogin(){
+  const email=document.getElementById('lEmail').value.trim();
+  const pw=document.getElementById('lPass').value;
+  if(!email||!pw){se('eLogin','Please fill in all fields');return;}
+  const btn=document.getElementById('lBtn');btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    const r=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},body:JSON.stringify({email,password:pw})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error_description||d.msg||'Login failed');
+    localStorage.setItem('wl_token',d.access_token);
+    localStorage.setItem('wl_uid',d.user.id);
+    window.location.href='dashboard.html';
+  }catch(e){se('eLogin',e.message);btn.disabled=false;btn.textContent='Sign In →';}
+}
+async function doSignup(){
+  const n1=document.getElementById('sN1').value.trim();
+  const n2=document.getElementById('sN2').value.trim();
+  const email=document.getElementById('sEmail').value.trim();
+  const pw=document.getElementById('sPass').value;
+  const wd=document.getElementById('sDate').value;
+  if(!email||!pw){se('eSignup','Email and password are required');return;}
+  if(pw.length<6){se('eSignup','Password must be at least 6 characters');return;}
+  const btn=document.getElementById('sBtn');btn.disabled=true;btn.textContent='Creating account…';
+  try{
+    const r=await fetch(`${SUPABASE_URL}/auth/v1/signup`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},body:JSON.stringify({email,password:pw,data:{name1:n1,name2:n2,wedding_date:wd}})});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error_description||d.msg||'Signup failed');
+    if(d.access_token){
+      localStorage.setItem('wl_token',d.access_token);
+      localStorage.setItem('wl_uid',d.user.id);
+      await fetch(`${SUPABASE_URL}/rest/v1/profiles`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${d.access_token}`,'Prefer':'return=minimal'},body:JSON.stringify({user_id:d.user.id,name1:n1,name2:n2,wedding_date:wd||null,email})});
+      window.location.href='dashboard.html';
+    }else{so('okSignup','✅ Check your email to confirm your account, then sign in!');btn.textContent='Check your email!';}
+  }catch(e){se('eSignup',e.message);btn.disabled=false;btn.textContent='Create My Account →';}
+}
+async function doReset(){
+  const email=document.getElementById('lEmail').value.trim();
+  if(!email){se('eLogin','Enter your email first');return;}
+  await fetch(`${SUPABASE_URL}/auth/v1/recover`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},body:JSON.stringify({email})});
+  so('okLogin','✅ Password reset email sent!');
+}
+if(localStorage.getItem('wl_token'))window.location.href='dashboard.html';
+</script>
+</body>
+</html>
