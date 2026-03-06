@@ -6,7 +6,7 @@
 <title>WeddingLedger — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- PayPal: replace YOUR_CLIENT_ID with your PayPal Business Client ID -->
-<script src="https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU&currency=GBP" onload="initPayPal()"></script>
+<script src="https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU=GBP" onload="initPayPal()"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -296,8 +296,30 @@
         <span class="upgrade-amount">$12</span>
         <span class="upgrade-period">one-time · per couple</span>
       </div>
+      <!-- PayPal renders here when SDK loaded -->
       <div id="paypalButtonContainer" style="margin-top:14px"></div>
-      <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">Secure payment via PayPal · Instant activation</p>
+
+      <!-- Fallback shown when PayPal SDK hasn't loaded yet -->
+      <div id="paypalFallback" style="margin-top:14px;display:none">
+        <a id="paypalDirectLink" href="#" target="_blank"
+          style="display:flex;align-items:center;justify-content:center;gap:10px;
+                 background:#FFC439;border:none;border-radius:99px;padding:14px 24px;
+                 font-family:'Jost',sans-serif;font-size:15px;font-weight:700;
+                 color:#003087;text-decoration:none;cursor:pointer;
+                 box-shadow:0 4px 18px rgba(255,196,57,0.4);transition:opacity 0.2s;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z" fill="#009CDE"/>
+          </svg>
+          Pay $12 with PayPal
+        </a>
+        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">
+          You'll be redirected to PayPal to complete payment
+        </p>
+      </div>
+
+      <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">
+        🔒 Secure payment via PayPal · Instant activation · No subscription
+      </p>
     </div>
   </div>
 </div>
