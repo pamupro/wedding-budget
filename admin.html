@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeddingLedger — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f0d0a;--cream:#fdf9f3;--warm:#f5ede0;--gold:#c9a84c;--gold-pale:#fdf0d8;--rose:#b85c6e;--rose-pale:#fde8ed;--sage:#5a7a5a;--sage-pale:#e8f0e8;--muted:#8a7968;--border:#e8ddd0;--charcoal:#2d2416;--danger:#e05555;--card-bg:#ffffff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Jost',sans-serif;background:#1a1209;color:var(--cream);min-height:100vh;}
+
+/* Login gate */
+#loginGate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+.login-box{background:var(--card-bg);border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center;}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--charcoal);font-style:italic;margin-bottom:6px;}
+.login-logo span{color:var(--gold);}
+.login-sub{font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:28px;}
+.login-input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:14px;color:var(--charcoal);outline:none;margin-bottom:12px;}
+.login-input:focus{border-color:var(--gold);}
+.login-btn{width:100%;background:var(--charcoal);color:white;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Jost',sans-serif;}
+.login-btn:hover{background:var(--gold);}
+.login-error{color:var(--danger);font-size:13px;margin-top:8px;}
+
+/* Admin layout */
+#adminApp{display:none;}
+.admin-topbar{background:#2d2416;border-bottom:1px solid rgba(201,168,76,0.2);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.admin-logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);font-style:italic;}
+.admin-logo span{color:white;}
+.admin-nav{display:flex;gap:4px;}
+.admin-nav-btn{background:none;border:none;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
+.admin-nav-btn.active,.admin-nav-btn:hover{background:rgba(201,168,76,0.15);color:var(--gold);}
+.admin-signout{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:6px 14px;border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;cursor:pointer;}
+.admin-signout:hover{border-color:var(--gold);color:var(--gold);}
+
+.admin-content{max-width:1200px;margin:0 auto;padding:32px 24px;}
+
+/* Page sections */
+.admin-page{display:none;}
+.admin-page.active{display:block;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:white;margin-bottom:6px;}
+.page-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px;}
+
+/* Metric cards */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px;}
+.metric-card{background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:20px;}
+.metric-label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:8px;}
+.metric-value{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;color:var(--gold);line-height:1;}
+.metric-sub{font-size:12px;color:rgba(255,255,255,0.35);margin-top:6px;}
+
+/* Table */
+.admin-table-wrap{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.1);border-radius:14px;overflow:hidden;margin-bottom:24px;}
+.admin-table-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(201,168,76,0.1);}
+.admin-table-title{font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.6);}
+.search-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;width:220px;}
+.search-input::placeholder{color:rgba(255,255,255,0.3);}
+.search-input:focus{border-color:var(--gold);}
+.admin-table{width:100%;border-collapse:collapse;}
+.admin-table th{padding:10px 16px;text-align:left;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);border-bottom:1px solid rgba(255,255,255,0.06);font-weight:500;}
+.admin-table td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:rgba(255,255,255,0.8);vertical-align:middle;}
+.admin-table tr:last-child td{border-bottom:none;}
+.admin-table tr:hover td{background:rgba(255,255,255,0.03);}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;}
+.badge-pro{background:rgba(201,168,76,0.2);color:var(--gold);}
+.badge-free{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);}
+.badge-overdue{background:rgba(224,85,85,0.2);color:#f08080;}
+.badge-soon{background:rgba(255,180,0,0.15);color:#e8b060;}
+.action-btn{background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:4px 12px;border-radius:6px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer;transition:all 0.2s;margin-right:4px;}
+.action-btn:hover{border-color:var(--gold);color:var(--gold);}
+.action-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
+.action-btn.success{border-color:rgba(90,122,90,0.4);color:var(--sage);}
+.action-btn.success:hover{background:rgba(90,122,90,0.15);}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-style:italic;}
+
+/* Settings page */
+.settings-section{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.1);border-radius:14px;padding:24px;margin-bottom:20px;}
+.settings-title{font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:18px;}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{font-size:14px;color:rgba(255,255,255,0.8);}
+.settings-desc{font-size:12px;color:rgba(255,255,255,0.3);margin-top:2px;}
+.admin-input{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;min-width:180px;}
+.admin-input:focus{border-color:var(--gold);}
+.admin-btn{background:var(--gold);color:var(--charcoal);border:none;border-radius:8px;padding:9px 18px;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.admin-btn:hover{opacity:0.85;}
+.admin-btn.secondary{background:rgba(255,255,255,0.08);color:white;}
+.admin-btn.danger{background:var(--danger);color:white;}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gold);color:var(--charcoal);padding:10px 24px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:var(--danger);color:white;}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN GATE ─────────────────────────────────────────────────────────── -->
+<div id="loginGate">
+  <div class="login-box">
+    <div class="login-logo">Wedding<span>Ledger</span></div>
+    <div class="login-sub">Admin Panel</div>
+    <input type="password" id="adminPassword" class="login-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="login-btn" onclick="adminLogin()">Access Admin Panel →</button>
+    <div class="login-error" id="loginError" style="display:none">Incorrect password</div>
+  </div>
+</div>
+
+<!-- ── ADMIN APP ──────────────────────────────────────────────────────────── -->
+<div id="adminApp">
+  <div class="admin-topbar">
+    <div class="admin-logo">Wedding<span>Ledger</span> <span style="font-size:11px;color:rgba(255,255,255,0.3);font-family:Jost,sans-serif;font-style:normal;margin-left:8px;">ADMIN</span></div>
+    <div class="admin-nav">
+      <button class="admin-nav-btn active" onclick="showPage('overview')">📊 Overview</button>
+      <button class="admin-nav-btn" onclick="showPage('users')">👥 Users</button>
+      <button class="admin-nav-btn" onclick="showPage('payments')">💳 Payments</button>
+      <button class="admin-nav-btn" onclick="showPage('settings')">⚙️ Settings</button>
+    </div>
+    <button class="admin-signout" onclick="adminLogout()">Sign Out</button>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- OVERVIEW PAGE -->
+    <div class="admin-page active" id="page-overview">
+      <div class="page-title">Overview</div>
+      <div class="page-sub">Platform health at a glance</div>
+      <div class="metrics-grid" id="metricsGrid">
+        <div class="metric-card"><div class="metric-label">Total Users</div><div class="metric-value" id="m-total">—</div></div>
+        <div class="metric-card"><div class="metric-label">Pro Users</div><div class="metric-value" id="m-pro">—</div><div class="metric-sub" id="m-revenue">— revenue</div></div>
+        <div class="metric-card"><div class="metric-label">Free Users</div><div class="metric-value" id="m-free">—</div></div>
+        <div class="metric-card"><div class="metric-label">Overdue Payments</div><div class="metric-value" id="m-overdue" style="color:#f08080">—</div></div>
+        <div class="metric-card"><div class="metric-label">Due This Week</div><div class="metric-value" id="m-dueweek" style="color:#e8b060">—</div></div>
+      </div>
+
+      <!-- Recent signups -->
+      <div class="admin-table-wrap">
+        <div class="admin-table-header">
+          <div class="admin-table-title">Recent Signups</div>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Wedding Date</th><th>Joined</th></tr></thead>
+          <tbody id="recentSignups"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS PAGE -->
+    <div class="admin-page" id="page-users">
+      <div class="page-title">All Users</div>
+      <div class="page-sub">Manage accounts and subscriptions</div>
+      <div class="admin-table-wrap">
+        <div class="admin-table-header">
+          <div class="admin-table-title" id="userCount">Users</div>
+          <input type="text" class="search-input" placeholder="Search by name or email..." oninput="filterUsers(this.value)">
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Wedding Date</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="usersTable"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAYMENTS PAGE -->
+    <div class="admin-page" id="page-payments">
+      <div class="page-title">Payments & Dues</div>
+      <div class="page-sub">All vendor due dates across the platform</div>
+      <div class="admin-table-wrap">
+        <div class="admin-table-header">
+          <div class="admin-table-title">Upcoming & Overdue</div>
+        </div>
+        <table class="admin-table">
+          <thead><tr><th>Couple</th><th>Vendor</th><th>Due Date</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody id="paymentsTable"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="admin-page" id="page-settings">
+      <div class="page-title">Settings</div>
+      <div class="page-sub">Platform configuration</div>
+
+      <div class="settings-section">
+        <div class="settings-title">Admin Access</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Change Admin Password</div><div class="settings-desc">Stored locally in this browser</div></div>
+          <div style="display:flex;gap:8px">
+            <input type="password" id="newAdminPass" class="admin-input" placeholder="New password">
+            <button class="admin-btn" onclick="changeAdminPassword()">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Pricing</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Pro Plan Price</div><div class="settings-desc">Currently $12 USD one-time (change in dashboard.html PayPal button)</div></div>
+          <div style="color:rgba(255,255,255,0.4);font-size:20px;font-family:'Cormorant Garamond',serif">$12 USD</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Supabase Config</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Free Vendor Limit</div><div class="settings-desc">Currently 5 vendors per free account (change in app.js)</div></div>
+          <div style="color:var(--gold);font-size:22px;font-family:'Cormorant Garamond',serif">5</div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">View Supabase Dashboard</div><div class="settings-desc">Manage database, auth, and RLS policies</div></div>
+          <a href="https://supabase.com/dashboard" target="_blank" class="admin-btn" style="text-decoration:none;display:inline-block">Open →</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="db.js"></script>
+<script>
+// ── ADMIN PASSWORD ────────────────────────────────────────────────────────────
+// Default password is "admin123" — change it in settings after first login
+const DEFAULT_ADMIN_PASSWORD = 'admin123';
+
+function adminLogin() {
+  const pw = document.getElementById('adminPassword').value;
+  const stored = localStorage.getItem('wl_admin_pw') || DEFAULT_ADMIN_PASSWORD;
+  if (pw === stored) {
+    document.getElementById('loginGate').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    loadAllData();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function adminLogout() {
+  document.getElementById('loginGate').style.display = 'flex';
+  document.getElementById('adminApp').style.display = 'none';
+  document.getElementById('adminPassword').value = '';
+}
+
+function changeAdminPassword() {
+  const pw = document.getElementById('newAdminPass').value.trim();
+  if (!pw || pw.length < 4) { showToast('Password too short', true); return; }
+  localStorage.setItem('wl_admin_pw', pw);
+  document.getElementById('newAdminPass').value = '';
+  showToast('Admin password updated ✓');
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+let allUsers = [], allVendors = [], allPayments = [];
+
+async function loadAllData() {
+  try {
+    // Need service role key for admin reads — use Supabase admin API
+    // For now we use anon key but require supabase to have RLS disabled for admin reads
+    // OR you can use a separate admin token stored in environment
+    const SUPABASE_URL = DB.SUPABASE_URL;
+    const ANON_KEY = DB.ANON_KEY;
+
+    const headers = { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY };
+
+    const [profilesRes, vendorsRes, paymentsRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&order=created_at.desc`, {headers}),
+      fetch(`${SUPABASE_URL}/rest/v1/vendors?select=*`, {headers}),
+      fetch(`${SUPABASE_URL}/rest/v1/payments?select=*`, {headers}),
+    ]);
+
+    allUsers = await profilesRes.json();
+    allVendors = await vendorsRes.json();
+    allPayments = await paymentsRes.json();
+
+    renderOverview();
+    renderUsersTable(allUsers);
+    renderPaymentsTable();
+  } catch(e) {
+    console.error(e);
+    showToast('Error loading data: ' + e.message, true);
+  }
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────────────────────
+function renderOverview() {
+  const total = allUsers.length;
+  const pro = allUsers.filter(u => u.is_pro).length;
+  const free = total - pro;
+  document.getElementById('m-total').textContent = total;
+  document.getElementById('m-pro').textContent = pro;
+  document.getElementById('m-revenue').textContent = '$' + (pro * 12).toLocaleString() + ' revenue';
+  document.getElementById('m-free').textContent = free;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  let overdue = 0, dueWeek = 0;
+  allVendors.forEach(v => {
+    if (!v.due_date) return;
+    const dd = new Date(v.due_date + 'T00:00:00');
+    const diff = Math.round((dd - today) / 86400000);
+    const vPmts = allPayments.filter(p => p.vendor_id === v.id);
+    const paid = vPmts.reduce((s,p) => s + parseFloat(p.amount||0), 0);
+    if (paid >= (v.total_cost||0)) return;
+    if (diff < 0) overdue++;
+    else if (diff <= 7) dueWeek++;
+  });
+  document.getElementById('m-overdue').textContent = overdue;
+  document.getElementById('m-dueweek').textContent = dueWeek;
+
+  // Recent 10 signups
+  const tbody = document.getElementById('recentSignups');
+  tbody.innerHTML = allUsers.slice(0,10).map(u => `
+    <tr>
+      <td>${esc(u.name1||'')}${u.name2?' & '+esc(u.name2):''}</td>
+      <td style="color:rgba(255,255,255,0.4)">${esc(u.email||'')}</td>
+      <td><span class="badge ${u.is_pro?'badge-pro':'badge-free'}">${u.is_pro?'Pro':'Free'}</span></td>
+      <td style="color:rgba(255,255,255,0.4)">${u.wedding_date||'—'}</td>
+      <td style="color:rgba(255,255,255,0.4)">${u.created_at?u.created_at.split('T')[0]:'—'}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="loading">No users yet</td></tr>';
+}
+
+// ── USERS TABLE ───────────────────────────────────────────────────────────────
+function renderUsersTable(users) {
+  document.getElementById('userCount').textContent = `All Users (${users.length})`;
+  const tbody = document.getElementById('usersTable');
+  tbody.innerHTML = users.map(u => `
+    <tr id="user-row-${u.id}">
+      <td><strong>${esc(u.name1||'')}${u.name2?' & '+esc(u.name2):''}</strong></td>
+      <td style="color:rgba(255,255,255,0.5)">${esc(u.email||'')}</td>
+      <td><span class="badge ${u.is_pro?'badge-pro':'badge-free'}">${u.is_pro?'✨ Pro':'Free'}</span></td>
+      <td style="color:rgba(255,255,255,0.4)">${u.wedding_date||'—'}</td>
+      <td style="color:rgba(255,255,255,0.4)">${u.created_at?u.created_at.split('T')[0]:'—'}</td>
+      <td>
+        ${u.is_pro
+          ? `<button class="action-btn danger" onclick="revokePro('${u.id}','${u.user_id}')">Revoke Pro</button>`
+          : `<button class="action-btn success" onclick="grantPro('${u.id}','${u.user_id}')">Grant Pro ✨</button>`
+        }
+        <button class="action-btn" onclick="viewUser('${u.id}')">View</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="6" class="loading">No users found</td></tr>';
+}
+
+function filterUsers(query) {
+  const q = query.toLowerCase();
+  const filtered = allUsers.filter(u =>
+    (u.name1||'').toLowerCase().includes(q) ||
+    (u.name2||'').toLowerCase().includes(q) ||
+    (u.email||'').toLowerCase().includes(q)
+  );
+  renderUsersTable(filtered);
+}
+
+async function grantPro(profileId, userId) {
+  if (!confirm('Grant Pro access to this user for free?')) return;
+  await adminPatch('profiles', profileId, { is_pro: true });
+  const u = allUsers.find(x => x.id === profileId);
+  if (u) u.is_pro = true;
+  renderUsersTable(allUsers); renderOverview();
+  showToast('Pro access granted ✓');
+}
+
+async function revokePro(profileId, userId) {
+  if (!confirm('Revoke Pro access from this user?')) return;
+  await adminPatch('profiles', profileId, { is_pro: false });
+  const u = allUsers.find(x => x.id === profileId);
+  if (u) u.is_pro = false;
+  renderUsersTable(allUsers); renderOverview();
+  showToast('Pro access revoked');
+}
+
+function viewUser(profileId) {
+  const u = allUsers.find(x => x.id === profileId);
+  if (!u) return;
+  const vCount = allVendors.filter(v => v.user_id === u.user_id).length;
+  const pCount = allPayments.filter(p => {
+    const uVendors = allVendors.filter(v => v.user_id === u.user_id).map(v => v.id);
+    return uVendors.includes(p.vendor_id);
+  }).length;
+  alert(`👰 ${u.name1||''} & ${u.name2||''}\n📧 ${u.email||'—'}\n💍 ${u.wedding_date||'Not set'}\n🏷 Plan: ${u.is_pro?'Pro':'Free'}\n💒 Vendors: ${vCount}\n💳 Payments: ${pCount}\n📅 Joined: ${u.created_at?u.created_at.split('T')[0]:'—'}`);
+}
+
+// ── PAYMENTS TABLE ────────────────────────────────────────────────────────────
+function renderPaymentsTable() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const rows = [];
+  allVendors.forEach(v => {
+    if (!v.due_date) return;
+    const vPmts = allPayments.filter(p => p.vendor_id === v.id);
+    const paid = vPmts.reduce((s,p) => s + parseFloat(p.amount||0), 0);
+    if (paid >= (v.total_cost||0)) return;
+    const dd = new Date(v.due_date + 'T00:00:00');
+    const diff = Math.round((dd - today) / 86400000);
+    const user = allUsers.find(u => u.user_id === v.user_id);
+    const dueAmt = v.due_amount || Math.max(0, (v.total_cost||0) - paid);
+    rows.push({ v, diff, user, dueAmt });
+  });
+  rows.sort((a,b) => a.diff - b.diff);
+
+  const tbody = document.getElementById('paymentsTable');
+  tbody.innerHTML = rows.map(r => {
+    const cls = r.diff < 0 ? 'badge-overdue' : r.diff <= 7 ? 'badge-soon' : 'badge-free';
+    const lbl = r.diff < 0 ? `${Math.abs(r.diff)}d overdue` : r.diff === 0 ? 'Today' : `In ${r.diff}d`;
+    return `<tr>
+      <td>${r.user ? esc(r.user.name1||'')+(r.user.name2?' & '+esc(r.user.name2):'') : '—'}</td>
+      <td>${r.v.icon||''} ${esc(r.v.category)}${r.v.name?' — '+esc(r.v.name):''}</td>
+      <td style="color:rgba(255,255,255,0.5)">${r.v.due_date}</td>
+      <td style="color:var(--gold)">LKR ${Number(r.dueAmt).toLocaleString()}</td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="loading">No upcoming due dates 🎉</td></tr>';
+}
+
+// ── ADMIN DB HELPERS ──────────────────────────────────────────────────────────
+async function adminPatch(table, id, data) {
+  const SUPABASE_URL = DB.SUPABASE_URL;
+  const ANON_KEY = DB.ANON_KEY;
+  await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify(data)
+  });
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+let toastTimer;
+function showToast(msg, isError=false) {
+  const t = document.getElementById('toast'); if(!t) return;
+  t.textContent = msg; t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+</script>
+</body>
+</html>
