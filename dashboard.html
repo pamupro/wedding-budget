@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WeddingLedger — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <!-- PayPal: replace YOUR_CLIENT_ID with your PayPal Business Client ID -->
@@ -22,11 +22,29 @@
       <div class="notif-dot" id="notifDot" style="display:none"></div>
       <div class="notif-panel" id="notifPanel" style="display:none"></div>
     </div>
-    <div id="proBadge"></div>
-    <button class="topbar-btn share-btn" onclick="openShareModal()">🔗 Share</button>
-    <button class="topbar-btn signout-btn" onclick="doLogout()">Sign Out</button>
+    <div id="proBadge" class="desktop-only"></div>
+    <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
+    <button class="topbar-btn signout-btn desktop-only" onclick="doLogout()">Sign Out</button>
+    <!-- Mobile hamburger -->
+    <button class="hamburger-btn" onclick="openMobileNav()" aria-label="Menu">☰</button>
   </div>
 </nav>
+
+<!-- ── MOBILE NAV DRAWER ── -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+<div class="mobile-nav-drawer" id="mobileNavDrawer">
+  <div class="mobile-nav-header">
+    <div id="mobileNavNames" class="mobile-nav-names"></div>
+    <button onclick="closeMobileNav()" class="mobile-nav-close">✕</button>
+  </div>
+  <div class="mobile-nav-items">
+    <div id="mobileProBadge" style="margin-bottom:8px"></div>
+    <button class="mobile-nav-item" onclick="openShareModal();closeMobileNav()">🔗 Share Budget</button>
+    <button class="mobile-nav-item" onclick="openSettingsModal();closeMobileNav()">⚙️ Settings</button>
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <button class="mobile-nav-item danger" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
 
 <!-- ── COUPLE HERO ────────────────────────────────────────────────────────── -->
 <div id="coupleHero"></div>
@@ -287,5 +305,18 @@
 <div class="toast" id="toast"></div>
 <script src="db.js"></script>
 <script src="app.js"></script>
+<script>
+// ── MOBILE NAV ────────────────────────────────────────────────────────────────
+function openMobileNav() {
+  document.getElementById('mobileNavOverlay').classList.add('open');
+  document.getElementById('mobileNavDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileNav() {
+  document.getElementById('mobileNavOverlay').classList.remove('open');
+  document.getElementById('mobileNavDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+</script>
 </body>
 </html>
