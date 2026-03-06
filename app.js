@@ -73,22 +73,32 @@ async function loadProfile() {
     if (el&&(n1||n2)) el.textContent=n1&&n2?`${n1} & ${n2}`:n1||n2;
     const hero=document.getElementById('coupleHero');
     if (hero&&(n1||n2)) {
+      const wdStr=profile.wedding_date?formatDateLong(profile.wedding_date):'';
       hero.innerHTML=`<div class="couple-hero">
+        <div class="couple-hero-sparkle">✦</div>
         <div class="couple-hero-tag">💍 Your Wedding Budget</div>
-        <div class="couple-hero-names">${esc(n1)}${n2?` <span style="color:var(--gold)">& </span>${esc(n2)}`:''}</div>
-        ${profile.wedding_date?`<div class="couple-hero-date">${formatDateLong(profile.wedding_date)}</div>`:''}
+        <div class="couple-hero-names">
+          <span class="hero-name1">${esc(n1)}</span>
+          ${n2?`<span class="hero-amp"> &amp; </span><span class="hero-name2">${esc(n2)}</span>`:''}
+        </div>
+        ${wdStr?`<div class="couple-hero-date">📅 ${wdStr}</div>`:''}
+        <div class="couple-hero-divider"><span>✦</span></div>
       </div>`;
     }
+    // Also update mobile nav names
+    const mobileNames=document.getElementById('mobileNavNames');
+    if (mobileNames&&(n1||n2)) mobileNames.textContent=n1&&n2?`${n1} & ${n2}`:n1||n2;
     if (profile.wedding_date) weddingDate=new Date(profile.wedding_date+'T09:00:00');
     updateProBadge();
   }
 }
 
 function updateProBadge() {
-  const b=document.getElementById('proBadge'); if(!b) return;
-  b.innerHTML=isPro
+  const badge=isPro
     ?'<span class="pro-badge">✨ Pro</span>'
     :'<button class="upgrade-small-btn" onclick="openUpgradeModal()">⬆ Upgrade</button>';
+  const b=document.getElementById('proBadge'); if(b) b.innerHTML=badge;
+  const mb=document.getElementById('mobileProBadge'); if(mb) mb.innerHTML=badge;
 }
 
 // ─── LOAD DATA ───────────────────────────────────────────────────────────────
@@ -129,8 +139,13 @@ async function loadSettings() {
     if(r.key==='share_enabled') shareEnabled=r.value==='true';
     if(r.key==='share_permissions'){try{sharePermissions=JSON.parse(r.value);}catch(e){}}
     if(r.key==='currency'){activeCurrency=r.value||'LKR';setCurrencyUI(activeCurrency);}
+    if(r.key==='vendor_limit'){
+      // Admin-assigned custom vendor limit
+      const lim=parseInt(r.value)||0;
+      if(lim>0&&profile){profile.custom_vendor_limit=lim;}
+    }
   });
-  updateStats();
+  updateStats();updateVendorLimitUI();
 }
 
 // ─── CURRENCY ────────────────────────────────────────────────────────────────
@@ -166,15 +181,17 @@ function fmtGBP(lkr){
 // ─── VENDOR LIMIT UI ─────────────────────────────────────────────────────────
 function updateVendorLimitUI(){
   const bar=document.getElementById('vendorLimitBar'); if(!bar) return;
-  if(isPro){bar.style.display='none';return;}
+  const lim=getVendorLimit();
+  if(isPro&&!(profile?.custom_vendor_limit>0)){bar.style.display='none';return;}
   bar.style.display='flex';
-  const n=vendors.length, pct=Math.min(100,(n/FREE_VENDOR_LIMIT)*100);
+  const n=vendors.length, pct=Math.min(100,(n/lim)*100);
+  const isCustom=profile?.custom_vendor_limit>0;
   bar.innerHTML=`
     <div style="flex:1">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">Free vendors: <strong style="color:${n>=FREE_VENDOR_LIMIT?'var(--danger)':'var(--charcoal)'}">${n}/${FREE_VENDOR_LIMIT}</strong>${n>=FREE_VENDOR_LIMIT?' — <span style="color:var(--danger)">Limit reached</span>':''}</div>
-      <div style="background:var(--border);border-radius:99px;height:5px;"><div style="width:${pct}%;background:${n>=FREE_VENDOR_LIMIT?'var(--danger)':'var(--gold)'};border-radius:99px;height:5px;transition:width 0.3s"></div></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">${isCustom?'Custom':'Free'} vendors: <strong style="color:${n>=lim?'var(--danger)':'var(--charcoal)'}">${n}/${lim}</strong>${n>=lim?' — <span style="color:var(--danger)">Limit reached</span>':''}</div>
+      <div style="background:var(--border);border-radius:99px;height:5px;"><div style="width:${pct}%;background:${n>=lim?'var(--danger)':'var(--gold)'};border-radius:99px;height:5px;transition:width 0.3s"></div></div>
     </div>
-    ${n>=FREE_VENDOR_LIMIT?`<button onclick="openUpgradeModal()" style="margin-left:14px;background:var(--gold);color:white;border:none;border-radius:99px;padding:6px 16px;font-size:11px;cursor:pointer;font-family:Jost,sans-serif;font-weight:500;white-space:nowrap">Upgrade →</button>`:''}`;
+    ${n>=lim&&!isCustom?`<button onclick="openUpgradeModal()" style="margin-left:14px;background:var(--gold);color:white;border:none;border-radius:99px;padding:6px 16px;font-size:11px;cursor:pointer;font-family:Jost,sans-serif;font-weight:500;white-space:nowrap">Upgrade →</button>`:''}`;
 }
 
 // ─── RENDER VENDORS ───────────────────────────────────────────────────────────
@@ -370,8 +387,19 @@ document.addEventListener('click',function(e){
 });
 
 // ─── ADD VENDOR ──────────────────────────────────────────────────────────────
+function getVendorLimit(){
+  if(profile&&profile.custom_vendor_limit>0) return profile.custom_vendor_limit;
+  if(isPro) return 9999;
+  return FREE_VENDOR_LIMIT;
+}
+
 async function addVendor(){
-  if(!isPro&&vendors.length>=FREE_VENDOR_LIMIT){openUpgradeModal();return;}
+  const lim=getVendorLimit();
+  if(vendors.length>=lim){
+    if(!isPro&&!profile?.custom_vendor_limit) openUpgradeModal();
+    else showToast(`Vendor limit of ${lim} reached`,true);
+    return;
+  }
   const name=document.getElementById('newVendorName').value.trim();
   if(!name){showToast('Please enter a vendor name',true);return;}
   const data={user_id:userId,icon:selectedIcon,
