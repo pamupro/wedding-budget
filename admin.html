@@ -123,10 +123,22 @@ tr:hover td{background:rgba(255,255,255,0.02);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.error{background:var(--danger);}
 
+/* ── HAMBURGER ── */
+.hamburger{display:none;background:none;border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--textm);font-size:18px;padding:6px 10px;cursor:pointer;line-height:1;}
+.hamburger:hover{border-color:var(--gold);color:var(--gold);}
+.mobile-menu{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);}
+.mobile-menu.open{display:flex;align-items:flex-end;}
+.mobile-menu-inner{background:var(--surface2);border-top:1px solid rgba(201,168,76,0.2);border-radius:18px 18px 0 0;padding:20px 16px 36px;width:100%;display:flex;flex-direction:column;gap:8px;}
+.mobile-menu-inner .nav-btn{width:100%;text-align:left;padding:13px 16px;font-size:15px;border-radius:10px;}
+.mobile-menu-close{background:none;border:none;color:var(--textm);font-size:22px;cursor:pointer;position:absolute;top:16px;right:20px;}
+
 @media(max-width:700px){
   .topbar-nav{display:none;}
+  .hamburger{display:block;}
   th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){display:none;}
   .metrics-grid{grid-template-columns:1fr 1fr;}
+  .table-search{width:140px;}
+  .page{padding:24px 14px;}
 }
 </style>
 </head>
@@ -157,7 +169,10 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <button class="nav-btn" onclick="showPage('payments',this)">💳 Pro Upgrades</button>
       <button class="nav-btn" onclick="showPage('settings',this)">⚙️ Settings</button>
     </div>
-    <button class="signout-btn" onclick="adminLogout()">Sign Out</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="hamburger" onclick="openMobileMenu()">☰</button>
+      <button class="signout-btn" onclick="adminLogout()">Sign Out</button>
+    </div>
   </nav>
 
   <!-- ── OVERVIEW ── -->
@@ -231,6 +246,18 @@ tr:hover td{background:rgba(255,255,255,0.02);}
       <div class="info-row"><span>Default Free Vendor Limit</span><strong>5 vendors</strong></div>
       <div class="info-row"><span>Admin Panel</span><a href="https://supabase.com/dashboard" target="_blank" style="color:var(--gold)">Open Supabase →</a></div>
     </div>
+  </div>
+</div>
+
+<!-- ── MOBILE MENU ── -->
+<div class="mobile-menu" id="mobileMenu" onclick="if(event.target===this)closeMobileMenu()">
+  <div class="mobile-menu-inner">
+    <button class="mobile-menu-close" onclick="closeMobileMenu()">✕</button>
+    <button class="nav-btn" onclick="showPage('overview',null);closeMobileMenu()">📊 Overview</button>
+    <button class="nav-btn" onclick="showPage('users',null);closeMobileMenu()">👥 Users</button>
+    <button class="nav-btn" onclick="showPage('payments',null);closeMobileMenu()">💳 Pro Upgrades</button>
+    <button class="nav-btn" onclick="showPage('settings',null);closeMobileMenu()">⚙️ Settings</button>
+    <button class="nav-btn" style="color:#ff7070;margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:16px" onclick="adminLogout();closeMobileMenu()">Sign Out</button>
   </div>
 </div>
 
@@ -614,6 +641,16 @@ function renderVendorDues() {
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── MOBILE MENU ──────────────────────────────────────────────────────────────
+function openMobileMenu() {
+  document.getElementById('mobileMenu').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.body.style.overflow = '';
+}
 
 let toastTimer;
 function showToast(msg, isError=false) {
