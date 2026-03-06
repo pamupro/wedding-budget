@@ -1,14 +1,21 @@
 /**
  * db.js — WeddingLedger Database (Supabase)
- * EDIT THE TWO VALUES BELOW ONLY
+ * ─────────────────────────────────────────
+ * STEP 1: Go to supabase.com → your project → Settings → API
+ * STEP 2: Copy "Project URL"  → paste below as SUPABASE_URL
+ * STEP 3: Copy "anon public"  → paste below as SUPABASE_ANON_KEY
+ * ─────────────────────────────────────────
  */
 
-const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';        // e.g. https://abcdefgh.supabase.co
+const SUPABASE_URL     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';       // e.g. https://abcdefgh.supabase.co
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4'; // starts with eyJ...
 
 // ─── DO NOT EDIT BELOW ────────────────────────────────────────────────────────
 
 const DB = {
+  SUPABASE_URL,
+  ANON_KEY: SUPABASE_ANON_KEY,
+
   _h(token) {
     return {
       'Content-Type': 'application/json',
@@ -49,7 +56,6 @@ const DB = {
   },
 
   async upsertSetting(userId, key, value, token) {
-    // Try update first
     const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?user_id=eq.${userId}&key=eq.${key}`, {
       method: 'PATCH', headers: this._h(token), body: JSON.stringify({ value: String(value) })
     });
@@ -59,7 +65,6 @@ const DB = {
     }
   },
 
-  // For share page - query by share token (public, no auth)
   async queryShare(table, shareToken) {
     const r = await fetch(
       `${SUPABASE_URL}/rest/v1/${table}?share_token=eq.${shareToken}&select=*`,
