@@ -1,197 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard — WeddingLedger</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeddingLedger — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- PayPal: replace YOUR_CLIENT_ID with your PayPal Business Client ID -->
+<script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD" onload="initPayPal()"></script>
 <link rel="stylesheet" href="style.css">
-<style>
-.top-bar{position:sticky;top:0;z-index:50;background:rgba(250,247,242,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
-.top-bar-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--charcoal);}
-.top-bar-logo span{color:var(--gold);}
-.top-bar-couple{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--muted);font-style:italic;}
-.top-bar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.share-btn{display:flex;align-items:center;gap:7px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:99px;padding:8px 16px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-dark);cursor:pointer;font-family:'Jost',sans-serif;transition:all 0.2s;font-weight:500;}
-.share-btn:hover{background:rgba(201,168,76,0.2);}
-.logout-btn{background:none;border:1px solid var(--border);border-radius:99px;padding:8px 16px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);cursor:pointer;font-family:'Jost',sans-serif;transition:all 0.2s;}
-.logout-btn:hover{border-color:var(--danger);color:var(--danger);}
-.due-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 9px;border-radius:99px;}
-.due-overdue{background:#ffeaea;color:#c04040;border:1px solid #f5c0c0;}
-.due-soon{background:#fff8e1;color:#9a6000;border:1px solid #f0d060;}
-.due-upcoming{background:rgba(201,168,76,0.1);color:var(--gold-dark);border:1px solid rgba(201,168,76,0.25);}
-.upcoming-panel{background:linear-gradient(135deg,#fffbf0,#fff8e6);border:1px solid rgba(201,168,76,0.25);border-radius:16px;padding:22px 24px;margin-bottom:32px;}
-.upcoming-panel-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--charcoal);margin-bottom:16px;}
-.upcoming-list{display:flex;flex-direction:column;gap:10px;}
-.upcoming-item{display:flex;align-items:center;gap:14px;background:white;border:1px solid var(--border);border-radius:10px;padding:11px 14px;}
-.upcoming-icon{font-size:18px;}
-.upcoming-info{flex:1;}
-.upcoming-vendor{font-size:13px;font-weight:500;color:var(--charcoal);}
-.upcoming-date{font-size:11px;color:var(--muted);margin-top:1px;}
-.upcoming-amount{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--charcoal);font-weight:600;white-space:nowrap;}
-.no-upcoming{font-size:13px;color:var(--muted);font-style:italic;}
-.share-url-box{display:flex;align-items:center;gap:10px;background:rgba(250,247,242,0.8);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin:14px 0;}
-.share-url-text{flex:1;font-family:monospace;font-size:12px;color:var(--muted);word-break:break-all;}
-.share-copy-btn{background:var(--gold);color:white;border:none;border-radius:6px;padding:6px 14px;font-size:11px;cursor:pointer;font-family:'Jost',sans-serif;letter-spacing:0.1em;white-space:nowrap;transition:all 0.2s;}
-.share-copy-btn:hover{background:var(--gold-dark);}
-.share-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
-.share-toggle-label{font-size:13px;color:var(--text);}
-.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;}
-.toggle-switch input{opacity:0;width:0;height:0;}
-.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;transition:0.3s;}
-.toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
-.toggle-switch input:checked+.toggle-slider{background:var(--gold);}
-.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px);}
-.share-warning{font-size:12px;color:var(--muted);background:rgba(250,247,242,0.8);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:12px;line-height:1.5;}
-</style>
 </head>
 <body>
-<div class="top-bar">
-  <div>
-    <div class="top-bar-logo">Wedding<span>Ledger</span></div>
-    <div class="top-bar-couple" id="coupleNames"></div>
+
+<!-- ── TOP BAR ────────────────────────────────────────────────────────────── -->
+<nav class="topbar">
+  <a href="index.html" class="topbar-logo">Wedding<span>Ledger</span></a>
+  <div class="topbar-center" id="coupleNames"></div>
+  <div class="topbar-right">
+    <select id="currencySelect" class="currency-select"></select>
+    <div class="notif-wrap" id="notifBell" onclick="toggleNotifPanel()">
+      <button class="notif-btn" title="Upcoming payments">🔔</button>
+      <div class="notif-dot" id="notifDot" style="display:none"></div>
+      <div class="notif-panel" id="notifPanel" style="display:none"></div>
+    </div>
+    <div id="proBadge"></div>
+    <button class="topbar-btn share-btn" onclick="openShareModal()">🔗 Share</button>
+    <button class="topbar-btn signout-btn" onclick="doLogout()">Sign Out</button>
   </div>
-  <div class="top-bar-right">
-    <button class="share-btn" onclick="openShareModal()">🔗 Share with Planner</button>
-    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+</nav>
+
+<!-- ── COUPLE HERO ────────────────────────────────────────────────────────── -->
+<div id="coupleHero"></div>
+
+<!-- ── COUNTDOWN ─────────────────────────────────────────────────────────── -->
+<section class="countdown-section">
+  <div class="countdown-label">Days Until Your Wedding</div>
+  <div class="countdown-timer">
+    <div class="countdown-unit"><div class="countdown-num" id="cd-days">—</div><div class="countdown-unit-label">Days</div></div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-hours">—</div><div class="countdown-unit-label">Hours</div></div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-mins">—</div><div class="countdown-unit-label">Mins</div></div>
+    <div class="countdown-sep">:</div>
+    <div class="countdown-unit"><div class="countdown-num" id="cd-secs">—</div><div class="countdown-unit-label">Secs</div></div>
+  </div>
+</section>
+
+<!-- ── UPCOMING PAYMENTS ALERT ───────────────────────────────────────────── -->
+<div class="upcoming-section" id="upcomingSection" style="display:none">
+  <div class="section-inner">
+    <div class="upcoming-header">⚠️ Upcoming Payments Due</div>
+    <div class="upcoming-list" id="upcomingList"></div>
   </div>
 </div>
-<main>
-  <div class="section-block" id="upcomingSection" style="display:none">
-    <div class="upcoming-panel">
-      <div class="upcoming-panel-title">⏰ Upcoming Payments Due</div>
-      <div class="upcoming-list" id="upcomingList"></div>
-    </div>
-  </div>
-  <div class="section-block">
-    <div class="budget-overview">
-      <div class="budget-overview-title">💰 Budget Overview</div>
-      <div class="budget-grid">
-        <div class="budget-stat"><div class="budget-stat-label">Total Wedding Cost</div><div class="budget-stat-value" id="stat-total">LKR 0</div></div>
-        <div class="budget-stat"><div class="budget-stat-label">Total Paid</div><div class="budget-stat-value success" id="stat-paid">LKR 0</div></div>
-        <div class="budget-stat"><div class="budget-stat-label">Total Remaining</div><div class="budget-stat-value rose" id="stat-remaining">LKR 0</div></div>
-        <div class="budget-stat"><div class="budget-stat-label">Vendors Booked</div><div class="budget-stat-value" id="stat-count">0</div></div>
+
+<!-- ── STATS ─────────────────────────────────────────────────────────────── -->
+<section class="stats-section">
+  <div class="section-inner">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Budget</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-gbp" id="stat-total-gbp" style="display:none"></div>
       </div>
-      <div class="budget-limit-row">
-        <div class="limit-label">Maximum Spend Limit:</div>
-        <div class="limit-input-wrap"><span class="limit-prefix">LKR</span><input type="number" class="limit-input" id="spendLimit" placeholder="e.g. 5000000"></div>
-        <button class="save-limit-btn" onclick="saveLimit()">Save Limit</button>
+      <div class="stat-card">
+        <div class="stat-label">Total Paid</div>
+        <div class="stat-value paid-color" id="stat-paid">—</div>
+        <div class="stat-gbp" id="stat-paid-gbp" style="display:none"></div>
       </div>
-      <div class="progress-wrap">
-        <div class="progress-label"><span>Budget Used</span><span id="progress-pct">0%</span></div>
-        <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="stat-card">
+        <div class="stat-label">Remaining</div>
+        <div class="stat-value remain-color" id="stat-remaining">—</div>
+        <div class="stat-gbp" id="stat-remaining-gbp" style="display:none"></div>
       </div>
-    </div>
-  </div>
-  <div class="section-block">
-    <div class="section-title">Vendors</div>
-    <div class="section-subtitle">Track each vendor, payments, due dates &amp; balances</div>
-    <div id="vendorsGrid" class="vendors-grid"><div class="loading-msg">Loading vendors…</div></div>
-  </div>
-  <div class="section-block">
-    <div class="section-title">Add New Vendor</div>
-    <div class="section-subtitle">Add a custom vendor to your list</div>
-    <div class="add-vendor-form">
-      <div class="add-vendor-icon-label">Choose Icon</div>
-      <div class="add-vendor-icon-selector" id="iconSelector"></div>
-      <div class="add-form-grid">
-        <div class="input-group"><label class="input-label">Vendor Name *</label><input type="text" class="input-field" id="newVendorName" placeholder="e.g. Silva Photography"></div>
-        <div class="input-group"><label class="input-label">Category</label><input type="text" class="input-field" id="newVendorCategory" placeholder="e.g. Photographer"></div>
-        <div class="input-group"><label class="input-label">Total Cost (LKR)</label><div class="currency-input-wrap"><span class="currency-prefix">LKR</span><input type="number" class="input-field" id="newVendorTotal" placeholder="0"></div></div>
-        <div class="input-group"><label class="input-label">Notes (optional)</label><input type="text" class="input-field" id="newVendorNotes" placeholder="Contact, booking ref…"></div>
-      </div>
-      <button class="add-btn" onclick="addVendor()">+ Add Vendor</button>
-    </div>
-  </div>
-  <hr class="section-hr">
-  <div class="section-block">
-    <div class="summary-section">
-      <div class="summary-title">Financial Summary</div>
-      <div class="summary-sub">Complete overview of your wedding budget</div>
-      <div class="summary-grid">
-        <div class="summary-card"><div class="summary-card-icon">💍</div><div class="summary-card-label">Total Wedding Cost</div><div class="summary-card-value gold" id="sum-total">LKR 0</div></div>
-        <div class="summary-card"><div class="summary-card-icon">✅</div><div class="summary-card-label">Total Paid</div><div class="summary-card-value green" id="sum-paid">LKR 0</div></div>
-        <div class="summary-card"><div class="summary-card-icon">⏳</div><div class="summary-card-label">Still to Pay</div><div class="summary-card-value rose" id="sum-remaining">LKR 0</div></div>
-        <div class="summary-card"><div class="summary-card-icon">🎯</div><div class="summary-card-label">Spend Limit</div><div class="summary-card-value gold" id="sum-limit">Not set</div></div>
-      </div>
-      <div class="available-line">
-        <div><div class="available-line-label">Available After All Vendor Costs</div><div class="available-line-note">Budget Limit minus Total Wedding Cost</div></div>
-        <div class="available-line-value" id="sum-available">—</div>
+      <div class="stat-card">
+        <div class="stat-label">Active Vendors</div>
+        <div class="stat-value" id="stat-count">0</div>
       </div>
     </div>
+    <div class="progress-wrap">
+      <div class="progress-top">
+        <span class="progress-label">Budget Used</span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="vendor-limit-bar" id="vendorLimitBar" style="display:none"></div>
   </div>
-  <hr class="section-hr">
-  <div class="section-block">
-    <div class="section-title">Wedding Checklist</div>
-    <div class="section-subtitle">Track your to-do's &amp; preparations</div>
+</section>
+
+<!-- ── VENDORS ───────────────────────────────────────────────────────────── -->
+<section class="vendors-section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">💒 Vendors</h2>
+      <button class="btn-add-vendor" onclick="document.getElementById('addVendorForm').classList.toggle('open')">+ Add Vendor</button>
+    </div>
+    <div class="add-vendor-form" id="addVendorForm">
+      <div class="icon-selector" id="iconSelector"></div>
+      <div class="add-vendor-fields">
+        <input id="newVendorCategory" placeholder="Category (e.g. Florist)" class="field-input">
+        <input id="newVendorName" placeholder="Vendor name *" class="field-input">
+        <input id="newVendorTotal" type="number" placeholder="Total cost" class="field-input">
+        <input id="newVendorNotes" placeholder="Notes (optional)" class="field-input">
+      </div>
+      <button class="btn-primary" onclick="addVendor()">Add Vendor →</button>
+    </div>
+    <div class="vendors-grid" id="vendorsGrid"></div>
+  </div>
+</section>
+
+<!-- ── SUMMARY + SETTINGS ────────────────────────────────────────────────── -->
+<section class="bottom-section">
+  <div class="section-inner bottom-grid">
+    <div class="summary-card">
+      <h3 class="card-title">📊 Financial Summary</h3>
+      <div class="summary-rows">
+        <div class="summary-row"><span>Total Budget</span><strong id="sum-total">—</strong></div>
+        <div class="summary-row"><span>Total Paid</span><strong id="sum-paid" class="paid-color">—</strong></div>
+        <div class="summary-row"><span>Remaining</span><strong id="sum-remaining" class="remain-color">—</strong></div>
+        <div class="summary-row"><span>Spend Limit</span><strong id="sum-limit">Not set</strong></div>
+        <div class="summary-row highlight"><span>Available</span><strong id="sum-available">—</strong></div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <h3 class="card-title">⚙️ Settings</h3>
+      <label class="field-label">Spend Limit</label>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input id="spendLimit" type="number" placeholder="Enter limit" class="field-input" style="flex:1;margin:0">
+        <button class="btn-primary" style="padding:10px 18px" onclick="saveLimit()">Save</button>
+      </div>
+      <label class="field-label">Wedding Notes</label>
+      <textarea id="weddingNotes" rows="4" class="field-input" placeholder="Notes about your wedding..." style="resize:vertical"></textarea>
+      <button class="btn-primary" style="margin-top:8px" onclick="saveNotes()">Save Notes</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHECKLIST ─────────────────────────────────────────────────────────── -->
+<section class="checklist-section">
+  <div class="section-inner">
+    <h2 class="section-title" style="margin-bottom:16px">✅ Wedding Checklist</h2>
     <div class="checklist-grid" id="checklistGrid"></div>
     <div class="add-task-row">
-      <input type="text" class="add-task-input" id="newTaskInput" placeholder="Add a new task…" onkeydown="if(event.key==='Enter')addTask()">
-      <button class="add-task-btn" onclick="addTask()">+ Add</button>
+      <input id="newTaskInput" class="field-input" placeholder="Add a new task..." onkeydown="if(event.key==='Enter')addTask()">
+      <button class="btn-primary" onclick="addTask()">Add</button>
     </div>
   </div>
-  <div class="section-block">
-    <div class="section-title">Wedding Notes</div>
-    <div class="section-subtitle">Jot down ideas, reminders and important info</div>
-    <textarea class="notes-area" id="weddingNotes" placeholder="Write your notes here…"></textarea>
-    <button class="add-task-btn" style="margin-top:10px" onclick="saveNotes()">Save Notes</button>
-  </div>
-</main>
-<div class="toast" id="toast"></div>
+</section>
 
-<!-- PAYMENT MODAL -->
+<!-- ═══════════ MODALS ═══════════════════════════════════════════════════════ -->
+
+<!-- Payment Modal -->
 <div class="modal-overlay" id="paymentModal" style="display:none">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title">💳 Add Payment</div><div class="modal-vendor-name" id="modalVendorName"></div></div>
-    <div class="modal-body">
-      <div class="input-group"><label class="input-label">Amount (LKR) *</label><div class="currency-input-wrap"><span class="currency-prefix">LKR</span><input type="number" class="input-field" id="pmtAmount" placeholder="0"></div></div>
-      <div class="input-group"><label class="input-label">Payment Date *</label><input type="date" class="input-field" id="pmtDate"></div>
-      <div class="input-group"><label class="input-label">Payment Method</label><select class="input-field" id="pmtMethod"><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>Cheque</option><option>Other</option></select></div>
-      <div class="input-group"><label class="input-label">Note / Reference</label><input type="text" class="input-field" id="pmtNote" placeholder="e.g. Booking deposit, Receipt #1234"></div>
+    <div class="modal-header">
+      <h3 class="modal-title">💳 Add Payment</h3>
+      <button class="modal-close" onclick="closePaymentModal()">✕</button>
     </div>
-    <div class="modal-footer"><button class="modal-cancel-btn" onclick="closePaymentModal()">Cancel</button><button class="add-btn" onclick="submitPayment()">Add Payment</button></div>
+    <div class="modal-vendor-name" id="modalVendorName"></div>
+    <div class="modal-body">
+      <label class="field-label">Amount <span id="pmtCurrencyLabel" style="color:var(--gold);font-size:13px"></span></label>
+      <input id="pmtAmount" type="number" class="field-input" placeholder="0.00">
+      <label class="field-label">Payment Date</label>
+      <input id="pmtDate" type="date" class="field-input">
+      <label class="field-label">Method</label>
+      <select id="pmtMethod" class="field-input">
+        <option>Cash</option><option>Bank Transfer</option><option>Card</option>
+        <option>Cheque</option><option>Online</option><option>Other</option>
+      </select>
+      <label class="field-label">Note (optional)</label>
+      <input id="pmtNote" class="field-input" placeholder="e.g. Deposit payment">
+      <button class="btn-primary full-width" style="margin-top:16px" onclick="submitPayment()">Record Payment →</button>
+    </div>
   </div>
 </div>
 
-<!-- EDIT MODAL -->
+<!-- Edit Vendor Modal -->
 <div class="modal-overlay" id="editModal" style="display:none">
   <div class="modal">
-    <div class="modal-header"><div class="modal-title">✏️ Edit Vendor</div></div>
-    <div class="modal-body">
-      <input type="hidden" id="editVendorId">
-      <div class="input-group"><label class="input-label">Vendor Name</label><input type="text" class="input-field" id="editVendorName"></div>
-      <div class="input-group"><label class="input-label">Category</label><input type="text" class="input-field" id="editVendorCategory"></div>
-      <div class="input-group"><label class="input-label">Total Cost (LKR)</label><div class="currency-input-wrap"><span class="currency-prefix">LKR</span><input type="number" class="input-field" id="editVendorTotal"></div></div>
-      <div class="input-group"><label class="input-label">Notes</label><textarea class="input-field" id="editVendorNotes" style="min-height:60px;resize:vertical"></textarea></div>
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
-      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold-dark);margin:10px 0 12px;font-weight:500;">📅 Due Date (Optional)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="input-group"><label class="input-label">Due Date</label><input type="date" class="input-field" id="editDueDate"></div>
-        <div class="input-group"><label class="input-label">Due Amount (LKR)</label><div class="currency-input-wrap"><span class="currency-prefix">LKR</span><input type="number" class="input-field" id="editDueAmount" placeholder="Blank = full balance"></div></div>
-      </div>
-      <div class="input-group"><label class="input-label">Due Date Note</label><input type="text" class="input-field" id="editDueNote" placeholder="e.g. Final payment before event"></div>
+    <div class="modal-header">
+      <h3 class="modal-title">✏️ Edit Vendor</h3>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
     </div>
-    <div class="modal-footer"><button class="modal-cancel-btn" onclick="closeEditModal()">Cancel</button><button class="add-btn" onclick="submitEdit()">Save Changes</button></div>
+    <div class="modal-body">
+      <label class="field-label">Vendor Name</label>
+      <input id="editVendorName" class="field-input" placeholder="e.g. Silva Studios">
+      <label class="field-label">Category</label>
+      <input id="editVendorCategory" class="field-input" placeholder="e.g. Photographer">
+      <label class="field-label">Total Cost</label>
+      <input id="editVendorTotal" type="number" class="field-input" placeholder="0">
+      <label class="field-label">Notes</label>
+      <textarea id="editVendorNotes" class="field-input" rows="2" placeholder="Any notes..."></textarea>
+
+      <!-- Due Date Section -->
+      <div class="due-date-section">
+        <div class="due-date-title">📅 Due Payment (Optional)</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Set when this vendor's next payment is due. This will show as a badge on the card and appear in your notification bell.</p>
+        <div class="due-date-grid">
+          <div>
+            <label class="field-label">Due Date</label>
+            <input id="editDueDate" type="date" class="field-input">
+          </div>
+          <div>
+            <label class="field-label">Due Amount (blank = remaining balance)</label>
+            <input id="editDueAmount" type="number" class="field-input" placeholder="Optional">
+          </div>
+        </div>
+        <label class="field-label">Due Note</label>
+        <input id="editDueNote" class="field-input" placeholder="e.g. Final balance before event day">
+      </div>
+
+      <button class="btn-primary full-width" onclick="submitEdit()">Save Changes →</button>
+    </div>
   </div>
 </div>
 
-<!-- SHARE MODAL -->
+<!-- Share Modal -->
 <div class="modal-overlay" id="shareModal" style="display:none">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header"><div class="modal-title">🔗 Share with Wedding Planner</div><div class="modal-vendor-name">Give your planner a read-only view of your budget</div></div>
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🔗 Share with Planner</h3>
+      <button class="modal-close" onclick="closeShareModal()">✕</button>
+    </div>
     <div class="modal-body">
       <div class="share-toggle-row">
-        <div class="share-toggle-label">Enable sharing</div>
-        <label class="toggle-switch"><input type="checkbox" id="shareToggle" onchange="toggleShare()"><span class="toggle-slider"></span></label>
+        <div>
+          <div style="font-weight:500;color:var(--charcoal)">Enable share link</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Your planner gets a read-only view</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="shareToggle" onchange="toggleShare()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="share-permissions">
+        <div class="share-permissions-title">What can your planner see?</div>
+        <label class="perm-row"><input type="checkbox" id="shareVendors"> <span>Vendor list & payment history</span></label>
+        <label class="perm-row"><input type="checkbox" id="shareDueDates"> <span>Due dates & amounts</span></label>
+        <label class="perm-row"><input type="checkbox" id="shareBudget"> <span>Budget overview & spend limit</span></label>
+        <label class="perm-row"><input type="checkbox" id="shareChecklist"> <span>Wedding checklist</span></label>
+        <label class="perm-row"><input type="checkbox" id="shareNotes"> <span>Wedding notes</span></label>
+        <button class="btn-secondary full-width" style="margin-top:10px" onclick="saveSharePermissions()">Save Permissions</button>
       </div>
       <div id="shareUrlSection" style="display:none">
-        <div class="share-url-box"><div class="share-url-text" id="shareUrlText">—</div><button class="share-copy-btn" onclick="copyShareUrl()">Copy Link</button></div>
-        <div class="share-warning">👁️ Anyone with this link can <strong>view</strong> your full budget but cannot edit or delete anything. Toggle off above to revoke access instantly.</div>
+        <div class="share-url-box">
+          <div class="share-url-text" id="shareUrlText"></div>
+          <button class="share-copy-btn" onclick="copyShareUrl()">📋 Copy</button>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Anyone with this link can view your budget (read-only)</p>
       </div>
     </div>
-    <div class="modal-footer"><button class="add-btn" onclick="closeShareModal()">Done</button></div>
   </div>
 </div>
 
+<!-- Upgrade Modal -->
+<div class="modal-overlay" id="upgradeModal" style="display:none">
+  <div class="modal upgrade-modal">
+    <div class="modal-header">
+      <h3 class="modal-title">✨ Upgrade to Pro</h3>
+      <button class="modal-close" onclick="closeUpgradeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="upgrade-hero">
+        <div class="upgrade-icon">💍</div>
+        <div class="upgrade-title">Unlock your full wedding budget</div>
+        <div class="upgrade-sub">One-time payment · No subscriptions · Yours forever</div>
+      </div>
+      <div class="upgrade-features">
+        <div class="upgrade-feature">✓ Unlimited vendors</div>
+        <div class="upgrade-feature">✓ Due date alerts</div>
+        <div class="upgrade-feature">✓ Share with planner</div>
+        <div class="upgrade-feature">✓ All currencies</div>
+        <div class="upgrade-feature">✓ All devices</div>
+        <div class="upgrade-feature">✓ All future updates</div>
+      </div>
+      <div class="upgrade-price">
+        <span class="upgrade-amount">$12</span>
+        <span class="upgrade-period">one-time · per couple</span>
+      </div>
+      <div id="paypalButtonContainer" style="margin-top:14px"></div>
+      <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">Secure payment via PayPal · Instant activation</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 <script src="db.js"></script>
 <script src="app.js"></script>
 </body>
