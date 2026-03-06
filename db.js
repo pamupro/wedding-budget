@@ -1,16 +1,9 @@
 /**
  * db.js — WeddingLedger Database (Supabase)
- * ─────────────────────────────────────────
- * STEP 1: Go to supabase.com → your project → Settings → API
- * STEP 2: Copy "Project URL"  → paste below as SUPABASE_URL
- * STEP 3: Copy "anon public"  → paste below as SUPABASE_ANON_KEY
- * ─────────────────────────────────────────
  */
 
-const SUPABASE_URL     = 'https://bqggtyguhedlyfffjkkw.supabase.co';       // e.g. https://abcdefgh.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4'; // starts with eyJ...
-
-// ─── DO NOT EDIT BELOW ────────────────────────────────────────────────────────
+const SUPABASE_URL      = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 
 const DB = {
   SUPABASE_URL,
@@ -63,14 +56,5 @@ const DB = {
     if (!Array.isArray(rows) || !rows.length) {
       await this.post('settings', { user_id: userId, key, value: String(value) }, token);
     }
-  },
-
-  async queryShare(table, shareToken) {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/${table}?share_token=eq.${shareToken}&select=*`,
-      { headers: this._h(SUPABASE_ANON_KEY) }
-    );
-    if (!r.ok) return [];
-    return r.json();
   }
 };
