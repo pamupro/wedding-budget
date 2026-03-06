@@ -528,29 +528,84 @@ async function saveSharePermissions(){
 function copyShareUrl(){navigator.clipboard.writeText(getShareUrl()).then(()=>showToast('Link copied! 📋'));}
 
 // ─── UPGRADE MODAL ───────────────────────────────────────────────────────────
-function openUpgradeModal(){document.getElementById('upgradeModal').style.display='flex';}
+// openUpgradeModal defined in PayPal section below
 function closeUpgradeModal(){document.getElementById('upgradeModal').style.display='none';}
 
 window.initPayPal=function(){
-  if(typeof paypal==='undefined') return;
+  if(typeof paypal==='undefined'){
+    // SDK failed to load — show the fallback button
+    showPayPalFallback();
+    return;
+  }
+  // Hide fallback, show SDK button
+  const fb=document.getElementById('paypalFallback');
+  if(fb) fb.style.display='none';
+  const container=document.getElementById('paypalButtonContainer');
+  if(!container) return;
+
   paypal.Buttons({
     style:{layout:'vertical',color:'gold',shape:'pill',label:'pay'},
     createOrder:function(data,actions){
-      return actions.order.create({purchase_units:[{amount:{value:'12.00',currency_code:'USD'},description:'WeddingLedger Pro'}]});
+      return actions.order.create({
+        purchase_units:[{
+          amount:{value:'12.00',currency_code:'USD'},
+          description:'WeddingLedger Pro — Unlimited Vendors'
+        }]
+      });
     },
     onApprove:async function(data,actions){
+      const btn=container.querySelector('button,iframe');
+      if(btn) btn.disabled=true;
+      showToast('Processing your payment…');
       const order=await actions.order.capture();
       await activatePro(order.id);
     },
-    onError:function(err){showToast('Payment failed, please try again.',true);console.error(err);}
+    onCancel:function(){
+      showToast('Payment cancelled — you can try again anytime.');
+    },
+    onError:function(err){
+      showToast('Payment failed, please try again.',true);
+      console.error(err);
+    }
   }).render('#paypalButtonContainer');
 };
 
+function showPayPalFallback(){
+  // Show manual PayPal button as fallback
+  const fb=document.getElementById('paypalFallback');
+  const container=document.getElementById('paypalButtonContainer');
+  if(fb) fb.style.display='block';
+  if(container) container.style.display='none';
+  // Set the direct PayPal link (replace with your PayPal.me or hosted button URL)
+  const link=document.getElementById('paypalDirectLink');
+  if(link) link.href='https://www.paypal.com/paypalme/YOUR_PAYPAL_USERNAME/12';
+}
+
+// Called when upgrade modal opens — ensure PayPal is initialised
+function openUpgradeModal(){
+  document.getElementById('upgradeModal').style.display='flex';
+  // Re-try init in case SDK loaded after page load
+  if(typeof paypal!=='undefined'){
+    const container=document.getElementById('paypalButtonContainer');
+    if(container&&!container.hasChildNodes()) initPayPal();
+  } else {
+    showPayPalFallback();
+  }
+}
+
 async function activatePro(orderId){
-  await DB.patch('profiles',profile.id,{is_pro:true,paypal_order_id:orderId},accessToken);
-  isPro=true;profile.is_pro=true;
-  closeUpgradeModal();updateProBadge();updateVendorLimitUI();
-  showToast('🎉 You are now Pro! All features unlocked.');
+  try{
+    await DB.patch('profiles',profile.id,{is_pro:true,paypal_order_id:orderId},accessToken);
+    isPro=true; profile.is_pro=true; profile.paypal_order_id=orderId;
+    closeUpgradeModal();
+    updateProBadge();
+    updateVendorLimitUI();
+    renderVendors();
+    showToast('🎉 Welcome to Pro! All features are now unlocked.');
+  }catch(e){
+    showToast('Payment received but activation failed — contact support.',true);
+    console.error(e);
+  }
 }
 
 // ─── STATS ───────────────────────────────────────────────────────────────────
