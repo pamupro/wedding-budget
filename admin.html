@@ -3,236 +3,296 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WeddingLedger — Admin Panel</title>
+<title>WeddingLedger — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#0f0d0a;--cream:#fdf9f3;--warm:#f5ede0;--gold:#c9a84c;--gold-pale:#fdf0d8;--rose:#b85c6e;--rose-pale:#fde8ed;--sage:#5a7a5a;--sage-pale:#e8f0e8;--muted:#8a7968;--border:#e8ddd0;--charcoal:#2d2416;--danger:#e05555;--card-bg:#ffffff;}
+:root{
+  --cream:#fdf9f3;--warm:#f5ede0;--gold:#c9a84c;--gold-pale:#fdf0d8;
+  --rose:#b85c6e;--sage:#5a7a5a;--sage-pale:#e8f0e8;
+  --muted:#8a7968;--border:#e8ddd0;--charcoal:#2d2416;--danger:#e05555;
+  --bg:#111009;--surface:#1e1a10;--surface2:#2a2416;--text:rgba(255,255,255,0.88);--textm:rgba(255,255,255,0.45);
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Jost',sans-serif;background:#1a1209;color:var(--cream);min-height:100vh;}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-/* Login gate */
+/* ── LOGIN ── */
 #loginGate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
-.login-box{background:var(--card-bg);border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center;}
-.login-logo{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--charcoal);font-style:italic;margin-bottom:6px;}
+.login-box{background:var(--surface);border:1px solid rgba(201,168,76,0.2);border-radius:20px;padding:44px;width:100%;max-width:380px;text-align:center;}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:30px;color:white;font-style:italic;margin-bottom:4px;}
 .login-logo span{color:var(--gold);}
-.login-sub{font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:28px;}
-.login-input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:14px;color:var(--charcoal);outline:none;margin-bottom:12px;}
+.login-sub{font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:32px;opacity:0.7;}
+.login-input{width:100%;padding:13px 16px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-family:'Jost',sans-serif;font-size:14px;color:white;background:rgba(255,255,255,0.06);outline:none;margin-bottom:12px;}
 .login-input:focus{border-color:var(--gold);}
-.login-btn{width:100%;background:var(--charcoal);color:white;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Jost',sans-serif;}
-.login-btn:hover{background:var(--gold);}
-.login-error{color:var(--danger);font-size:13px;margin-top:8px;}
+.login-btn{width:100%;background:var(--gold);color:var(--charcoal);border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;}
+.login-btn:hover{opacity:0.9;}
+.login-error{color:var(--danger);font-size:12px;margin-top:8px;display:none;}
 
-/* Admin layout */
+/* ── LAYOUT ── */
 #adminApp{display:none;}
-.admin-topbar{background:#2d2416;border-bottom:1px solid rgba(201,168,76,0.2);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.admin-logo{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold);font-style:italic;}
-.admin-logo span{color:white;}
-.admin-nav{display:flex;gap:4px;}
-.admin-nav-btn{background:none;border:none;color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s;}
-.admin-nav-btn.active,.admin-nav-btn:hover{background:rgba(201,168,76,0.15);color:var(--gold);}
-.admin-signout{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:6px 14px;border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;cursor:pointer;}
-.admin-signout:hover{border-color:var(--gold);color:var(--gold);}
+.topbar{background:var(--surface);border-bottom:1px solid rgba(201,168,76,0.15);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--gold);font-style:italic;}
+.topbar-logo span{color:white;}
+.topbar-tag{font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);opacity:0.6;margin-left:10px;font-style:normal;}
+.topbar-nav{display:flex;gap:4px;}
+.nav-btn{background:none;border:none;color:var(--textm);padding:8px 16px;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.nav-btn:hover,.nav-btn.active{background:rgba(201,168,76,0.12);color:var(--gold);}
+.signout-btn{background:rgba(255,255,255,0.05);color:var(--textm);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;font-family:'Jost',sans-serif;}
+.signout-btn:hover{border-color:var(--danger);color:var(--danger);}
 
-.admin-content{max-width:1200px;margin:0 auto;padding:32px 24px;}
+/* ── PAGE ── */
+.page{display:none;padding:36px 28px;max-width:1200px;margin:0 auto;}
+.page.active{display:block;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;font-style:italic;color:white;margin-bottom:4px;}
+.page-sub{font-size:13px;color:var(--textm);margin-bottom:28px;}
 
-/* Page sections */
-.admin-page{display:none;}
-.admin-page.active{display:block;}
-.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:white;margin-bottom:6px;}
-.page-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:28px;}
+/* ── METRIC CARDS ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
+.metric-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px 22px;}
+.metric-label{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--textm);margin-bottom:10px;}
+.metric-value{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:white;line-height:1;}
+.metric-sub{font-size:12px;color:var(--gold);margin-top:5px;}
+.metric-card.highlight{border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.05);}
+.metric-card.danger-card{border-color:rgba(224,85,85,0.3);}
 
-/* Metric cards */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px;}
-.metric-card{background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:20px;}
-.metric-label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:8px;}
-.metric-value{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;color:var(--gold);line-height:1;}
-.metric-sub{font-size:12px;color:rgba(255,255,255,0.35);margin-top:6px;}
+/* ── TABLE ── */
+.table-wrap{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.table-title{font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--textm);}
+.table-search{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;width:240px;}
+.table-search::placeholder{color:var(--textm);}
+.table-search:focus{border-color:var(--gold);}
+table{width:100%;border-collapse:collapse;}
+th{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--textm);padding:12px 18px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);}
+td{padding:13px 18px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.loading{text-align:center;padding:32px;color:var(--textm);font-style:italic;}
 
-/* Table */
-.admin-table-wrap{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.1);border-radius:14px;overflow:hidden;margin-bottom:24px;}
-.admin-table-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(201,168,76,0.1);}
-.admin-table-title{font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.6);}
-.search-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;width:220px;}
-.search-input::placeholder{color:rgba(255,255,255,0.3);}
-.search-input:focus{border-color:var(--gold);}
-.admin-table{width:100%;border-collapse:collapse;}
-.admin-table th{padding:10px 16px;text-align:left;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);border-bottom:1px solid rgba(255,255,255,0.06);font-weight:500;}
-.admin-table td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:rgba(255,255,255,0.8);vertical-align:middle;}
-.admin-table tr:last-child td{border-bottom:none;}
-.admin-table tr:hover td{background:rgba(255,255,255,0.03);}
-.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;}
-.badge-pro{background:rgba(201,168,76,0.2);color:var(--gold);}
-.badge-free{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);}
-.badge-overdue{background:rgba(224,85,85,0.2);color:#f08080;}
-.badge-soon{background:rgba(255,180,0,0.15);color:#e8b060;}
-.action-btn{background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:4px 12px;border-radius:6px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer;transition:all 0.2s;margin-right:4px;}
-.action-btn:hover{border-color:var(--gold);color:var(--gold);}
-.action-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
-.action-btn.success{border-color:rgba(90,122,90,0.4);color:var(--sage);}
-.action-btn.success:hover{background:rgba(90,122,90,0.15);}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.badge-pro{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
+.badge-free{background:rgba(255,255,255,0.06);color:var(--textm);border:1px solid rgba(255,255,255,0.08);}
+.badge-overdue{background:rgba(224,85,85,0.15);color:#ff7070;}
+.badge-soon{background:rgba(255,160,0,0.15);color:#ffb030;}
+.badge-ok{background:rgba(90,122,90,0.15);color:#7dc87d;}
 
-/* Loading */
-.loading{text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-style:italic;}
+/* ── BUTTONS ── */
+.action-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--textm);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Jost',sans-serif;margin-right:4px;transition:all 0.2s;white-space:nowrap;}
+.action-btn:hover{background:rgba(255,255,255,0.12);color:white;}
+.action-btn.success{border-color:rgba(201,168,76,0.3);color:var(--gold);}
+.action-btn.success:hover{background:rgba(201,168,76,0.12);}
+.action-btn.danger{border-color:rgba(224,85,85,0.3);color:#ff7070;}
+.action-btn.danger:hover{background:rgba(224,85,85,0.1);}
 
-/* Settings page */
-.settings-section{background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.1);border-radius:14px;padding:24px;margin-bottom:20px;}
-.settings-title{font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:18px;}
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
-.settings-row:last-child{border-bottom:none;}
-.settings-label{font-size:14px;color:rgba(255,255,255,0.8);}
-.settings-desc{font-size:12px;color:rgba(255,255,255,0.3);margin-top:2px;}
-.admin-input{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;min-width:180px;}
-.admin-input:focus{border-color:var(--gold);}
-.admin-btn{background:var(--gold);color:var(--charcoal);border:none;border-radius:8px;padding:9px 18px;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
-.admin-btn:hover{opacity:0.85;}
-.admin-btn.secondary{background:rgba(255,255,255,0.08);color:white;}
-.admin-btn.danger{background:var(--danger);color:white;}
+/* ── VENDOR LIMIT INLINE ── */
+.limit-row{display:inline-flex;align-items:center;gap:6px;}
+.limit-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:white;font-family:'Jost',sans-serif;font-size:12px;padding:4px 8px;width:52px;outline:none;text-align:center;}
+.limit-input:focus{border-color:var(--gold);}
+.limit-save-btn{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Jost',sans-serif;}
+.limit-save-btn:hover{background:rgba(201,168,76,0.25);}
 
-/* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gold);color:var(--charcoal);padding:10px 24px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;}
+/* ── SETTINGS FORM ── */
+.settings-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;max-width:480px;margin-bottom:16px;}
+.settings-title{font-size:13px;font-weight:600;color:white;margin-bottom:16px;letter-spacing:0.05em;}
+.s-label{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--textm);margin-bottom:5px;margin-top:14px;display:block;}
+.s-input{width:100%;padding:10px 13px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:white;background:rgba(255,255,255,0.05);font-family:'Jost',sans-serif;font-size:14px;outline:none;}
+.s-input:focus{border-color:var(--gold);}
+.s-btn{margin-top:12px;background:var(--charcoal);color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;font-family:'Jost',sans-serif;}
+.s-btn:hover{background:var(--gold);color:var(--charcoal);}
+.info-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+.info-row:last-child{border:none;}
+.info-row span{color:var(--textm);}
+
+/* ── USER DETAIL MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
+.modal{background:var(--surface2);border:1px solid rgba(201,168,76,0.2);border-radius:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.modal-head h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:white;font-style:italic;}
+.modal-close{background:none;border:none;color:var(--textm);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;}
+.modal-close:hover{background:rgba(255,255,255,0.08);}
+.modal-body{padding:18px 22px 24px;}
+.modal-section{margin-bottom:16px;}
+.modal-sec-title{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;opacity:0.7;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.detail-item{background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;}
+.detail-item-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--textm);margin-bottom:4px;}
+.detail-item-value{font-size:14px;color:white;font-weight:500;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--charcoal);color:white;padding:11px 22px;border-radius:99px;font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast.error{background:var(--danger);color:white;}
+.toast.error{background:var(--danger);}
+
+@media(max-width:700px){
+  .topbar-nav{display:none;}
+  th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){display:none;}
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
 
-<!-- ── LOGIN GATE ─────────────────────────────────────────────────────────── -->
+<!-- ── LOGIN GATE ── -->
 <div id="loginGate">
   <div class="login-box">
     <div class="login-logo">Wedding<span>Ledger</span></div>
     <div class="login-sub">Admin Panel</div>
-    <input type="password" id="adminPassword" class="login-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')adminLogin()">
-    <button class="login-btn" onclick="adminLogin()">Access Admin Panel →</button>
-    <div class="login-error" id="loginError" style="display:none">Incorrect password</div>
+    <input type="password" id="adminPassword" class="login-input" placeholder="Admin password"
+      onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="login-btn" onclick="adminLogin()">Sign In →</button>
+    <div class="login-error" id="loginError">Incorrect password</div>
   </div>
 </div>
 
-<!-- ── ADMIN APP ──────────────────────────────────────────────────────────── -->
+<!-- ── ADMIN APP ── -->
 <div id="adminApp">
-  <div class="admin-topbar">
-    <div class="admin-logo">Wedding<span>Ledger</span> <span style="font-size:11px;color:rgba(255,255,255,0.3);font-family:Jost,sans-serif;font-style:normal;margin-left:8px;">ADMIN</span></div>
-    <div class="admin-nav">
-      <button class="admin-nav-btn active" onclick="showPage('overview')">📊 Overview</button>
-      <button class="admin-nav-btn" onclick="showPage('users')">👥 Users</button>
-      <button class="admin-nav-btn" onclick="showPage('payments')">💳 Payments</button>
-      <button class="admin-nav-btn" onclick="showPage('settings')">⚙️ Settings</button>
+  <nav class="topbar">
+    <div style="display:flex;align-items:center">
+      <div class="topbar-logo">Wedding<span>Ledger</span></div>
+      <div class="topbar-tag">ADMIN</div>
     </div>
-    <button class="admin-signout" onclick="adminLogout()">Sign Out</button>
+    <div class="topbar-nav">
+      <button class="nav-btn active" onclick="showPage('overview',this)">📊 Overview</button>
+      <button class="nav-btn" onclick="showPage('users',this)">👥 Users</button>
+      <button class="nav-btn" onclick="showPage('payments',this)">💳 Pro Upgrades</button>
+      <button class="nav-btn" onclick="showPage('settings',this)">⚙️ Settings</button>
+    </div>
+    <button class="signout-btn" onclick="adminLogout()">Sign Out</button>
+  </nav>
+
+  <!-- ── OVERVIEW ── -->
+  <div class="page active" id="page-overview">
+    <div class="page-title">Overview</div>
+    <div class="page-sub">Platform health at a glance</div>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-label">Total Users</div><div class="metric-value" id="m-total">—</div></div>
+      <div class="metric-card highlight"><div class="metric-label">Pro Users</div><div class="metric-value" id="m-pro">—</div><div class="metric-sub" id="m-revenue">— revenue</div></div>
+      <div class="metric-card"><div class="metric-label">Free Users</div><div class="metric-value" id="m-free">—</div></div>
+      <div class="metric-card danger-card"><div class="metric-label">Overdue Payments</div><div class="metric-value" id="m-overdue">—</div></div>
+      <div class="metric-card"><div class="metric-label">Due This Week</div><div class="metric-value" id="m-dueweek">—</div></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header"><div class="table-title">Recent Signups</div></div>
+      <table>
+        <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Wedding Date</th><th>Joined</th></tr></thead>
+        <tbody id="recentSignups"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="admin-content">
-
-    <!-- OVERVIEW PAGE -->
-    <div class="admin-page active" id="page-overview">
-      <div class="page-title">Overview</div>
-      <div class="page-sub">Platform health at a glance</div>
-      <div class="metrics-grid" id="metricsGrid">
-        <div class="metric-card"><div class="metric-label">Total Users</div><div class="metric-value" id="m-total">—</div></div>
-        <div class="metric-card"><div class="metric-label">Pro Users</div><div class="metric-value" id="m-pro">—</div><div class="metric-sub" id="m-revenue">— revenue</div></div>
-        <div class="metric-card"><div class="metric-label">Free Users</div><div class="metric-value" id="m-free">—</div></div>
-        <div class="metric-card"><div class="metric-label">Overdue Payments</div><div class="metric-value" id="m-overdue" style="color:#f08080">—</div></div>
-        <div class="metric-card"><div class="metric-label">Due This Week</div><div class="metric-value" id="m-dueweek" style="color:#e8b060">—</div></div>
+  <!-- ── USERS ── -->
+  <div class="page" id="page-users">
+    <div class="page-title">All Users</div>
+    <div class="page-sub">Manage accounts, plans and vendor limits</div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <div class="table-title" id="userCount">ALL USERS</div>
+        <input class="table-search" placeholder="Search by name or email..." oninput="filterUsers(this.value)">
       </div>
-
-      <!-- Recent signups -->
-      <div class="admin-table-wrap">
-        <div class="admin-table-header">
-          <div class="admin-table-title">Recent Signups</div>
-        </div>
-        <table class="admin-table">
-          <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Wedding Date</th><th>Joined</th></tr></thead>
-          <tbody id="recentSignups"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
-        </table>
-      </div>
+      <table>
+        <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Vendor Limit</th><th>Wedding Date</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="usersTable"><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- USERS PAGE -->
-    <div class="admin-page" id="page-users">
-      <div class="page-title">All Users</div>
-      <div class="page-sub">Manage accounts and subscriptions</div>
-      <div class="admin-table-wrap">
-        <div class="admin-table-header">
-          <div class="admin-table-title" id="userCount">Users</div>
-          <input type="text" class="search-input" placeholder="Search by name or email..." oninput="filterUsers(this.value)">
-        </div>
-        <table class="admin-table">
-          <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Wedding Date</th><th>Joined</th><th>Actions</th></tr></thead>
-          <tbody id="usersTable"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
-        </table>
-      </div>
+  <!-- ── PAYMENTS ── -->
+  <div class="page" id="page-payments">
+    <div class="page-title">Payments</div>
+    <div class="page-sub">Pro upgrades and platform revenue</div>
+    <div class="metrics-grid" style="grid-template-columns:repeat(3,1fr);max-width:600px">
+      <div class="metric-card highlight"><div class="metric-label">Total Revenue</div><div class="metric-value" id="rev-total">—</div></div>
+      <div class="metric-card"><div class="metric-label">Pro Users</div><div class="metric-value" id="rev-count">—</div></div>
+      <div class="metric-card"><div class="metric-label">Free Users</div><div class="metric-value" id="rev-free">—</div></div>
     </div>
-
-    <!-- PAYMENTS PAGE -->
-    <div class="admin-page" id="page-payments">
-      <div class="page-title">Payments & Dues</div>
-      <div class="page-sub">All vendor due dates across the platform</div>
-      <div class="admin-table-wrap">
-        <div class="admin-table-header">
-          <div class="admin-table-title">Upcoming & Overdue</div>
-        </div>
-        <table class="admin-table">
-          <thead><tr><th>Couple</th><th>Vendor</th><th>Due Date</th><th>Amount</th><th>Status</th></tr></thead>
-          <tbody id="paymentsTable"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
-        </table>
-      </div>
+    <div class="table-wrap" style="margin-bottom:24px">
+      <div class="table-header"><div class="table-title">Pro Purchases (Your Revenue)</div></div>
+      <table>
+        <thead><tr><th>Couple</th><th>Email</th><th>PayPal Order ID</th><th>Amount Paid</th><th>Upgrade Date</th></tr></thead>
+        <tbody id="purchasesTable"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- SETTINGS PAGE -->
-    <div class="admin-page" id="page-settings">
-      <div class="page-title">Settings</div>
-      <div class="page-sub">Platform configuration</div>
-
-      <div class="settings-section">
-        <div class="settings-title">Admin Access</div>
-        <div class="settings-row">
-          <div><div class="settings-label">Change Admin Password</div><div class="settings-desc">Stored locally in this browser</div></div>
-          <div style="display:flex;gap:8px">
-            <input type="password" id="newAdminPass" class="admin-input" placeholder="New password">
-            <button class="admin-btn" onclick="changeAdminPassword()">Save</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-title">Pricing</div>
-        <div class="settings-row">
-          <div><div class="settings-label">Pro Plan Price</div><div class="settings-desc">Currently $12 USD one-time (change in dashboard.html PayPal button)</div></div>
-          <div style="color:rgba(255,255,255,0.4);font-size:20px;font-family:'Cormorant Garamond',serif">$12 USD</div>
-        </div>
-      </div>
-
-      <div class="settings-section">
-        <div class="settings-title">Supabase Config</div>
-        <div class="settings-row">
-          <div><div class="settings-label">Free Vendor Limit</div><div class="settings-desc">Currently 5 vendors per free account (change in app.js)</div></div>
-          <div style="color:var(--gold);font-size:22px;font-family:'Cormorant Garamond',serif">5</div>
-        </div>
-        <div class="settings-row">
-          <div><div class="settings-label">View Supabase Dashboard</div><div class="settings-desc">Manage database, auth, and RLS policies</div></div>
-          <a href="https://supabase.com/dashboard" target="_blank" class="admin-btn" style="text-decoration:none;display:inline-block">Open →</a>
-        </div>
-      </div>
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="page-settings">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Admin configuration</div>
+    <div class="settings-card">
+      <div class="settings-title">🔐 Change Admin Password</div>
+      <label class="s-label">New Password</label>
+      <input type="password" id="newAdminPass" class="s-input" placeholder="Enter new password">
+      <button class="s-btn" onclick="changeAdminPassword()">Update Password</button>
     </div>
+    <div class="settings-card">
+      <div class="settings-title">⚙️ Platform Info</div>
+      <div class="info-row"><span>Supabase URL</span><strong>bqggtyguhedlyfffjkkw.supabase.co</strong></div>
+      <div class="info-row"><span>Pro Price</span><strong>$12 USD (one-time)</strong></div>
+      <div class="info-row"><span>Default Free Vendor Limit</span><strong>5 vendors</strong></div>
+      <div class="info-row"><span>Admin Panel</span><a href="https://supabase.com/dashboard" target="_blank" style="color:var(--gold)">Open Supabase →</a></div>
+    </div>
+  </div>
+</div>
 
+<!-- ── USER DETAIL MODAL ── -->
+<div class="modal-overlay" id="userModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">User Details</h3>
+      <button class="modal-close" onclick="document.getElementById('userModal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── ADMIN CREDENTIALS ────────────────────────────────────────────────────────
-// These are set independently of db.js so admin always works on its own
-// Supabase → Settings → API
-const ADMIN_SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';         // e.g. https://abcxyz.supabase.co
-const SERVICE_ROLE_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';     // Settings → API → Secret keys (sb_secret_...)
+// ── CREDENTIALS ───────────────────────────────────────────────────────────────
+const ADMIN_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc1MDQ3NiwiZXhwIjoyMDg4MzI2NDc2fQ.6-OlI0KtlY4f1XkLIF8KEp_Rk1Wqos5Z89Zzm1UKy_Q';
 
-// ── ADMIN PASSWORD ────────────────────────────────────────────────────────────
-// Default password is "admin123" — change it in settings after first login
-const DEFAULT_ADMIN_PASSWORD = 'admin123';
+const HEADERS = {
+  'apikey': SERVICE_KEY,
+  'Authorization': 'Bearer ' + SERVICE_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+async function dbGet(path) {
+  const r = await fetch(`${ADMIN_URL}/rest/v1/${path}`, { headers: HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function dbPatch(table, id, data) {
+  const r = await fetch(`${ADMIN_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+async function dbUpsertSetting(userId, key, value) {
+  // Try patch first
+  const r = await fetch(`${ADMIN_URL}/rest/v1/settings?user_id=eq.${userId}&key=eq.${key}`, {
+    method: 'PATCH', headers: HEADERS, body: JSON.stringify({ value: String(value) })
+  });
+  const rows = await r.json();
+  if (!Array.isArray(rows) || !rows.length) {
+    await fetch(`${ADMIN_URL}/rest/v1/settings`, {
+      method: 'POST', headers: HEADERS,
+      body: JSON.stringify({ user_id: userId, key, value: String(value) })
+    });
+  }
+}
+
+// ── LOGIN ────────────────────────────────────────────────────────────────────
+const DEFAULT_PASSWORD = 'admin123';
 
 function adminLogin() {
   const pw = document.getElementById('adminPassword').value;
-  const stored = localStorage.getItem('wl_admin_pw') || DEFAULT_ADMIN_PASSWORD;
+  const stored = localStorage.getItem('wl_admin_pw') || DEFAULT_PASSWORD;
   if (pw === stored) {
     document.getElementById('loginGate').style.display = 'none';
     document.getElementById('adminApp').style.display = 'block';
@@ -256,99 +316,129 @@ function changeAdminPassword() {
   showToast('Admin password updated ✓');
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────────────────────
-function showPage(name) {
-  document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+// ── NAV ──────────────────────────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  event.target.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
-// ── DATA ──────────────────────────────────────────────────────────────────────
-let allUsers = [], allVendors = [], allPayments = [];
+// ── DATA ─────────────────────────────────────────────────────────────────────
+let allUsers = [], allVendors = [], allSettings = [];
 
 async function loadAllData() {
   try {
-    // Need service role key for admin reads — use Supabase admin API
-    // For now we use anon key but require supabase to have RLS disabled for admin reads
-    // OR you can use a separate admin token stored in environment
-    const headers = { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY };
-
-    const [profilesRes, vendorsRes, paymentsRes] = await Promise.all([
-      fetch(`${ADMIN_SUPABASE_URL}/rest/v1/profiles?select=*&order=created_at.desc`, {headers}),
-      fetch(`${ADMIN_SUPABASE_URL}/rest/v1/vendors?select=*`, {headers}),
-      fetch(`${ADMIN_SUPABASE_URL}/rest/v1/payments?select=*`, {headers}),
+    const [profiles, vendors, settings, authRes] = await Promise.all([
+      dbGet('profiles?select=*&order=created_at.desc'),
+      dbGet('vendors?select=*'),
+      dbGet('settings?select=*'),
+      fetch(`${ADMIN_URL}/auth/v1/admin/users?per_page=1000`, { headers: HEADERS })
     ]);
 
-    allUsers = await profilesRes.json();
-    allVendors = await vendorsRes.json();
-    allPayments = await paymentsRes.json();
+    allVendors = vendors;
+    allSettings = settings;
+
+    // Merge auth emails into profiles
+    let authUsers = [];
+    if (authRes.ok) {
+      const authData = await authRes.json();
+      authUsers = authData.users || [];
+    }
+
+    allUsers = profiles.map(p => {
+      const au = authUsers.find(a => a.id === p.user_id);
+      return { ...p, email: au?.email || p.email || '' };
+    });
 
     renderOverview();
     renderUsersTable(allUsers);
-    renderPaymentsTable();
+    renderPurchases();
+    renderVendorDues();
   } catch(e) {
     console.error(e);
     showToast('Error loading data: ' + e.message, true);
   }
 }
 
-// ── OVERVIEW ──────────────────────────────────────────────────────────────────
+// ── OVERVIEW ─────────────────────────────────────────────────────────────────
 function renderOverview() {
   const total = allUsers.length;
   const pro = allUsers.filter(u => u.is_pro).length;
-  const free = total - pro;
   document.getElementById('m-total').textContent = total;
   document.getElementById('m-pro').textContent = pro;
   document.getElementById('m-revenue').textContent = '$' + (pro * 12).toLocaleString() + ' revenue';
-  document.getElementById('m-free').textContent = free;
+  document.getElementById('m-free').textContent = total - pro;
 
+  // Count vendor due dates across platform
   const today = new Date(); today.setHours(0,0,0,0);
   let overdue = 0, dueWeek = 0;
   allVendors.forEach(v => {
     if (!v.due_date) return;
     const dd = new Date(v.due_date + 'T00:00:00');
     const diff = Math.round((dd - today) / 86400000);
-    const vPmts = allPayments.filter(p => p.vendor_id === v.id);
-    const paid = vPmts.reduce((s,p) => s + parseFloat(p.amount||0), 0);
-    if (paid >= (v.total_cost||0)) return;
     if (diff < 0) overdue++;
     else if (diff <= 7) dueWeek++;
   });
   document.getElementById('m-overdue').textContent = overdue;
   document.getElementById('m-dueweek').textContent = dueWeek;
 
-  // Recent 10 signups
+  // Recent signups
   const tbody = document.getElementById('recentSignups');
-  tbody.innerHTML = allUsers.slice(0,10).map(u => `
+  tbody.innerHTML = allUsers.slice(0, 10).map(u => `
     <tr>
-      <td>${esc(u.name1||'')}${u.name2?' & '+esc(u.name2):''}</td>
-      <td style="color:rgba(255,255,255,0.4)">${esc(u.email||'')}</td>
-      <td><span class="badge ${u.is_pro?'badge-pro':'badge-free'}">${u.is_pro?'Pro':'Free'}</span></td>
-      <td style="color:rgba(255,255,255,0.4)">${u.wedding_date||'—'}</td>
-      <td style="color:rgba(255,255,255,0.4)">${u.created_at?u.created_at.split('T')[0]:'—'}</td>
+      <td><strong>${esc(u.name1||'')}${u.name2 ? ' & ' + esc(u.name2) : ''}</strong></td>
+      <td style="color:var(--textm)">${esc(u.email||'')}</td>
+      <td><span class="badge ${u.is_pro ? 'badge-pro' : 'badge-free'}">${u.is_pro ? '✨ Pro' : 'Free'}</span></td>
+      <td style="color:var(--textm)">${u.wedding_date || '—'}</td>
+      <td style="color:var(--textm)">${u.created_at ? u.created_at.split('T')[0] : '—'}</td>
     </tr>`).join('') || '<tr><td colspan="5" class="loading">No users yet</td></tr>';
 }
 
-// ── USERS TABLE ───────────────────────────────────────────────────────────────
+// ── USERS TABLE ──────────────────────────────────────────────────────────────
+function getUserVendorLimit(userId) {
+  // Check settings for custom vendor limit, fall back to default (5 for free, unlimited for pro)
+  const setting = allSettings.find(s => s.user_id === userId && s.key === 'vendor_limit');
+  return setting ? parseInt(setting.value) : null;
+}
+
 function renderUsersTable(users) {
-  document.getElementById('userCount').textContent = `All Users (${users.length})`;
+  document.getElementById('userCount').textContent = `ALL USERS (${users.length})`;
   const tbody = document.getElementById('usersTable');
-  tbody.innerHTML = users.map(u => `
-    <tr id="user-row-${u.id}">
-      <td><strong>${esc(u.name1||'')}${u.name2?' & '+esc(u.name2):''}</strong></td>
-      <td style="color:rgba(255,255,255,0.5)">${esc(u.email||'')}</td>
-      <td><span class="badge ${u.is_pro?'badge-pro':'badge-free'}">${u.is_pro?'✨ Pro':'Free'}</span></td>
-      <td style="color:rgba(255,255,255,0.4)">${u.wedding_date||'—'}</td>
-      <td style="color:rgba(255,255,255,0.4)">${u.created_at?u.created_at.split('T')[0]:'—'}</td>
+
+  tbody.innerHTML = users.map(u => {
+    const customLimit = getUserVendorLimit(u.user_id);
+    const defaultLimit = u.is_pro ? '∞' : '5';
+    const displayLimit = customLimit !== null ? customLimit : defaultLimit;
+    const vendorCount = allVendors.filter(v => v.user_id === u.user_id).length;
+
+    return `<tr id="user-row-${u.id}">
+      <td>
+        <div style="font-weight:500">${esc(u.name1||'—')}${u.name2 ? ' & ' + esc(u.name2) : ''}</div>
+      </td>
+      <td style="color:var(--textm);font-size:12px">${esc(u.email||'')}</td>
+      <td><span class="badge ${u.is_pro ? 'badge-pro' : 'badge-free'}">${u.is_pro ? '✨ Pro' : 'Free'}</span></td>
+      <td>
+        <div class="limit-row">
+          <span style="font-size:12px;color:var(--textm)">${vendorCount}/</span>
+          <input class="limit-input" type="number" min="1" max="999"
+            value="${customLimit !== null ? customLimit : (u.is_pro ? '' : 5)}"
+            placeholder="${u.is_pro ? '∞' : '5'}"
+            id="limit-${u.id}" title="Set custom vendor limit for this user">
+          <button class="limit-save-btn" onclick="saveVendorLimit('${u.id}','${u.user_id}')">Set</button>
+        </div>
+      </td>
+      <td style="color:var(--textm);font-size:12px">${u.wedding_date || '—'}</td>
+      <td style="color:var(--textm);font-size:12px">${u.created_at ? u.created_at.split('T')[0] : '—'}</td>
       <td>
         ${u.is_pro
-          ? `<button class="action-btn danger" onclick="revokePro('${u.id}','${u.user_id}')">Revoke Pro</button>`
-          : `<button class="action-btn success" onclick="grantPro('${u.id}','${u.user_id}')">Grant Pro ✨</button>`
+          ? `<button class="action-btn danger" onclick="revokePro('${u.id}')">Revoke Pro</button>`
+          : `<button class="action-btn success" onclick="grantPro('${u.id}')">Grant Pro ✨</button>`
         }
         <button class="action-btn" onclick="viewUser('${u.id}')">View</button>
       </td>
-    </tr>`).join('') || '<tr><td colspan="6" class="loading">No users found</td></tr>';
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" class="loading">No users found</td></tr>';
 }
 
 function filterUsers(query) {
@@ -361,80 +451,131 @@ function filterUsers(query) {
   renderUsersTable(filtered);
 }
 
-async function grantPro(profileId, userId) {
+// ── VENDOR LIMIT CONTROL ─────────────────────────────────────────────────────
+async function saveVendorLimit(profileId, userId) {
+  const input = document.getElementById('limit-' + profileId);
+  const val = input.value.trim();
+  if (!val || isNaN(val) || parseInt(val) < 1) {
+    showToast('Enter a valid number (1 or more)', true); return;
+  }
+  try {
+    await dbUpsertSetting(userId, 'vendor_limit', parseInt(val));
+    // Update local cache
+    const existing = allSettings.find(s => s.user_id === userId && s.key === 'vendor_limit');
+    if (existing) existing.value = String(val);
+    else allSettings.push({ user_id: userId, key: 'vendor_limit', value: String(val) });
+    showToast(`Vendor limit set to ${val} ✓`);
+  } catch(e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+// ── GRANT / REVOKE PRO ───────────────────────────────────────────────────────
+async function grantPro(profileId) {
   if (!confirm('Grant Pro access to this user for free?')) return;
-  await adminPatch('profiles', profileId, { is_pro: true });
-  const u = allUsers.find(x => x.id === profileId);
-  if (u) u.is_pro = true;
-  renderUsersTable(allUsers); renderOverview();
-  showToast('Pro access granted ✓');
+  try {
+    await dbPatch('profiles', profileId, { is_pro: true });
+    const u = allUsers.find(x => x.id === profileId);
+    if (u) u.is_pro = true;
+    renderUsersTable(allUsers); renderOverview(); renderPurchases();
+    showToast('Pro access granted ✓');
+  } catch(e) { showToast('Error: ' + e.message, true); }
 }
 
-async function revokePro(profileId, userId) {
+async function revokePro(profileId) {
   if (!confirm('Revoke Pro access from this user?')) return;
-  await adminPatch('profiles', profileId, { is_pro: false });
-  const u = allUsers.find(x => x.id === profileId);
-  if (u) u.is_pro = false;
-  renderUsersTable(allUsers); renderOverview();
-  showToast('Pro access revoked');
+  try {
+    await dbPatch('profiles', profileId, { is_pro: false, paypal_order_id: null });
+    const u = allUsers.find(x => x.id === profileId);
+    if (u) { u.is_pro = false; u.paypal_order_id = null; }
+    renderUsersTable(allUsers); renderOverview(); renderPurchases();
+    showToast('Pro access revoked');
+  } catch(e) { showToast('Error: ' + e.message, true); }
 }
 
+// ── VIEW USER ────────────────────────────────────────────────────────────────
 function viewUser(profileId) {
   const u = allUsers.find(x => x.id === profileId);
   if (!u) return;
-  const vCount = allVendors.filter(v => v.user_id === u.user_id).length;
-  const pCount = allPayments.filter(p => {
-    const uVendors = allVendors.filter(v => v.user_id === u.user_id).map(v => v.id);
-    return uVendors.includes(p.vendor_id);
-  }).length;
-  alert(`👰 ${u.name1||''} & ${u.name2||''}\n📧 ${u.email||'—'}\n💍 ${u.wedding_date||'Not set'}\n🏷 Plan: ${u.is_pro?'Pro':'Free'}\n💒 Vendors: ${vCount}\n💳 Payments: ${pCount}\n📅 Joined: ${u.created_at?u.created_at.split('T')[0]:'—'}`);
+  const userVendors = allVendors.filter(v => v.user_id === u.user_id);
+  const customLimit = getUserVendorLimit(u.user_id);
+
+  document.getElementById('modalTitle').textContent =
+    (u.name1 || '') + (u.name2 ? ' & ' + u.name2 : '') || 'User Details';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-sec-title">Account Info</div>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="detail-item-label">Name 1</div><div class="detail-item-value">${esc(u.name1||'—')}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Name 2</div><div class="detail-item-value">${esc(u.name2||'—')}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Email</div><div class="detail-item-value" style="font-size:12px">${esc(u.email||'—')}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Plan</div><div class="detail-item-value">${u.is_pro ? '✨ Pro' : 'Free'}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Wedding Date</div><div class="detail-item-value">${u.wedding_date||'—'}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Joined</div><div class="detail-item-value">${u.created_at?u.created_at.split('T')[0]:'—'}</div></div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-sec-title">Vendor Usage</div>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="detail-item-label">Vendors Created</div><div class="detail-item-value">${userVendors.length}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Limit</div><div class="detail-item-value">${customLimit !== null ? customLimit + ' (custom)' : u.is_pro ? 'Unlimited' : '5 (free)'}</div></div>
+        <div class="detail-item"><div class="detail-item-label">Named Vendors</div><div class="detail-item-value">${userVendors.filter(v=>v.name).length}</div></div>
+        <div class="detail-item"><div class="detail-item-label">With Due Dates</div><div class="detail-item-value">${userVendors.filter(v=>v.due_date).length}</div></div>
+      </div>
+    </div>
+    ${u.paypal_order_id ? `<div class="modal-section">
+      <div class="modal-sec-title">PayPal Transaction</div>
+      <div class="detail-item" style="word-break:break-all"><div class="detail-item-label">Order ID</div><div class="detail-item-value" style="font-size:11px;font-family:monospace">${esc(u.paypal_order_id)}</div></div>
+    </div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      ${u.is_pro
+        ? `<button class="action-btn danger" style="flex:1" onclick="revokePro('${u.id}');document.getElementById('userModal').style.display='none'">Revoke Pro</button>`
+        : `<button class="action-btn success" style="flex:1" onclick="grantPro('${u.id}');document.getElementById('userModal').style.display='none'">Grant Pro ✨</button>`
+      }
+      <button class="action-btn" style="flex:1" onclick="document.getElementById('userModal').style.display='none'">Close</button>
+    </div>
+  `;
+  document.getElementById('userModal').style.display = 'flex';
 }
 
-// ── PAYMENTS TABLE ────────────────────────────────────────────────────────────
-function renderPaymentsTable() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const rows = [];
-  allVendors.forEach(v => {
-    if (!v.due_date) return;
-    const vPmts = allPayments.filter(p => p.vendor_id === v.id);
-    const paid = vPmts.reduce((s,p) => s + parseFloat(p.amount||0), 0);
-    if (paid >= (v.total_cost||0)) return;
-    const dd = new Date(v.due_date + 'T00:00:00');
-    const diff = Math.round((dd - today) / 86400000);
-    const user = allUsers.find(u => u.user_id === v.user_id);
-    const dueAmt = v.due_amount || Math.max(0, (v.total_cost||0) - paid);
-    rows.push({ v, diff, user, dueAmt });
-  });
-  rows.sort((a,b) => a.diff - b.diff);
+// ── PURCHASES (Pro upgrades = your revenue) ─────────────────────────────────
+function renderPurchases() {
+  const proUsers = allUsers.filter(u => u.is_pro);
+  const paidUsers = proUsers.filter(u => u.paypal_order_id);
+  const total = paidUsers.length * 12;
 
-  const tbody = document.getElementById('paymentsTable');
-  tbody.innerHTML = rows.map(r => {
-    const cls = r.diff < 0 ? 'badge-overdue' : r.diff <= 7 ? 'badge-soon' : 'badge-free';
-    const lbl = r.diff < 0 ? `${Math.abs(r.diff)}d overdue` : r.diff === 0 ? 'Today' : `In ${r.diff}d`;
-    return `<tr>
-      <td>${r.user ? esc(r.user.name1||'')+(r.user.name2?' & '+esc(r.user.name2):'') : '—'}</td>
-      <td>${r.v.icon||''} ${esc(r.v.category)}${r.v.name?' — '+esc(r.v.name):''}</td>
-      <td style="color:rgba(255,255,255,0.5)">${r.v.due_date}</td>
-      <td style="color:var(--gold)">LKR ${Number(r.dueAmt).toLocaleString()}</td>
-      <td><span class="badge ${cls}">${lbl}</span></td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="5" class="loading">No upcoming due dates 🎉</td></tr>';
+  document.getElementById('rev-total').textContent = '$' + total.toLocaleString();
+  document.getElementById('rev-count').textContent = proUsers.length;
+  document.getElementById('rev-free').textContent = allUsers.length - proUsers.length;
+
+  const tbody = document.getElementById('purchasesTable');
+  tbody.innerHTML = proUsers.map(u => `
+    <tr>
+      <td><strong>${esc(u.name1||'—')}${u.name2?' & '+esc(u.name2):''}</strong></td>
+      <td style="color:var(--textm);font-size:12px">${esc(u.email||'—')}</td>
+      <td style="font-family:monospace;font-size:11px;color:var(--textm)">
+        ${u.paypal_order_id ? esc(u.paypal_order_id) : '<span style="color:var(--gold);font-family:Jost,sans-serif;font-size:12px">Admin granted (free)</span>'}
+      </td>
+      <td style="${u.paypal_order_id ? 'color:var(--gold);font-weight:600' : 'color:var(--textm)'}">
+        ${u.paypal_order_id ? '$12.00' : '—'}
+      </td>
+      <td style="color:var(--textm);font-size:12px">${u.updated_at ? u.updated_at.split('T')[0] : (u.created_at ? u.created_at.split('T')[0] : '—')}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="loading">No Pro users yet</td></tr>';
 }
 
-// ── ADMIN DB HELPERS ──────────────────────────────────────────────────────────
-async function adminPatch(table, id, data) {
-  await fetch(`${ADMIN_SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-    method: 'PATCH',
-    headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-    body: JSON.stringify(data)
-  });
+// ── VENDOR DUE DATES (users\'s wedding vendor payments) ───────────────────────
+function renderVendorDues() {
+  // This is rendered in the old "Payments" tab — now called via Overview only
+  // The Payments nav tab now shows Pro purchases above
 }
 
+// ── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 let toastTimer;
 function showToast(msg, isError=false) {
-  const t = document.getElementById('toast'); if(!t) return;
+  const t = document.getElementById('toast');
   t.textContent = msg; t.className = 'toast show' + (isError ? ' error' : '');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
 }
