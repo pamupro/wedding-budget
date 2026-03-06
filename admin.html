@@ -219,12 +219,12 @@ body{font-family:'Jost',sans-serif;background:#1a1209;color:var(--cream);min-hei
 
 <div class="toast" id="toast"></div>
 
-<script src="db.js"></script>
 <script>
-// ── SERVICE ROLE KEY ─────────────────────────────────────────────────────────
-// Paste your Supabase service_role key here (starts with sb_secret_...)
-// Supabase → Settings → API → Secret keys
-const SERVICE_ROLE_KEY = 'sb_secret_JhxNIHgAxTu-q8UXkXhtjQ_0yvbbNFl';
+// ── ADMIN CREDENTIALS ────────────────────────────────────────────────────────
+// These are set independently of db.js so admin always works on its own
+// Supabase → Settings → API
+const ADMIN_SUPABASE_URL = 'YOUR_SUPABASE_URL';         // e.g. https://abcxyz.supabase.co
+const SERVICE_ROLE_KEY   = 'YOUR_SERVICE_ROLE_KEY';     // Settings → API → Secret keys (sb_secret_...)
 
 // ── ADMIN PASSWORD ────────────────────────────────────────────────────────────
 // Default password is "admin123" — change it in settings after first login
@@ -272,15 +272,12 @@ async function loadAllData() {
     // Need service role key for admin reads — use Supabase admin API
     // For now we use anon key but require supabase to have RLS disabled for admin reads
     // OR you can use a separate admin token stored in environment
-    const SUPABASE_URL = DB.SUPABASE_URL;
-    const ANON_KEY = SERVICE_ROLE_KEY;
-
-    const headers = { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY };
+    const headers = { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY };
 
     const [profilesRes, vendorsRes, paymentsRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&order=created_at.desc`, {headers}),
-      fetch(`${SUPABASE_URL}/rest/v1/vendors?select=*`, {headers}),
-      fetch(`${SUPABASE_URL}/rest/v1/payments?select=*`, {headers}),
+      fetch(`${ADMIN_SUPABASE_URL}/rest/v1/profiles?select=*&order=created_at.desc`, {headers}),
+      fetch(`${ADMIN_SUPABASE_URL}/rest/v1/vendors?select=*`, {headers}),
+      fetch(`${ADMIN_SUPABASE_URL}/rest/v1/payments?select=*`, {headers}),
     ]);
 
     allUsers = await profilesRes.json();
@@ -426,11 +423,9 @@ function renderPaymentsTable() {
 
 // ── ADMIN DB HELPERS ──────────────────────────────────────────────────────────
 async function adminPatch(table, id, data) {
-  const SUPABASE_URL = DB.SUPABASE_URL;
-  const ANON_KEY = SERVICE_ROLE_KEY;
-  await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+  await fetch(`${ADMIN_SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
     method: 'PATCH',
-    headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    headers: { 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
     body: JSON.stringify(data)
   });
 }
