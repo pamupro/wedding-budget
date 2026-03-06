@@ -339,17 +339,34 @@ async function loadAllData() {
     allVendors = vendors;
     allSettings = settings;
 
-    // Merge auth emails into profiles
+    // Get auth users (always has emails)
     let authUsers = [];
     if (authRes.ok) {
       const authData = await authRes.json();
       authUsers = authData.users || [];
     }
 
-    allUsers = profiles.map(p => {
-      const au = authUsers.find(a => a.id === p.user_id);
-      return { ...p, email: au?.email || p.email || '' };
+    // Build user list: start from auth users so we never miss anyone
+    // Even if profiles table is empty, we still show auth users
+    allUsers = authUsers.map(au => {
+      const profile = profiles.find(p => p.user_id === au.id) || {};
+      return {
+        id: profile.id || au.id,           // profile table PK (for patch)
+        user_id: au.id,                     // auth UID
+        email: au.email || '',
+        name1: profile.name1 || '',
+        name2: profile.name2 || '',
+        wedding_date: profile.wedding_date || '',
+        is_pro: profile.is_pro || false,
+        paypal_order_id: profile.paypal_order_id || null,
+        created_at: au.created_at || profile.created_at || '',
+        updated_at: profile.updated_at || '',
+        _hasProfile: !!profile.id,          // flag: does a profiles row exist?
+      };
     });
+
+    // Sort newest first
+    allUsers.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
     renderOverview();
     renderUsersTable(allUsers);
@@ -408,13 +425,15 @@ function renderUsersTable(users) {
 
   tbody.innerHTML = users.map(u => {
     const customLimit = getUserVendorLimit(u.user_id);
-    const defaultLimit = u.is_pro ? '∞' : '5';
-    const displayLimit = customLimit !== null ? customLimit : defaultLimit;
     const vendorCount = allVendors.filter(v => v.user_id === u.user_id).length;
+    const coupleName = (u.name1 || u.name2)
+      ? esc(u.name1||'') + (u.name2 ? ' & ' + esc(u.name2) : '')
+      : '<span style="color:var(--textm);font-style:italic">No profile yet</span>';
 
     return `<tr id="user-row-${u.id}">
       <td>
-        <div style="font-weight:500">${esc(u.name1||'—')}${u.name2 ? ' & ' + esc(u.name2) : ''}</div>
+        <div style="font-weight:500">${coupleName}</div>
+        ${!u._hasProfile ? '<div style="font-size:10px;color:#ffb030;margin-top:2px">⚠ Profile not created</div>' : ''}
       </td>
       <td style="color:var(--textm);font-size:12px">${esc(u.email||'')}</td>
       <td><span class="badge ${u.is_pro ? 'badge-pro' : 'badge-free'}">${u.is_pro ? '✨ Pro' : 'Free'}</span></td>
@@ -471,26 +490,49 @@ async function saveVendorLimit(profileId, userId) {
 }
 
 // ── GRANT / REVOKE PRO ───────────────────────────────────────────────────────
-async function grantPro(profileId) {
+async function grantPro(userId) {
   if (!confirm('Grant Pro access to this user for free?')) return;
   try {
-    await dbPatch('profiles', profileId, { is_pro: true });
-    const u = allUsers.find(x => x.id === profileId);
-    if (u) u.is_pro = true;
+    const u = allUsers.find(x => x.id === userId || x.user_id === userId);
+    if (!u) throw new Error('User not found');
+    await dbUpsertProfile(u.user_id, { is_pro: true });
+    u.is_pro = true; u._hasProfile = true;
     renderUsersTable(allUsers); renderOverview(); renderPurchases();
     showToast('Pro access granted ✓');
   } catch(e) { showToast('Error: ' + e.message, true); }
 }
 
-async function revokePro(profileId) {
+async function revokePro(userId) {
   if (!confirm('Revoke Pro access from this user?')) return;
   try {
-    await dbPatch('profiles', profileId, { is_pro: false, paypal_order_id: null });
-    const u = allUsers.find(x => x.id === profileId);
-    if (u) { u.is_pro = false; u.paypal_order_id = null; }
+    const u = allUsers.find(x => x.id === userId || x.user_id === userId);
+    if (!u) throw new Error('User not found');
+    await dbUpsertProfile(u.user_id, { is_pro: false, paypal_order_id: null });
+    u.is_pro = false; u.paypal_order_id = null;
     renderUsersTable(allUsers); renderOverview(); renderPurchases();
     showToast('Pro access revoked');
   } catch(e) { showToast('Error: ' + e.message, true); }
+}
+
+// Upsert a profile row (create if missing, update if exists)
+async function dbUpsertProfile(authUserId, data) {
+  // Try update first
+  const patchRes = await fetch(`${ADMIN_URL}/rest/v1/profiles?user_id=eq.${authUserId}`, {
+    method: 'PATCH',
+    headers: { ...HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify(data)
+  });
+  const patched = await patchRes.json();
+  if (Array.isArray(patched) && patched.length > 0) return patched[0];
+  // No row existed — insert
+  const insertRes = await fetch(`${ADMIN_URL}/rest/v1/profiles`, {
+    method: 'POST',
+    headers: { ...HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify({ user_id: authUserId, ...data })
+  });
+  if (!insertRes.ok) throw new Error(await insertRes.text());
+  const inserted = await insertRes.json();
+  return Array.isArray(inserted) ? inserted[0] : inserted;
 }
 
 // ── VIEW USER ────────────────────────────────────────────────────────────────
