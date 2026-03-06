@@ -221,6 +221,11 @@ body{font-family:'Jost',sans-serif;background:#1a1209;color:var(--cream);min-hei
 
 <script src="db.js"></script>
 <script>
+// ── SERVICE ROLE KEY ─────────────────────────────────────────────────────────
+// Paste your Supabase service_role key here (starts with sb_secret_...)
+// Supabase → Settings → API → Secret keys
+const SERVICE_ROLE_KEY = 'sb_secret_JhxNIHgAxTu-q8UXkXhtjQ_0yvbbNFl';
+
 // ── ADMIN PASSWORD ────────────────────────────────────────────────────────────
 // Default password is "admin123" — change it in settings after first login
 const DEFAULT_ADMIN_PASSWORD = 'admin123';
@@ -268,7 +273,7 @@ async function loadAllData() {
     // For now we use anon key but require supabase to have RLS disabled for admin reads
     // OR you can use a separate admin token stored in environment
     const SUPABASE_URL = DB.SUPABASE_URL;
-    const ANON_KEY = DB.ANON_KEY;
+    const ANON_KEY = SERVICE_ROLE_KEY;
 
     const headers = { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY };
 
@@ -422,7 +427,7 @@ function renderPaymentsTable() {
 // ── ADMIN DB HELPERS ──────────────────────────────────────────────────────────
 async function adminPatch(table, id, data) {
   const SUPABASE_URL = DB.SUPABASE_URL;
-  const ANON_KEY = DB.ANON_KEY;
+  const ANON_KEY = SERVICE_ROLE_KEY;
   await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
     method: 'PATCH',
     headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
