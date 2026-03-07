@@ -132,6 +132,7 @@ async function doLogin(){
     const d=await r.json();
     if(!r.ok)throw new Error(d.error_description||d.msg||'Login failed');
     localStorage.setItem('wl_token',d.access_token);
+    localStorage.setItem('wl_refresh',d.refresh_token||'');
     localStorage.setItem('wl_uid',d.user.id);
     window.location.href='dashboard.html';
   }catch(e){se('eLogin',e.message);btn.disabled=false;btn.textContent='Sign In →';}
@@ -151,6 +152,7 @@ async function doSignup(){
     if(!r.ok)throw new Error(d.error_description||d.msg||'Signup failed');
     if(d.access_token){
       localStorage.setItem('wl_token',d.access_token);
+      localStorage.setItem('wl_refresh',d.refresh_token||'');
       localStorage.setItem('wl_uid',d.user.id);
       await fetch(`${SUPABASE_URL}/rest/v1/profiles`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${d.access_token}`,'Prefer':'return=minimal'},body:JSON.stringify({user_id:d.user.id,name1:n1,name2:n2,wedding_date:wd||null,email})});
       window.location.href='dashboard.html';
