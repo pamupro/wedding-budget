@@ -31,6 +31,7 @@ window.addEventListener('load', function(){
       <div class="notif-panel" id="notifPanel" style="display:none"></div>
     </div>
     <div id="proBadge" class="desktop-only"></div>
+    <button class="topbar-btn desktop-only" onclick="openSettingsModal()" style="color:var(--muted)">⚙️ Settings</button>
     <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
     <button class="topbar-btn signout-btn desktop-only" onclick="doLogout()">Sign Out</button>
     <!-- Mobile hamburger -->
@@ -345,6 +346,80 @@ window.addEventListener('load', function(){
       <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">
         🔒 Secure payment via PayPal · Instant activation · No subscription
       </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── WELCOME SETUP MODAL (auto-opens for new users) ── -->
+<div class="modal-overlay" id="welcomeModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header" style="border-bottom:none;padding-bottom:0">
+      <h3 class="modal-title" style="font-size:26px">💍 Welcome to WeddingLedger!</h3>
+    </div>
+    <div class="modal-body" style="padding-top:8px">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Let's set up your wedding budget. You can change these anytime.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <label class="modal-label">Your Name</label>
+          <input type="text" id="setupName1" class="modal-input" placeholder="e.g. Chamo">
+        </div>
+        <div>
+          <label class="modal-label">Partner's Name</label>
+          <input type="text" id="setupName2" class="modal-input" placeholder="e.g. Pamu">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="modal-label">Wedding Date (optional)</label>
+        <input type="date" id="setupDate" class="modal-input">
+      </div>
+      <div style="margin-bottom:20px">
+        <label class="modal-label">Budget Limit (optional)</label>
+        <input type="number" id="setupBudget" class="modal-input" placeholder="e.g. 500000">
+      </div>
+      <button class="btn-primary" onclick="saveWelcomeSetup()" style="width:100%">Save & Start Planning 🎉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ── -->
+<div class="modal-overlay" id="settingsModal" style="display:none">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h3 class="modal-title">⚙️ Settings</h3>
+      <button class="modal-close" onclick="closeSettingsModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section-title">👫 Couple Names</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div>
+          <label class="modal-label">Your Name</label>
+          <input type="text" id="settingsName1" class="modal-input" placeholder="Your name">
+        </div>
+        <div>
+          <label class="modal-label">Partner's Name</label>
+          <input type="text" id="settingsName2" class="modal-input" placeholder="Partner's name">
+        </div>
+      </div>
+      <div style="margin-bottom:20px">
+        <label class="modal-label">Wedding Date</label>
+        <input type="date" id="settingsDate" class="modal-input">
+      </div>
+      <button class="btn-primary" onclick="saveProfileSettings()" style="width:100%;margin-bottom:20px">Save Profile</button>
+
+      <div class="settings-section-title">💰 Budget</div>
+      <div style="margin-bottom:20px">
+        <label class="modal-label">Spend Limit</label>
+        <div style="display:flex;gap:8px">
+          <input type="number" id="settingsSpendLimit" class="modal-input" placeholder="Enter budget limit">
+          <button class="btn-secondary" onclick="saveSpendLimitFromSettings()">Save</button>
+        </div>
+      </div>
+
+      <div class="settings-section-title">📝 Wedding Notes</div>
+      <div style="margin-bottom:20px">
+        <textarea id="settingsNotes" class="modal-input" rows="4" placeholder="Notes about your wedding..." style="resize:vertical"></textarea>
+        <button class="btn-secondary" onclick="saveNotesFromSettings()" style="margin-top:8px">Save Notes</button>
+      </div>
     </div>
   </div>
 </div>
