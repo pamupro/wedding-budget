@@ -44,18 +44,54 @@ let weddingDate=new Date('2027-02-11T09:00:00');
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
-  userId=localStorage.getItem('wl_uid');
-  accessToken=localStorage.getItem('wl_token');
-  if (!userId||!accessToken) { window.location.href='login.html'; return; }
-  renderIconSelector(); startCountdown(); initCurrencyUI();
+  userId = localStorage.getItem('wl_uid');
+  accessToken = localStorage.getItem('wl_token');
+
+  if (!userId || !accessToken) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Show loading state
+  showLoadingState(true);
+
+  // Validate / refresh token before any DB calls
+  try {
+    accessToken = await DB.getValidToken(accessToken);
+    if (!accessToken) return; // redirected to login
+    localStorage.setItem('wl_token', accessToken);
+  } catch(e) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  renderIconSelector();
+  startCountdown();
+  initCurrencyUI();
+
   try {
     await loadProfile();
-    await Promise.all([loadVendors(),loadPayments(),loadTasks(),loadSettings()]);
+    await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
   } catch(e) {
-    console.error(e);
-    if (e.message&&e.message.includes('JWT')) { doLogout(); return; }
-    showToast('Error loading data', true);
+    console.error('Init error:', e);
+    const msg = e.message || '';
+    if (msg.includes('JWT') || msg.includes('401') || msg.includes('invalid')) {
+      doLogout();
+      return;
+    }
+    showToast('Error loading data — please refresh the page', true);
+  } finally {
+    showLoadingState(false);
   }
+}
+
+function showLoadingState(on) {
+  // Show/hide a subtle loading indicator on the stats
+  const ids = ['stat-total','stat-paid','stat-remaining'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = on ? '…' : el.textContent;
+  });
 }
 
 function doLogout() {
