@@ -528,9 +528,6 @@ async function saveSharePermissions(){
 function copyShareUrl(){navigator.clipboard.writeText(getShareUrl()).then(()=>showToast('Link copied! 📋'));}
 
 // ─── UPGRADE MODAL ───────────────────────────────────────────────────────────
-// openUpgradeModal defined in PayPal section below
-function closeUpgradeModal(){document.getElementById('upgradeModal').style.display='none';}
-
 window.initPayPal=function(){
   if(typeof paypal==='undefined'){
     // SDK failed to load — show the fallback button
@@ -571,42 +568,205 @@ window.initPayPal=function(){
 };
 
 function showPayPalFallback(){
-  // Show manual PayPal button as fallback
   const fb=document.getElementById('paypalFallback');
   const container=document.getElementById('paypalButtonContainer');
   if(fb) fb.style.display='block';
   if(container) container.style.display='none';
-  // Set the direct PayPal link (replace with your PayPal.me or hosted button URL)
-  const link=document.getElementById('paypalDirectLink');
-  if(link) link.href='https://www.paypal.com/paypalme/YOUR_PAYPAL_USERNAME/12';
+
+  // Build a PayPal checkout link that works without PayPal.me
+  // It creates a payment request directly — user pays, then emails you
+  // REPLACE the two values below once you have your PayPal details:
+  const PAYPAL_EMAIL = 'YOUR_PAYPAL_EMAIL@gmail.com'; // your PayPal account email
+  const RETURN_URL   = 'https://pamupro.github.io/wedding-budget/dashboard.html';
+
+  const link = document.getElementById('paypalDirectLink');
+  if(link){
+    // PayPal standard checkout URL — works for any PayPal account
+    const params = new URLSearchParams({
+      cmd: '_xclick',
+      business: PAYPAL_EMAIL,
+      item_name: 'WeddingLedger Pro',
+      amount: '12.00',
+      currency_code: 'USD',
+      return: RETURN_URL,
+      cancel_return: RETURN_URL,
+      no_shipping: '1',
+    });
+    link.href = 'https://www.paypal.com/cgi-bin/webscr?' + params.toString();
+    link.onclick = function(){
+      // Show manual activation notice since we can't auto-detect payment
+      setTimeout(()=>{
+        document.getElementById('manualActivationNotice').style.display='block';
+      }, 2000);
+    };
+  }
 }
 
-// Called when upgrade modal opens — ensure PayPal is initialised
+// ─── PAYPAL & UPGRADE ────────────────────────────────────────────────────────
+
+let paypalRendered = false;
+
 function openUpgradeModal(){
   document.getElementById('upgradeModal').style.display='flex';
-  // Re-try init in case SDK loaded after page load
-  if(typeof paypal!=='undefined'){
-    const container=document.getElementById('paypalButtonContainer');
-    if(container&&!container.hasChildNodes()) initPayPal();
-  } else {
+  // Render PayPal buttons if SDK is ready and not already rendered
+  if(typeof paypal !== 'undefined' && !paypalRendered){
+    initPayPal();
+  } else if(typeof paypal === 'undefined'){
     showPayPalFallback();
+  }
+}
+
+function closeUpgradeModal(){
+  document.getElementById('upgradeModal').style.display='none';
+}
+
+window.initPayPal = function(){
+  if(typeof paypal === 'undefined'){
+    showPayPalFallback();
+    return;
+  }
+
+  const container = document.getElementById('paypalButtonContainer');
+  if(!container || paypalRendered) return;
+
+  // Hide fallback, show SDK container
+  const fb = document.getElementById('paypalFallback');
+  if(fb) fb.style.display = 'none';
+  container.style.display = 'block';
+
+  paypal.Buttons({
+    style:{
+      layout: 'vertical',
+      color:  'gold',
+      shape:  'pill',
+      label:  'pay',
+      height: 48
+    },
+
+    createOrder: function(data, actions){
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: '12.00',
+            currency_code: 'USD'
+          },
+          description: 'WeddingLedger Pro — Unlimited Vendors'
+        }]
+      });
+    },
+
+    onApprove: async function(data, actions){
+      // Show processing state
+      container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gold);font-size:14px">⏳ Processing your payment…</div>';
+      try{
+        const order = await actions.order.capture();
+        await activatePro(order.id);
+      }catch(e){
+        container.innerHTML = '';
+        paypalRendered = false;
+        showToast('Payment capture failed — please try again.', true);
+        console.error(e);
+      }
+    },
+
+    onCancel: function(){
+      showToast('Payment cancelled — no charge was made.');
+    },
+
+    onError: function(err){
+      console.error('PayPal error:', err);
+      showPayPalFallback();
+      showToast('PayPal encountered an error — try the button below.', true);
+    }
+
+  }).render('#paypalButtonContainer')
+    .then(()=>{ paypalRendered = true; })
+    .catch(err=>{
+      console.error('PayPal render failed:', err);
+      showPayPalFallback();
+    });
+};
+
+function showPayPalFallback(){
+  const fb = document.getElementById('paypalFallback');
+  const container = document.getElementById('paypalButtonContainer');
+  if(fb){ fb.style.display = 'block'; }
+  if(container){ container.style.display = 'none'; }
+  // Direct PayPal.me link as fallback
+  const link = document.getElementById('paypalDirectLink');
+  if(link){
+    link.href = 'https://www.paypal.com/paypalme/pamupro/12';
+    link.onclick = function(){
+      setTimeout(()=>{
+        const notice = document.getElementById('manualActivationNotice');
+        if(notice) notice.style.display = 'block';
+      }, 2000);
+    };
   }
 }
 
 async function activatePro(orderId){
   try{
-    await DB.patch('profiles',profile.id,{is_pro:true,paypal_order_id:orderId},accessToken);
-    isPro=true; profile.is_pro=true; profile.paypal_order_id=orderId;
+    await DB.patch('profiles', profile.id, {
+      is_pro: true,
+      paypal_order_id: orderId
+    }, accessToken);
+
+    isPro = true;
+    profile.is_pro = true;
+    profile.paypal_order_id = orderId;
+
     closeUpgradeModal();
     updateProBadge();
     updateVendorLimitUI();
     renderVendors();
     showToast('🎉 Welcome to Pro! All features are now unlocked.');
   }catch(e){
-    showToast('Payment received but activation failed — contact support.',true);
-    console.error(e);
+    console.error('Activation error:', e);
+    showToast('Payment received but activation failed — please contact support.', true);
   }
 }
+
+// Manual check for users who paid via redirect fallback
+async function manualActivateCheck(){
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = 'Checking…';
+  btn.disabled = true;
+  try{
+    const rows = await DB.query(`profiles?user_id=eq.${userId}&select=is_pro,id`, accessToken);
+    if(rows && rows[0] && rows[0].is_pro){
+      isPro = true;
+      profile.is_pro = true;
+      closeUpgradeModal();
+      updateProBadge();
+      updateVendorLimitUI();
+      renderVendors();
+      showToast('🎉 Pro activated! All features unlocked.');
+    } else {
+      const notice = document.getElementById('manualActivationNotice');
+      if(notice){
+        notice.innerHTML = \`
+          <div style="font-size:14px;margin-bottom:8px">⏳ Payment not yet confirmed</div>
+          <p style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.5">
+            Email your PayPal receipt to:<br>
+            <strong>pamupvt@gmail.com</strong><br>
+            We'll activate your Pro within a few hours.
+          </p>
+          <button onclick="closeUpgradeModal()" style="background:var(--gold);color:white;border:none;
+            border-radius:99px;padding:9px 20px;font-family:'Jost',sans-serif;font-size:13px;
+            font-weight:600;cursor:pointer;">
+            Got it
+          </button>\`;
+      }
+    }
+  }catch(e){
+    btn.textContent = originalText;
+    btn.disabled = false;
+    showToast('Could not check — try again.', true);
+  }
+}
+
 
 // ─── STATS ───────────────────────────────────────────────────────────────────
 function updateStats(){
