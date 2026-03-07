@@ -762,17 +762,24 @@ window.initPayPal = function(){
 };
 
 function showPayPalFallback(){
-  // If SDK failed, just retry rendering - don't redirect away
   const container = document.getElementById('paypalButtonContainer');
   if(!container) return;
   
-  // Clear and show retry message inside the container
+  // Show both retry AND direct payment link
   container.innerHTML = `
     <div style="text-align:center;padding:16px;border:1px solid #e0d0c0;border-radius:12px;background:#fdf9f3">
       <p style="font-size:13px;color:#888;margin-bottom:12px">PayPal button failed to load</p>
       <button onclick="retryPayPal()" style="background:var(--gold);color:white;border:none;
         border-radius:99px;padding:11px 24px;font-family:'Jost',sans-serif;font-size:13px;
-        font-weight:600;cursor:pointer;">🔄 Retry PayPal</button>
+        font-weight:600;cursor:pointer;display:block;width:100%;margin-bottom:10px;">🔄 Retry PayPal</button>
+      <div style="font-size:11px;color:#aaa;margin-bottom:10px">— or pay directly —</div>
+      <a href="https://www.paypal.com/ncp/payment/REPLACE_WITH_PAYMENT_LINK" target="_blank"
+        onclick="setTimeout(()=>{document.getElementById('manualActivationNotice').style.display='block'},3000)"
+        style="display:block;background:#003087;color:white;border-radius:99px;padding:12px 24px;
+        font-family:'Jost',sans-serif;font-size:13px;font-weight:600;text-decoration:none;text-align:center;">
+        💳 Pay £12 via PayPal
+      </a>
+      <p style="font-size:11px;color:#aaa;margin-top:8px">You'll be redirected to PayPal secure checkout</p>
     </div>`;
 }
 
