@@ -661,7 +661,7 @@ function showPayPalFallback(){
       business: PAYPAL_EMAIL,
       item_name: 'WeddingLedger Pro',
       amount: '12.00',
-      currency_code: 'USD',
+      currency_code: 'GBP',
       return: RETURN_URL,
       cancel_return: RETURN_URL,
       no_shipping: '1',
@@ -722,9 +722,9 @@ window.initPayPal = function(){
         purchase_units: [{
           amount: {
             value: '1.00',
-            currency_code: 'USD'
+            currency_code: 'GBP'
           },
-          description: 'WeddingLedger Pro — Unlimited Vendors'
+          description: 'WeddingLedger Pro — Unlimited Vendors (Test)'
         }]
       });
     },
