@@ -721,7 +721,7 @@ window.initPayPal = function(){
       return actions.order.create({
         purchase_units: [{
           amount: {
-            value: '12.00',
+            value: '1.00',
             currency_code: 'USD'
           },
           description: 'WeddingLedger Pro — Unlimited Vendors'
@@ -788,7 +788,7 @@ function retryPayPal(){
   
   const s = document.createElement('script');
   s.src = document.querySelector('script[data-paypal-src]')?.dataset.paypalSrc || 
-    'https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU&currency=USD&intent=capture';
+    'https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU&currency=USD&intent=capture&locale=en_US';
   s.onload = function(){ initPayPal(); };
   s.onerror = function(){ 
     if(container) container.innerHTML = '<div style="text-align:center;padding:12px;color:#c04040;font-size:13px">⚠️ PayPal unavailable — please try again later</div>';
