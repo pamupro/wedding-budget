@@ -380,6 +380,24 @@ body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--charcoal)
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+/* ── MODAL FORM ELEMENTS ── */
+.modal-label{display:block;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.modal-input{width:100%;background:white;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'Jost',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s;box-sizing:border-box;}
+.modal-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.1);}
+.modal-input::placeholder{color:rgba(138,122,96,0.45);}
+textarea.modal-input{resize:vertical;min-height:90px;}
+.btn-primary{background:linear-gradient(135deg,var(--gold-dark,#9a7535),var(--gold));color:white;border:none;border-radius:99px;padding:13px 24px;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 14px rgba(154,117,53,0.25);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(154,117,53,0.35);}
+.btn-secondary{background:var(--warm,#f5ede0);color:var(--charcoal);border:1.5px solid var(--border);border-radius:99px;padding:10px 18px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.btn-secondary:hover{border-color:var(--gold);background:var(--gold-pale,#fdf0d8);}
+.settings-section-title{font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--charcoal);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted);}
+.empty-state-icon{font-size:48px;margin-bottom:12px;}
+.empty-state-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--charcoal);margin-bottom:8px;}
+.empty-state-sub{font-size:13px;line-height:1.6;max-width:300px;margin:0 auto 20px;}
+
 /* ── HAMBURGER & MOBILE NAV DRAWER ── */
 .hamburger-btn{
   display:none;background:none;border:1px solid var(--border);
