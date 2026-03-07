@@ -762,21 +762,38 @@ window.initPayPal = function(){
 };
 
 function showPayPalFallback(){
-  const fb = document.getElementById('paypalFallback');
+  // If SDK failed, just retry rendering - don't redirect away
   const container = document.getElementById('paypalButtonContainer');
-  if(fb){ fb.style.display = 'block'; }
-  if(container){ container.style.display = 'none'; }
-  // Direct PayPal.me link as fallback
-  const link = document.getElementById('paypalDirectLink');
-  if(link){
-    link.href = 'https://www.paypal.com/paypalme/pamupro/12';
-    link.onclick = function(){
-      setTimeout(()=>{
-        const notice = document.getElementById('manualActivationNotice');
-        if(notice) notice.style.display = 'block';
-      }, 2000);
-    };
-  }
+  if(!container) return;
+  
+  // Clear and show retry message inside the container
+  container.innerHTML = `
+    <div style="text-align:center;padding:16px;border:1px solid #e0d0c0;border-radius:12px;background:#fdf9f3">
+      <p style="font-size:13px;color:#888;margin-bottom:12px">PayPal button failed to load</p>
+      <button onclick="retryPayPal()" style="background:var(--gold);color:white;border:none;
+        border-radius:99px;padding:11px 24px;font-family:'Jost',sans-serif;font-size:13px;
+        font-weight:600;cursor:pointer;">🔄 Retry PayPal</button>
+    </div>`;
+}
+
+function retryPayPal(){
+  // Reset and try loading SDK again
+  const container = document.getElementById('paypalButtonContainer');
+  if(container) container.innerHTML = '<div style="text-align:center;padding:12px;color:#888;font-size:13px">Loading PayPal…</div>';
+  paypalRendered = false;
+  
+  // Remove old SDK script and reload
+  const oldScript = document.querySelector('script[src*="paypal.com/sdk"]');
+  if(oldScript) oldScript.remove();
+  
+  const s = document.createElement('script');
+  s.src = document.querySelector('script[data-paypal-src]')?.dataset.paypalSrc || 
+    'https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU&currency=USD&intent=capture';
+  s.onload = function(){ initPayPal(); };
+  s.onerror = function(){ 
+    if(container) container.innerHTML = '<div style="text-align:center;padding:12px;color:#c04040;font-size:13px">⚠️ PayPal unavailable — please try again later</div>';
+  };
+  document.head.appendChild(s);
 }
 
 async function activatePro(orderId){
