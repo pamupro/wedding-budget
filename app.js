@@ -68,11 +68,36 @@ async function loadProfile() {
   const rows=await DB.query(`profiles?user_id=eq.${userId}&select=*`,accessToken);
   if (rows&&rows.length) {
     profile=rows[0]; isPro=profile.is_pro===true;
-    const n1=profile.name1||'', n2=profile.name2||'';
-    const el=document.getElementById('coupleNames');
-    if (el&&(n1||n2)) el.textContent=n1&&n2?`${n1} & ${n2}`:n1||n2;
-    const hero=document.getElementById('coupleHero');
-    if (hero&&(n1||n2)) {
+    renderHero();
+    updateProBadge();
+    // Auto-open welcome modal if no names set yet
+    if (!profile.name1 && !profile.name2) {
+      setTimeout(()=>openWelcomeModal(), 500);
+    }
+  } else {
+    // No profile row at all — create one then show welcome
+    try {
+      const r = await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles`, {
+        method:'POST',
+        headers:{...DB._h(accessToken),'Prefer':'return=representation'},
+        body:JSON.stringify({user_id:userId})
+      });
+      const rows2 = await r.json();
+      profile = Array.isArray(rows2) ? rows2[0] : rows2;
+    } catch(e) { profile = {user_id:userId}; }
+    setTimeout(()=>openWelcomeModal(), 500);
+    updateProBadge();
+  }
+}
+
+function renderHero() {
+  if (!profile) return;
+  const n1=profile.name1||'', n2=profile.name2||'';
+  const el=document.getElementById('coupleNames');
+  if (el) el.textContent=n1&&n2?`${n1} & ${n2}`:n1||n2||'';
+  const hero=document.getElementById('coupleHero');
+  if (hero) {
+    if (n1||n2) {
       const wdStr=profile.wedding_date?formatDateLong(profile.wedding_date):'';
       hero.innerHTML=`<div class="couple-hero">
         <div class="couple-hero-sparkle">✦</div>
@@ -84,13 +109,13 @@ async function loadProfile() {
         ${wdStr?`<div class="couple-hero-date">📅 ${wdStr}</div>`:''}
         <div class="couple-hero-divider"><span>✦</span></div>
       </div>`;
+    } else {
+      hero.innerHTML=''; // cleared until names set
     }
-    // Also update mobile nav names
-    const mobileNames=document.getElementById('mobileNavNames');
-    if (mobileNames&&(n1||n2)) mobileNames.textContent=n1&&n2?`${n1} & ${n2}`:n1||n2;
-    if (profile.wedding_date) weddingDate=new Date(profile.wedding_date+'T09:00:00');
-    updateProBadge();
   }
+  const mobileNames=document.getElementById('mobileNavNames');
+  if (mobileNames) mobileNames.textContent=n1&&n2?`${n1} & ${n2}`:n1||n2||'My Wedding';
+  if (profile.wedding_date) weddingDate=new Date(profile.wedding_date+'T09:00:00');
 }
 
 function updateProBadge() {
@@ -862,6 +887,117 @@ function showToast(msg,isError=false){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.className='toast show'+(isError?' error':'');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='toast';},3500);
+}
+
+// ─── WELCOME SETUP MODAL ─────────────────────────────────────────────────────
+function openWelcomeModal() {
+  const m = document.getElementById('welcomeModal');
+  if (!m) return;
+  // Pre-fill if data exists
+  if (profile) {
+    const n1 = document.getElementById('setupName1');
+    const n2 = document.getElementById('setupName2');
+    const d  = document.getElementById('setupDate');
+    if (n1) n1.value = profile.name1||'';
+    if (n2) n2.value = profile.name2||'';
+    if (d)  d.value  = profile.wedding_date||'';
+  }
+  m.style.display = 'flex';
+}
+
+async function saveWelcomeSetup() {
+  const n1  = document.getElementById('setupName1').value.trim();
+  const n2  = document.getElementById('setupName2').value.trim();
+  const wd  = document.getElementById('setupDate').value;
+  const bud = document.getElementById('setupBudget').value;
+
+  if (!n1) { showToast('Please enter at least your name', true); return; }
+
+  const btn = document.querySelector('#welcomeModal .btn-primary');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  try {
+    // Update profile
+    await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
+      method:'PATCH',
+      headers:{...DB._h(accessToken),'Prefer':'return=minimal'},
+      body:JSON.stringify({name1:n1, name2:n2, wedding_date:wd||null})
+    });
+    profile.name1=n1; profile.name2=n2; profile.wedding_date=wd||null;
+    // Save budget limit if set
+    if (bud) {
+      spendLimit = parseFloat(bud)||0;
+      await DB.upsertSetting(userId,'spend_limit',spendLimit,accessToken);
+      const el=document.getElementById('spendLimit'); if(el) el.value=spendLimit;
+      const sl=document.getElementById('settingsSpendLimit'); if(sl) sl.value=spendLimit;
+    }
+    renderHero();
+    updateStats();
+    document.getElementById('welcomeModal').style.display='none';
+    showToast(`Welcome, ${n1}${n2?' & '+n2:''}! 🎉`);
+  } catch(e) {
+    showToast('Could not save — please try again', true);
+    console.error(e);
+  } finally {
+    btn.textContent='Save & Start Planning 🎉'; btn.disabled=false;
+  }
+}
+
+// ─── SETTINGS MODAL ──────────────────────────────────────────────────────────
+function openSettingsModal() {
+  const m = document.getElementById('settingsModal');
+  if (!m) return;
+  // Pre-fill with current values
+  const n1 = document.getElementById('settingsName1');
+  const n2 = document.getElementById('settingsName2');
+  const d  = document.getElementById('settingsDate');
+  const sl = document.getElementById('settingsSpendLimit');
+  const sn = document.getElementById('settingsNotes');
+  if (n1) n1.value = profile?.name1||'';
+  if (n2) n2.value = profile?.name2||'';
+  if (d)  d.value  = profile?.wedding_date||'';
+  if (sl) sl.value = spendLimit||'';
+  if (sn) sn.value = notes||'';
+  m.style.display='flex';
+}
+
+function closeSettingsModal() {
+  document.getElementById('settingsModal').style.display='none';
+}
+
+async function saveProfileSettings() {
+  const n1 = document.getElementById('settingsName1').value.trim();
+  const n2 = document.getElementById('settingsName2').value.trim();
+  const wd = document.getElementById('settingsDate').value;
+  if (!n1) { showToast('Please enter your name', true); return; }
+  const btn = document.querySelector('#settingsModal .btn-primary');
+  btn.textContent='Saving…'; btn.disabled=true;
+  try {
+    await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
+      method:'PATCH',
+      headers:{...DB._h(accessToken),'Prefer':'return=minimal'},
+      body:JSON.stringify({name1:n1, name2:n2, wedding_date:wd||null})
+    });
+    profile.name1=n1; profile.name2=n2; profile.wedding_date=wd||null;
+    renderHero(); updateStats();
+    showToast('Profile saved ✓');
+  } catch(e) { showToast('Save failed', true); }
+  finally { btn.textContent='Save Profile'; btn.disabled=false; }
+}
+
+async function saveSpendLimitFromSettings() {
+  const val = parseFloat(document.getElementById('settingsSpendLimit').value)||0;
+  spendLimit = val;
+  await DB.upsertSetting(userId,'spend_limit',val,accessToken);
+  const el=document.getElementById('spendLimit'); if(el) el.value=val||'';
+  updateStats(); showToast('Budget limit saved ✓');
+}
+
+async function saveNotesFromSettings() {
+  const val = document.getElementById('settingsNotes').value.trim();
+  notes = val;
+  await DB.upsertSetting(userId,'wedding_notes',val,accessToken);
+  const el=document.getElementById('weddingNotes'); if(el) el.value=val;
+  showToast('Notes saved ✓');
 }
 
 init();
