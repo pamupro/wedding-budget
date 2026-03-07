@@ -74,12 +74,25 @@ async function init() {
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
   } catch(e) {
     console.error('Init error:', e);
+    showLoadingState(false);
     const msg = e.message || '';
     if (msg.includes('JWT') || msg.includes('401') || msg.includes('invalid')) {
       doLogout();
       return;
     }
-    showToast('Error loading data — please refresh the page', true);
+    // Show visible error banner with retry
+    const hero = document.getElementById('coupleHero');
+    if (hero) {
+      hero.innerHTML = `<div style="text-align:center;padding:32px 24px;background:#fff8f0;border:1px solid #f5c0a0;margin:16px;border-radius:12px">
+        <div style="font-size:16px;color:#c04040;margin-bottom:8px">⚠️ Could not load your dashboard</div>
+        <div style="font-size:13px;color:#888;margin-bottom:16px">${e.message || 'Connection error'}</div>
+        <button onclick="location.reload()" style="background:var(--gold);color:white;border:none;border-radius:99px;padding:10px 24px;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer">
+          🔄 Try Again
+        </button>
+      </div>`;
+    }
+    showToast('Error loading data — click Try Again', true);
+    return;
   } finally {
     showLoadingState(false);
   }
@@ -807,18 +820,13 @@ async function manualActivateCheck(){
     } else {
       const notice = document.getElementById('manualActivationNotice');
       if(notice){
-        notice.innerHTML = \`
-          <div style="font-size:14px;margin-bottom:8px">⏳ Payment not yet confirmed</div>
-          <p style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.5">
-            Email your PayPal receipt to:<br>
-            <strong>pamupvt@gmail.com</strong><br>
-            We'll activate your Pro within a few hours.
-          </p>
-          <button onclick="closeUpgradeModal()" style="background:var(--gold);color:white;border:none;
-            border-radius:99px;padding:9px 20px;font-family:'Jost',sans-serif;font-size:13px;
-            font-weight:600;cursor:pointer;">
-            Got it
-          </button>\`;
+        notice.innerHTML = '<div style="font-size:14px;margin-bottom:8px">⏳ Payment not yet confirmed</div>' +
+            '<p style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.5">' +
+            'Email your PayPal receipt to:<br><strong>pamupvt@gmail.com</strong><br>' +
+            "We'll activate your Pro within a few hours.</p>" +
+            '<button onclick="closeUpgradeModal()" style="background:var(--gold);color:white;border:none;' +
+            'border-radius:99px;padding:9px 20px;font-family:Jost,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">' +
+            'Got it</button>';
       }
     }
   }catch(e){
