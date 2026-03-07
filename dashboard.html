@@ -9,7 +9,7 @@
 // Load PayPal SDK dynamically AFTER app.js so functions are defined
 window.addEventListener('load', function(){
   var s = document.createElement('script');
-  s.src = 'https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU&currency=USD&intent=capture';
+  s.src = 'https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU&currency=USD&intent=capture&locale=en_US';
   s.onload = function(){ if(typeof initPayPal==='function') initPayPal(); };
   s.onerror = function(){ if(typeof showPayPalFallback==='function') showPayPalFallback(); };
   document.head.appendChild(s);
