@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WeddingLedger — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://www.paypal.com/sdk/js?client-id=BAA59dd7Fz8aLSxqrX5NOazy_5Zm9L4LPZRchautr_8KcBFeVhZEOspWIO2UuRwihuIGfyjkuC8NoYBf_E&currency=USD&intent=capture" onload="initPayPal()" onerror="showPayPalFallback()"></script>
+<script>
+// Load PayPal SDK dynamically AFTER app.js so functions are defined
+window.addEventListener('load', function(){
+  var s = document.createElement('script');
+  s.src = 'https://www.paypal.com/sdk/js?client-id=BAA59dd7Fz8aLSxqrX5NOazy_5Zm9L4LPZRchautr_8KcBFeVhZEOspWIO2UuRwihuIGfyjkuC8NoYBf_E&currency=USD&intent=capture';
+  s.onload = function(){ if(typeof initPayPal==='function') initPayPal(); };
+  s.onerror = function(){ if(typeof showPayPalFallback==='function') showPayPalFallback(); };
+  document.head.appendChild(s);
+});
+</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
