@@ -50,8 +50,72 @@
     .empty-box .ei{font-size:52px;margin-bottom:14px}
     .empty-box h3{font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px}
     .empty-box p{font-size:13px;color:var(--muted);margin-bottom:20px}
-    .bulk-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:white;border-radius:99px;padding:12px 20px;display:none;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:200;flex-wrap:wrap;max-width:calc(100vw - 32px)}
-    .bb{border:none;border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+    /* ── Bulk action bar ── */
+    .bulk-bar{
+      position:fixed;bottom:0;left:0;right:0;z-index:400;
+      background:white;
+      border-top:1px solid var(--border);
+      box-shadow:0 -8px 40px rgba(0,0,0,.12);
+      display:none;flex-direction:column;
+      animation:slideUp .22s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+    .bulk-top{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 20px 10px;border-bottom:1px solid #f0ece4;
+    }
+    .bulk-count{
+      display:flex;align-items:center;gap:8px;
+    }
+    .bulk-count-badge{
+      background:var(--gold);color:white;
+      font-size:12px;font-weight:700;
+      padding:3px 10px;border-radius:99px;
+      font-family:'Jost',sans-serif;
+      min-width:28px;text-align:center;
+    }
+    .bulk-count-label{
+      font-size:13px;font-weight:600;color:var(--charcoal);
+      font-family:'Jost',sans-serif;
+    }
+    .bulk-close{
+      background:none;border:none;cursor:pointer;
+      width:32px;height:32px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      color:var(--muted);font-size:16px;transition:.15s;
+    }
+    .bulk-close:hover{background:var(--cream);color:var(--charcoal)}
+    .bulk-actions{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:0;
+      padding-bottom:env(safe-area-inset-bottom,0px);
+    }
+    .ba{
+      display:flex;flex-direction:column;align-items:center;
+      gap:5px;padding:12px 6px 14px;
+      border:none;background:none;cursor:pointer;
+      font-family:'Jost',sans-serif;transition:.15s;
+      position:relative;
+    }
+    .ba:hover{background:#f9f5ee}
+    .ba:active{background:#f0e8d0}
+    .ba-icon{
+      width:42px;height:42px;border-radius:14px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;transition:.15s;
+    }
+    .ba-label{
+      font-size:10px;font-weight:600;letter-spacing:.03em;
+      text-transform:uppercase;color:var(--muted);
+      white-space:nowrap;
+    }
+    .ba.wa   .ba-icon{background:#e8faf0;color:#1a7a40}
+    .ba.em   .ba-icon{background:#e8f0ff;color:#1a40aa}
+    .ba.yes  .ba-icon{background:#e8f5e8;color:#1a5a1a}
+    .ba.no   .ba-icon{background:#fde8e8;color:#7a1a1a}
+    .ba.del  .ba-icon{background:#fdf0f0;color:#aa2020}
+    .ba:hover .ba-icon{transform:scale(1.08)}
     .msg-prev-box{background:var(--cream);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;border:1px solid var(--border);white-space:pre-wrap;margin-bottom:12px;min-height:80px}
     .vchip{background:white;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:monospace;display:inline-block;margin:2px}
     .vchip:hover{border-color:var(--gold);color:var(--gold)}
@@ -170,13 +234,35 @@
   </div>
   <div class="grid" id="guestGrid"></div>
   <div class="bulk-bar" id="bulkBar">
-    <span id="bulkLbl" style="font-size:13px;font-weight:600"></span>
-    <button class="bb" onclick="bkWA()"        style="background:#25D366;color:white">💬 WhatsApp</button>
-    <button class="bb" onclick="bkEmail()"     style="background:#4a90d9;color:white">✉️ Email</button>
-    <button class="bb" onclick="bkRsvp('yes')" style="background:#2a7a2a;color:white">✅ Attending</button>
-    <button class="bb" onclick="bkRsvp('no')"  style="background:#c04040;color:white">❌ Declined</button>
-    <button class="bb" onclick="bkDel()"       style="background:rgba(255,255,255,.12);color:white">🗑 Delete</button>
-    <button onclick="clearSel()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:4px">✕</button>
+    <div class="bulk-top">
+      <div class="bulk-count">
+        <span class="bulk-count-badge" id="bulkBadge">0</span>
+        <span class="bulk-count-label" id="bulkLbl">guests selected</span>
+      </div>
+      <button class="bulk-close" onclick="clearSel()" title="Deselect all">✕</button>
+    </div>
+    <div class="bulk-actions">
+      <button class="ba wa"  onclick="bkWA()">
+        <div class="ba-icon">💬</div>
+        <span class="ba-label">WhatsApp</span>
+      </button>
+      <button class="ba em"  onclick="bkEmail()">
+        <div class="ba-icon">✉️</div>
+        <span class="ba-label">Email</span>
+      </button>
+      <button class="ba yes" onclick="bkRsvp('yes')">
+        <div class="ba-icon">✅</div>
+        <span class="ba-label">Attending</span>
+      </button>
+      <button class="ba no"  onclick="bkRsvp('no')">
+        <div class="ba-icon">❌</div>
+        <span class="ba-label">Declined</span>
+      </button>
+      <button class="ba del" onclick="bkDel()">
+        <div class="ba-icon">🗑</div>
+        <span class="ba-label">Delete</span>
+      </button>
+    </div>
   </div>
 </main>
 
@@ -754,8 +840,15 @@ function clearSel() {
 }
 function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
-  bar.style.display = selIds.size > 0 ? 'flex' : 'none';
-  document.getElementById('bulkLbl').textContent = selIds.size+' selected';
+  const n = selIds.size;
+  bar.style.display = n > 0 ? 'flex' : 'none';
+  const badge = document.getElementById('bulkBadge');
+  const lbl   = document.getElementById('bulkLbl');
+  if(badge) badge.textContent = n;
+  if(lbl)   lbl.textContent   = n === 1 ? 'guest selected' : 'guests selected';
+  // Add padding to grid so bar doesn't cover last card
+  const grid = document.getElementById('guestGrid');
+  if(grid) grid.style.paddingBottom = n > 0 ? '140px' : '20px';
 }
 async function bkRsvp(status) {
   for(const id of [...selIds]) {
