@@ -24,7 +24,10 @@ window.addEventListener('load', function(){
   <a href="index.html" class="topbar-logo">Wedding<span>Ledger</span></a>
   <div class="topbar-center" id="coupleNames"></div>
   <div class="topbar-right">
-    <select id="currencySelect" class="currency-select"></select>
+    <div style="display:flex;align-items:center;gap:6px">
+      <select id="currencySelect" class="currency-select"></select>
+      <span id="liveRateBadge" style="font-size:10px;color:var(--muted);white-space:nowrap;display:none"></span>
+    </div>
     <div class="notif-wrap" id="notifBell" onclick="toggleNotifPanel()">
       <button class="notif-btn" title="Upcoming payments">🔔</button>
       <div class="notif-dot" id="notifDot" style="display:none"></div>
