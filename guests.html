@@ -62,6 +62,45 @@
     .opt-chip{display:inline-flex;align-items:center;gap:4px;background:white;border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:12px;margin:2px}
     .drop-label{border:2px dashed var(--border);border-radius:12px;padding:28px;cursor:pointer;transition:.2s;text-align:center;display:block}
     .drop-label:hover{border-color:var(--gold);background:#fdf9f0}
+    /* ── New guest modal ── */
+    .gmodal{display:flex;background:white;border-radius:20px;overflow:hidden;width:min(680px,94vw);max-height:90vh;box-shadow:0 24px 64px rgba(0,0,0,.18)}
+    .gmodal-aside{width:130px;flex-shrink:0;background:linear-gradient(160deg,#2a2118 0%,#3d2e1a 100%);padding:28px 14px;display:flex;flex-direction:column;align-items:center;gap:4px}
+    .gmodal-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(201,168,76,.5);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#e4d4a0;margin-bottom:4px}
+    .gmodal-aside-label{font-size:11px;color:rgba(255,255,255,.45);text-align:center;margin-bottom:14px;font-style:italic;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .gmodal-nav{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:10px;border:none;background:none;cursor:pointer;width:100%;transition:.15s;color:rgba(255,255,255,.5)}
+    .gmodal-nav:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+    .gmodal-nav.on{background:rgba(201,168,76,.2);color:#e4c870}
+    .gnav-icon{font-size:18px;line-height:1}
+    .gnav-lbl{font-size:10px;font-family:'Jost',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+    .gmodal-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .gmodal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+    .gmodal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--charcoal);margin:0}
+    .gmodal-panel{flex:1;overflow-y:auto;padding:16px 24px;scrollbar-width:thin}
+    .gmodal-footer{display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--border);background:white}
+    .gfield{margin-bottom:14px}
+    .gfield-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+    .glabel{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .ginput{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:13px;color:var(--charcoal);background:var(--cream);outline:none;box-sizing:border-box;transition:.15s}
+    .ginput:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+    .ghint{font-size:11px;color:var(--muted);margin-top:4px}
+    .rsvp-picker{display:flex;gap:6px;flex-wrap:wrap}
+    .rsvp-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
+    .rsvp-opt.on.pend{border-color:#aaa;background:#f5f5f5;color:#555}
+    .rsvp-opt.on.yes{border-color:#2a7a2a;background:#e8f5e8;color:#1a5a1a}
+    .rsvp-opt.on.maybe{border-color:#c89020;background:#fff3cd;color:#7a5000}
+    .rsvp-opt.on.no{border-color:#c04040;background:#fde8e8;color:#7a1a1a}
+    .side-picker{display:flex;gap:6px;flex-wrap:wrap}
+    .side-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
+    .side-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
+    @media(max-width:560px){
+      .gmodal{flex-direction:column;border-radius:20px 20px 0 0;max-height:92vh;width:100%;position:fixed;bottom:0}
+      .gmodal-aside{width:100%;flex-direction:row;padding:14px 16px;gap:6px;justify-content:flex-start}
+      .gmodal-avatar{width:36px;height:36px;font-size:15px;margin-bottom:0;flex-shrink:0}
+      .gmodal-aside-label{display:none}
+      .gmodal-nav{flex-direction:row;gap:6px;padding:8px 12px;width:auto}
+      .gnav-icon{font-size:16px}
+      .gnav-lbl{font-size:11px;text-transform:none;letter-spacing:0}
+    }
     @media(max-width:680px){.toolbar{padding:10px 14px}.grid{padding:12px;grid-template-columns:1fr}.stats-strip{top:56px}}
   </style>
 </head>
@@ -79,16 +118,25 @@
     <button onclick="doExport()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
     <a href="dashboard.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">← Dashboard</a>
     <button class="btn-primary" onclick="openAdd()" style="padding:8px 18px;font-size:13px">+ Add Guest</button>
-    <button class="hamburger-btn" onclick="toggleMobileNav()">☰</button>
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()">☰</button>
   </div>
 </nav>
 
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
 <div class="mobile-nav-drawer" id="mobileNavDrawer">
-  <button class="mobile-nav-item" onclick="openAdd();closeMobileNav()">+ Add Guest</button>
-  <button class="mobile-nav-item" onclick="openMenuModal();closeMobileNav()">🍽 Menu Settings</button>
-  <button class="mobile-nav-item" onclick="openImport();closeMobileNav()">📥 Import CSV</button>
-  <button class="mobile-nav-item" onclick="doExport();closeMobileNav()">📤 Export CSV</button>
-  <button class="mobile-nav-item" onclick="location.href='dashboard.html'">← Dashboard</button>
+  <div class="mobile-nav-header">
+    <span class="mobile-nav-names">WeddingLedger</span>
+    <button class="mobile-nav-close" onclick="closeMobileNav()">✕</button>
+  </div>
+  <div class="mobile-nav-items">
+    <button class="mobile-nav-item" onclick="openAdd();closeMobileNav()">+ Add Guest</button>
+    <button class="mobile-nav-item" onclick="openMenuModal();closeMobileNav()">🍽 Menu Settings</button>
+    <button class="mobile-nav-item" onclick="openImport();closeMobileNav()">📥 Import CSV</button>
+    <button class="mobile-nav-item" onclick="doExport();closeMobileNav()">📤 Export CSV</button>
+    <button class="mobile-nav-item" onclick="location.href='seating.html'">🪑 Seating Chart</button>
+    <button class="mobile-nav-item" onclick="location.href='timeline.html'">📅 Day-of Timeline</button>
+    <button class="mobile-nav-item" onclick="location.href='dashboard.html'">← Dashboard</button>
+  </div>
 </div>
 
 <main style="padding-top:64px;min-height:100vh;background:var(--cream)">
@@ -105,7 +153,13 @@
       <span style="color:var(--muted)">🔍</span>
       <input id="searchQ" placeholder="Search guests…" oninput="renderList()">
     </div>
-    <select class="tbar-sel" id="grpSel" onchange="renderList()"><option value="">All Groups</option></select>
+    <select class="tbar-sel" id="grpSel" onchange="renderList()">
+      <option value="">All Sides</option>
+      <option value="Bride Side">💐 Bride Side</option>
+      <option value="Groom Side">🤵 Groom Side</option>
+      <option value="Both Sides">💑 Both Sides</option>
+      <option value="Other">👥 Other</option>
+    </select>
     <select class="tbar-sel" id="sortSel" onchange="renderList()">
       <option value="name">Sort: Name</option>
       <option value="rsvp">Sort: RSVP</option>
@@ -126,108 +180,134 @@
   </div>
 </main>
 
-<!-- ADD/EDIT MODAL -->
+<!-- ADD/EDIT MODAL — redesigned -->
 <div class="modal-overlay" id="editModal" style="display:none" onclick="if(event.target===this)closeEdit()">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header">
-      <h3 class="modal-title" id="editTitle">Add Guest</h3>
-      <button class="modal-close" onclick="closeEdit()">✕</button>
+  <div class="gmodal">
+    <!-- Left accent strip with avatar -->
+    <div class="gmodal-aside">
+      <div class="gmodal-avatar" id="modalAvatar">?</div>
+      <div class="gmodal-aside-label" id="modalAvatarName">New Guest</div>
+      <!-- Side nav pills -->
+      <button class="gmodal-nav on" id="t-info"    onclick="showTab('info')">
+        <span class="gnav-icon">👤</span><span class="gnav-lbl">Info</span>
+      </button>
+      <button class="gmodal-nav"    id="t-contact" onclick="showTab('contact')">
+        <span class="gnav-icon">📱</span><span class="gnav-lbl">Contact</span>
+      </button>
+      <button class="gmodal-nav"    id="t-meal"    onclick="showTab('meal')">
+        <span class="gnav-icon">🍽</span><span class="gnav-lbl">Meal</span>
+      </button>
     </div>
-    <div class="modal-body">
-      <div class="tab-row">
-        <button class="mtab on"  id="t-info"    onclick="showTab('info')">👤 Info</button>
-        <button class="mtab"     id="t-meal"    onclick="showTab('meal')">🍽 Meal</button>
-        <button class="mtab"     id="t-contact" onclick="showTab('contact')">📱 Contact</button>
+
+    <!-- Right content area -->
+    <div class="gmodal-main">
+      <div class="gmodal-header">
+        <h3 class="gmodal-title" id="editTitle">Add Guest</h3>
+        <button class="modal-close" onclick="closeEdit()">✕</button>
       </div>
 
-      <!-- Info tab -->
-      <div id="p-info">
-        <label class="modal-label">Full Name *</label>
-        <input id="fName" class="modal-input" placeholder="Jane Smith" style="margin-bottom:12px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-          <div>
-            <label class="modal-label">RSVP Status</label>
-            <select id="fRsvp" class="modal-input">
-              <option value="pending">⏳ Pending</option>
-              <option value="yes">✅ Attending</option>
-              <option value="no">❌ Declined</option>
-              <option value="maybe">🤔 Maybe</option>
+      <!-- INFO TAB -->
+      <div id="p-info" class="gmodal-panel">
+        <div class="gfield">
+          <label class="glabel">Full Name <span style="color:var(--gold)">*</span></label>
+          <input id="fName" class="ginput" placeholder="e.g. Jane Smith" oninput="updateModalAvatar()">
+        </div>
+        <div class="gfield-row">
+          <div class="gfield">
+            <label class="glabel">RSVP Status</label>
+            <div class="rsvp-picker" id="rsvpPicker">
+              <button class="rsvp-opt pend on" data-v="pending"  onclick="pickRsvp(this)">⏳ Pending</button>
+              <button class="rsvp-opt yes"     data-v="yes"      onclick="pickRsvp(this)">✅ Going</button>
+              <button class="rsvp-opt maybe"   data-v="maybe"    onclick="pickRsvp(this)">🤔 Maybe</button>
+              <button class="rsvp-opt no"      data-v="no"       onclick="pickRsvp(this)">❌ Can't</button>
+            </div>
+            <input type="hidden" id="fRsvp" value="pending">
+          </div>
+        </div>
+        <div class="gfield">
+          <label class="glabel">Side of Family</label>
+          <div class="side-picker">
+            <button class="side-opt" data-v=""          onclick="pickSide(this)">— None —</button>
+            <button class="side-opt" data-v="Bride Side" onclick="pickSide(this)">💐 Bride</button>
+            <button class="side-opt" data-v="Groom Side" onclick="pickSide(this)">🤵 Groom</button>
+            <button class="side-opt" data-v="Both Sides" onclick="pickSide(this)">💑 Both</button>
+            <button class="side-opt" data-v="Other"      onclick="pickSide(this)">👥 Other</button>
+          </div>
+          <input type="hidden" id="fGroup" value="">
+        </div>
+        <div class="gfield-row">
+          <div class="gfield">
+            <label class="glabel" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="fPlus" onchange="togglePlusRow()" style="accent-color:var(--gold);width:15px;height:15px">
+              Bringing a +1?
+            </label>
+            <input id="fPlusName" class="ginput" placeholder="+1 guest name" style="display:none;margin-top:8px" id="fPlusName">
+          </div>
+        </div>
+        <div class="gfield">
+          <label class="glabel">Notes</label>
+          <textarea id="fNotes" class="ginput" rows="2" style="resize:vertical" placeholder="Any special notes…"></textarea>
+        </div>
+      </div>
+
+      <!-- CONTACT TAB -->
+      <div id="p-contact" class="gmodal-panel" style="display:none">
+        <div class="gfield">
+          <label class="glabel">Email Address</label>
+          <input type="email" id="fEmail" class="ginput" placeholder="jane@example.com">
+          <div class="ghint">Used to send email invitations</div>
+        </div>
+        <div class="gfield">
+          <label class="glabel">WhatsApp / Phone</label>
+          <div style="display:flex;gap:8px">
+            <select id="fCode" class="ginput" style="width:120px;flex-shrink:0">
+              <option value="44">🇬🇧 +44</option>
+              <option value="1">🇺🇸 +1</option>
+              <option value="94">🇱🇰 +94</option>
+              <option value="61">🇦🇺 +61</option>
+              <option value="91">🇮🇳 +91</option>
+              <option value="65">🇸🇬 +65</option>
+              <option value="971">🇦🇪 +971</option>
+              <option value="92">🇵🇰 +92</option>
+              <option value="880">🇧🇩 +880</option>
+              <option value="33">🇫🇷 +33</option>
+              <option value="49">🇩🇪 +49</option>
             </select>
+            <input type="tel" id="fPhone" class="ginput" placeholder="7700 900 123" style="flex:1">
           </div>
-          <div>
-            <label class="modal-label">Group / Side</label>
-            <input id="fGroup" class="modal-input" placeholder="e.g. Bride side" list="grpDL">
-            <datalist id="grpDL"></datalist>
+          <div class="ghint">No leading 0 — used for WhatsApp</div>
+        </div>
+        <div class="gfield">
+          <label class="glabel">Quick Send</label>
+          <div style="display:flex;gap:8px">
+            <button onclick="quickWA()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #25D366;background:white;color:#25D366;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s" onmouseover="this.style.background='#25D366';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#25D366'">💬 WhatsApp</button>
+            <button onclick="quickEmail()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #4a90d9;background:white;color:#4a90d9;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s" onmouseover="this.style.background='#4a90d9';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#4a90d9'">✉️ Email</button>
           </div>
         </div>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px">
-          <input type="checkbox" id="fPlus" onchange="togglePlusRow()">
-          <span style="font-size:13px">Bringing a +1</span>
-        </label>
-        <div id="plusRow" style="display:none;margin-bottom:12px">
-          <input id="fPlusName" class="modal-input" placeholder="+1 guest name">
-        </div>
-        <label class="modal-label">Notes</label>
-        <textarea id="fNotes" class="modal-input" rows="2" style="resize:vertical" placeholder="Any notes…"></textarea>
       </div>
 
-      <!-- Meal tab -->
-      <div id="p-meal" style="display:none">
-        <div id="noMenuMsg" style="text-align:center;padding:24px">
-          <div style="font-size:32px;margin-bottom:10px">🍽</div>
-          <div style="font-size:13px;font-weight:600;margin-bottom:6px">No menu set up yet</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Only needed for set menus — leave empty for buffets.</div>
-          <button class="btn-secondary" onclick="closeEdit();openMenuModal()">Open Menu Settings</button>
+      <!-- MEAL TAB -->
+      <div id="p-meal" class="gmodal-panel" style="display:none">
+        <div id="noMenuMsg" style="text-align:center;padding:32px 16px">
+          <div style="font-size:40px;margin-bottom:12px">🍽</div>
+          <div style="font-size:14px;font-weight:600;color:var(--charcoal);margin-bottom:6px">No menu configured</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Only needed for set menus.<br>Leave empty for buffets.</div>
+          <button class="btn-secondary" onclick="closeEdit();openMenuModal()" style="font-size:12px">⚙️ Configure Menu</button>
         </div>
         <div id="mealFields" style="display:none">
-          <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px">
-            Optional — only for set menus, not buffets
+          <div class="gfield">
+            <label class="glabel">Dietary Requirements</label>
+            <input id="fDiet" class="ginput" placeholder="e.g. Vegan, nut allergy, gluten-free">
+            <div class="ghint">Leave blank if none</div>
           </div>
           <div id="dynMeal"></div>
-          <label class="modal-label">Dietary Requirements / Allergies</label>
-          <input id="fDiet" class="modal-input" placeholder="e.g. Vegan, nut allergy">
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank if none</div>
-        </div>
-      </div>
-
-      <!-- Contact tab -->
-      <div id="p-contact" style="display:none">
-        <div style="background:var(--warm);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
-          📱 Used for WhatsApp &amp; email invitations. <strong>Both are optional</strong> — you can contact guests manually too.
-        </div>
-        <label class="modal-label">Email Address</label>
-        <input type="email" id="fEmail" class="modal-input" placeholder="jane@email.com" style="margin-bottom:12px">
-        <label class="modal-label">WhatsApp / Phone</label>
-        <div style="display:flex;gap:8px;margin-bottom:4px">
-          <select id="fCode" class="modal-input" style="width:130px;flex-shrink:0">
-            <option value="44">🇬🇧 +44</option>
-            <option value="1">🇺🇸 +1</option>
-            <option value="94">🇱🇰 +94</option>
-            <option value="61">🇦🇺 +61</option>
-            <option value="91">🇮🇳 +91</option>
-            <option value="65">🇸🇬 +65</option>
-            <option value="971">🇦🇪 +971</option>
-            <option value="92">🇵🇰 +92</option>
-            <option value="880">🇧🇩 +880</option>
-            <option value="33">🇫🇷 +33</option>
-            <option value="49">🇩🇪 +49</option>
-          </select>
-          <input type="tel" id="fPhone" class="modal-input" placeholder="7700 900 123">
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:16px">No leading 0 needed</div>
-        <div style="border-top:1px solid var(--border);padding-top:14px">
-          <div style="font-size:12px;font-weight:600;margin-bottom:10px">Quick Send</div>
-          <div style="display:flex;gap:8px">
-            <button class="gbtn wa" onclick="quickWA()" style="flex:1;justify-content:center;padding:10px;font-size:12px">💬 WhatsApp Now</button>
-            <button class="gbtn em" onclick="quickEmail()" style="flex:1;justify-content:center;padding:10px;font-size:12px">✉️ Email Now</button>
-          </div>
         </div>
       </div>
 
       <input type="hidden" id="fId">
-      <div style="display:flex;gap:10px;margin-top:18px">
-        <button class="btn-secondary" onclick="closeEdit()" style="flex:1">Cancel</button>
-        <button class="btn-primary" id="saveBtn" onclick="saveGuest()" style="flex:2">Save Guest</button>
+      <div class="gmodal-footer">
+        <button class="btn-secondary" onclick="closeEdit()">Cancel</button>
+        <button class="btn-primary" id="saveBtn" onclick="saveGuest()" style="flex:1;min-width:120px">Save Guest</button>
       </div>
     </div>
   </div>
@@ -384,12 +464,7 @@ async function init() {
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function rebuildGroupSel() {
-  const groups = [...new Set(guests.map(g=>g.group_label).filter(Boolean))];
-  const s = document.getElementById('grpSel'), cur = s.value;
-  s.innerHTML = '<option value="">All Groups</option>' +
-    groups.map(g => '<option'+(g===cur?' selected':'')+'>'+esc(g)+'</option>').join('');
-  const dl = document.getElementById('grpDL');
-  if(dl) dl.innerHTML = groups.map(g => '<option value="'+esc(g)+'">').join('');
+  // Groups are now fixed (Bride Side / Groom Side / Both / Other) — no rebuild needed
 }
 
 function setF(f, el) {
@@ -500,31 +575,65 @@ function updateStats() {
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function showTab(t) {
   ['info','meal','contact'].forEach(x => {
-    document.getElementById('p-'+x).style.display  = x===t ? 'block' : 'none';
-    document.getElementById('t-'+x).classList.toggle('on', x===t);
+    const panel = document.getElementById('p-'+x);
+    const nav   = document.getElementById('t-'+x);
+    if(panel) panel.style.display = x===t ? 'block' : 'none';
+    if(nav)   nav.classList.toggle('on', x===t);
   });
   if(t === 'meal') buildMealFields();
 }
 function togglePlusRow() {
-  document.getElementById('plusRow').style.display =
-    document.getElementById('fPlus').checked ? 'block' : 'none';
+  const inp = document.getElementById('fPlusName');
+  if(inp) inp.style.display = document.getElementById('fPlus').checked ? 'block' : 'none';
+}
+
+function pickRsvp(btn) {
+  document.querySelectorAll('.rsvp-opt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('fRsvp').value = btn.dataset.v;
+}
+
+function pickSide(btn) {
+  document.querySelectorAll('.side-opt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('fGroup').value = btn.dataset.v;
+}
+
+function updateModalAvatar() {
+  const name = document.getElementById('fName').value.trim();
+  const ini = name ? name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : '?';
+  const av = document.getElementById('modalAvatar');
+  const lbl = document.getElementById('modalAvatarName');
+  if(av)  av.textContent  = ini;
+  if(lbl) lbl.textContent = name || 'New Guest';
 }
 
 // ── ADD / EDIT ────────────────────────────────────────────────────────────────
 function clearForm() {
-  ['fName','fGroup','fDiet','fNotes','fPlusName','fEmail','fPhone'].forEach(id => {
+  ['fName','fDiet','fNotes','fPlusName','fEmail','fPhone'].forEach(id => {
     const e = document.getElementById(id); if(e) e.value = '';
   });
   document.getElementById('fRsvp').value  = 'pending';
+  document.getElementById('fGroup').value = '';
   document.getElementById('fCode').value  = '44';
   document.getElementById('fPlus').checked = false;
-  document.getElementById('plusRow').style.display = 'none';
+  const pn = document.getElementById('fPlusName'); if(pn) pn.style.display='none';
   document.getElementById('fId').value = '';
+  // Reset pickers
+  document.querySelectorAll('.rsvp-opt').forEach(b => {
+    b.classList.toggle('on', b.dataset.v === 'pending');
+  });
+  document.querySelectorAll('.side-opt').forEach(b => b.classList.remove('on'));
+  document.querySelector('.side-opt[data-v=""]') && document.querySelector('.side-opt[data-v=""]').classList.add('on');
+  // Reset avatar
+  const av=document.getElementById('modalAvatar'); if(av) av.textContent='?';
+  const lbl=document.getElementById('modalAvatarName'); if(lbl) lbl.textContent='New Guest';
 }
 function openAdd() {
   document.getElementById('editTitle').textContent = 'Add Guest';
   clearForm();
   showTab('info');
+  updateModalAvatar();
   document.getElementById('editModal').style.display = 'flex';
 }
 function editGuest(id) {
@@ -534,12 +643,18 @@ function editGuest(id) {
   clearForm();
   document.getElementById('fName').value   = g.name  || '';
   document.getElementById('fRsvp').value   = g.rsvp_status || 'pending';
-  document.getElementById('fGroup').value  = g.group_label || '';
+  document.getElementById('fGroup').value = g.group_label || '';
+  // Sync RSVP picker
+  const rv = g.rsvp_status || 'pending';
+  document.querySelectorAll('.rsvp-opt').forEach(b => b.classList.toggle('on', b.dataset.v === rv));
+  // Sync side picker
+  const grp = g.group_label || '';
+  document.querySelectorAll('.side-opt').forEach(b => b.classList.toggle('on', b.dataset.v === grp));
   document.getElementById('fDiet').value   = g.dietary || '';
   document.getElementById('fNotes').value  = g.notes  || '';
   document.getElementById('fEmail').value  = g.email  || '';
   document.getElementById('fPlus').checked = !!g.plus_one;
-  document.getElementById('plusRow').style.display = g.plus_one ? 'block' : 'none';
+  const pnEdit=document.getElementById('fPlusName'); if(pnEdit) pnEdit.style.display = g.plus_one ? 'block' : 'none';
   document.getElementById('fPlusName').value = g.plus_one_name || '';
   document.getElementById('fId').value = id;
   if(g.phone) {
@@ -551,6 +666,7 @@ function editGuest(id) {
     document.getElementById('fPhone').value = num;
   }
   showTab('info');
+  updateModalAvatar();
   document.getElementById('editModal').style.display = 'flex';
 }
 function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
@@ -878,8 +994,15 @@ function toast(msg, err) {
   t.textContent=msg; t.className='toast'+(err?' error':'')+' show';
   setTimeout(()=>t.classList.remove('show'),3200);
 }
-function toggleMobileNav() { document.getElementById('mobileNavDrawer').classList.toggle('open'); }
-function closeMobileNav()  { document.getElementById('mobileNavDrawer').classList.remove('open'); }
+function toggleMobileNav() {
+  document.getElementById('mobileNavDrawer').classList.toggle('open');
+  document.getElementById('mobileNavOverlay').classList.toggle('open');
+  document.getElementById('hamburgerBtn') && document.getElementById('hamburgerBtn').blur();
+}
+function closeMobileNav() {
+  document.getElementById('mobileNavDrawer').classList.remove('open');
+  document.getElementById('mobileNavOverlay').classList.remove('open');
+}
 
 init();
 </script>
