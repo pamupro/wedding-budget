@@ -25,11 +25,16 @@ const DEFAULT_TASKS = [
   'Choose floral arrangements','Finalise seating plan','Confirm all vendor bookings',
 ];
 
+// Base currency is GBP. All amounts stored in GBP internally.
+// Live rates fetched from exchangerate-api (free tier)
 const CURRENCIES = {
-  LKR:{ symbol:'LKR', locale:'en-LK', rate:1,      name:'Sri Lankan Rupee' },
-  GBP:{ symbol:'£',   locale:'en-GB', rate:0.0024, name:'British Pounds'   },
-  EUR:{ symbol:'€',   locale:'de-DE', rate:0.0028, name:'Euro'             },
-  USD:{ symbol:'$',   locale:'en-US', rate:0.0031, name:'US Dollar'        },
+  GBP:{ symbol:'£',   locale:'en-GB', rate:1,      name:'British Pound'   },
+  USD:{ symbol:'$',   locale:'en-US', rate:1.27,   name:'US Dollar'       },
+  EUR:{ symbol:'€',   locale:'de-DE', rate:1.17,   name:'Euro'            },
+  LKR:{ symbol:'LKR', locale:'en-LK', rate:383,    name:'Sri Lankan Rupee'},
+  AUD:{ symbol:'A$',  locale:'en-AU', rate:1.97,   name:'Australian Dollar'},
+  INR:{ symbol:'₹',   locale:'en-IN', rate:107,    name:'Indian Rupee'    },
+  SGD:{ symbol:'S$',  locale:'en-SG', rate:1.71,   name:'Singapore Dollar'},
 };
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -37,7 +42,7 @@ let vendors=[], payments=[], tasks=[];
 let notes='', spendLimit=0;
 let shareToken=null, shareEnabled=false;
 let sharePermissions={vendors:true,dueDates:true,budget:true,checklist:false,notes:false};
-let selectedIcon='💒', activeCurrency='LKR', isPro=false;
+let selectedIcon='💒', activeCurrency='GBP', isPro=false;
 let activePaymentVendorId=null, activeEditVendorId=null;
 let userId=null, accessToken=null, profile=null;
 let weddingDate=new Date('2027-02-11T09:00:00');
@@ -72,6 +77,7 @@ async function init() {
   try {
     await loadProfile();
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
+    fetchLiveRates(); // async - updates rates in background
   } catch(e) {
     console.error('Init error:', e);
     showLoadingState(false);
@@ -212,7 +218,7 @@ async function loadSettings() {
     if(r.key==='share_token') shareToken=r.value;
     if(r.key==='share_enabled') shareEnabled=r.value==='true';
     if(r.key==='share_permissions'){try{sharePermissions=JSON.parse(r.value);}catch(e){}}
-    if(r.key==='currency'){activeCurrency=r.value||'LKR';setCurrencyUI(activeCurrency);}
+    if(r.key==='currency'){activeCurrency=r.value||'GBP';setCurrencyUI(activeCurrency);}
     if(r.key==='vendor_limit'){
       // Admin-assigned custom vendor limit
       const lim=parseInt(r.value)||0;
@@ -225,6 +231,7 @@ async function loadSettings() {
 // ─── CURRENCY ────────────────────────────────────────────────────────────────
 function initCurrencyUI() {
   const sel=document.getElementById('currencySelect'); if(!sel) return;
+  sel.innerHTML=''; // clear first
   Object.keys(CURRENCIES).forEach(code=>{
     const opt=document.createElement('option');
     opt.value=code; opt.textContent=`${CURRENCIES[code].symbol} ${code}`;
@@ -236,20 +243,58 @@ function setCurrencyUI(code){activeCurrency=code;const sel=document.getElementBy
 async function changeCurrency(code){
   activeCurrency=code;
   await DB.upsertSetting(userId,'currency',code,accessToken);
-  renderVendors();updateStats();showToast(`Currency: ${CURRENCIES[code].name} ✓`);
+  renderVendors(); updateStats();
+  const rate = CURRENCIES[code].rate;
+  const msg = code==='GBP'
+    ? 'Currency: British Pound (£) ✓'
+    : `Currency: ${CURRENCIES[code].name} — £1 = ${CURRENCIES[code].symbol}${rate.toLocaleString()} ✓`;
+  showToast(msg);
+  updateLiveRateBadge();
 }
 
-// Convert LKR amount to active currency for display
-function fmt(lkr){
+// Format amount from GBP base to active currency
+function fmt(gbp){
+  if(!gbp && gbp!==0) return '—';
   const c=CURRENCIES[activeCurrency];
-  const v=lkr*c.rate;
-  return c.symbol+' '+v.toLocaleString(c.locale,{minimumFractionDigits:0,maximumFractionDigits:0});
+  const v=gbp*(c.rate||1);
+  return c.symbol+v.toLocaleString(c.locale,{minimumFractionDigits:0,maximumFractionDigits:0});
 }
-// Always return GBP conversion if not already GBP (for secondary display)
-function fmtGBP(lkr){
+// Show £ equivalent when viewing in another currency
+function fmtGBP(gbp){
+  if(!gbp && gbp!==0) return null;
   if(activeCurrency==='GBP') return null;
-  const v=lkr*CURRENCIES.GBP.rate;
-  return '£'+v.toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});
+  return '£'+Number(gbp).toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+// Fetch live exchange rates and update CURRENCIES
+async function fetchLiveRates(){
+  try {
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/GBP');
+    if(!r.ok) return;
+    const d = await r.json();
+    // Update each currency's rate from live data
+    Object.keys(CURRENCIES).forEach(code => {
+      if(d.rates[code]) CURRENCIES[code].rate = d.rates[code];
+    });
+    console.log('✅ Live exchange rates updated');
+    // Re-render with fresh rates
+    renderVendors(); updateStats();
+    updateLiveRateBadge();
+  } catch(e) {
+    console.log('Using fallback rates:', e.message);
+  }
+}
+
+function updateLiveRateBadge(){
+  const badge = document.getElementById('liveRateBadge');
+  if(!badge) return;
+  if(activeCurrency === 'GBP'){
+    badge.style.display = 'none';
+    return;
+  }
+  const c = CURRENCIES[activeCurrency];
+  badge.textContent = `£1 = ${c.symbol}${c.rate.toLocaleString('en-GB',{maximumFractionDigits:2})}`;
+  badge.style.display = 'inline';
+  badge.title = 'Live exchange rate';
 }
 
 // ─── VENDOR LIMIT UI ─────────────────────────────────────────────────────────
@@ -546,7 +591,7 @@ async function submitPayment(){
   if(!amount||amount<=0){showToast('Enter a valid amount',true);return;}
   const date=document.getElementById('pmtDate').value;
   if(!date){showToast('Select a date',true);return;}
-  // Convert to LKR for storage
+  // Convert to GBP for storage
   const lkrAmount=amount/CURRENCIES[activeCurrency].rate;
   const data={user_id:userId,vendor_id:activePaymentVendorId,
     amount:lkrAmount,payment_date:date,
@@ -892,9 +937,10 @@ function updateStats(){
 
 async function saveLimit(){
   const input=parseFloat(document.getElementById('spendLimit').value)||0;
-  const lkr=input/CURRENCIES[activeCurrency].rate;
-  spendLimit=lkr;
-  await DB.upsertSetting(userId,'spend_limit',lkr,accessToken);
+  // Convert from selected currency to GBP for storage
+  const gbpAmount=input/CURRENCIES[activeCurrency].rate;
+  spendLimit=gbpAmount;
+  await DB.upsertSetting(userId,'spend_limit',gbpAmount,accessToken);
   updateStats();showToast('Spend limit saved ✓');
 }
 async function saveNotes(){
