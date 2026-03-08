@@ -16,6 +16,11 @@ window.addEventListener('load', function(){
 });
 </script>
 <link rel="stylesheet" href="style.css">
+  <!-- Chart.js for budget chart -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -162,6 +167,44 @@ window.addEventListener('load', function(){
       <label class="field-label">Wedding Notes</label>
       <textarea id="weddingNotes" rows="4" class="field-input" placeholder="Notes about your wedding..." style="resize:vertical"></textarea>
       <button class="btn-primary" style="margin-top:8px" onclick="saveNotes()">Save Notes</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── BUDGET CHART ──────────────────────────────────────────────────────── -->
+<section class="bottom-section" style="padding-top:0">
+  <div class="section-inner">
+    <div class="summary-card" style="padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h3 class="card-title" style="margin:0">📊 Budget Breakdown</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;gap:6px">
+            <button onclick="setChartType('doughnut')" id="btnDoughnut"
+              style="background:var(--gold);color:white;border:none;border-radius:99px;
+              padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+              🍩 Doughnut
+            </button>
+            <button onclick="setChartType('bar')" id="btnBar"
+              style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
+              border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+              📊 Bar
+            </button>
+          </div>
+          <button onclick="exportPDF()"
+            style="background:linear-gradient(135deg,#2d5a3d,#3d7a52);color:white;border:none;
+            border-radius:99px;padding:8px 18px;font-family:'Jost',sans-serif;font-size:12px;
+            font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
+            box-shadow:0 4px 14px rgba(45,90,61,0.3)">
+            📄 Export PDF
+          </button>
+        </div>
+      </div>
+      <div style="position:relative;max-width:480px;margin:0 auto" id="chartWrapper">
+        <canvas id="budgetChart" height="300"></canvas>
+        <div id="chartEmpty" style="display:none;text-align:center;padding:40px;color:var(--muted);font-size:14px">
+          Add vendors to see your budget breakdown
+        </div>
+      </div>
     </div>
   </div>
 </section>
