@@ -562,81 +562,92 @@ async function init() {
   }
 }
 
-// ── REALTIME — listens for guest row changes from RSVP form ───────────────────
+// ── REALTIME + POLLING ────────────────────────────────────────────────────────
+// Two-pronged approach: Supabase Realtime WebSocket + 10s polling fallback
+// This guarantees the guest list always reflects RSVP submissions
+
+let realtimeConnected = false;
+let pollTimer = null;
+
 function startRealtime() {
+  // ── Polling: refresh guests from DB every 10 seconds ──────────────────────
+  // Simple, guaranteed to work regardless of Realtime status
+  pollTimer = setInterval(refreshGuests, 10000);
+
+  // ── WebSocket Realtime: instant push when guest row changes ───────────────
   try {
     const client = supabase.createClient(SB, SK);
     client
       .channel('guests-live')
       .on('postgres_changes', {
-        event: '*',          // INSERT, UPDATE, DELETE
+        event: '*',
         schema: 'public',
-        table: 'guests',
-        filter: 'user_id=eq.' + uid
+        table: 'guests'
+        // No filter here — filters on non-PK columns need REPLICA IDENTITY FULL
+        // We filter by user_id in handleRealtimeEvent instead
       }, payload => {
         handleRealtimeEvent(payload);
       })
       .subscribe(status => {
-        if(status === 'SUBSCRIBED') {
-          console.log('🔴 Realtime connected');
-          showLiveDot(true);
-        } else if(status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-          showLiveDot(false);
+        console.log('Realtime status:', status);
+        realtimeConnected = (status === 'SUBSCRIBED');
+        showLiveDot(realtimeConnected);
+        if(realtimeConnected) {
+          // When realtime connects, do one immediate refresh to catch anything missed
+          refreshGuests();
         }
       });
   } catch(e) {
-    console.warn('Realtime not available:', e);
+    console.warn('Realtime unavailable, polling only:', e);
   }
+}
+
+async function refreshGuests() {
+  try {
+    const fresh = await sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc');
+    if(!fresh) return;
+    // Detect changes and show toasts
+    fresh.forEach(newG => {
+      const old = guests.find(g => g.id === newG.id);
+      if(old && old.rsvp_status !== newG.rsvp_status && newG.rsvp_status !== 'pending') {
+        const emoji = newG.rsvp_status === 'yes' ? '✅' : newG.rsvp_status === 'no' ? '❌' : '🤔';
+        const label = newG.rsvp_status === 'yes' ? 'Attending' : newG.rsvp_status === 'no' ? 'Declined' : 'Maybe';
+        toast(emoji + ' ' + (newG.name||'Guest') + ' — ' + label);
+      }
+      if(!old && newG.user_id === uid) {
+        toast('🎉 New RSVP from ' + (newG.name||'guest'));
+      }
+    });
+    guests = fresh;
+    renderList();
+    updateStats();
+  } catch(e) { /* silent fail on poll */ }
 }
 
 function handleRealtimeEvent(payload) {
   const { eventType, new: newRow, old: oldRow } = payload;
-
-  if(eventType === 'INSERT') {
-    // New guest added via RSVP form
-    guests.push(newRow);
-    toast('New RSVP from ' + (newRow.name || 'guest') + ' 🎉');
-
-  } else if(eventType === 'UPDATE') {
-    // Guest updated their RSVP
-    const i = guests.findIndex(g => g.id === newRow.id);
-    if(i >= 0) {
-      const oldStatus = guests[i].rsvp_status;
-      guests[i] = newRow;
-      if(oldStatus !== newRow.rsvp_status) {
-        const emoji = newRow.rsvp_status === 'yes' ? '✅' : newRow.rsvp_status === 'no' ? '❌' : '🤔';
-        toast(emoji + ' ' + (newRow.name || 'Guest') + ' is ' +
-          (newRow.rsvp_status === 'yes' ? 'Attending' :
-           newRow.rsvp_status === 'no'  ? 'Declined'  : 'Maybe'));
-      }
-    } else {
-      guests.push(newRow); // edge case: wasn't in local list
-    }
-
-  } else if(eventType === 'DELETE') {
-    guests = guests.filter(g => g.id !== oldRow.id);
-  }
-
-  renderList();
-  updateStats();
+  // Only handle rows belonging to this couple
+  if(newRow && newRow.user_id && newRow.user_id !== uid) return;
+  if(oldRow && oldRow.user_id && oldRow.user_id !== uid) return;
+  // Just trigger a full refresh — simpler and bulletproof
+  refreshGuests();
 }
 
 function showLiveDot(on) {
   let dot = document.getElementById('liveDot');
   if(!dot) {
-    // Inject a small live indicator next to the page title
     const title = document.querySelector('.page-title');
     if(!title) return;
     dot = document.createElement('span');
     dot.id = 'liveDot';
-    dot.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;letter-spacing:.05em;padding:3px 8px;border-radius:99px;margin-left:8px;vertical-align:middle;transition:.3s';
+    dot.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;letter-spacing:.05em;padding:3px 8px;border-radius:99px;margin-left:10px;vertical-align:middle;transition:.4s';
     title.appendChild(dot);
   }
   dot.style.background = on ? '#e8f5e8' : '#f5f5f5';
-  dot.style.color       = on ? '#2a7a2a' : '#aaa';
+  dot.style.color       = on ? '#2a7a2a' : '#999';
   dot.innerHTML = on
-    ? '<span style="width:6px;height:6px;border-radius:50%;background:#2a7a2a;animation:pulse 1.5s infinite"></span>LIVE'
-    : '<span style="width:6px;height:6px;border-radius:50%;background:#ccc"></span>OFFLINE';
+    ? '<span style="width:6px;height:6px;border-radius:50%;background:#2a7a2a;display:inline-block;animation:pulse 1.5s infinite"></span>LIVE'
+    : '<span style="width:6px;height:6px;border-radius:50%;background:#ccc;display:inline-block"></span>OFFLINE';
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
