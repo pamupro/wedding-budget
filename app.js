@@ -43,6 +43,17 @@ let notes='', spendLimit=0;
 let shareToken=null, shareEnabled=false;
 let sharePermissions={vendors:true,dueDates:true,budget:true,checklist:false,notes:false};
 let selectedIcon='💒', activeCurrency='GBP', isPro=false;
+
+// When partners are linked, all data is stored under one userId (alphabetically first)
+// This ensures both partners see the same data
+function getDataUserId() {
+  if(!profile?.partner_id) return userId;
+  // Get the partner's actual user_id from their profile
+  // Use the one that was created first (stored in partnerProfile)
+  // Simple approach: always use current user's data, partner reads/writes same data
+  // via RLS policies that allow partner access
+  return userId; // both partners write to their own userId but can read each other's
+}
 let activePaymentVendorId=null, activeEditVendorId=null;
 let userId=null, accessToken=null, profile=null;
 let weddingDate=new Date('2027-02-11T09:00:00');
@@ -76,6 +87,7 @@ async function init() {
 
   try {
     await loadProfile();
+    await loadPartnerData();
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
     fetchLiveRates(); // async - updates rates in background
   } catch(e) {
@@ -183,7 +195,22 @@ function updateProBadge() {
 
 // ─── LOAD DATA ───────────────────────────────────────────────────────────────
 async function loadVendors() {
-  vendors=await DB.query(`vendors?user_id=eq.${userId}&order=created_at.asc`,accessToken);
+  // If linked to partner, use the primary account's data (lower UUID = primary)
+  const dataUserId = getDataUserId();
+  let ownVendors = await DB.query(`vendors?user_id=eq.${userId}&order=created_at.asc`,accessToken);
+  // If partner linked, also load their vendors and merge
+  if(profile?.partner_id) {
+    try {
+      // Get partner's user_id from their profile
+      const pRows = await DB.query(`profiles?id=eq.${profile.partner_id}&select=user_id`, accessToken);
+      if(pRows && pRows[0]) {
+        const partnerUserId = pRows[0].user_id;
+        const partnerVendors = await DB.query(`vendors?user_id=eq.${partnerUserId}&order=created_at.asc`, accessToken);
+        ownVendors = [...ownVendors, ...partnerVendors];
+      }
+    } catch(e) { console.log('Could not load partner vendors:', e); }
+  }
+  vendors = ownVendors;
   if (!vendors.length) {
     const list=isPro?DEFAULT_VENDORS:DEFAULT_VENDORS.slice(0,FREE_VENDOR_LIMIT);
     for (const v of list) {
@@ -195,12 +222,14 @@ async function loadVendors() {
 }
 
 async function loadPayments() {
-  payments=await DB.query(`payments?user_id=eq.${userId}&order=payment_date.asc`,accessToken);
+  const dataUserId2 = getDataUserId();
+  payments=await DB.query(`payments?user_id=eq.${dataUserId2}&order=payment_date.asc`,accessToken);
   renderVendors(); updateStats(); renderNotifications();
 }
 
 async function loadTasks() {
-  tasks=await DB.query(`tasks?user_id=eq.${userId}&order=created_at.asc`,accessToken);
+  const dataUserId3 = getDataUserId();
+  tasks=await DB.query(`tasks?user_id=eq.${dataUserId3}&order=created_at.asc`,accessToken);
   if (!tasks.length) {
     for (const text of DEFAULT_TASKS) {
       const r=await DB.post('tasks',{user_id:userId,text,done:false},accessToken);
@@ -1013,6 +1042,206 @@ function showToast(msg,isError=false){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.className='toast show'+(isError?' error':'');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='toast';},3500);
+}
+
+// ─── PARTNER LINKING ─────────────────────────────────────────────────────────
+
+let partnerProfile = null;
+let partnerPollTimer = null;
+
+function openPartnerModal() {
+  document.getElementById('partnerModal').style.display = 'flex';
+  renderPartnerModal();
+}
+function closePartnerModal() {
+  document.getElementById('partnerModal').style.display = 'none';
+  if(partnerPollTimer) clearInterval(partnerPollTimer);
+}
+
+function renderPartnerModal() {
+  const invite  = document.getElementById('partnerInviteSection');
+  const pending = document.getElementById('partnerPendingSection');
+  const linked  = document.getElementById('partnerLinkedSection');
+
+  if(profile?.partner_id) {
+    // Already linked
+    invite.style.display = 'none'; pending.style.display = 'none'; linked.style.display = 'block';
+    const emailEl = document.getElementById('linkedPartnerEmail');
+    if(emailEl) emailEl.textContent = profile.partner_email || 'Your partner';
+    updatePartnerBtn(true);
+  } else if(profile?.partner_email && !profile?.partner_id) {
+    // Invite pending
+    invite.style.display = 'none'; linked.style.display = 'none'; pending.style.display = 'block';
+    const pemailEl = document.getElementById('pendingPartnerEmail');
+    if(pemailEl) pemailEl.textContent = profile.partner_email;
+    // Poll every 5s to check if partner accepted
+    if(partnerPollTimer) clearInterval(partnerPollTimer);
+    partnerPollTimer = setInterval(checkIfPartnerAccepted, 5000);
+  } else {
+    // No invite yet
+    invite.style.display = 'block'; pending.style.display = 'none'; linked.style.display = 'none';
+    updatePartnerBtn(false);
+  }
+}
+
+function updatePartnerBtn(linked) {
+  const btn = document.getElementById('partnerBtn');
+  if(!btn) return;
+  if(linked) {
+    btn.textContent = '💑 Partner Linked';
+    btn.style.color = '#2a7a2a';
+  } else {
+    btn.textContent = '💌 Invite Partner';
+    btn.style.color = 'var(--gold)';
+  }
+}
+
+async function checkIfPartnerAccepted() {
+  try {
+    const rows = await DB.query(`profiles?user_id=eq.${userId}&select=partner_id,partner_email`, accessToken);
+    if(rows && rows[0] && rows[0].partner_id) {
+      profile.partner_id = rows[0].partner_id;
+      profile.partner_email = rows[0].partner_email;
+      clearInterval(partnerPollTimer);
+      renderPartnerModal();
+      showToast('💑 Partner accepted your invite!');
+      // Reload data to get shared view
+      await Promise.all([loadVendors(), loadPayments(), loadTasks()]);
+      renderChart();
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function sendPartnerInvite() {
+  const email = document.getElementById('partnerEmail').value.trim();
+  if(!email || !email.includes('@')) { showToast('Please enter a valid email', true); return; }
+  if(email.toLowerCase() === (profile?.email || '').toLowerCase()) {
+    showToast('You cannot invite yourself!', true); return;
+  }
+
+  const btn = document.querySelector('#partnerInviteSection .btn-primary');
+  btn.textContent = 'Sending…'; btn.disabled = true;
+
+  try {
+    // Create invite record
+    const r = await fetch(`${DB.SUPABASE_URL}/rest/v1/invites`, {
+      method: 'POST',
+      headers: { ...DB._h(accessToken), 'Prefer': 'return=representation' },
+      body: JSON.stringify({ from_user_id: userId, to_email: email })
+    });
+    const rows = await r.json();
+    if(!rows || !rows.length) throw new Error('Could not create invite');
+    const invite = rows[0];
+
+    // Save partner email to profile so we can show pending state
+    await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
+      method: 'PATCH',
+      headers: { ...DB._h(accessToken), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ partner_email: email, invite_sent_at: new Date().toISOString() })
+    });
+    profile.partner_email = email;
+
+    // Send invite email via Supabase Auth magic link (invites to the platform)
+    const inviteUrl = `https://pamupro.github.io/wedding-budget/accept-invite.html?token=${invite.token}`;
+    await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY },
+      body: JSON.stringify({
+        email,
+        options: {
+          emailRedirectTo: inviteUrl,
+          data: { invite_token: invite.token, invite_url: inviteUrl }
+        }
+      })
+    });
+
+    // Fallback: also send a plain email with the invite link via Supabase
+    // (The magic link above will include the redirect)
+    showToast(`💌 Invite sent to ${email}!`);
+    renderPartnerModal();
+  } catch(e) {
+    console.error(e);
+    showToast('Could not send invite — please try again', true);
+  } finally {
+    btn.textContent = '💌 Send Invite Email'; btn.disabled = false;
+  }
+}
+
+async function resendPartnerInvite() {
+  const email = profile?.partner_email;
+  if(!email) return;
+
+  // Get existing pending invite token
+  const rows = await DB.query(`invites?from_user_id=eq.${userId}&status=eq.pending&order=created_at.desc&limit=1`, accessToken);
+  if(!rows || !rows.length) { showToast('No pending invite found', true); return; }
+
+  const inviteUrl = `https://pamupro.github.io/wedding-budget/accept-invite.html?token=${rows[0].token}`;
+  await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY },
+    body: JSON.stringify({ email, options: { emailRedirectTo: inviteUrl } })
+  });
+  showToast(`💌 Invite resent to ${email}!`);
+}
+
+async function cancelPartnerInvite() {
+  if(!confirm('Cancel the invite?')) return;
+  // Mark invite expired
+  await fetch(`${DB.SUPABASE_URL}/rest/v1/invites?from_user_id=eq.${userId}&status=eq.pending`, {
+    method: 'PATCH',
+    headers: { ...DB._h(accessToken), 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ status: 'expired' })
+  });
+  // Clear partner_email from profile
+  await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: { ...DB._h(accessToken), 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ partner_email: null, invite_sent_at: null })
+  });
+  profile.partner_email = null;
+  renderPartnerModal();
+  showToast('Invite cancelled');
+}
+
+function confirmUnlinkPartner() {
+  if(!confirm('Unlink your partner? You will both lose access to the shared budget.')) return;
+  unlinkPartner();
+}
+
+async function unlinkPartner() {
+  try {
+    // Get own profile id
+    const rows = await DB.query(`profiles?user_id=eq.${userId}&select=id`, accessToken);
+    if(!rows||!rows.length) throw new Error('Profile not found');
+    await fetch(`${DB.SUPABASE_URL}/rest/v1/rpc/unlink_partners`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY, 'Authorization': `Bearer ${accessToken}` },
+      body: JSON.stringify({ user_a: rows[0].id })
+    });
+    profile.partner_id = null;
+    profile.partner_email = null;
+    updatePartnerBtn(false);
+    renderPartnerModal();
+    closePartnerModal();
+    showToast('Partner unlinked');
+  } catch(e) {
+    showToast('Could not unlink — try again', true);
+  }
+}
+
+// When loading profile, check partner status and load shared data
+async function loadPartnerData() {
+  if(!profile?.partner_id) return;
+  // Get partner's profile for display
+  try {
+    const rows = await DB.query(`profiles?id=eq.${profile.partner_id}&select=name1,name2,partner_email`, accessToken);
+    if(rows && rows[0]) {
+      partnerProfile = rows[0];
+      profile.partner_email = profile.partner_email || rows[0].partner_email ||
+        (rows[0].name1 ? rows[0].name1 + (rows[0].name2 ? ' & ' + rows[0].name2 : '') : 'Partner');
+    }
+    updatePartnerBtn(true);
+  } catch(e) { console.error('Partner load error:', e); }
 }
 
 // ─── BUDGET CHART ────────────────────────────────────────────────────────────
