@@ -294,9 +294,20 @@
 
       <!-- INFO TAB -->
       <div id="p-info" class="gmodal-panel">
-        <div class="gfield">
-          <label class="glabel">Full Name <span style="color:var(--gold)">*</span></label>
-          <input id="fName" class="ginput" placeholder="e.g. Jane Smith" oninput="updateModalAvatar()">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div class="gfield" style="margin-bottom:0">
+            <label class="glabel" style="display:flex;align-items:center;justify-content:space-between">
+              First Name
+              <span style="color:var(--gold);font-size:10px;font-weight:700">Required</span>
+            </label>
+            <input id="fFirst" class="ginput" placeholder="e.g. Jane" oninput="updateModalAvatar()" autocomplete="given-name">
+          </div>
+          <div class="gfield" style="margin-bottom:0">
+            <label class="glabel">Last Name
+              <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0"> (optional)</span>
+            </label>
+            <input id="fLast" class="ginput" placeholder="e.g. Smith" autocomplete="family-name">
+          </div>
         </div>
         <div class="gfield-row">
           <div class="gfield">
@@ -638,7 +649,9 @@ function buildCard(g) {
     '<div class="gcard-top">' +
       '<div class="avatar">'+ini+'</div>' +
       '<div style="flex:1;min-width:0">' +
-        '<div class="gname">'+esc(g.name)+'</div>' +
+        '<div class="gname">'+esc(g.name)+
+    (missingName(g.name) ? ' <span style="font-size:10px;background:#fff3cd;color:#7a5000;border-radius:99px;padding:2px 7px;font-weight:600;vertical-align:middle">⚠ Incomplete</span>' : '')+
+    '</div>' +
         '<div class="gmeta">'+(hasEm ? esc(g.email) : hasPh ? '📱 '+esc(g.phone) : '<i style="opacity:.5">No contact saved</i>')+'</div>' +
       '</div>' +
     '</div>' +
@@ -686,17 +699,19 @@ function pickSide(btn) {
 }
 
 function updateModalAvatar() {
-  const name = document.getElementById('fName').value.trim();
-  const ini = name ? name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : '?';
-  const av = document.getElementById('modalAvatar');
-  const lbl = document.getElementById('modalAvatarName');
+  const first = (document.getElementById('fFirst')?.value||'').trim();
+  const last  = (document.getElementById('fLast')?.value||'').trim();
+  const full  = [first,last].filter(Boolean).join(' ');
+  const ini   = [first[0],last[0]].filter(Boolean).join('').toUpperCase() || '?';
+  const av    = document.getElementById('modalAvatar');
+  const lbl   = document.getElementById('modalAvatarName');
   if(av)  av.textContent  = ini;
-  if(lbl) lbl.textContent = name || 'New Guest';
+  if(lbl) lbl.textContent = full || 'New Guest';
 }
 
 // ── ADD / EDIT ────────────────────────────────────────────────────────────────
 function clearForm() {
-  ['fName','fDiet','fNotes','fPlusName','fEmail','fPhone'].forEach(id => {
+  ['fFirst','fLast','fDiet','fNotes','fPlusName','fEmail','fPhone'].forEach(id => {
     const e = document.getElementById(id); if(e) e.value = '';
   });
   document.getElementById('fRsvp').value  = 'pending';
@@ -727,7 +742,10 @@ function editGuest(id) {
   if(!g) return;
   document.getElementById('editTitle').textContent = 'Edit Guest';
   clearForm();
-  document.getElementById('fName').value   = g.name  || '';
+  // Split stored name into first/last
+  const _nameParts = (g.name||'').trim().split(' ');
+  document.getElementById('fFirst').value = _nameParts[0] || '';
+  document.getElementById('fLast').value  = _nameParts.slice(1).join(' ') || '';
   document.getElementById('fRsvp').value   = g.rsvp_status || 'pending';
   document.getElementById('fGroup').value = g.group_label || '';
   // Sync RSVP picker
@@ -758,8 +776,10 @@ function editGuest(id) {
 function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
 
 async function saveGuest() {
-  const name = document.getElementById('fName').value.trim();
-  if(!name) { toast('Name is required', true); return; }
+  const fFirst = document.getElementById('fFirst').value.trim();
+  const fLast  = document.getElementById('fLast').value.trim();
+  if(!fFirst) { toast('First name is required', true); document.getElementById('fFirst').focus(); return; }
+  const name = [fFirst, fLast].filter(Boolean).join(' ');
   const btn = document.getElementById('saveBtn');
   btn.textContent = 'Saving…'; btn.disabled = true;
 
@@ -1081,6 +1101,11 @@ function doExport() {
 }
 
 // ── UTILS ──────────────────────────────────────────────────────────────────────
+function missingName(name) {
+  if(!name) return true;
+  const parts = name.trim().split(' ').filter(Boolean);
+  return parts.length < 2; // only one name = incomplete
+}
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
