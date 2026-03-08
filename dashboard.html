@@ -40,6 +40,7 @@ window.addEventListener('load', function(){
     </div>
     <div id="proBadge" class="desktop-only"></div>
     <button class="topbar-btn desktop-only" onclick="openSettingsModal()" style="color:var(--muted)">⚙️ Settings</button>
+    <button class="topbar-btn desktop-only" onclick="openPartnerModal()" id="partnerBtn" style="color:var(--gold);font-weight:600">💌 Invite Partner</button>
     <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
     <button class="topbar-btn signout-btn desktop-only" onclick="doLogout()">Sign Out</button>
     <!-- Mobile hamburger -->
@@ -58,6 +59,7 @@ window.addEventListener('load', function(){
     <div id="mobileProBadge" style="margin-bottom:8px"></div>
     <button class="mobile-nav-item" onclick="openShareModal();closeMobileNav()">🔗 Share Budget</button>
     <button class="mobile-nav-item" onclick="openSettingsModal();closeMobileNav()">⚙️ Settings</button>
+    <button class="mobile-nav-item" onclick="openPartnerModal();closeMobileNav()" style="color:var(--gold);font-weight:600">💌 Invite Partner</button>
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
     <button class="mobile-nav-item danger" onclick="doLogout()">Sign Out</button>
   </div>
@@ -476,6 +478,80 @@ window.addEventListener('load', function(){
           🗑️ Reset All Data — delete vendors & payments
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PARTNER LINKING MODAL ── -->
+<div class="modal-overlay" id="partnerModal" style="display:none" onclick="if(event.target===this)closePartnerModal()">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h3 class="modal-title">💌 Invite Your Partner</h3>
+      <button class="modal-close" onclick="closePartnerModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- No partner linked yet -->
+      <div id="partnerInviteSection">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.6">
+          Invite your partner to join WeddingLedger. They'll see your exact same budget, vendors and payments — fully synced in real time.
+        </p>
+        <div style="background:var(--warm);border-radius:12px;padding:16px;margin-bottom:20px">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+            <span style="font-size:20px">✨</span>
+            <div style="font-size:12px;color:var(--charcoal);font-weight:600">Pro tip</div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">
+            If you have Pro, your partner gets Pro too — automatically. Plan together, stress less.
+          </div>
+        </div>
+        <label class="modal-label">Partner's Email Address</label>
+        <input type="email" id="partnerEmail" class="modal-input" placeholder="partner@email.com" style="margin-bottom:12px">
+        <button class="btn-primary" onclick="sendPartnerInvite()" style="width:100%">
+          💌 Send Invite Email
+        </button>
+      </div>
+
+      <!-- Invite pending -->
+      <div id="partnerPendingSection" style="display:none">
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:12px">📨</div>
+          <div style="font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:8px">Invite Sent!</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Waiting for</div>
+          <div id="pendingPartnerEmail" style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:20px"></div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:20px">
+            They'll receive an email with a link to join your budget.
+          </div>
+          <button class="btn-secondary" onclick="resendPartnerInvite()" style="margin-bottom:10px;width:100%">
+            🔄 Resend Invite
+          </button>
+          <button class="btn-secondary" onclick="cancelPartnerInvite()" style="width:100%;border-color:#f5c0c0;color:#c04040">
+            ✕ Cancel Invite
+          </button>
+        </div>
+      </div>
+
+      <!-- Partner linked -->
+      <div id="partnerLinkedSection" style="display:none">
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-size:48px;margin-bottom:12px">💑</div>
+          <div style="font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px">Partner Linked!</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Planning together with</div>
+          <div id="linkedPartnerEmail" style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px"></div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:#f0faf0;
+            border:1px solid #a0d0a0;border-radius:99px;padding:6px 14px;margin-bottom:20px">
+            <span style="width:8px;height:8px;background:#2a7a2a;border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span>
+            <span style="font-size:11px;color:#2a5a2a;font-weight:600">Live sync active</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:20px">
+            All changes are shared instantly between both accounts.
+          </div>
+          <button class="btn-secondary" onclick="confirmUnlinkPartner()" style="width:100%;border-color:#f5c0c0;color:#c04040">
+            🔓 Unlink Partner
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
