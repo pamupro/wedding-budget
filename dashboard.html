@@ -40,7 +40,7 @@ window.addEventListener('load', function(){
     </div>
     <div id="proBadge" class="desktop-only"></div>
     <button class="topbar-btn desktop-only" onclick="openSettingsModal()" style="color:var(--muted)">⚙️ Settings</button>
-    <button class="topbar-btn desktop-only" onclick="openPartnerModal()" id="partnerBtn" style="color:var(--gold);font-weight:600">💌 Invite Partner</button>
+    <button onclick="openPartnerModal()" id="partnerBtn" title="Invite Partner" style="background:none;border:1.5px solid var(--gold);border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;white-space:nowrap">💌 <span class="desktop-only" style="display:inline">Partner</span></button>
     <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
     <button class="topbar-btn signout-btn desktop-only" onclick="doLogout()">Sign Out</button>
     <!-- Mobile hamburger -->
