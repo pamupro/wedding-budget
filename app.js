@@ -93,6 +93,7 @@ async function init() {
     await loadProfile();
     await loadPartnerData();
   loadReferralCode();
+  updateWeddingPageUrl();
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
     fetchLiveRates(); // async - updates rates in background
   } catch(e) {
@@ -1328,6 +1329,33 @@ function loadReferralCode() {
   if(el && profile?.referral_code) el.textContent = profile.referral_code;
 }
 
+// ─── WEDDING PAGE ─────────────────────────────────────────────────────────────
+
+function updateWeddingPageUrl() {
+  const slug = profile?.page_slug;
+  const el = document.getElementById('weddingPageUrl');
+  if(!el) return;
+  if(slug) {
+    const url = `https://pamupro.github.io/wedding-budget/wedding.html?slug=${slug}`;
+    el.textContent = url;
+    el.dataset.url = url;
+  } else {
+    el.textContent = 'Set your names in settings to generate your page URL';
+  }
+}
+
+function copyWeddingUrl() {
+  const url = document.getElementById('weddingPageUrl')?.dataset?.url;
+  if(!url) { showToast('Set your names first to generate the URL', true); return; }
+  navigator.clipboard.writeText(url).then(()=>showToast('💌 Wedding page URL copied!'));
+}
+
+function openWeddingPage() {
+  const url = document.getElementById('weddingPageUrl')?.dataset?.url;
+  if(!url) { showToast('Set your names first', true); return; }
+  window.open(url, '_blank');
+}
+
 // ─── SUBSCRIPTION (PayPal recurring) ─────────────────────────────────────────
 
 const PAYPAL_PLAN_ID = ''; // Set after creating PayPal recurring plan
@@ -2054,12 +2082,16 @@ async function saveProfileSettings() {
   const btn = document.querySelector('#settingsModal .btn-primary');
   btn.textContent='Saving…'; btn.disabled=true;
   try {
+    // Generate slug from names
+    const slug = (n1 + (n2?'-'+n2:'')).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const pageMsg = document.getElementById('settingsPageMessage')?.value.trim()||null;
     await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
       method:'PATCH',
       headers:{...DB._h(accessToken),'Prefer':'return=minimal'},
-      body:JSON.stringify({name1:n1, name2:n2, wedding_date:wd||null})
+      body:JSON.stringify({name1:n1, name2:n2, wedding_date:wd||null, page_slug:slug, page_message:pageMsg})
     });
-    profile.name1=n1; profile.name2=n2; profile.wedding_date=wd||null;
+    profile.name1=n1; profile.name2=n2; profile.wedding_date=wd||null; profile.page_slug=slug; profile.page_message=pageMsg;
+    updateWeddingPageUrl();
     renderHero(); updateStats();
     showToast('Profile saved ✓');
   } catch(e) { showToast('Save failed', true); }
@@ -2083,4 +2115,5 @@ async function saveNotesFromSettings() {
   showToast('Notes saved ✓');
 }
 
-init();
+init();  updateWeddingPageUrl();
+  const pmEl=document.getElementById('settingsPageMessage');if(pmEl)pmEl.value=profile?.page_message||'';
