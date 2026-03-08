@@ -423,6 +423,16 @@ window.addEventListener('load', function(){
         <textarea id="settingsNotes" class="modal-input" rows="4" placeholder="Notes about your wedding..." style="resize:vertical"></textarea>
         <button class="btn-secondary" onclick="saveNotesFromSettings()" style="margin-top:8px">Save Notes</button>
       </div>
+
+      <div class="settings-section-title" style="color:#c04040;border-color:#f5c0c0">⚠️ Account</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
+        <button class="btn-secondary" onclick="sendPasswordReset()" style="border-color:#e0a0a0;color:#c04040;text-align:left;padding:12px 16px">
+          🔑 Reset Password — send email link
+        </button>
+        <button class="btn-secondary" onclick="confirmResetData()" style="border-color:#e0a0a0;color:#c04040;text-align:left;padding:12px 16px">
+          🗑️ Reset All Data — delete vendors & payments
+        </button>
+      </div>
     </div>
   </div>
 </div>
