@@ -60,6 +60,10 @@ let weddingDate=new Date('2027-02-11T09:00:00');
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
+  // Check for referral code in URL (for new signups)
+  const urlRef = new URLSearchParams(window.location.search).get('ref');
+  if(urlRef) localStorage.setItem('wl_ref', urlRef);
+
   userId = localStorage.getItem('wl_uid');
   accessToken = localStorage.getItem('wl_token');
 
@@ -88,6 +92,7 @@ async function init() {
   try {
     await loadProfile();
     await loadPartnerData();
+  loadReferralCode();
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
     fetchLiveRates(); // async - updates rates in background
   } catch(e) {
@@ -443,6 +448,34 @@ function renderVendors() {
           ${dueBadgeHtml}
         </div>
         <button class="add-payment-btn" onclick="openPaymentModal('${v.id}')">+ Add Payment</button>
+      </div>
+
+      <!-- Rating -->
+      <div class="vc-rating" id="rating-${v.id}">
+        ${renderStars(v.id, v.rating||0)}
+        ${v.rating_note?`<span style="font-size:11px;color:var(--muted);margin-left:6px">${esc(v.rating_note)}</span>`:''}
+      </div>
+
+      <!-- Attachment -->
+      <div class="vc-attachment">
+        ${v.attachment_url
+          ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--warm);border-radius:8px;margin-top:4px">
+              ${v.attachment_type==='image'
+                ? `<img src="${esc(v.attachment_url)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="viewAttachment('${v.id}')">`
+                : `<span style="font-size:20px;cursor:pointer" onclick="viewAttachment('${v.id}')">📄</span>`}
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(v.attachment_name||'Attachment')}</div>
+                <div style="font-size:10px;color:var(--muted)">${v.attachment_type==='image'?'Photo':'PDF Contract'}</div>
+              </div>
+              <button onclick="removeAttachment('${v.id}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:4px">✕</button>
+            </div>`
+          : `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);
+              cursor:pointer;padding:6px 0;border-top:1px solid var(--border);margin-top:4px">
+              <input type="file" accept="image/*,.pdf" style="display:none"
+                onchange="uploadAttachment('${v.id}', this)">
+              📎 Attach photo or contract
+            </label>`
+        }
       </div>
 
       <!-- Collapsible payment history -->
@@ -1042,6 +1075,336 @@ function showToast(msg,isError=false){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.className='toast show'+(isError?' error':'');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='toast';},3500);
+}
+
+// ─── VENDOR RATING ───────────────────────────────────────────────────────────
+
+function renderStars(vendorId, currentRating) {
+  const stars = [1,2,3,4,5].map(n => `
+    <span onclick="setRating('${vendorId}',${n})"
+      style="font-size:18px;cursor:pointer;transition:transform 0.1s;display:inline-block"
+      onmouseover="hoverStars('${vendorId}',${n})"
+      onmouseout="unhoverStars('${vendorId}',${currentRating})"
+      id="star-${vendorId}-${n}">${n <= currentRating ? '⭐' : '☆'}</span>
+  `).join('');
+  return `<div style="display:flex;align-items:center;gap:2px;padding:6px 0 2px">${stars}
+    ${currentRating ? `<span style="font-size:11px;color:var(--muted);margin-left:4px">${currentRating}/5</span>` : ''}
+    <button onclick="openRatingNote('${vendorId}')"
+      style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);margin-left:6px">
+      ✏️ note
+    </button>
+  </div>`;
+}
+
+function hoverStars(vendorId, n) {
+  [1,2,3,4,5].forEach(i => {
+    const el = document.getElementById(`star-${vendorId}-${i}`);
+    if(el) el.textContent = i <= n ? '⭐' : '☆';
+  });
+}
+function unhoverStars(vendorId, current) {
+  [1,2,3,4,5].forEach(i => {
+    const el = document.getElementById(`star-${vendorId}-${i}`);
+    if(el) el.textContent = i <= current ? '⭐' : '☆';
+  });
+}
+
+async function setRating(vendorId, rating) {
+  const v = vendors.find(x => x.id === vendorId);
+  if(!v) return;
+  // Toggle off if same rating clicked
+  const newRating = v.rating === rating ? null : rating;
+  await DB.patch(`vendors?id=eq.${vendorId}`, { rating: newRating }, accessToken);
+  v.rating = newRating;
+  const el = document.getElementById(`rating-${vendorId}`);
+  if(el) el.innerHTML = renderStars(vendorId, newRating||0) + (v.rating_note ? `<span style="font-size:11px;color:var(--muted);margin-left:6px">${esc(v.rating_note)}</span>` : '');
+  showToast(newRating ? `${['','⭐','⭐⭐','⭐⭐⭐','⭐⭐⭐⭐','⭐⭐⭐⭐⭐'][newRating]} Rated!` : 'Rating removed');
+}
+
+async function openRatingNote(vendorId) {
+  const v = vendors.find(x => x.id === vendorId);
+  const note = prompt('Add a note about this vendor (optional):', v?.rating_note || '');
+  if(note === null) return;
+  await DB.patch(`vendors?id=eq.${vendorId}`, { rating_note: note }, accessToken);
+  if(v) v.rating_note = note;
+  renderVendors();
+  showToast('Note saved');
+}
+
+// ─── VENDOR ATTACHMENTS ───────────────────────────────────────────────────────
+
+async function uploadAttachment(vendorId, input) {
+  const file = input.files[0];
+  if(!file) return;
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if(file.size > maxSize) { showToast('File too large (max 5MB)', true); return; }
+  const isImage = file.type.startsWith('image/');
+  const isPDF   = file.type === 'application/pdf';
+  if(!isImage && !isPDF) { showToast('Only images and PDFs allowed', true); return; }
+
+  showToast('Uploading…');
+  try {
+    // Upload to Supabase Storage
+    const ext  = file.name.split('.').pop();
+    const path = `${userId}/${vendorId}-${Date.now()}.${ext}`;
+    const res  = await fetch(
+      `${DB.SUPABASE_URL}/storage/v1/object/vendor-files/${path}`,
+      { method:'POST', headers:{ 'Authorization':`Bearer ${accessToken}`, 'apikey': DB.ANON_KEY, 'Content-Type': file.type }, body: file }
+    );
+    if(!res.ok) throw new Error('Upload failed');
+    const url = `${DB.SUPABASE_URL}/storage/v1/object/public/vendor-files/${path}`;
+    await DB.patch(`vendors?id=eq.${vendorId}`, {
+      attachment_url:  url,
+      attachment_name: file.name,
+      attachment_type: isImage ? 'image' : 'pdf'
+    }, accessToken);
+    const v = vendors.find(x => x.id === vendorId);
+    if(v){ v.attachment_url = url; v.attachment_name = file.name; v.attachment_type = isImage ? 'image' : 'pdf'; }
+    renderVendors();
+    showToast('📎 Attachment saved!');
+  } catch(e) {
+    console.error(e);
+    showToast('Upload failed — check Supabase Storage is enabled', true);
+  }
+}
+
+function viewAttachment(vendorId) {
+  const v = vendors.find(x => x.id === vendorId);
+  if(!v?.attachment_url) return;
+  window.open(v.attachment_url, '_blank');
+}
+
+async function removeAttachment(vendorId) {
+  if(!confirm('Remove this attachment?')) return;
+  await DB.patch(`vendors?id=eq.${vendorId}`, { attachment_url:null, attachment_name:null, attachment_type:null }, accessToken);
+  const v = vendors.find(x => x.id === vendorId);
+  if(v){ v.attachment_url=null; v.attachment_name=null; v.attachment_type=null; }
+  renderVendors();
+  showToast('Attachment removed');
+}
+
+// ─── PAYMENT TIMELINE ─────────────────────────────────────────────────────────
+
+let timelineFilter = 'all';
+
+function setTimelineFilter(f) {
+  timelineFilter = f;
+  ['all','paid','upcoming'].forEach(x => {
+    const btn = document.getElementById('tl'+x.charAt(0).toUpperCase()+x.slice(1));
+    if(btn) {
+      btn.style.background = x===f ? 'var(--gold)' : 'var(--warm)';
+      btn.style.color      = x===f ? 'white' : 'var(--charcoal)';
+      btn.style.border     = x===f ? 'none' : '1.5px solid var(--border)';
+    }
+  });
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const el = document.getElementById('paymentTimeline');
+  if(!el) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Build combined list: actual payments + upcoming due amounts
+  let items = [];
+
+  // Actual payments
+  payments.forEach(p => {
+    const v = vendors.find(x => x.id === p.vendor_id);
+    items.push({
+      type:     'paid',
+      date:     p.payment_date ? new Date(p.payment_date) : new Date(p.created_at),
+      dateStr:  p.payment_date || p.created_at?.split('T')[0],
+      amount:   parseFloat(p.amount||0),
+      vendor:   v?.name || v?.category || 'Unknown',
+      icon:     v?.icon || '💒',
+      method:   p.method || 'Cash',
+      note:     p.note || '',
+      id:       p.id
+    });
+  });
+
+  // Upcoming dues
+  vendors.forEach(v => {
+    if(v.due_amount && v.due_date) {
+      const paidForVendor = payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+      const remaining = parseFloat(v.due_amount) - paidForVendor;
+      if(remaining > 0) {
+        items.push({
+          type:    'upcoming',
+          date:    new Date(v.due_date),
+          dateStr: v.due_date,
+          amount:  remaining,
+          vendor:  v.name || v.category || 'Unknown',
+          icon:    v.icon || '💒',
+          method:  'Due',
+          note:    v.due_note || '',
+          id:      'due-'+v.id
+        });
+      }
+    }
+  });
+
+  // Filter
+  if(timelineFilter === 'paid')     items = items.filter(i => i.type === 'paid');
+  if(timelineFilter === 'upcoming') items = items.filter(i => i.type === 'upcoming');
+
+  // Sort by date descending
+  items.sort((a,b) => b.date - a.date);
+
+  if(!items.length) {
+    el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">No ${timelineFilter==='all'?'':''+timelineFilter+' '}payments yet</div>`;
+    return;
+  }
+
+  // Group by month
+  const groups = {};
+  items.forEach(item => {
+    const key = item.date.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  el.innerHTML = Object.entries(groups).map(([month, its]) => `
+    <div style="margin-bottom:20px">
+      <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;
+        color:var(--muted);font-weight:600;margin-bottom:10px;padding-bottom:6px;
+        border-bottom:1px solid var(--border)">${month}</div>
+      ${its.map(item => `
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;
+          border-bottom:1px solid var(--border);last-child{border:none}">
+          <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;
+            justify-content:center;font-size:18px;flex-shrink:0;
+            background:${item.type==='paid'?'#f0faf0':'#fff9e6'};
+            border:2px solid ${item.type==='paid'?'#a0d0a0':'#f0d080'}">
+            ${item.icon}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <div style="font-size:13px;font-weight:600;color:var(--charcoal)">${esc(item.vendor)}</div>
+              <div style="font-size:13px;font-weight:700;color:${item.type==='paid'?'var(--charcoal)':'var(--gold)'};white-space:nowrap">
+                ${item.type==='upcoming'?'Due: ':''}${fmt(item.amount)}
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+              <span style="font-size:11px;color:var(--muted)">${item.dateStr ? new Date(item.dateStr).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</span>
+              <span style="font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600;
+                background:${item.type==='paid'?'#e8f5e8':'#fff3cd'};
+                color:${item.type==='paid'?'#2a5a2a':'#7a5a00'}">
+                ${item.type==='paid'?item.method:'⏰ Upcoming'}
+              </span>
+            </div>
+            ${item.note?`<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:3px">💬 ${esc(item.note)}</div>`:''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+// ─── REFERRAL SYSTEM ──────────────────────────────────────────────────────────
+
+function copyReferralCode() {
+  const code = document.getElementById('myReferralCode')?.textContent;
+  if(!code || code==='—') return;
+  navigator.clipboard.writeText(code).then(()=>showToast('📋 Code copied!'));
+}
+
+function shareReferral() {
+  const code = document.getElementById('myReferralCode')?.textContent;
+  if(!code || code==='—') return;
+  const url  = `https://pamupro.github.io/wedding-budget/index.html?ref=${code}`;
+  const text = `Plan your wedding budget together! Use my referral code ${code} and we both get £2 off our first month 💍`;
+  if(navigator.share) {
+    navigator.share({ title:'WeddingLedger', text, url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(`${text}
+${url}`).then(()=>showToast('🔗 Link copied!'));
+  }
+}
+
+function loadReferralCode() {
+  const el = document.getElementById('myReferralCode');
+  if(el && profile?.referral_code) el.textContent = profile.referral_code;
+}
+
+// ─── SUBSCRIPTION (PayPal recurring) ─────────────────────────────────────────
+
+const PAYPAL_PLAN_ID = ''; // Set after creating PayPal recurring plan
+const MONTHLY_PRICE  = 7.99;
+
+function openUpgradeModal() {
+  // Check if referred (£2 off first month)
+  const hasDiscount = profile?.referral_discount;
+  const price = hasDiscount ? (MONTHLY_PRICE - 2).toFixed(2) : MONTHLY_PRICE.toFixed(2);
+  const modal = document.getElementById('upgradeModal');
+  if(!modal) return;
+  // Update price display
+  const priceEl = modal.querySelector('.upgrade-price');
+  if(priceEl) priceEl.innerHTML = hasDiscount
+    ? `<span style="text-decoration:line-through;color:var(--muted);font-size:14px">£${MONTHLY_PRICE}</span>
+       <span style="color:var(--gold);font-size:22px;font-weight:700"> £${price}/month</span>
+       <span style="font-size:11px;background:#f0faf0;color:#2a5a2a;border-radius:99px;padding:3px 10px;margin-left:6px">£2 referral discount applied!</span>`
+    : `<span style="font-size:22px;font-weight:700;color:var(--gold)">£${price}/month</span>`;
+  modal.style.display='flex';
+  initPayPalSubscription(price);
+}
+
+function initPayPalSubscription(price) {
+  const container = document.getElementById('paypal-button-container');
+  if(!container) return;
+  container.innerHTML = '';
+  if(typeof paypal === 'undefined') { showPayPalFallback(); return; }
+  try {
+    paypal.Buttons({
+      style: { layout:'vertical', color:'gold', shape:'pill', label:'subscribe' },
+      createSubscription: function(data, actions) {
+        // Without a plan ID, fall back to one-time order for now
+        if(PAYPAL_PLAN_ID) {
+          return actions.subscription.create({ plan_id: PAYPAL_PLAN_ID });
+        }
+        return actions.order.create({
+          purchase_units:[{ amount:{ currency_code:'GBP', value: price } }]
+        });
+      },
+      onApprove: function(data) {
+        activatePro(data.subscriptionID || data.orderID, true);
+      },
+      onError: function(err){ console.error(err); showPayPalFallback(); }
+    }).render('#paypal-button-container');
+  } catch(e){ showPayPalFallback(); }
+}
+
+async function activatePro(subscriptionId, isSubscription=false) {
+  await DB.patch(`profiles?user_id=eq.${userId}`, {
+    is_pro: true,
+    subscription_status: isSubscription ? 'active' : 'active',
+    subscription_id: subscriptionId,
+    subscription_start: new Date().toISOString()
+  }, accessToken);
+  isPro = true;
+  profile.is_pro = true;
+  profile.subscription_status = 'active';
+  // If user was referred, mark referrer's discount too
+  if(profile?.referred_by) applyReferralReward(profile.referred_by);
+  closeUpgradeModal();
+  showToast('🎉 Pro activated! Welcome to WeddingLedger Pro');
+  await loadVendors();
+  renderChart();
+}
+
+async function applyReferralReward(referralCode) {
+  // Find referrer and give them £2 discount on next payment
+  try {
+    const rows = await DB.query(`profiles?referral_code=eq.${referralCode}&select=user_id`, accessToken);
+    if(rows && rows[0]) {
+      await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${rows[0].user_id}`, {
+        method:'PATCH',
+        headers:{...DB._h(accessToken),'Prefer':'return=minimal'},
+        body: JSON.stringify({ referral_discount: true })
+      });
+    }
+  } catch(e){ console.error('Referral reward error:', e); }
 }
 
 // ─── PARTNER LINKING ─────────────────────────────────────────────────────────
