@@ -10,9 +10,8 @@
     *{box-sizing:border-box;margin:0;padding:0}
     :root{--gold:#C9A84C;--dark:#3d2e1a;--cream:#faf7f0;--muted:#8a7a60;--green:#2a7a2a;--red:#c04040}
     body{background:var(--cream);font-family:'Jost',sans-serif;color:var(--dark);min-height:100vh}
-    input,select,textarea{font-size:16px !important} /* prevent iOS zoom */
+    input,select,textarea{font-size:16px !important}
 
-    /* ── HERO ── */
     .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
       padding:60px 24px;text-align:center;position:relative;overflow:hidden}
     .hero::before{content:'';position:absolute;inset:0;
@@ -25,87 +24,110 @@
     .divider{display:flex;align-items:center;gap:16px;margin:24px auto;width:240px}
     .divider-line{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent)}
     .date-main{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,26px);font-weight:600;margin-bottom:4px}
-    .date-venue{font-size:13px;color:var(--muted);margin-bottom:32px}
     .cd-row{display:flex;gap:20px;justify-content:center;margin-bottom:40px;flex-wrap:wrap}
     .cd-unit{text-align:center}
     .cd-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);line-height:1}
     .cd-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
     .btn-gold{background:linear-gradient(135deg,#9a7535,var(--gold));color:white;border:none;
       border-radius:99px;padding:16px 40px;font-family:'Jost',sans-serif;font-size:15px;font-weight:600;
-      cursor:pointer;box-shadow:0 6px 20px rgba(154,117,53,.35);transition:transform .15s,box-shadow .15s}
+      cursor:pointer;box-shadow:0 6px 20px rgba(154,117,53,.35);transition:transform .15s}
     .btn-gold:hover{transform:translateY(-2px)}
     .btn-gold:disabled{opacity:.55;transform:none;cursor:not-allowed}
     .scroll-hint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
       font-size:11px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;animation:bounce 2s infinite}
     @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
 
-    /* ── DETAILS ── */
     .section{padding:60px 24px;text-align:center}
     .section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,5vw,38px);margin-bottom:8px}
-    .section-sub{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.7;max-width:500px;margin:0 auto 32px}
+    .section-sub{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.7;
+      max-width:500px;margin-left:auto;margin-right:auto}
     .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:560px;margin:0 auto 32px}
-    .detail-card{background:white;border-radius:16px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.06);
-      border:1px solid rgba(201,168,76,.2)}
+    .detail-card{background:white;border-radius:16px;padding:22px;
+      box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(201,168,76,.2)}
     .detail-icon{font-size:26px;margin-bottom:8px}
     .detail-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
     .detail-val{font-size:13px;font-weight:600;color:var(--dark);line-height:1.5}
 
-    /* ── RSVP FORM ── */
+    /* ── RSVP card ── */
     .rsvp-wrap{max-width:480px;margin:0 auto;background:white;border-radius:24px;padding:36px;
       box-shadow:0 8px 40px rgba(0,0,0,.08);border:1px solid rgba(201,168,76,.2)}
-    .rsvp-title{font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:6px}
-    .rsvp-sub{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.5}
-    .attend-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px}
+
+    /* greeting banner */
+    .greet-banner{display:flex;align-items:center;gap:14px;background:#fdf9f0;
+      border:1.5px solid rgba(201,168,76,.3);border-radius:14px;padding:14px 16px;margin-bottom:24px}
+    .greet-avatar{width:44px;height:44px;border-radius:50%;
+      background:linear-gradient(135deg,#f0e8d0,#e4d4a0);
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;
+      color:var(--dark);flex-shrink:0}
+    .greet-text{font-size:14px;font-weight:500;color:var(--dark);line-height:1.5}
+    .greet-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+    /* attend picker */
+    .attend-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
     .att-btn{padding:16px 10px;border:2px solid #e8e0d0;border-radius:14px;background:white;
       font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;
-      display:flex;flex-direction:column;align-items:center;gap:5px;line-height:1.3}
+      display:flex;flex-direction:column;align-items:center;gap:5px}
     .att-btn .ab-icon{font-size:24px}
     .att-btn.yes.on{border-color:var(--green);background:#f0faf0;color:var(--green)}
     .att-btn.no.on{border-color:var(--red);background:#fff0f0;color:var(--red)}
-    .att-btn:hover:not(.on){border-color:#c9a84c;background:#fdf9f0}
+    .att-btn:hover:not(.on){border-color:var(--gold);background:#fdf9f0}
 
-    /* form fields */
-    .fgroup{margin-bottom:18px}
+    /* section divider */
+    .sec-div{display:flex;align-items:center;gap:10px;margin:20px 0 16px}
+    .sec-div hr{flex:1;border:none;border-top:1px solid #f0ece4}
+    .sec-div span{font-size:11px;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.1em;white-space:nowrap;font-weight:600}
+
+    /* fields */
+    .fgroup{margin-bottom:16px}
     .flabel{display:flex;align-items:center;justify-content:space-between;
-      font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-    .frequired{background:var(--gold);color:white;font-size:9px;padding:2px 6px;border-radius:99px;
-      font-weight:700;letter-spacing:.05em;text-transform:uppercase}
-    .foptional{font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0}
+      font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:7px}
+    .ftag{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:700;letter-spacing:.03em}
+    .ftag-req{background:var(--gold);color:white}
+    .ftag-opt{background:#f0ece4;color:var(--muted)}
+    .ftag-pre{background:#e8f5e8;color:#2a5a2a;border:1px solid #a0d0a0}
     .finput{width:100%;padding:13px 16px;border:1.5px solid #e8e0d0;border-radius:12px;
       font-family:'Jost',sans-serif;font-size:16px;outline:none;background:white;
       color:var(--dark);transition:border-color .15s,box-shadow .15s}
     .finput:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
-    .finput.filled{border-color:#a0c0a0;background:#f8fdf8} /* pre-filled by us */
-    .finput.err{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,64,64,.1)}
+    .finput.prefilled{border-color:#a0c8a0;background:#f8fdf8;color:#2a4a2a}
+    .finput.err{border-color:var(--red) !important;box-shadow:0 0 0 3px rgba(192,64,64,.1)}
     .finput::placeholder{color:#bbb}
-    select.finput{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
-    .fhint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+    select.finput{appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+    .fhint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
     .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .fpre-tag{display:inline-flex;align-items:center;gap:4px;background:#f0faf0;border:1px solid #a0c0a0;
-      border-radius:99px;padding:2px 8px;font-size:10px;color:#2a5a2a;font-weight:600;margin-bottom:6px}
-    .divider-row{display:flex;align-items:center;gap:12px;margin:22px 0 18px}
-    .divider-row hr{flex:1;border:none;border-top:1px solid #f0ece4}
-    .divider-row span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
-    .plus-row{margin-top:10px;padding-top:12px;border-top:1px solid #f5f0e8}
-    .plus-check-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:500;padding:4px 0}
-    .plus-check-label input{width:18px;height:18px;accent-color:var(--gold);flex-shrink:0;cursor:pointer}
 
-    /* ── SUCCESS SCREEN ── */
-    .success-screen{text-align:center;padding:12px 0}
-    .success-ring{width:80px;height:80px;border-radius:50%;margin:0 auto 20px;
-      display:flex;align-items:center;justify-content:center;font-size:36px}
-    .success-ring.yes{background:#e8f5e8;border:3px solid #a0d0a0}
-    .success-ring.no{background:#f5f0e8;border:3px solid #e0d0b0}
-    .success-h{font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:10px}
-    .success-p{font-size:13px;color:var(--muted);line-height:1.8;max-width:320px;margin:0 auto}
+    /* known-field read-only display */
+    .known-field{display:flex;align-items:center;gap:10px;
+      padding:12px 16px;border-radius:12px;border:1.5px solid #a0c8a0;
+      background:#f8fdf8;margin-bottom:16px}
+    .known-icon{font-size:18px;flex-shrink:0}
+    .known-val{font-size:14px;font-weight:600;color:#2a4a2a;flex:1}
+    .known-lbl{font-size:10px;color:#6a8a6a;text-transform:uppercase;letter-spacing:.08em}
+    .known-tick{font-size:16px;color:#2a7a2a}
 
-    /* ── LOADING SKELETON ── */
-    .skeleton{background:linear-gradient(90deg,#f0ece4 25%,#faf7f0 50%,#f0ece4 75%);
-      background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;height:16px;margin-bottom:8px}
+    /* skeleton */
+    .skel{background:linear-gradient(90deg,#f0ece4 25%,#faf7f0 50%,#f0ece4 75%);
+      background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-    footer{text-align:center;padding:32px 24px;border-top:1px solid #e8e0d0;font-size:12px;color:var(--muted)}
+    /* success */
+    .success-screen{text-align:center;padding:16px 0}
+    .s-ring{width:80px;height:80px;border-radius:50%;margin:0 auto 20px;
+      display:flex;align-items:center;justify-content:center;font-size:36px}
+    .s-ring.yes{background:#e8f5e8;border:3px solid #a0d0a0}
+    .s-ring.no{background:#f5f0e8;border:3px solid #e0d0b0}
+    .s-h{font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:10px}
+    .s-p{font-size:13px;color:var(--muted);line-height:1.8;max-width:320px;margin:0 auto}
+
+    footer{text-align:center;padding:32px 24px;border-top:1px solid #e8e0d0;
+      font-size:12px;color:var(--muted)}
     footer a{color:var(--gold);text-decoration:none}
+
     @media(max-width:460px){
       .details-grid{grid-template-columns:1fr}
       .rsvp-wrap{padding:24px 16px;border-radius:16px}
@@ -115,6 +137,7 @@
 </head>
 <body>
 
+<!-- ── HERO ── -->
 <section class="hero">
   <div class="ornament">✦ ✦ ✦</div>
   <div class="together">Together with their families</div>
@@ -122,14 +145,20 @@
   <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:20px">
     request the pleasure of your company
   </div>
-  <div class="divider"><div class="divider-line"></div><div style="color:var(--gold)">💍</div><div class="divider-line"></div></div>
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div style="color:var(--gold)">💍</div>
+    <div class="divider-line"></div>
+  </div>
   <div class="date-main" id="heroDate">—</div>
-  <div class="date-venue" id="heroVenue"></div>
   <div class="cd-row" id="cd"></div>
-  <button class="btn-gold" onclick="document.getElementById('rsvpSec').scrollIntoView({behavior:'smooth'})">RSVP Now 💌</button>
+  <button class="btn-gold" onclick="document.getElementById('rsvpSec').scrollIntoView({behavior:'smooth'})">
+    RSVP Now 💌
+  </button>
   <div class="scroll-hint">↓ scroll</div>
 </section>
 
+<!-- ── DETAILS ── -->
 <div style="background:white">
   <div class="section">
     <h2 class="section-title">Wedding Details</h2>
@@ -143,21 +172,38 @@
   </div>
 </div>
 
+<!-- ── RSVP ── -->
 <div class="section" id="rsvpSec">
   <h2 class="section-title">RSVP</h2>
   <p class="section-sub">Kindly respond by <strong id="deadline">—</strong></p>
-  <div class="rsvp-wrap" id="rsvpWrap">
-    <div id="formLoading">
-      <div class="skeleton" style="width:60%;height:28px;margin:0 auto 20px"></div>
-      <div class="skeleton" style="height:52px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:52px;margin-bottom:12px"></div>
-      <div class="skeleton" style="width:40%;height:40px;margin:0 auto"></div>
-    </div>
-    <div id="formContent" style="display:none">
-      <div class="rsvp-title">Will you join us?</div>
-      <div class="rsvp-sub" id="personalGreeting"></div>
 
-      <!-- Attend -->
+  <div class="rsvp-wrap" id="rsvpWrap">
+
+    <!-- Loading skeleton -->
+    <div id="formLoading">
+      <div class="skel" style="width:55%;height:24px;margin:0 auto 20px"></div>
+      <div class="skel" style="height:56px;margin-bottom:10px"></div>
+      <div class="skel" style="height:56px;margin-bottom:10px"></div>
+      <div class="skel" style="width:50%;height:44px;margin:20px auto 0;border-radius:99px"></div>
+    </div>
+
+    <!-- Form -->
+    <div id="formContent" style="display:none">
+
+      <!-- Personal greeting banner -->
+      <div class="greet-banner" id="greetBanner" style="display:none">
+        <div class="greet-avatar" id="greetAvatar">?</div>
+        <div>
+          <div class="greet-text" id="greetText">Welcome!</div>
+          <div class="greet-sub" id="greetSub">Please complete your details below</div>
+        </div>
+      </div>
+
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:18px;text-align:center">
+        Will you join us?
+      </div>
+
+      <!-- Attend picker -->
       <div class="attend-btns">
         <button class="att-btn yes on" id="bYes" onclick="pickAtt('yes')">
           <span class="ab-icon">🎉</span>Joyfully Accepts
@@ -167,94 +213,58 @@
         </button>
       </div>
 
-      <!-- Name row: first + last -->
-      <div class="frow">
-        <div class="fgroup">
-          <div class="flabel">
-            First Name
-            <span id="firstPreTag" class="fpre-tag" style="display:none">✓ Pre-filled</span>
-          </div>
-          <input class="finput" id="rFirst" placeholder="e.g. Jane" autocomplete="given-name">
-          <div class="fhint" id="firstHint" style="display:none"></div>
-        </div>
-        <div class="fgroup">
-          <div class="flabel">
-            Last Name
-            <span class="frequired">Required</span>
-          </div>
-          <input class="finput" id="rLast" placeholder="e.g. Smith" autocomplete="family-name">
+      <!-- ── NAME SECTION ── -->
+      <div class="sec-div"><hr><span>Your Name</span><hr></div>
+      <div id="nameFields">
+        <!-- Dynamically built based on what's missing -->
+      </div>
+
+      <!-- ── CONTACT SECTION ── -->
+      <div id="contactSection">
+        <div class="sec-div"><hr><span>Contact</span><hr></div>
+        <div id="contactFields">
+          <!-- Dynamically built based on what's already known -->
         </div>
       </div>
 
-      <!-- Phone (mandatory) -->
-      <div class="fgroup">
-        <div class="flabel">
-          Phone / WhatsApp
-          <span class="frequired">Required</span>
-        </div>
-        <div style="display:flex;gap:8px">
-          <select class="finput" id="rCode" style="width:110px;flex-shrink:0;padding-right:32px">
-            <option value="44">🇬🇧 +44</option>
-            <option value="1">🇺🇸 +1</option>
-            <option value="94">🇱🇰 +94</option>
-            <option value="61">🇦🇺 +61</option>
-            <option value="91">🇮🇳 +91</option>
-            <option value="65">🇸🇬 +65</option>
-            <option value="971">🇦🇪 +971</option>
-            <option value="92">🇵🇰 +92</option>
-            <option value="880">🇧🇩 +880</option>
-            <option value="33">🇫🇷 +33</option>
-            <option value="49">🇩🇪 +49</option>
-          </select>
-          <input type="tel" class="finput" id="rPhone" placeholder="7700 900 123" style="flex:1" autocomplete="tel">
-        </div>
-        <div class="fhint">No leading 0 needed</div>
-      </div>
-
-      <!-- Email (optional) -->
-      <div class="fgroup">
-        <div class="flabel">Email <span class="foptional">(optional)</span></div>
-        <input type="email" class="finput" id="rEmail" placeholder="jane@email.com" autocomplete="email">
-      </div>
-
-      <!-- Attending-only fields -->
+      <!-- ── ATTENDING-ONLY FIELDS ── -->
       <div id="attendingFields">
-        <!-- Dietary -->
+        <div class="sec-div"><hr><span>Details</span><hr></div>
         <div class="fgroup">
-          <div class="flabel">Dietary Requirements / Allergies <span class="foptional">(optional)</span></div>
+          <div class="flabel">Dietary Requirements / Allergies <span class="ftag ftag-opt">Optional</span></div>
           <input class="finput" id="rDietary" placeholder="e.g. Vegan, nut allergy, gluten-free">
           <div class="fhint">Leave blank if none</div>
         </div>
 
-        <!-- Menu choices (shown only if couple configured a menu) -->
+        <!-- Menu choices if configured -->
         <div id="menuSection" style="display:none">
-          <div class="divider-row"><hr><span>🍽 Your Menu Choices</span><hr></div>
+          <div class="sec-div"><hr><span>🍽 Menu Choices</span><hr></div>
           <div id="menuChoices"></div>
         </div>
 
         <!-- +1 -->
-        <div class="plus-row">
-          <label class="plus-check-label">
-            <input type="checkbox" id="rPlus" onchange="togglePlus()">
-            Bringing a +1 guest?
-          </label>
-          <div id="plusNameRow" style="display:none;margin-top:10px">
-            <input class="finput" id="rPlusName" placeholder="+1 guest full name">
-          </div>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;
+          font-weight:500;padding:4px 0;margin-bottom:4px">
+          <input type="checkbox" id="rPlus" onchange="togglePlus()"
+            style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
+          Bringing a +1 guest?
+        </label>
+        <div id="plusNameRow" style="display:none;margin-top:8px;margin-bottom:8px">
+          <input class="finput" id="rPlusName" placeholder="+1 guest full name">
         </div>
       </div>
 
       <!-- Message -->
-      <div class="divider-row" style="margin-top:20px"><hr><span>Your message</span><hr></div>
+      <div class="sec-div" style="margin-top:20px"><hr><span>Message</span><hr></div>
       <div class="fgroup">
-        <textarea class="finput" id="rMsg" rows="2" placeholder="Congratulations! Looking forward to it…" style="resize:none"></textarea>
+        <textarea class="finput" id="rMsg" rows="2"
+          placeholder="Congratulations! Looking forward to it…" style="resize:none"></textarea>
       </div>
 
       <button class="btn-gold" id="submitBtn" onclick="submitRsvp()" style="width:100%">
         Send RSVP 💌
       </button>
 
-      <!-- Error msg -->
       <div id="errBox" style="display:none;margin-top:14px;padding:12px 16px;background:#fff0f0;
         border:1px solid #f0a0a0;border-radius:10px;font-size:13px;color:#c04040;text-align:center"></div>
     </div>
@@ -269,26 +279,29 @@ const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 const H   = { 'apikey': KEY, 'Authorization': 'Bearer '+KEY };
 
 let rsvpChoice = 'yes';
-let guestId    = null;   // existing guest row id (from ?gid= param)
+let guestId    = null;
 let pageUserId = null;
 let menuCfg    = { courses: [] };
+
+// What we know vs what we need from the guest
+let knownFirst = '', knownLast = '', knownPhone = '', knownEmail = '';
+let needFirst  = false, needLast = false;
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
   const params = new URLSearchParams(window.location.search);
   const slug   = params.get('slug');
-  const gid    = params.get('gid');   // unique guest ID passed in WhatsApp link
+  const gid    = params.get('gid');
 
   if(!slug) { showBroken('This invitation link is invalid.'); return; }
 
-  // Load profile
-  const pr = await fetch(SB+'/rest/v1/profiles?page_slug=eq.'+encodeURIComponent(slug)+'&select=*', {headers:H});
+  const pr   = await fetch(SB+'/rest/v1/profiles?page_slug=eq.'+encodeURIComponent(slug)+'&select=*', {headers:H});
   const rows = await pr.json();
   if(!rows || !rows.length) { showBroken("This wedding page doesn't exist."); return; }
+
   const p = rows[0];
   pageUserId = p.user_id;
 
-  // Page meta
   document.title = (p.name1||'') + ' & ' + (p.name2||'') + ' — Wedding';
   document.getElementById('n1').textContent = p.name1 || '';
   document.getElementById('n2').textContent = p.name2 || '';
@@ -298,7 +311,7 @@ async function init() {
     const d   = new Date(p.wedding_date);
     const fmt = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     document.getElementById('heroDate').textContent = fmt;
-    document.getElementById('dDate').textContent    = fmt;
+    document.getElementById('dDate') && (document.getElementById('dDate').textContent = fmt);
     const dl = new Date(d); dl.setDate(dl.getDate()-28);
     document.getElementById('deadline').textContent =
       dl.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
@@ -306,98 +319,205 @@ async function init() {
   }
 
   // Load menu config
-  const ms = await fetch(SB+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.menu_config', {headers:H});
-  const mrows = await ms.json();
-  if(mrows && mrows[0] && mrows[0].value) {
-    try { menuCfg = JSON.parse(mrows[0].value); } catch(e) {}
-    if(menuCfg.courses && menuCfg.courses.length) buildMenuChoices();
-  }
+  try {
+    const ms    = await fetch(SB+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.menu_config', {headers:H});
+    const mrows = await ms.json();
+    if(mrows && mrows[0] && mrows[0].value) {
+      menuCfg = JSON.parse(mrows[0].value);
+      if(menuCfg.courses && menuCfg.courses.length) buildMenuChoices();
+    }
+  } catch(e) {}
 
-  // Pre-fill from existing guest record if gid provided
+  // Load guest record if gid provided
   if(gid) {
     guestId = gid;
-    await prefillFromGuest(gid);
+    await loadGuest(gid);
   }
+
+  buildNameFields();
+  buildContactFields();
 
   document.getElementById('formLoading').style.display = 'none';
   document.getElementById('formContent').style.display = 'block';
 }
 
-// ── PRE-FILL from existing guest record ───────────────────────────────────────
-async function prefillFromGuest(gid) {
-  const r = await fetch(SB+'/rest/v1/guests?id=eq.'+gid+'&select=*', {headers:H});
+// ── LOAD GUEST RECORD ─────────────────────────────────────────────────────────
+async function loadGuest(gid) {
+  const r    = await fetch(SB+'/rest/v1/guests?id=eq.'+gid+'&select=*', {headers:H});
   const rows = await r.json();
-  if(!rows || !rows.length) return;
+  if(!rows || !rows.length) { guestId = null; return; }
   const g = rows[0];
 
-  // Split name into first/last
-  const parts     = (g.name||'').trim().split(' ');
-  const firstName = parts[0] || '';
-  const lastName  = parts.slice(1).join(' ') || '';
+  // Parse stored name into first / last
+  const parts = (g.name||'').trim().split(/\s+/).filter(Boolean);
+  knownFirst  = parts[0] || '';
+  knownLast   = parts.slice(1).join(' ') || '';
+  knownPhone  = g.phone || '';
+  knownEmail  = g.email || '';
 
-  if(firstName) {
-    document.getElementById('rFirst').value = firstName;
-    document.getElementById('rFirst').classList.add('filled');
-    document.getElementById('firstPreTag').style.display = 'inline-flex';
-    document.getElementById('firstHint').textContent = 'Added by the couple';
-    document.getElementById('firstHint').style.display = 'block';
-  }
-  if(lastName) {
-    document.getElementById('rLast').value = lastName;
-    document.getElementById('rLast').classList.add('filled');
-  }
-  if(g.email) {
-    document.getElementById('rEmail').value = g.email;
-    document.getElementById('rEmail').classList.add('filled');
-  }
-  if(g.phone) {
-    const clean = g.phone.replace(/^\+/,'');
-    const codes = ['971','880','94','61','91','65','92','33','49','44','1'];
-    let code='44', num=clean;
-    for(const c of codes) { if(clean.startsWith(c)){code=c; num=clean.slice(c.length); break;} }
-    document.getElementById('rCode').value  = code;
-    document.getElementById('rPhone').value = num;
-    if(num) document.getElementById('rPhone').classList.add('filled');
-  }
-  if(g.dietary) document.getElementById('rDietary').value = g.dietary;
-  if(g.notes)   document.getElementById('rMsg').value     = g.notes;
+  // Decide what's missing
+  needFirst = !knownFirst;
+  needLast  = !knownLast;
+
+  // Pre-fill optional fields
+  if(g.dietary)       document.getElementById('rDietary').value    = g.dietary;
+  if(g.notes)         document.getElementById('rMsg').value        = g.notes;
   if(g.plus_one) {
     document.getElementById('rPlus').checked = true;
     document.getElementById('plusNameRow').style.display = 'block';
     if(g.plus_one_name) document.getElementById('rPlusName').value = g.plus_one_name;
   }
-
-  // Set RSVP choice if already responded
   if(g.rsvp_status && g.rsvp_status !== 'pending') {
     pickAtt(g.rsvp_status === 'yes' ? 'yes' : 'no');
   }
 
-  // Personal greeting
-  if(firstName) {
-    document.getElementById('personalGreeting').textContent =
-      'Hi '+firstName+'! Please complete your details below.';
+  // Greeting banner
+  const displayName = knownFirst || knownLast || '';
+  if(displayName) {
+    const ini = (knownFirst[0]||'') + (knownLast[0]||'');
+    document.getElementById('greetAvatar').textContent = ini.toUpperCase() || '👋';
+    document.getElementById('greetText').textContent   = 'Hi ' + displayName + '!';
+    document.getElementById('greetSub').textContent    =
+      needFirst || needLast
+        ? 'Please fill in your ' + (needFirst ? 'first name' : 'last name') + ' and confirm your attendance'
+        : 'Please confirm your attendance below';
+    document.getElementById('greetBanner').style.display = 'flex';
   }
 }
 
-// ── COUNTDOWN ─────────────────────────────────────────────────────────────────
-function startCountdown(wd) {
-  const el = document.getElementById('cd');
-  const tick = () => {
-    const diff = wd - new Date();
-    if(diff <= 0) {
-      el.innerHTML = '<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;color:var(--gold)">Today is the day! 🎉</div>';
-      return;
-    }
-    const dd=Math.floor(diff/86400000),hh=Math.floor((diff%86400000)/3600000),
-          mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000);
-    el.innerHTML = [[dd,'Days'],[hh,'Hours'],[mm,'Mins'],[ss,'Secs']]
-      .map(([n,l])=>'<div class="cd-unit"><div class="cd-num">'+String(n).padStart(2,'0')+'</div><div class="cd-label">'+l+'</div></div>')
-      .join('');
-  };
-  tick(); setInterval(tick,1000);
+// ── BUILD NAME FIELDS dynamically ─────────────────────────────────────────────
+function buildNameFields() {
+  const wrap = document.getElementById('nameFields');
+  wrap.innerHTML = '';
+
+  if(!guestId) {
+    // No gid — new guest, ask for both first & last
+    wrap.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="fgroup" style="margin-bottom:0">
+          <div class="flabel">First Name <span class="ftag ftag-req">Required</span></div>
+          <input class="finput" id="rFirst" placeholder="e.g. Jane" autocomplete="given-name">
+        </div>
+        <div class="fgroup" style="margin-bottom:0">
+          <div class="flabel">Last Name <span class="ftag ftag-req">Required</span></div>
+          <input class="finput" id="rLast" placeholder="e.g. Smith" autocomplete="family-name">
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Has a guest record — show known name parts as locked, ask for missing parts
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">';
+
+  // FIRST NAME
+  if(knownFirst) {
+    html += `
+      <div>
+        <div class="flabel">First Name <span class="ftag ftag-pre">✓ Confirmed</span></div>
+        <div class="known-field">
+          <span class="known-icon">👤</span>
+          <div><div class="known-val">${esc(knownFirst)}</div><div class="known-lbl">Added by couple</div></div>
+          <span class="known-tick">✓</span>
+        </div>
+        <input type="hidden" id="rFirst" value="${esc(knownFirst)}">
+      </div>`;
+  } else {
+    html += `
+      <div>
+        <div class="flabel">First Name <span class="ftag ftag-req">Required</span></div>
+        <input class="finput" id="rFirst" placeholder="e.g. Jane" autocomplete="given-name">
+      </div>`;
+  }
+
+  // LAST NAME
+  if(knownLast) {
+    html += `
+      <div>
+        <div class="flabel">Last Name <span class="ftag ftag-pre">✓ Confirmed</span></div>
+        <div class="known-field">
+          <span class="known-icon">👤</span>
+          <div><div class="known-val">${esc(knownLast)}</div><div class="known-lbl">Added by couple</div></div>
+          <span class="known-tick">✓</span>
+        </div>
+        <input type="hidden" id="rLast" value="${esc(knownLast)}">
+      </div>`;
+  } else {
+    html += `
+      <div>
+        <div class="flabel">Last Name <span class="ftag ftag-req">Required</span></div>
+        <input class="finput" id="rLast" placeholder="e.g. Smith" autocomplete="family-name">
+      </div>`;
+  }
+
+  html += '</div>';
+  wrap.innerHTML = html;
 }
 
-// ── ATTEND PICKER ─────────────────────────────────────────────────────────────
+// ── BUILD CONTACT FIELDS dynamically ──────────────────────────────────────────
+function buildContactFields() {
+  const wrap = document.getElementById('contactFields');
+  wrap.innerHTML = '';
+  let html = '';
+
+  // Phone
+  if(knownPhone) {
+    // Already known — show as confirmed, hidden input
+    html += `
+      <div class="known-field" style="margin-bottom:12px">
+        <span class="known-icon">📱</span>
+        <div><div class="known-val">${esc(knownPhone)}</div><div class="known-lbl">Phone · Added by couple</div></div>
+        <span class="known-tick">✓</span>
+      </div>
+      <input type="hidden" id="rPhone" value="${esc(knownPhone)}">
+      <input type="hidden" id="rCode" value="">`;
+  } else {
+    // Ask for phone
+    html += `
+      <div class="fgroup">
+        <div class="flabel">Phone / WhatsApp <span class="ftag ftag-opt">Optional</span></div>
+        <div style="display:flex;gap:8px">
+          <select class="finput" id="rCode" style="width:110px;flex-shrink:0;padding-right:32px">
+            <option value="44">🇬🇧 +44</option>
+            <option value="1">🇺🇸 +1</option>
+            <option value="94">🇱🇰 +94</option>
+            <option value="61">🇦🇺 +61</option>
+            <option value="91">🇮🇳 +91</option>
+            <option value="65">🇸🇬 +65</option>
+            <option value="971">🇦🇪 +971</option>
+            <option value="92">🇵🇰 +92</option>
+            <option value="880">🇧🇩 +880</option>
+            <option value="33">🇫🇷 +33</option>
+            <option value="49">🇩🇪 +49</option>
+          </select>
+          <input type="tel" class="finput" id="rPhone" placeholder="7700 900 123" style="flex:1">
+        </div>
+        <div class="fhint">No leading 0 needed</div>
+      </div>`;
+  }
+
+  // Email
+  if(knownEmail) {
+    html += `
+      <div class="known-field" style="margin-bottom:16px">
+        <span class="known-icon">✉️</span>
+        <div><div class="known-val">${esc(knownEmail)}</div><div class="known-lbl">Email · Added by couple</div></div>
+        <span class="known-tick">✓</span>
+      </div>
+      <input type="hidden" id="rEmail" value="${esc(knownEmail)}">`;
+  } else {
+    html += `
+      <div class="fgroup">
+        <div class="flabel">Email <span class="ftag ftag-opt">Optional</span></div>
+        <input type="email" class="finput" id="rEmail" placeholder="jane@email.com" autocomplete="email">
+      </div>`;
+  }
+
+  wrap.innerHTML = html;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function pickAtt(s) {
   rsvpChoice = s;
   document.getElementById('bYes').classList.toggle('on', s==='yes');
@@ -410,7 +530,6 @@ function togglePlus() {
     document.getElementById('rPlus').checked ? 'block' : 'none';
 }
 
-// ── MENU ──────────────────────────────────────────────────────────────────────
 function buildMenuChoices() {
   document.getElementById('menuSection').style.display = 'block';
   const wrap = document.getElementById('menuChoices');
@@ -418,10 +537,10 @@ function buildMenuChoices() {
   menuCfg.courses.forEach((course, i) => {
     const div = document.createElement('div');
     div.className = 'fgroup';
-    const label = document.createElement('div');
-    label.className = 'flabel';
-    label.textContent = course.name;
-    div.appendChild(label);
+    const lbl = document.createElement('div');
+    lbl.className = 'flabel';
+    lbl.textContent = course.name;
+    div.appendChild(lbl);
     let el;
     if(course.options && course.options.length) {
       el = document.createElement('select');
@@ -444,36 +563,70 @@ function buildMenuChoices() {
   });
 }
 
-// ── VALIDATE ──────────────────────────────────────────────────────────────────
+function startCountdown(wd) {
+  const el = document.getElementById('cd');
+  const tick = () => {
+    const diff = wd - new Date();
+    if(diff <= 0) {
+      el.innerHTML = '<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;color:var(--gold)">Today is the day! 🎉</div>';
+      return;
+    }
+    const dd=Math.floor(diff/86400000), hh=Math.floor((diff%86400000)/3600000),
+          mm=Math.floor((diff%3600000)/60000), ss=Math.floor((diff%60000)/1000);
+    el.innerHTML = [[dd,'Days'],[hh,'Hours'],[mm,'Mins'],[ss,'Secs']]
+      .map(([n,l])=>'<div class="cd-unit"><div class="cd-num">'+String(n).padStart(2,'0')+'</div><div class="cd-label">'+l+'</div></div>')
+      .join('');
+  };
+  tick(); setInterval(tick,1000);
+}
+
+function markErr(id) {
+  const el = document.getElementById(id);
+  if(!el || el.type==='hidden') return;
+  el.classList.add('err');
+  el.focus();
+  el.addEventListener('input', ()=>el.classList.remove('err'), {once:true});
+}
 function showErr(msg) {
   const b = document.getElementById('errBox');
   b.textContent = msg; b.style.display = 'block';
   b.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function clearErr() { document.getElementById('errBox').style.display='none'; }
-function markErr(id) {
-  const el = document.getElementById(id);
-  el.classList.add('err');
-  el.focus();
-  el.addEventListener('input',()=>el.classList.remove('err'),{once:true});
-}
 
 // ── SUBMIT ────────────────────────────────────────────────────────────────────
 async function submitRsvp() {
   clearErr();
-  const first = document.getElementById('rFirst').value.trim();
-  const last  = document.getElementById('rLast').value.trim();
-  const phone = document.getElementById('rPhone').value.trim().replace(/^0+/,'');
-  const code  = document.getElementById('rCode').value;
 
-  if(!first)  { markErr('rFirst');  showErr('Please enter your first name.');  return; }
-  if(!last)   { markErr('rLast');   showErr('Please enter your last name — this is required.'); return; }
-  if(!phone)  { markErr('rPhone');  showErr('Please enter your phone number — this is required.'); return; }
+  const first = (document.getElementById('rFirst')?.value||'').trim();
+  const last  = (document.getElementById('rLast')?.value||'').trim();
+
+  // Always need both names
+  if(!first) { markErr('rFirst'); showErr('Please enter your first name.'); return; }
+  if(!last)  { markErr('rLast');  showErr('Please enter your last name.'); return; }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Sending…';
 
-  // Collect meal choices
+  // Collect phone — could be hidden (already known) or from inputs
+  let phone = null;
+  const phoneEl = document.getElementById('rPhone');
+  const codeEl  = document.getElementById('rCode');
+  if(phoneEl) {
+    if(phoneEl.type === 'hidden') {
+      // Already known, stored as full international format
+      phone = phoneEl.value || null;
+    } else {
+      const num = phoneEl.value.trim().replace(/^0+/,'');
+      if(num) phone = '+' + (codeEl?.value||'44') + num;
+    }
+  }
+
+  // Email
+  const emailEl = document.getElementById('rEmail');
+  const email   = emailEl ? (emailEl.value.trim()||null) : null;
+
+  // Meal choices
   const mealData = {};
   (menuCfg.courses||[]).forEach((c,i) => {
     const el = document.getElementById('mChoice_'+i);
@@ -483,10 +636,10 @@ async function submitRsvp() {
   const fullName = first + ' ' + last;
   const data = {
     name:          fullName,
-    email:         document.getElementById('rEmail').value.trim() || null,
-    phone:         '+'+code+phone,
+    email,
+    phone,
     rsvp_status:   rsvpChoice,
-    dietary:       rsvpChoice==='yes' ? (document.getElementById('rDietary').value.trim()||null) : null,
+    dietary:       rsvpChoice==='yes' ? (document.getElementById('rDietary')?.value.trim()||null) : null,
     plus_one:      rsvpChoice==='yes' && document.getElementById('rPlus').checked,
     plus_one_name: rsvpChoice==='yes' ? (document.getElementById('rPlusName')?.value.trim()||null) : null,
     notes:         document.getElementById('rMsg').value.trim() || null,
@@ -496,18 +649,18 @@ async function submitRsvp() {
 
   let res;
   if(guestId) {
-    // ── PATCH existing record ─────────────────────────────────────────────────
+    // PATCH — update existing record, never create duplicate
     res = await fetch(SB+'/rest/v1/guests?id=eq.'+guestId, {
       method: 'PATCH',
-      headers: { ...H, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
       body: JSON.stringify(data)
     });
   } else {
-    // ── POST new record (guest not pre-added by couple) ───────────────────────
+    // POST — genuinely new guest (no gid in link)
     data.user_id = pageUserId;
     res = await fetch(SB+'/rest/v1/guests', {
       method: 'POST',
-      headers: { ...H, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
       body: JSON.stringify(data)
     });
   }
@@ -520,18 +673,16 @@ async function submitRsvp() {
   }
 }
 
-// ── SUCCESS ───────────────────────────────────────────────────────────────────
 function showSuccess(name) {
   const yes = rsvpChoice === 'yes';
   document.getElementById('rsvpWrap').innerHTML = `
     <div class="success-screen">
-      <div class="success-ring ${yes?'yes':'no'}">${yes?'🎉':'💌'}</div>
-      <div class="success-h">${yes?'See you there!':'You will be missed'}</div>
-      <p class="success-p">
-        ${yes
-          ? 'We can\'t wait to celebrate with you, <strong>'+name+'</strong>!<br>We\'ll be in touch with more details soon. 💍'
-          : 'Thank you for letting us know, <strong>'+name+'</strong>.<br>You\'ll be in our hearts on the day. 🤍'}
-      </p>
+      <div class="s-ring ${yes?'yes':'no'}">${yes?'🎉':'💌'}</div>
+      <div class="s-h">${yes ? 'See you there!' : 'You will be missed'}</div>
+      <p class="s-p">${yes
+        ? 'We can\'t wait to celebrate with you, <strong>'+name+'</strong>! We\'ll be in touch soon. 💍'
+        : 'Thank you for letting us know, <strong>'+name+'</strong>. You\'ll be in our hearts. 🤍'
+      }</p>
     </div>`;
 }
 
