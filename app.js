@@ -94,6 +94,12 @@ async function init() {
     await loadPartnerData();
   loadReferralCode();
   updateWeddingPageUrl();
+  // Update couple name in mobile nav drawer
+  const mnEl = document.getElementById('mobileNavNames');
+  if(mnEl) {
+    const n1 = profile?.name1||'', n2 = profile?.name2||'';
+    mnEl.textContent = (n1||n2) ? n1+(n2?' & '+n2:'') : 'WeddingLedger';
+  }
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
     fetchLiveRates(); // async - updates rates in background
   } catch(e) {
@@ -449,34 +455,6 @@ function renderVendors() {
           ${dueBadgeHtml}
         </div>
         <button class="add-payment-btn" onclick="openPaymentModal('${v.id}')">+ Add Payment</button>
-      </div>
-
-      <!-- Rating -->
-      <div class="vc-rating" id="rating-${v.id}">
-        ${renderStars(v.id, v.rating||0)}
-        ${v.rating_note?`<span style="font-size:11px;color:var(--muted);margin-left:6px">${esc(v.rating_note)}</span>`:''}
-      </div>
-
-      <!-- Attachment -->
-      <div class="vc-attachment">
-        ${v.attachment_url
-          ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--warm);border-radius:8px;margin-top:4px">
-              ${v.attachment_type==='image'
-                ? `<img src="${esc(v.attachment_url)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="viewAttachment('${v.id}')">`
-                : `<span style="font-size:20px;cursor:pointer" onclick="viewAttachment('${v.id}')">📄</span>`}
-              <div style="flex:1;min-width:0">
-                <div style="font-size:11px;font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(v.attachment_name||'Attachment')}</div>
-                <div style="font-size:10px;color:var(--muted)">${v.attachment_type==='image'?'Photo':'PDF Contract'}</div>
-              </div>
-              <button onclick="removeAttachment('${v.id}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:4px">✕</button>
-            </div>`
-          : `<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);
-              cursor:pointer;padding:6px 0;border-top:1px solid var(--border);margin-top:4px">
-              <input type="file" accept="image/*,.pdf" style="display:none"
-                onchange="uploadAttachment('${v.id}', this)">
-              📎 Attach photo or contract
-            </label>`
-        }
       </div>
 
       <!-- Collapsible payment history -->
@@ -1076,112 +1054,6 @@ function showToast(msg,isError=false){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.className='toast show'+(isError?' error':'');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='toast';},3500);
-}
-
-// ─── VENDOR RATING ───────────────────────────────────────────────────────────
-
-function renderStars(vendorId, currentRating) {
-  const stars = [1,2,3,4,5].map(n => `
-    <span onclick="setRating('${vendorId}',${n})"
-      style="font-size:18px;cursor:pointer;transition:transform 0.1s;display:inline-block"
-      onmouseover="hoverStars('${vendorId}',${n})"
-      onmouseout="unhoverStars('${vendorId}',${currentRating})"
-      id="star-${vendorId}-${n}">${n <= currentRating ? '⭐' : '☆'}</span>
-  `).join('');
-  return `<div style="display:flex;align-items:center;gap:2px;padding:6px 0 2px">${stars}
-    ${currentRating ? `<span style="font-size:11px;color:var(--muted);margin-left:4px">${currentRating}/5</span>` : ''}
-    <button onclick="openRatingNote('${vendorId}')"
-      style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);margin-left:6px">
-      ✏️ note
-    </button>
-  </div>`;
-}
-
-function hoverStars(vendorId, n) {
-  [1,2,3,4,5].forEach(i => {
-    const el = document.getElementById(`star-${vendorId}-${i}`);
-    if(el) el.textContent = i <= n ? '⭐' : '☆';
-  });
-}
-function unhoverStars(vendorId, current) {
-  [1,2,3,4,5].forEach(i => {
-    const el = document.getElementById(`star-${vendorId}-${i}`);
-    if(el) el.textContent = i <= current ? '⭐' : '☆';
-  });
-}
-
-async function setRating(vendorId, rating) {
-  const v = vendors.find(x => x.id === vendorId);
-  if(!v) return;
-  // Toggle off if same rating clicked
-  const newRating = v.rating === rating ? null : rating;
-  await DB.patch(`vendors?id=eq.${vendorId}`, { rating: newRating }, accessToken);
-  v.rating = newRating;
-  const el = document.getElementById(`rating-${vendorId}`);
-  if(el) el.innerHTML = renderStars(vendorId, newRating||0) + (v.rating_note ? `<span style="font-size:11px;color:var(--muted);margin-left:6px">${esc(v.rating_note)}</span>` : '');
-  showToast(newRating ? `${['','⭐','⭐⭐','⭐⭐⭐','⭐⭐⭐⭐','⭐⭐⭐⭐⭐'][newRating]} Rated!` : 'Rating removed');
-}
-
-async function openRatingNote(vendorId) {
-  const v = vendors.find(x => x.id === vendorId);
-  const note = prompt('Add a note about this vendor (optional):', v?.rating_note || '');
-  if(note === null) return;
-  await DB.patch(`vendors?id=eq.${vendorId}`, { rating_note: note }, accessToken);
-  if(v) v.rating_note = note;
-  renderVendors();
-  showToast('Note saved');
-}
-
-// ─── VENDOR ATTACHMENTS ───────────────────────────────────────────────────────
-
-async function uploadAttachment(vendorId, input) {
-  const file = input.files[0];
-  if(!file) return;
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if(file.size > maxSize) { showToast('File too large (max 5MB)', true); return; }
-  const isImage = file.type.startsWith('image/');
-  const isPDF   = file.type === 'application/pdf';
-  if(!isImage && !isPDF) { showToast('Only images and PDFs allowed', true); return; }
-
-  showToast('Uploading…');
-  try {
-    // Upload to Supabase Storage
-    const ext  = file.name.split('.').pop();
-    const path = `${userId}/${vendorId}-${Date.now()}.${ext}`;
-    const res  = await fetch(
-      `${DB.SUPABASE_URL}/storage/v1/object/vendor-files/${path}`,
-      { method:'POST', headers:{ 'Authorization':`Bearer ${accessToken}`, 'apikey': DB.ANON_KEY, 'Content-Type': file.type }, body: file }
-    );
-    if(!res.ok) throw new Error('Upload failed');
-    const url = `${DB.SUPABASE_URL}/storage/v1/object/public/vendor-files/${path}`;
-    await DB.patch(`vendors?id=eq.${vendorId}`, {
-      attachment_url:  url,
-      attachment_name: file.name,
-      attachment_type: isImage ? 'image' : 'pdf'
-    }, accessToken);
-    const v = vendors.find(x => x.id === vendorId);
-    if(v){ v.attachment_url = url; v.attachment_name = file.name; v.attachment_type = isImage ? 'image' : 'pdf'; }
-    renderVendors();
-    showToast('📎 Attachment saved!');
-  } catch(e) {
-    console.error(e);
-    showToast('Upload failed — check Supabase Storage is enabled', true);
-  }
-}
-
-function viewAttachment(vendorId) {
-  const v = vendors.find(x => x.id === vendorId);
-  if(!v?.attachment_url) return;
-  window.open(v.attachment_url, '_blank');
-}
-
-async function removeAttachment(vendorId) {
-  if(!confirm('Remove this attachment?')) return;
-  await DB.patch(`vendors?id=eq.${vendorId}`, { attachment_url:null, attachment_name:null, attachment_type:null }, accessToken);
-  const v = vendors.find(x => x.id === vendorId);
-  if(v){ v.attachment_url=null; v.attachment_name=null; v.attachment_type=null; }
-  renderVendors();
-  showToast('Attachment removed');
 }
 
 // ─── PAYMENT TIMELINE ─────────────────────────────────────────────────────────
@@ -2117,3 +1989,22 @@ async function saveNotesFromSettings() {
 
 init();  updateWeddingPageUrl();
   const pmEl=document.getElementById('settingsPageMessage');if(pmEl)pmEl.value=profile?.page_message||'';
+
+
+// ── MOBILE NAV ────────────────────────────────────────────────────────────────
+function openMobileNav() {
+  const overlay = document.getElementById('mobileNavOverlay');
+  const drawer  = document.getElementById('mobileNavDrawer');
+  if(!overlay || !drawer) return;
+  overlay.classList.add('open');
+  drawer.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileNav() {
+  const overlay = document.getElementById('mobileNavOverlay');
+  const drawer  = document.getElementById('mobileNavDrawer');
+  if(!overlay || !drawer) return;
+  overlay.classList.remove('open');
+  drawer.classList.remove('open');
+  document.body.style.overflow = '';
+}
