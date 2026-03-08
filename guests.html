@@ -8,570 +8,986 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    .guests-header{background:white;border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:64px;z-index:10}
-    .guests-stats{display:flex;gap:12px;flex-wrap:wrap}
-    .gstat{background:var(--warm);border-radius:10px;padding:10px 16px;text-align:center;min-width:80px}
-    .gstat-num{font-size:22px;font-weight:700;color:var(--gold);font-family:'Cormorant Garamond',serif}
-    .gstat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
-    .guest-table{width:100%;border-collapse:collapse}
-    .guest-table th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 14px;background:var(--warm);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-    .guest-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--charcoal);vertical-align:middle}
-    .guest-table tr:hover td{background:#fdfaf4}
-    .rsvp-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
-    .rsvp-yes{background:#e8f5e8;color:#2a5a2a}
-    .rsvp-no{background:#fde8e8;color:#7a2a2a}
-    .rsvp-maybe{background:#fff3cd;color:#7a5a00}
-    .rsvp-pending{background:#f0f0f0;color:#666}
-    .guest-actions{display:flex;gap:6px;opacity:0;transition:.2s}
-    .guest-table tr:hover .guest-actions{opacity:1}
-    .btn-icon{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;color:var(--muted)}
-    .btn-icon:hover{border-color:var(--gold);color:var(--gold)}
-    .filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
-    .filter-tab{background:var(--warm);border:1.5px solid var(--border);border-radius:99px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;color:var(--charcoal);transition:.15s}
-    .filter-tab.active{background:var(--gold);color:white;border-color:var(--gold)}
-    .group-header{background:#fdf9f0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border)}
-    .empty-guests{text-align:center;padding:60px 20px;color:var(--muted)}
-    .empty-guests-icon{font-size:48px;margin-bottom:12px}
-    .import-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:.2s}
-    .import-area:hover{border-color:var(--gold);background:#fdf9f0}
-    .meal-select{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Jost',sans-serif;background:white;cursor:pointer}
-    .meal-select:focus{outline:none;border-color:var(--gold)}
+    /* ── Stats bar ── */
+    .stats-strip{display:flex;gap:0;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+    .stats-strip::-webkit-scrollbar{display:none}
+    .stat-pill{flex:1;min-width:90px;padding:16px 12px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:.15s}
+    .stat-pill:last-child{border-right:none}
+    .stat-pill:hover,.stat-pill.active{background:#fdf9f0}
+    .stat-pill.active .stat-num{color:var(--gold)}
+    .stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--charcoal);line-height:1;display:block}
+    .stat-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px;display:block}
+
+    /* ── Toolbar ── */
+    .guest-toolbar{display:flex;align-items:center;gap:10px;padding:14px 24px;background:white;
+      border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:64px;z-index:10}
+    .search-box{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;
+      background:var(--cream);border:1.5px solid var(--border);border-radius:99px;padding:9px 16px}
+    .search-box input{background:none;border:none;outline:none;font-family:'Jost',sans-serif;
+      font-size:13px;color:var(--charcoal);width:100%}
+    .search-box input::placeholder{color:var(--muted)}
+    .toolbar-select{padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;
+      font-family:'Jost',sans-serif;font-size:12px;background:white;outline:none;cursor:pointer;color:var(--charcoal)}
+
+    /* ── Guest cards (mobile-first grid) ── */
+    .guest-grid{padding:20px 24px;display:grid;gap:12px;
+      grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+    .guest-card{background:white;border-radius:14px;border:1.5px solid var(--border);
+      padding:16px;transition:.2s;position:relative}
+    .guest-card:hover{border-color:rgba(201,168,76,.4);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+    .guest-card.selected{border-color:var(--gold);background:#fdf9f0}
+    .gc-top{display:flex;align-items:flex-start;gap:12px}
+    .gc-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e8d8b0);
+      display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;
+      font-size:18px;font-weight:600;color:var(--charcoal);flex-shrink:0}
+    .gc-name{font-size:14px;font-weight:600;color:var(--charcoal);margin-bottom:2px}
+    .gc-meta{font-size:11px;color:var(--muted)}
+    .gc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600}
+    .badge-yes{background:#e8f5e8;color:#2a5a2a}
+    .badge-no{background:#fde8e8;color:#7a2a2a}
+    .badge-maybe{background:#fff3cd;color:#7a5a00}
+    .badge-pending{background:#f0f0f0;color:#666}
+    .badge-dietary{background:#fdf0ff;color:#6a2a7a}
+    .badge-plusone{background:#e8f0ff;color:#2a3a7a}
+    .badge-menu{background:#fff8e8;color:#7a5a00}
+    .gc-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+    .gc-btn{flex:1;padding:7px 10px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;
+      font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;
+      color:var(--charcoal);transition:.15s;display:flex;align-items:center;justify-content:center;gap:4px}
+    .gc-btn:hover{border-color:var(--gold);color:var(--gold);background:#fdf9f0}
+    .gc-btn.whatsapp:hover{border-color:#25D366;color:#25D366;background:#f0fff4}
+    .gc-btn.email:hover{border-color:#4a90d9;color:#4a90d9;background:#f0f5ff}
+    .gc-btn.danger:hover{border-color:#c04040;color:#c04040;background:#fff0f0}
+    .gc-check{position:absolute;top:14px;right:14px}
+
+    /* ── Group header ── */
+    .group-divider{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:4px 0}
+    .group-divider-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+      color:var(--muted);font-weight:600;white-space:nowrap}
+    .group-divider-line{flex:1;height:1px;background:var(--border)}
+
+    /* ── Empty ── */
+    .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px}
+    .empty-icon{font-size:52px;margin-bottom:14px}
+    .empty-title{font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px}
+    .empty-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+
+    /* ── Bulk bar ── */
+    .bulk-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      background:var(--charcoal);color:white;border-radius:99px;padding:12px 20px;
+      display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.25);
+      z-index:100;white-space:nowrap;flex-wrap:wrap;max-width:calc(100vw - 48px)}
+    .bulk-btn{border:none;border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;
+      font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+
+    /* ── Message modal ── */
+    .msg-preview{background:var(--cream);border-radius:12px;padding:14px;font-size:13px;
+      line-height:1.7;color:var(--charcoal);border:1px solid var(--border);white-space:pre-wrap;
+      margin-bottom:12px;min-height:80px}
+    .msg-vars{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+    .msg-var{background:white;border:1px solid var(--border);border-radius:6px;padding:3px 10px;
+      font-size:11px;cursor:pointer;font-family:monospace;color:var(--charcoal)}
+    .msg-var:hover{border-color:var(--gold);color:var(--gold)}
+
+    /* ── Menu settings ── */
+    .menu-course{background:var(--cream);border-radius:10px;padding:12px;margin-bottom:10px}
+    .course-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .course-title{font-size:12px;font-weight:600;color:var(--charcoal)}
+    .option-chip{display:inline-flex;align-items:center;gap:4px;background:white;border:1px solid var(--border);
+      border-radius:99px;padding:4px 10px;font-size:12px;margin:3px;cursor:pointer}
+    .option-chip .del{color:var(--muted);font-size:10px}
+    .option-chip .del:hover{color:#c04040}
+
     @media(max-width:680px){
-      .guests-header{top:56px;padding:12px 16px}
-      .guest-table th:nth-child(n+4){display:none}
-      .guest-table td:nth-child(n+4){display:none}
-      .gstat{min-width:60px;padding:8px 10px}
-      .gstat-num{font-size:18px}
+      .guest-toolbar{padding:10px 14px;top:56px}
+      .guest-grid{padding:14px;grid-template-columns:1fr}
+      .stats-strip{position:sticky;top:56px;z-index:9}
     }
   </style>
 </head>
 <body>
-<!-- TOPBAR -->
+
+<!-- ── TOPBAR ── -->
 <nav class="topbar">
-  <div class="topbar-left">
-    <a href="dashboard.html" class="logo-link"><span class="logo-text">Wedding<span class="logo-italic">Ledger</span></span></a>
+  <div style="display:flex;align-items:center;gap:16px">
+    <a href="dashboard.html" class="topbar-logo">Wedding<span>Ledger</span></a>
+    <span style="color:var(--border)">|</span>
+    <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--muted);font-style:italic">Guest List</span>
   </div>
   <div class="topbar-right">
-    <select class="currency-select" id="currencySelect" onchange="changeCurrency(this.value)">
-      <option value="GBP">£ GBP</option><option value="USD">$ USD</option>
-      <option value="EUR">€ EUR</option><option value="LKR">₨ LKR</option>
-      <option value="AUD">A$ AUD</option><option value="INR">₹ INR</option><option value="SGD">S$ SGD</option>
-    </select>
-    <a href="dashboard.html" class="topbar-btn" style="color:var(--muted);text-decoration:none">← Dashboard</a>
-    <button class="btn-primary" onclick="openAddGuest()" style="padding:8px 16px;font-size:13px">+ Add Guest</button>
-    <button onclick="openImportModal()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import CSV</button>
+    <button onclick="openMenuSettings()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu Settings</button>
+    <button onclick="openImportModal()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import</button>
     <button onclick="exportGuestCSV()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
+    <a href="dashboard.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">← Dashboard</a>
+    <button class="btn-primary" onclick="openAddGuest()" style="padding:8px 18px;font-size:13px">+ Add Guest</button>
     <button class="hamburger-btn" onclick="toggleMobileNav()" id="hamburgerBtn">☰</button>
   </div>
 </nav>
+
+<!-- ── MOBILE DRAWER ── -->
 <div class="mobile-nav-drawer" id="mobileNavDrawer">
   <button class="mobile-nav-item" onclick="openAddGuest();closeMobileNav()">+ Add Guest</button>
+  <button class="mobile-nav-item" onclick="openMenuSettings();closeMobileNav()">🍽 Menu Settings</button>
   <button class="mobile-nav-item" onclick="openImportModal();closeMobileNav()">📥 Import CSV</button>
-  <button class="mobile-nav-item" onclick="exportGuestCSV();closeMobileNav()">📤 Export CSV</button>
+  <button class="mobile-nav-item" onclick="exportGuestCSV();closeMobileNav()">📤 Export</button>
+  <button class="mobile-nav-item" onclick="location.href='seating.html'">🪑 Seating Chart</button>
   <button class="mobile-nav-item" onclick="location.href='dashboard.html'">← Dashboard</button>
 </div>
 
 <main style="padding-top:64px;min-height:100vh;background:var(--cream)">
-  <!-- Stats bar -->
-  <div class="guests-header">
-    <div class="guests-stats">
-      <div class="gstat"><div class="gstat-num" id="statTotal">0</div><div class="gstat-label">Invited</div></div>
-      <div class="gstat"><div class="gstat-num" id="statYes" style="color:#2a7a2a">0</div><div class="gstat-label">Attending</div></div>
-      <div class="gstat"><div class="gstat-num" id="statNo" style="color:#c04040">0</div><div class="gstat-label">Declined</div></div>
-      <div class="gstat"><div class="gstat-num" id="statPending" style="color:#8a6020">0</div><div class="gstat-label">Pending</div></div>
-      <div class="gstat"><div class="gstat-num" id="statPlusOnes">0</div><div class="gstat-label">+1s</div></div>
+
+  <!-- ── Stats strip ── -->
+  <div class="stats-strip">
+    <div class="stat-pill active" id="pill-all" onclick="setFilter('all',this)">
+      <span class="stat-num" id="statTotal">0</span>
+      <span class="stat-label">Invited</span>
     </div>
-    <div class="filter-tabs">
-      <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
-      <button class="filter-tab" onclick="setFilter('yes',this)">✅ Attending</button>
-      <button class="filter-tab" onclick="setFilter('no',this)">❌ Declined</button>
-      <button class="filter-tab" onclick="setFilter('pending',this)">⏳ Pending</button>
+    <div class="stat-pill" id="pill-yes" onclick="setFilter('yes',this)">
+      <span class="stat-num" id="statYes" style="color:#2a7a2a">0</span>
+      <span class="stat-label">✅ Attending</span>
+    </div>
+    <div class="stat-pill" id="pill-no" onclick="setFilter('no',this)">
+      <span class="stat-num" id="statNo" style="color:#c04040">0</span>
+      <span class="stat-label">❌ Declined</span>
+    </div>
+    <div class="stat-pill" id="pill-pending" onclick="setFilter('pending',this)">
+      <span class="stat-num" id="statPending" style="color:#8a6020">0</span>
+      <span class="stat-label">⏳ Pending</span>
+    </div>
+    <div class="stat-pill" id="pill-maybe" onclick="setFilter('maybe',this)">
+      <span class="stat-num" id="statMaybe">0</span>
+      <span class="stat-label">🤔 Maybe</span>
+    </div>
+    <div class="stat-pill" style="cursor:default">
+      <span class="stat-num" id="statPlusOnes" style="color:var(--gold)">0</span>
+      <span class="stat-label">+1 Guests</span>
     </div>
   </div>
 
-  <!-- Search + group filter -->
-  <div style="padding:16px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-    <input type="search" id="guestSearch" placeholder="🔍 Search guests…"
-      oninput="renderGuests()"
-      style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid var(--border);
-      border-radius:99px;font-family:'Jost',sans-serif;font-size:13px;outline:none;background:white">
-    <select id="groupFilter" onchange="renderGuests()"
-      style="padding:10px 14px;border:1.5px solid var(--border);border-radius:99px;
-      font-family:'Jost',sans-serif;font-size:13px;background:white;outline:none;cursor:pointer">
+  <!-- ── Toolbar ── -->
+  <div class="guest-toolbar">
+    <div class="search-box">
+      <span style="color:var(--muted);font-size:14px">🔍</span>
+      <input id="guestSearch" placeholder="Search guests…" oninput="renderGuests()">
+    </div>
+    <select class="toolbar-select" id="groupFilter" onchange="renderGuests()">
       <option value="">All Groups</option>
     </select>
-    <div style="font-size:12px;color:var(--muted)" id="guestCountLabel"></div>
+    <select class="toolbar-select" id="sortBy" onchange="renderGuests()">
+      <option value="name">Sort: Name</option>
+      <option value="rsvp">Sort: RSVP</option>
+      <option value="group">Sort: Group</option>
+      <option value="newest">Sort: Newest</option>
+    </select>
+    <span style="font-size:12px;color:var(--muted);white-space:nowrap" id="guestCountLabel"></span>
   </div>
 
-  <!-- Guest table -->
-  <div style="padding:0 24px 24px;overflow-x:auto">
-    <div style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
-      <table class="guest-table" id="guestTable">
-        <thead>
-          <tr>
-            <th style="width:32px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
-            <th>Name</th>
-            <th>RSVP</th>
-            <th class="desktop-only">Email</th>
-            <th class="desktop-only">Meal</th>
-            <th class="desktop-only">Dietary</th>
-            <th class="desktop-only">Table</th>
-            <th class="desktop-only">Group</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="guestBody">
-          <tr><td colspan="9"><div class="empty-guests"><div class="empty-guests-icon">👥</div><div>No guests yet — add your first guest!</div></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <!-- ── Guest Cards ── -->
+  <div class="guest-grid" id="guestGrid"></div>
 
-  <!-- Bulk actions bar (shows when guests selected) -->
-  <div id="bulkBar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-    background:var(--charcoal);color:white;border-radius:99px;padding:12px 24px;
-    display:none;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:100;white-space:nowrap">
-    <span id="bulkCount" style="font-size:13px;font-weight:600"></span>
-    <button onclick="bulkRSVP('yes')" style="background:#2a7a2a;border:none;color:white;border-radius:99px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Jost',sans-serif">✅ Mark Attending</button>
-    <button onclick="bulkRSVP('no')" style="background:#c04040;border:none;color:white;border-radius:99px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Jost',sans-serif">❌ Mark Declined</button>
-    <button onclick="bulkDelete()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:99px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Jost',sans-serif">🗑 Delete</button>
-    <button onclick="clearSelection()" style="background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px">✕</button>
+  <!-- ── Bulk bar ── -->
+  <div class="bulk-bar" id="bulkBar">
+    <span style="font-size:13px;font-weight:600" id="bulkCount"></span>
+    <button class="bulk-btn" onclick="bulkWhatsApp()" style="background:#25D366;color:white">💬 WhatsApp All</button>
+    <button class="bulk-btn" onclick="bulkEmail()" style="background:#4a90d9;color:white">✉️ Email All</button>
+    <button class="bulk-btn" onclick="bulkRSVP('yes')" style="background:#2a7a2a;color:white">✅ Mark Attending</button>
+    <button class="bulk-btn" onclick="bulkRSVP('no')" style="background:#c04040;color:white">❌ Mark Declined</button>
+    <button class="bulk-btn" onclick="bulkDelete()" style="background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.3)">🗑 Delete</button>
+    <button onclick="clearSelection()" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:18px;padding:4px">✕</button>
   </div>
 </main>
 
-<!-- ADD / EDIT GUEST MODAL -->
+<!-- ══════════════════════════════════════════════════════
+     ADD / EDIT GUEST MODAL
+══════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="guestModal" style="display:none" onclick="if(event.target===this)closeGuestModal()">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:540px">
     <div class="modal-header">
       <h3 class="modal-title" id="guestModalTitle">Add Guest</h3>
       <button class="modal-close" onclick="closeGuestModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div style="grid-column:1/-1">
-          <label class="modal-label">Full Name *</label>
-          <input type="text" id="gName" class="modal-input" placeholder="Jane Smith">
-        </div>
-        <div style="grid-column:1/-1">
-          <label class="modal-label">Email</label>
-          <input type="email" id="gEmail" class="modal-input" placeholder="jane@email.com">
-        </div>
-        <div>
-          <label class="modal-label">RSVP Status</label>
-          <select id="gRsvp" class="modal-input">
-            <option value="pending">⏳ Pending</option>
-            <option value="yes">✅ Attending</option>
-            <option value="no">❌ Declined</option>
-            <option value="maybe">🤔 Maybe</option>
-          </select>
-        </div>
-        <div>
-          <label class="modal-label">Group</label>
-          <input type="text" id="gGroup" class="modal-input" placeholder="e.g. Bride's side" list="groupList">
-          <datalist id="groupList"></datalist>
-        </div>
-        <div>
-          <label class="modal-label">Starter</label>
-          <input type="text" id="gStarter" class="modal-input" placeholder="e.g. Soup">
-        </div>
-        <div>
-          <label class="modal-label">Main</label>
-          <input type="text" id="gMain" class="modal-input" placeholder="e.g. Chicken">
-        </div>
-        <div>
-          <label class="modal-label">Dessert</label>
-          <input type="text" id="gDessert" class="modal-input" placeholder="e.g. Cake">
-        </div>
-        <div>
-          <label class="modal-label">Dietary Requirements</label>
-          <input type="text" id="gDietary" class="modal-input" placeholder="e.g. Vegan, Gluten-free">
-        </div>
-        <div style="grid-column:1/-1">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <input type="checkbox" id="gPlusOne" onchange="togglePlusOne(this)">
-            <span style="font-size:13px;color:var(--charcoal)">Bringing a +1</span>
-          </label>
-        </div>
-        <div id="plusOneNameRow" style="grid-column:1/-1;display:none">
-          <label class="modal-label">+1 Name</label>
-          <input type="text" id="gPlusOneName" class="modal-input" placeholder="+1 guest name">
-        </div>
-        <div style="grid-column:1/-1">
-          <label class="modal-label">Notes</label>
-          <textarea id="gNotes" class="modal-input" rows="2" placeholder="Any notes…" style="resize:vertical"></textarea>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px">
+        <button class="modal-tab active" id="tab-details" onclick="switchTab('details')">👤 Details</button>
+        <button class="modal-tab" id="tab-meal" onclick="switchTab('meal')" id="tabMeal">🍽 Meal</button>
+        <button class="modal-tab" id="tab-contact" onclick="switchTab('contact')">📱 Contact</button>
+      </div>
+
+      <!-- Details tab -->
+      <div id="panel-details">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="grid-column:1/-1">
+            <label class="modal-label">Full Name *</label>
+            <input type="text" id="gName" class="modal-input" placeholder="Jane Smith">
+          </div>
+          <div>
+            <label class="modal-label">RSVP Status</label>
+            <select id="gRsvp" class="modal-input">
+              <option value="pending">⏳ Pending</option>
+              <option value="yes">✅ Attending</option>
+              <option value="no">❌ Declined</option>
+              <option value="maybe">🤔 Maybe</option>
+            </select>
+          </div>
+          <div>
+            <label class="modal-label">Group / Side</label>
+            <input type="text" id="gGroup" class="modal-input" placeholder="e.g. Bride's side" list="groupList">
+            <datalist id="groupList"></datalist>
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">
+              <input type="checkbox" id="gPlusOne" onchange="togglePlusOne(this)">
+              <span style="font-size:13px;color:var(--charcoal)">This guest is bringing a +1</span>
+            </label>
+            <div id="plusOneRow" style="display:none">
+              <input type="text" id="gPlusOneName" class="modal-input" placeholder="+1 guest name">
+            </div>
+          </div>
+          <div style="grid-column:1/-1">
+            <label class="modal-label">Notes</label>
+            <textarea id="gNotes" class="modal-input" rows="2" placeholder="Any notes…" style="resize:vertical"></textarea>
+          </div>
         </div>
       </div>
+
+      <!-- Meal tab -->
+      <div id="panel-meal" style="display:none">
+        <div id="noMenuMsg" style="text-align:center;padding:24px;color:var(--muted)">
+          <div style="font-size:32px;margin-bottom:10px">🍽</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:6px">No menu set up yet</div>
+          <div style="font-size:12px;margin-bottom:14px">Add your menu courses in Menu Settings (top bar) first, then assign meals to guests here.</div>
+          <button class="btn-secondary" onclick="closeGuestModal();openMenuSettings()">Open Menu Settings</button>
+        </div>
+        <div id="menuFields" style="display:none">
+          <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px">
+            ✨ Optional — only fill in if your wedding has a set menu
+          </div>
+          <div id="dynamicMealFields"></div>
+          <div style="margin-top:14px">
+            <label class="modal-label">Dietary Requirements & Allergies</label>
+            <input type="text" id="gDietary" class="modal-input" placeholder="e.g. Vegan, nut allergy, gluten-free">
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank if none</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact tab -->
+      <div id="panel-contact" style="display:none">
+        <div style="background:var(--warm);border-radius:10px;padding:12px 14px;font-size:12px;
+          color:var(--muted);margin-bottom:16px;line-height:1.6">
+          📱 Contact details are used to send WhatsApp RSVP reminders and email confirmations.<br>
+          <strong>Both are optional</strong> — you can also contact guests manually.
+        </div>
+        <label class="modal-label">Email Address</label>
+        <input type="email" id="gEmail" class="modal-input" placeholder="jane@email.com" style="margin-bottom:12px">
+        <label class="modal-label">WhatsApp / Phone Number</label>
+        <div style="display:flex;gap:8px;margin-bottom:4px">
+          <select id="gPhoneCode" class="modal-input" style="width:130px;flex-shrink:0">
+            <option value="44">🇬🇧 +44</option>
+            <option value="1">🇺🇸 +1</option>
+            <option value="94">🇱🇰 +94</option>
+            <option value="61">🇦🇺 +61</option>
+            <option value="91">🇮🇳 +91</option>
+            <option value="65">🇸🇬 +65</option>
+            <option value="971">🇦🇪 +971</option>
+            <option value="33">🇫🇷 +33</option>
+            <option value="49">🇩🇪 +49</option>
+            <option value="92">🇵🇰 +92</option>
+            <option value="880">🇧🇩 +880</option>
+          </select>
+          <input type="tel" id="gPhone" class="modal-input" placeholder="7700 900 123">
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Enter number without leading 0</div>
+
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+          <div style="font-size:12px;font-weight:600;color:var(--charcoal);margin-bottom:10px">Quick Actions</div>
+          <div style="display:flex;gap:8px">
+            <button class="gc-btn whatsapp" id="quickWhatsApp" onclick="quickSendWhatsApp()" style="flex:1;padding:10px">
+              💬 Send WhatsApp
+            </button>
+            <button class="gc-btn email" id="quickEmail" onclick="quickSendEmail()" style="flex:1;padding:10px">
+              ✉️ Send Email
+            </button>
+          </div>
+        </div>
+      </div>
+
       <input type="hidden" id="gEditId">
-      <div style="display:flex;gap:10px;margin-top:16px">
+      <div style="display:flex;gap:10px;margin-top:18px">
         <button class="btn-secondary" onclick="closeGuestModal()" style="flex:1">Cancel</button>
-        <button class="btn-primary" onclick="saveGuest()" style="flex:2">Save Guest</button>
+        <button class="btn-primary" onclick="saveGuest()" style="flex:2" id="saveGuestBtn">Save Guest</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- IMPORT MODAL -->
-<div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target===this)closeImportModal()">
+<!-- ══════════════════════════════════════════════════════
+     MESSAGE MODAL (WhatsApp / Email)
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="msgModal" style="display:none" onclick="if(event.target===this)closeMsgModal()">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="msgModalTitle">Send Message</h3>
+      <button class="modal-close" onclick="closeMsgModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;
+        color:var(--muted);margin-bottom:14px;line-height:1.6">
+        Use <code style="background:white;border-radius:4px;padding:1px 5px">{name}</code>,
+        <code style="background:white;border-radius:4px;padding:1px 5px">{couple}</code>,
+        <code style="background:white;border-radius:4px;padding:1px 5px">{date}</code>,
+        <code style="background:white;border-radius:4px;padding:1px 5px">{rsvp_url}</code> as variables.
+        Click a variable to insert it.
+      </div>
+      <div class="msg-vars">
+        <span class="msg-var" onclick="insertVar('{name}')">&#123;name&#125;</span>
+        <span class="msg-var" onclick="insertVar('{couple}')">&#123;couple&#125;</span>
+        <span class="msg-var" onclick="insertVar('{date}')">&#123;date&#125;</span>
+        <span class="msg-var" onclick="insertVar('{rsvp_url}')">&#123;rsvp_url&#125;</span>
+      </div>
+      <label class="modal-label">Message Template</label>
+      <textarea id="msgTemplate" class="modal-input" rows="6" oninput="updateMsgPreview()"
+        style="font-family:monospace;font-size:12px;resize:vertical;margin-bottom:12px"></textarea>
+      <label class="modal-label">Preview (for first recipient)</label>
+      <div class="msg-preview" id="msgPreview"></div>
+      <div id="msgRecipientInfo" style="font-size:12px;color:var(--muted);margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" onclick="closeMsgModal()" style="flex:1">Cancel</button>
+        <button class="btn-primary" id="msgSendBtn" onclick="sendMessages()" style="flex:2">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MENU SETTINGS MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="menuModal" style="display:none" onclick="if(event.target===this)closeMenuSettings()">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
-      <h3 class="modal-title">📥 Import Guests from CSV</h3>
+      <h3 class="modal-title">🍽 Menu Settings</h3>
+      <button class="modal-close" onclick="closeMenuSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--warm);border-radius:10px;padding:12px 14px;font-size:12px;
+        color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Only set up a menu if your wedding has a <strong>set menu</strong> — leave empty for buffets or no meal choice.
+        Guests will be asked to choose from these options when you send the RSVP.
+      </div>
+      <div id="courseList"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="newCourseName" class="modal-input" placeholder="Course name (e.g. Starter)" style="flex:1">
+        <button class="btn-secondary" onclick="addCourse()" style="padding:0 16px">+ Add</button>
+      </div>
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:8px">
+        <button class="btn-secondary" onclick="closeMenuSettings()" style="flex:1">Done</button>
+        <button class="btn-primary" onclick="saveMenuSettings()" style="flex:2">Save Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     IMPORT MODAL
+══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h3 class="modal-title">📥 Import from CSV</h3>
       <button class="modal-close" onclick="closeImportModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--warm);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.7">
-        CSV must have headers: <strong>name, email, group, rsvp, starter, main, dessert, dietary</strong><br>
-        Only <strong>name</strong> is required. Download a template below.
+      <div style="background:var(--warm);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.7">
+        CSV headers: <strong>name, email, phone, group, rsvp, dietary, notes</strong><br>
+        Only <strong>name</strong> is required.
       </div>
-      <div class="import-area" onclick="document.getElementById('csvFile').click()">
-        <div style="font-size:32px;margin-bottom:8px">📂</div>
-        <div style="font-size:13px;font-weight:600;color:var(--charcoal)">Click to choose CSV file</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">or drag and drop</div>
+      <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+        border:2px dashed var(--border);border-radius:12px;padding:28px;cursor:pointer;
+        transition:.2s;text-align:center" id="dropZone" onclick="document.getElementById('csvFile').click()">
+        <span style="font-size:36px;margin-bottom:8px">📂</span>
+        <span style="font-size:13px;font-weight:600;color:var(--charcoal)">Click to choose CSV</span>
+        <span style="font-size:11px;color:var(--muted);margin-top:4px">or drag & drop</span>
         <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="previewCSV(this)">
-      </div>
+      </label>
       <div id="csvPreview" style="display:none;margin-top:12px"></div>
-      <div style="display:flex;gap:10px;margin-top:16px">
+      <div style="display:flex;gap:10px;margin-top:14px">
         <button class="btn-secondary" onclick="downloadCSVTemplate()" style="flex:1">⬇ Template</button>
-        <button class="btn-primary" id="importBtn" onclick="importCSV()" style="flex:2;display:none">Import Guests</button>
+        <button class="btn-primary" id="importBtn" onclick="importCSV()" style="flex:2;display:none">Import</button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
-
 <script src="db.js"></script>
 <script>
 const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 let userId = localStorage.getItem('wl_uid');
 let accessToken = localStorage.getItem('wl_token');
-let guests = [];
-let seatingTables = [];
-let currentFilter = 'all';
-let selectedIds = new Set();
-let csvData = [];
+let guests = [], profile = {}, menuConfig = { courses: [] };
+let currentFilter = 'all', selectedIds = new Set(), csvData = [];
+let msgType = '', msgTargets = [];
+let activeTab = 'details';
 
 if(!userId || !accessToken) location.href = 'login.html';
 
+// ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  await loadGuests();
-  await loadTables();
+  const [g, p] = await Promise.all([
+    DB.query(`guests?user_id=eq.${userId}&order=created_at.asc`, accessToken),
+    DB.query(`profiles?user_id=eq.${userId}&select=name1,name2,wedding_date,page_slug`, accessToken)
+  ]);
+  guests = g || [];
+  profile = p?.[0] || {};
+  // Load menu config from settings
+  const s = await DB.query(`settings?user_id=eq.${userId}&key=eq.menu_config`, accessToken);
+  if(s?.[0]?.value) try{ menuConfig = JSON.parse(s[0].value); }catch(e){}
+  populateGroups();
   renderGuests();
   updateStats();
 }
 
-async function loadGuests() {
-  guests = await DB.query(`guests?user_id=eq.${userId}&order=created_at.asc`, accessToken);
-}
-async function loadTables() {
-  seatingTables = await DB.query(`seating_tables?user_id=eq.${userId}&order=created_at.asc`, accessToken);
-  populateGroupFilter();
-}
-
-function populateGroupFilter() {
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function populateGroups() {
   const groups = [...new Set(guests.map(g => g.group_label).filter(Boolean))];
   const sel = document.getElementById('groupFilter');
+  const cur = sel.value;
   sel.innerHTML = '<option value="">All Groups</option>' +
-    groups.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
-  // Also populate datalist
+    groups.map(g => `<option ${g===cur?'selected':''}>${esc(g)}</option>`).join('');
   const dl = document.getElementById('groupList');
   if(dl) dl.innerHTML = groups.map(g => `<option value="${esc(g)}">`).join('');
 }
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function setFilter(f, btn) {
+function setFilter(f, el) {
   currentFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('.stat-pill').forEach(p => p.classList.remove('active'));
+  if(el) el.classList.add('active');
   renderGuests();
 }
 
 function renderGuests() {
   const search = document.getElementById('guestSearch').value.toLowerCase();
   const group  = document.getElementById('groupFilter').value;
+  const sort   = document.getElementById('sortBy').value;
+
   let list = guests.filter(g => {
-    if(currentFilter === 'yes' && g.rsvp_status !== 'yes') return false;
-    if(currentFilter === 'no'  && g.rsvp_status !== 'no')  return false;
-    if(currentFilter === 'pending' && !['pending','maybe'].includes(g.rsvp_status)) return false;
+    if(currentFilter === 'yes'     && g.rsvp_status !== 'yes')    return false;
+    if(currentFilter === 'no'      && g.rsvp_status !== 'no')     return false;
+    if(currentFilter === 'pending' && g.rsvp_status !== 'pending' && g.rsvp_status !== null && g.rsvp_status !== '') return false;
+    if(currentFilter === 'maybe'   && g.rsvp_status !== 'maybe')  return false;
     if(group && g.group_label !== group) return false;
-    if(search && !g.name.toLowerCase().includes(search) && !(g.email||'').toLowerCase().includes(search)) return false;
+    if(search && !g.name?.toLowerCase().includes(search) &&
+       !(g.email||'').toLowerCase().includes(search) &&
+       !(g.group_label||'').toLowerCase().includes(search)) return false;
     return true;
   });
 
-  document.getElementById('guestCountLabel').textContent = `${list.length} guest${list.length!==1?'s':''}`;
+  if(sort==='name')   list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  if(sort==='rsvp')   list.sort((a,b) => (a.rsvp_status||'').localeCompare(b.rsvp_status||''));
+  if(sort==='group')  list.sort((a,b) => (a.group_label||'').localeCompare(b.group_label||''));
+  if(sort==='newest') list.reverse();
 
-  const tbody = document.getElementById('guestBody');
+  document.getElementById('guestCountLabel').textContent = `${list.length} guest${list.length!==1?'s':''}`;
+  const grid = document.getElementById('guestGrid');
+
   if(!list.length) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-guests"><div class="empty-guests-icon">👥</div><div>${search?'No guests found':'No guests yet — click + Add Guest to start'}</div></div></td></tr>`;
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <div class="empty-title">${search ? 'No guests found' : currentFilter==='all' ? 'No guests yet' : 'None in this category'}</div>
+      <div class="empty-sub">${search ? 'Try a different search' : currentFilter==='all' ? 'Click + Add Guest to start building your list' : 'Guests will appear here as you update RSVPs'}</div>
+      ${currentFilter==='all'&&!search?`<button class="btn-primary" onclick="openAddGuest()">+ Add First Guest</button>`:''}
+    </div>`;
     return;
   }
 
   // Group by group_label
-  const groups = {};
+  const grouped = {};
   list.forEach(g => {
-    const k = g.group_label || 'General';
-    if(!groups[k]) groups[k] = [];
-    groups[k].push(g);
+    const k = g.group_label || '__none__';
+    if(!grouped[k]) grouped[k] = [];
+    grouped[k].push(g);
   });
 
-  tbody.innerHTML = Object.entries(groups).map(([grp, gs]) => `
-    <tr><td colspan="9" class="group-header">👥 ${esc(grp)} (${gs.length})</td></tr>
-    ${gs.map(g => {
-      const tbl = seatingTables.find(t => t.id === g.table_id);
-      return `<tr data-id="${g.id}">
-        <td><input type="checkbox" class="guest-cb" value="${g.id}" onchange="toggleSelect('${g.id}',this)" ${selectedIds.has(g.id)?'checked':''}></td>
-        <td>
-          <div style="font-weight:600">${esc(g.name)}</div>
-          ${g.plus_one ? `<div style="font-size:11px;color:var(--muted)">+1: ${esc(g.plus_one_name||'Guest')}</div>` : ''}
-        </td>
-        <td><span class="rsvp-badge rsvp-${g.rsvp_status||'pending'}">${{yes:'✅ Yes',no:'❌ No',maybe:'🤔 Maybe',pending:'⏳ Pending'}[g.rsvp_status||'pending']}</span></td>
-        <td class="desktop-only" style="color:var(--muted)">${esc(g.email||'—')}</td>
-        <td class="desktop-only">
-          <select class="meal-select" onchange="saveMeal('${g.id}','main',this.value)">
-            <option value="">— main —</option>
-            ${getMealOptions('main', g.main)}
-          </select>
-        </td>
-        <td class="desktop-only" style="font-size:12px;color:${g.dietary?'var(--charcoal)':'var(--muted)'}">${esc(g.dietary||'—')}</td>
-        <td class="desktop-only" style="font-size:12px">${tbl ? `<span style="background:${tbl.color}22;border:1px solid ${tbl.color};border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">${esc(tbl.name)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
-        <td class="desktop-only" style="font-size:12px;color:var(--muted)">${esc(g.group_label||'—')}</td>
-        <td>
-          <div class="guest-actions">
-            <button class="btn-icon" onclick="editGuest('${g.id}')">✏️</button>
-            <button class="btn-icon" onclick="deleteGuest('${g.id}')" style="color:#c04040">🗑</button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('')}
+  grid.innerHTML = Object.entries(grouped).map(([grp, gs]) => `
+    ${grp!=='__none__'?`<div class="group-divider">
+      <span class="group-divider-label">👥 ${esc(grp)} — ${gs.length}</span>
+      <div class="group-divider-line"></div>
+    </div>`:''}
+    ${gs.map(g => renderCard(g)).join('')}
   `).join('');
 }
 
-function getMealOptions(type, current) {
-  const opts = ['Chicken','Beef','Fish','Vegetarian','Vegan','Lamb','Pasta'];
-  return opts.map(o => `<option ${o===current?'selected':''}>${o}</option>`).join('');
-}
+function renderCard(g) {
+  const rsvpMap = {yes:'badge-yes',no:'badge-no',maybe:'badge-maybe',pending:'badge-pending'};
+  const rsvpLabel = {yes:'✅ Attending',no:'❌ Declined',maybe:'🤔 Maybe',pending:'⏳ Pending'};
+  const status = g.rsvp_status || 'pending';
+  const initials = (g.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const hasMeals = menuConfig.courses?.length > 0;
+  const hasPhone = g.phone && g.phone.length > 4;
+  const hasEmail = g.email && g.email.includes('@');
 
-async function saveMeal(guestId, field, val) {
-  await DB.patch(`guests?id=eq.${guestId}`, { [field]: val }, accessToken);
-  const g = guests.find(x => x.id === guestId);
-  if(g) g[field] = val;
+  return `<div class="guest-card ${selectedIds.has(g.id)?'selected':''}" id="gc-${g.id}">
+    <input type="checkbox" class="gc-check" value="${g.id}"
+      onchange="toggleSelect('${g.id}',this)" ${selectedIds.has(g.id)?'checked':''}>
+    <div class="gc-top">
+      <div class="gc-avatar">${initials}</div>
+      <div style="flex:1;min-width:0">
+        <div class="gc-name">${esc(g.name)}</div>
+        <div class="gc-meta">${g.email ? esc(g.email) : g.phone ? '📱 '+esc(g.phone) : 'No contact info'}</div>
+      </div>
+    </div>
+    <div class="gc-badges">
+      <span class="badge ${rsvpMap[status]}">${rsvpLabel[status]}</span>
+      ${g.plus_one ? `<span class="badge badge-plusone">+1${g.plus_one_name?' ('+esc(g.plus_one_name)+')':''}</span>` : ''}
+      ${g.dietary ? `<span class="badge badge-dietary">🌿 ${esc(g.dietary)}</span>` : ''}
+      ${hasMeals && g.main ? `<span class="badge badge-menu">🍽 ${esc(g.main)}</span>` : ''}
+      ${g.notes ? `<span style="font-size:11px;color:var(--muted);font-style:italic">💬 ${esc(g.notes)}</span>` : ''}
+    </div>
+    <div class="gc-actions">
+      <button class="gc-btn" onclick="editGuest('${g.id}')">✏️ Edit</button>
+      ${hasPhone ? `<button class="gc-btn whatsapp" onclick="sendWhatsApp('${g.id}')">💬 WA</button>` : ''}
+      ${hasEmail ? `<button class="gc-btn email" onclick="sendEmail('${g.id}')">✉️ Email</button>` : ''}
+      <button class="gc-btn" onclick="quickRsvp('${g.id}')">🔄 RSVP</button>
+      <button class="gc-btn danger" onclick="deleteGuest('${g.id}')">🗑</button>
+    </div>
+  </div>`;
 }
 
 function updateStats() {
-  const yes = guests.filter(g => g.rsvp_status==='yes').length;
-  const no  = guests.filter(g => g.rsvp_status==='no').length;
-  const pend= guests.filter(g => !g.rsvp_status||g.rsvp_status==='pending'||g.rsvp_status==='maybe').length;
-  const p1  = guests.filter(g => g.plus_one).length;
   document.getElementById('statTotal').textContent   = guests.length;
-  document.getElementById('statYes').textContent     = yes;
-  document.getElementById('statNo').textContent      = no;
-  document.getElementById('statPending').textContent = pend;
-  document.getElementById('statPlusOnes').textContent= p1;
+  document.getElementById('statYes').textContent     = guests.filter(g=>g.rsvp_status==='yes').length;
+  document.getElementById('statNo').textContent      = guests.filter(g=>g.rsvp_status==='no').length;
+  document.getElementById('statPending').textContent = guests.filter(g=>!g.rsvp_status||g.rsvp_status==='pending').length;
+  document.getElementById('statMaybe').textContent   = guests.filter(g=>g.rsvp_status==='maybe').length;
+  document.getElementById('statPlusOnes').textContent= guests.filter(g=>g.plus_one).length;
 }
 
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  ['details','meal','contact'].forEach(t => {
+    document.getElementById('panel-'+t).style.display = t===tab?'block':'none';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  if(tab==='meal') renderMealFields();
+}
+
+// ── ADD / EDIT ────────────────────────────────────────────────────────────────
 function openAddGuest() {
   document.getElementById('guestModalTitle').textContent = 'Add Guest';
-  document.getElementById('gName').value = '';
-  document.getElementById('gEmail').value = '';
+  ['gName','gEmail','gPhone','gGroup','gDietary','gNotes','gPlusOneName'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
   document.getElementById('gRsvp').value = 'pending';
-  document.getElementById('gGroup').value = '';
-  document.getElementById('gStarter').value = '';
-  document.getElementById('gMain').value = '';
-  document.getElementById('gDessert').value = '';
-  document.getElementById('gDietary').value = '';
-  document.getElementById('gNotes').value = '';
+  document.getElementById('gPhoneCode').value = '44';
   document.getElementById('gPlusOne').checked = false;
-  document.getElementById('gPlusOneName').value = '';
-  document.getElementById('plusOneNameRow').style.display = 'none';
+  document.getElementById('plusOneRow').style.display='none';
   document.getElementById('gEditId').value = '';
-  document.getElementById('guestModal').style.display = 'flex';
+  switchTab('details');
+  document.getElementById('guestModal').style.display='flex';
 }
 
 function editGuest(id) {
-  const g = guests.find(x => x.id === id);
+  const g = guests.find(x=>x.id===id);
   if(!g) return;
   document.getElementById('guestModalTitle').textContent = 'Edit Guest';
-  document.getElementById('gName').value    = g.name || '';
-  document.getElementById('gEmail').value   = g.email || '';
-  document.getElementById('gRsvp').value    = g.rsvp_status || 'pending';
-  document.getElementById('gGroup').value   = g.group_label || '';
-  document.getElementById('gStarter').value = g.starter || '';
-  document.getElementById('gMain').value    = g.main || '';
-  document.getElementById('gDessert').value = g.dessert || '';
-  document.getElementById('gDietary').value = g.dietary || '';
-  document.getElementById('gNotes').value   = g.notes || '';
-  document.getElementById('gPlusOne').checked = g.plus_one || false;
-  document.getElementById('gPlusOneName').value = g.plus_one_name || '';
-  document.getElementById('plusOneNameRow').style.display = g.plus_one ? 'block' : 'none';
+  document.getElementById('gName').value    = g.name||'';
+  document.getElementById('gEmail').value   = g.email||'';
+  document.getElementById('gGroup').value   = g.group_label||'';
+  document.getElementById('gDietary').value = g.dietary||'';
+  document.getElementById('gNotes').value   = g.notes||'';
+  document.getElementById('gRsvp').value    = g.rsvp_status||'pending';
+  document.getElementById('gPlusOne').checked = g.plus_one||false;
+  document.getElementById('gPlusOneName').value = g.plus_one_name||'';
+  document.getElementById('plusOneRow').style.display = g.plus_one?'block':'none';
   document.getElementById('gEditId').value  = id;
-  document.getElementById('guestModal').style.display = 'flex';
+  // Phone
+  if(g.phone) {
+    const match = g.phone.match(/^\+?(\d{1,3})(\d+)$/);
+    if(match) { document.getElementById('gPhoneCode').value = match[1]||'44'; document.getElementById('gPhone').value = match[2]; }
+    else document.getElementById('gPhone').value = g.phone;
+  } else { document.getElementById('gPhone').value=''; }
+  // Meal fields
+  if(g.starter) document.getElementById('gStarter_0') && (document.getElementById('gStarter_0').value=g.starter);
+  switchTab('details');
+  document.getElementById('guestModal').style.display='flex';
 }
 
-function closeGuestModal() { document.getElementById('guestModal').style.display = 'none'; }
-
-function togglePlusOne(cb) {
-  document.getElementById('plusOneNameRow').style.display = cb.checked ? 'block' : 'none';
-}
+function closeGuestModal() { document.getElementById('guestModal').style.display='none'; }
+function togglePlusOne(cb) { document.getElementById('plusOneRow').style.display = cb.checked?'block':'none'; }
 
 async function saveGuest() {
   const name = document.getElementById('gName').value.trim();
-  if(!name) { showToast('Name is required', true); return; }
+  if(!name) { showToast('Name is required',true); return; }
   const editId = document.getElementById('gEditId').value;
+  const btn = document.getElementById('saveGuestBtn');
+  btn.textContent='Saving…'; btn.disabled=true;
+
+  // Collect meal choices
+  const mealData = {};
+  menuConfig.courses?.forEach((c,i) => {
+    const el = document.getElementById(`meal_${i}`);
+    if(el) mealData[c.field] = el.value.trim()||null;
+  });
+
+  const phoneCode = document.getElementById('gPhoneCode').value;
+  const phoneNum  = document.getElementById('gPhone').value.trim().replace(/^0/,'');
+  const fullPhone = phoneNum ? `+${phoneCode}${phoneNum}` : null;
+
   const data = {
-    user_id: userId,
+    user_id:       userId,
     name,
-    email:        document.getElementById('gEmail').value.trim() || null,
-    rsvp_status:  document.getElementById('gRsvp').value,
-    group_label:  document.getElementById('gGroup').value.trim() || null,
-    starter:      document.getElementById('gStarter').value.trim() || null,
-    main:         document.getElementById('gMain').value.trim() || null,
-    dessert:      document.getElementById('gDessert').value.trim() || null,
-    dietary:      document.getElementById('gDietary').value.trim() || null,
-    notes:        document.getElementById('gNotes').value.trim() || null,
-    plus_one:     document.getElementById('gPlusOne').checked,
-    plus_one_name:document.getElementById('gPlusOneName').value.trim() || null,
+    email:         document.getElementById('gEmail').value.trim()||null,
+    phone:         fullPhone,
+    rsvp_status:   document.getElementById('gRsvp').value,
+    group_label:   document.getElementById('gGroup').value.trim()||null,
+    dietary:       document.getElementById('gDietary').value.trim()||null,
+    notes:         document.getElementById('gNotes').value.trim()||null,
+    plus_one:      document.getElementById('gPlusOne').checked,
+    plus_one_name: document.getElementById('gPlusOneName').value.trim()||null,
+    starter:       mealData.starter||null,
+    main:          mealData.main||null,
+    dessert:       mealData.dessert||null,
+    ...mealData
   };
-  if(editId) {
-    await DB.patch(`guests?id=eq.${editId}`, data, accessToken);
-    const i = guests.findIndex(x => x.id === editId);
-    if(i>=0) guests[i] = {...guests[i], ...data};
-    showToast('Guest updated ✅');
-  } else {
-    const row = await DB.post('guests', data, accessToken);
-    if(row) guests.push(row);
-    showToast('Guest added ✅');
-  }
-  closeGuestModal();
-  populateGroupFilter();
-  renderGuests();
-  updateStats();
+
+  try {
+    if(editId) {
+      await DB.patch(`guests?id=eq.${editId}`, data, accessToken);
+      const i=guests.findIndex(x=>x.id===editId);
+      if(i>=0) guests[i]={...guests[i],...data};
+      showToast('Guest updated ✅');
+    } else {
+      const row = await DB.post('guests', data, accessToken);
+      if(row) guests.push(row);
+      showToast('Guest added ✅');
+    }
+    closeGuestModal();
+    populateGroups(); renderGuests(); updateStats();
+  } catch(e) { showToast('Save failed',true); console.error(e); }
+  finally { btn.textContent='Save Guest'; btn.disabled=false; }
+}
+
+async function quickRsvp(id) {
+  const g = guests.find(x=>x.id===id);
+  if(!g) return;
+  const order = ['pending','yes','maybe','no'];
+  const cur = order.indexOf(g.rsvp_status||'pending');
+  const next = order[(cur+1)%order.length];
+  await DB.patch(`guests?id=eq.${id}`, {rsvp_status:next}, accessToken);
+  g.rsvp_status = next;
+  renderGuests(); updateStats();
+  showToast({pending:'⏳ Pending',yes:'✅ Attending',maybe:'🤔 Maybe',no:'❌ Declined'}[next]);
 }
 
 async function deleteGuest(id) {
   if(!confirm('Remove this guest?')) return;
   await DB.del(`guests?id=eq.${id}`, accessToken);
-  guests = guests.filter(g => g.id !== id);
-  renderGuests(); updateStats();
+  guests = guests.filter(g=>g.id!==id);
+  selectedIds.delete(id);
+  renderGuests(); updateStats(); updateBulkBar();
   showToast('Guest removed');
 }
 
-// ── Selection
+// ── SELECTION ─────────────────────────────────────────────────────────────────
 function toggleSelect(id, cb) {
   if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
-  updateBulkBar();
-}
-function toggleSelectAll(cb) {
-  document.querySelectorAll('.guest-cb').forEach(c => {
-    c.checked = cb.checked;
-    if(cb.checked) selectedIds.add(c.value); else selectedIds.delete(c.value);
-  });
+  const card = document.getElementById('gc-'+id);
+  if(card) card.classList.toggle('selected', cb.checked);
   updateBulkBar();
 }
 function clearSelection() {
   selectedIds.clear();
-  document.querySelectorAll('.guest-cb').forEach(c => c.checked=false);
-  document.getElementById('selectAll').checked = false;
+  document.querySelectorAll('.gc-check').forEach(c=>c.checked=false);
+  document.querySelectorAll('.guest-card').forEach(c=>c.classList.remove('selected'));
   updateBulkBar();
 }
 function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
-  if(selectedIds.size > 0) {
-    bar.style.display = 'flex';
-    document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
-  } else {
-    bar.style.display = 'none';
-  }
+  bar.style.display = selectedIds.size>0 ? 'flex' : 'none';
+  document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
 }
 async function bulkRSVP(status) {
-  for(const id of selectedIds) {
-    await DB.patch(`guests?id=eq.${id}`, { rsvp_status: status }, accessToken);
-    const g = guests.find(x => x.id === id);
-    if(g) g.rsvp_status = status;
+  const ids=[...selectedIds];
+  for(const id of ids) {
+    await DB.patch(`guests?id=eq.${id}`, {rsvp_status:status}, accessToken);
+    const g=guests.find(x=>x.id===id); if(g) g.rsvp_status=status;
   }
   clearSelection(); renderGuests(); updateStats();
-  showToast(`${selectedIds.size||'Guests'} marked as ${status==='yes'?'attending':'declined'}`);
+  showToast(`${ids.length} guests updated`);
 }
 async function bulkDelete() {
   if(!confirm(`Delete ${selectedIds.size} guests?`)) return;
-  for(const id of selectedIds) {
+  for(const id of [...selectedIds]) {
     await DB.del(`guests?id=eq.${id}`, accessToken);
-    guests = guests.filter(g => g.id !== id);
+    guests=guests.filter(g=>g.id!==id);
   }
   clearSelection(); renderGuests(); updateStats();
   showToast('Guests deleted');
 }
 
-// ── CSV Import/Export
+// ── WHATSAPP & EMAIL ──────────────────────────────────────────────────────────
+const DEFAULT_WA_MSG = `Hi {name}! 🎊\n\nWe'd love for you to join us at our wedding!\n\n📅 {date}\n💑 {couple}\n\nPlease RSVP here: {rsvp_url}\n\nWith love 💍`;
+const DEFAULT_EMAIL_SUBJ = `You're invited! {couple}'s Wedding`;
+const DEFAULT_EMAIL_MSG  = `Hi {name},\n\nWe are so excited to invite you to celebrate our wedding! 🎊\n\n📅 Date: {date}\n\nPlease RSVP at: {rsvp_url}\n\nWith love,\n{couple}`;
+
+function getRsvpUrl() {
+  const slug = profile?.page_slug;
+  return slug ? `https://pamupro.github.io/wedding-budget/wedding.html?slug=${slug}` : 'https://pamupro.github.io/wedding-budget/';
+}
+
+function fillTemplate(tpl, guest) {
+  const coupleName = [profile.name1, profile.name2].filter(Boolean).join(' & ') || 'The Couple';
+  const weddingDate = profile.wedding_date
+    ? new Date(profile.wedding_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    : 'TBC';
+  return tpl
+    .replace(/\{name\}/g, guest.name||'Guest')
+    .replace(/\{couple\}/g, coupleName)
+    .replace(/\{date\}/g, weddingDate)
+    .replace(/\{rsvp_url\}/g, getRsvpUrl());
+}
+
+function sendWhatsApp(id) {
+  const g = guests.find(x=>x.id===id);
+  if(!g?.phone) { showToast('No phone number saved for this guest',true); return; }
+  openMsgModal('whatsapp', [g]);
+}
+function sendEmail(id) {
+  const g = guests.find(x=>x.id===id);
+  if(!g?.email) { showToast('No email saved for this guest',true); return; }
+  openMsgModal('email', [g]);
+}
+function bulkWhatsApp() {
+  const targets = [...selectedIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g?.phone);
+  if(!targets.length) { showToast('None of the selected guests have a phone number',true); return; }
+  openMsgModal('whatsapp', targets);
+}
+function bulkEmail() {
+  const targets = [...selectedIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g?.email);
+  if(!targets.length) { showToast('None of the selected guests have an email',true); return; }
+  openMsgModal('email', targets);
+}
+
+// Quick send from Contact tab
+function quickSendWhatsApp() {
+  const phone = document.getElementById('gPhone').value.trim();
+  const code  = document.getElementById('gPhoneCode').value;
+  const name  = document.getElementById('gName').value.trim();
+  if(!phone) { showToast('Enter a phone number first',true); return; }
+  const fullPhone = '+'+code+phone.replace(/^0/,'');
+  const msg = fillTemplate(DEFAULT_WA_MSG, {name: name||'Guest'});
+  window.open(`https://wa.me/${fullPhone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+function quickSendEmail() {
+  const email = document.getElementById('gEmail').value.trim();
+  const name  = document.getElementById('gName').value.trim();
+  if(!email) { showToast('Enter an email address first',true); return; }
+  const subj = fillTemplate(DEFAULT_EMAIL_SUBJ, {name: name||'Guest'});
+  const body = fillTemplate(DEFAULT_EMAIL_MSG,  {name: name||'Guest'});
+  window.open(`mailto:${email}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`, '_blank');
+}
+
+function openMsgModal(type, targets) {
+  msgType = type; msgTargets = targets;
+  const isWA = type==='whatsapp';
+  document.getElementById('msgModalTitle').textContent = isWA ? '💬 Send WhatsApp Message' : '✉️ Send Email';
+  document.getElementById('msgSendBtn').textContent = isWA
+    ? `💬 Open WhatsApp (${targets.length})`
+    : `✉️ Open Email Client (${targets.length})`;
+  document.getElementById('msgTemplate').value = isWA ? DEFAULT_WA_MSG : DEFAULT_EMAIL_MSG;
+  document.getElementById('msgRecipientInfo').textContent =
+    `Will send to: ${targets.slice(0,3).map(g=>g.name).join(', ')}${targets.length>3?` +${targets.length-3} more`:''}`;
+  updateMsgPreview();
+  document.getElementById('msgModal').style.display='flex';
+}
+
+function closeMsgModal() { document.getElementById('msgModal').style.display='none'; }
+
+function updateMsgPreview() {
+  const tpl = document.getElementById('msgTemplate').value;
+  const preview = msgTargets.length ? fillTemplate(tpl, msgTargets[0]) : tpl;
+  document.getElementById('msgPreview').textContent = preview;
+}
+
+function insertVar(v) {
+  const ta = document.getElementById('msgTemplate');
+  const pos = ta.selectionStart;
+  ta.value = ta.value.slice(0,pos) + v + ta.value.slice(ta.selectionEnd);
+  ta.setSelectionRange(pos+v.length, pos+v.length);
+  ta.focus();
+  updateMsgPreview();
+}
+
+function sendMessages() {
+  const tpl = document.getElementById('msgTemplate').value;
+  if(msgType==='whatsapp') {
+    // Open WhatsApp for each (one at a time in browser)
+    msgTargets.forEach((g,i) => {
+      const msg  = fillTemplate(tpl, g);
+      const num  = (g.phone||'').replace(/\D/g,'');
+      setTimeout(() => window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank'), i*800);
+    });
+    closeMsgModal(); clearSelection();
+    showToast(`💬 Opening WhatsApp for ${msgTargets.length} guest${msgTargets.length>1?'s':''}…`);
+  } else {
+    // Email: open mailto for each
+    msgTargets.forEach((g,i) => {
+      const coupleName = [profile.name1,profile.name2].filter(Boolean).join(' & ')||'The Couple';
+      const subj = fillTemplate(DEFAULT_EMAIL_SUBJ, g);
+      const body = fillTemplate(tpl, g);
+      setTimeout(()=>window.open(`mailto:${g.email}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,'_blank'), i*600);
+    });
+    closeMsgModal(); clearSelection();
+    showToast(`✉️ Opening email for ${msgTargets.length} guest${msgTargets.length>1?'s':''}…`);
+  }
+}
+
+// ── MENU SETTINGS ─────────────────────────────────────────────────────────────
+function openMenuSettings() {
+  renderCourseList();
+  document.getElementById('menuModal').style.display='flex';
+}
+function closeMenuSettings() { document.getElementById('menuModal').style.display='none'; }
+
+function renderCourseList() {
+  const el = document.getElementById('courseList');
+  if(!menuConfig.courses?.length) {
+    el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No courses yet — add your first course below</div>`;
+    return;
+  }
+  el.innerHTML = menuConfig.courses.map((c,i)=>`
+    <div class="menu-course">
+      <div class="course-header">
+        <span class="course-title">${esc(c.name)}</span>
+        <button onclick="removeCourse(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px">✕</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px" id="opts-${i}">
+        ${(c.options||[]).map((o,j)=>`
+          <span class="option-chip">${esc(o)}<span class="del" onclick="removeOption(${i},${j})">✕</span></span>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="optInput-${i}" class="modal-input" style="flex:1;padding:7px 12px;font-size:12px"
+          placeholder="Add option (e.g. Chicken)" onkeydown="if(event.key==='Enter')addOption(${i})">
+        <button class="btn-secondary" onclick="addOption(${i})" style="padding:0 12px;font-size:12px">+ Add</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addCourse() {
+  const name = document.getElementById('newCourseName').value.trim();
+  if(!name) return;
+  const field = name.toLowerCase().replace(/\s+/g,'_');
+  menuConfig.courses.push({name, field, options:[]});
+  document.getElementById('newCourseName').value='';
+  renderCourseList();
+}
+function removeCourse(i) { menuConfig.courses.splice(i,1); renderCourseList(); }
+function addOption(ci) {
+  const inp = document.getElementById(`optInput-${ci}`);
+  const val = inp.value.trim(); if(!val) return;
+  menuConfig.courses[ci].options.push(val); inp.value='';
+  renderCourseList();
+}
+function removeOption(ci,oi) { menuConfig.courses[ci].options.splice(oi,1); renderCourseList(); }
+
+async function saveMenuSettings() {
+  await DB.upsertSetting(userId,'menu_config',JSON.stringify(menuConfig),accessToken);
+  closeMenuSettings();
+  showToast('🍽 Menu saved!');
+}
+
+function renderMealFields() {
+  const noMsg = document.getElementById('noMenuMsg');
+  const fields = document.getElementById('menuFields');
+  if(!menuConfig.courses?.length) { noMsg.style.display='block'; fields.style.display='none'; return; }
+  noMsg.style.display='none'; fields.style.display='block';
+  const editId = document.getElementById('gEditId').value;
+  const g = editId ? guests.find(x=>x.id===editId) : {};
+  document.getElementById('dynamicMealFields').innerHTML = menuConfig.courses.map((c,i)=>`
+    <div style="margin-bottom:12px">
+      <label class="modal-label">${esc(c.name)}</label>
+      ${c.options?.length
+        ? `<select id="meal_${i}" class="modal-input">
+            <option value="">— Choose ${esc(c.name)} —</option>
+            ${c.options.map(o=>`<option ${(g?.[c.field]||'')=== o?'selected':''}>${esc(o)}</option>`).join('')}
+           </select>`
+        : `<input type="text" id="meal_${i}" class="modal-input"
+            placeholder="Enter ${esc(c.name)} choice"
+            value="${esc(g?.[c.field]||'')}">`
+      }
+    </div>
+  `).join('');
+}
+
+// ── CSV ────────────────────────────────────────────────────────────────────────
 function openImportModal() { document.getElementById('importModal').style.display='flex'; }
 function closeImportModal() { document.getElementById('importModal').style.display='none'; csvData=[]; }
 
 function previewCSV(input) {
-  const file = input.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const lines = e.target.result.split('\n').map(l=>l.split(',').map(c=>c.trim().replace(/^"|"$/g,'')));
-    const headers = lines[0].map(h=>h.toLowerCase());
-    csvData = lines.slice(1).filter(r=>r[0]).map(row => {
-      const obj = {};
-      headers.forEach((h,i) => obj[h] = row[i]||'');
-      return { user_id:userId, name:obj.name, email:obj.email||null, group_label:obj.group||null,
-        rsvp_status:obj.rsvp||'pending', starter:obj.starter||null, main:obj.main||null,
-        dessert:obj.dessert||null, dietary:obj.dietary||null };
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const lines=e.target.result.split('\n').map(l=>l.split(',').map(c=>c.trim().replace(/^"|"$/g,'')));
+    const headers=lines[0].map(h=>h.toLowerCase().trim());
+    csvData=lines.slice(1).filter(r=>r[0]).map(row=>{
+      const obj={}; headers.forEach((h,i)=>obj[h]=row[i]||'');
+      return {user_id:userId,name:obj.name,email:obj.email||null,
+        phone:obj.phone||null,group_label:obj.group||null,
+        rsvp_status:obj.rsvp||'pending',dietary:obj.dietary||null,notes:obj.notes||null};
     });
     document.getElementById('csvPreview').style.display='block';
-    document.getElementById('csvPreview').innerHTML = `
+    document.getElementById('csvPreview').innerHTML=`
       <div style="background:#f0faf0;border:1px solid #a0d0a0;border-radius:10px;padding:12px;font-size:12px">
-        ✅ Found <strong>${csvData.length} guests</strong> ready to import
-        <div style="color:var(--muted);margin-top:4px">Preview: ${csvData.slice(0,3).map(g=>g.name).join(', ')}${csvData.length>3?'…':''}</div>
+        ✅ <strong>${csvData.length} guests</strong> ready to import
+        <div style="color:var(--muted);margin-top:4px">${csvData.slice(0,3).map(g=>g.name).join(', ')}${csvData.length>3?'…':''}</div>
       </div>`;
     document.getElementById('importBtn').style.display='block';
   };
   reader.readAsText(file);
 }
-
 async function importCSV() {
   if(!csvData.length) return;
-  const btn = document.getElementById('importBtn');
-  btn.textContent = 'Importing…'; btn.disabled=true;
+  const btn=document.getElementById('importBtn'); btn.textContent='Importing…'; btn.disabled=true;
   let count=0;
-  for(const g of csvData) {
-    const row = await DB.post('guests', g, accessToken);
-    if(row) { guests.push(row); count++; }
-  }
-  closeImportModal();
-  populateGroupFilter(); renderGuests(); updateStats();
+  for(const g of csvData){ const r=await DB.post('guests',g,accessToken); if(r){guests.push(r);count++;} }
+  closeImportModal(); populateGroups(); renderGuests(); updateStats();
   showToast(`✅ Imported ${count} guests!`);
 }
-
 function downloadCSVTemplate() {
-  const csv = 'name,email,group,rsvp,starter,main,dessert,dietary\nJane Smith,jane@email.com,Bride\'s side,yes,Soup,Chicken,Cake,\nJohn Doe,john@email.com,Groom\'s side,pending,,,, Gluten-free';
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download = 'guests_template.csv'; a.click();
+  const csv='name,email,phone,group,rsvp,dietary,notes\nJane Smith,jane@email.com,+447700900123,Bride\'s side,yes,,\nJohn Doe,,+447700900456,Groom\'s side,pending,Vegan,';
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='guests_template.csv'; a.click();
 }
-
 function exportGuestCSV() {
-  const rows = [['Name','Email','RSVP','Group','Starter','Main','Dessert','Dietary','Plus One','Notes']];
-  guests.forEach(g => rows.push([g.name,g.email||'',g.rsvp_status||'',g.group_label||'',
-    g.starter||'',g.main||'',g.dessert||'',g.dietary||'',g.plus_one?'Yes':'No',g.notes||'']));
-  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download = 'WeddingLedger_Guests.csv'; a.click();
-  showToast('📤 Guests exported!');
+  const rows=[['Name','Email','Phone','RSVP','Group','Starter','Main','Dessert','Dietary','Plus One','Notes']];
+  guests.forEach(g=>rows.push([g.name,g.email||'',g.phone||'',g.rsvp_status||'',g.group_label||'',g.starter||'',g.main||'',g.dessert||'',g.dietary||'',g.plus_one?'Yes':'No',g.notes||'']));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='WeddingLedger_Guests.csv'; a.click(); showToast('📤 Exported!');
 }
 
-function toggleMobileNav() { document.getElementById('mobileNavDrawer').classList.toggle('open'); }
-function closeMobileNav()  { document.getElementById('mobileNavDrawer').classList.remove('open'); }
-
-function showToast(msg, err=false) {
-  const t = document.getElementById('toast');
-  t.textContent=msg; t.className='toast'+(err?' error':'')+' show';
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
+// ── UTILS ──────────────────────────────────────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' error':'')+' show';setTimeout(()=>t.classList.remove('show'),3200);}
+function toggleMobileNav(){document.getElementById('mobileNavDrawer').classList.toggle('open');}
+function closeMobileNav(){document.getElementById('mobileNavDrawer').classList.remove('open');}
 
 init();
 </script>
+
+<style>
+/* Modal tab style */
+.modal-tab{flex:1;padding:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;
+  background:none;font-family:'Jost',sans-serif;color:var(--muted);border-bottom:2px solid transparent;
+  transition:.15s}
+.modal-tab.active{color:var(--gold);background:#fdf9f0;border-bottom-color:var(--gold)}
+</style>
 </body>
 </html>
