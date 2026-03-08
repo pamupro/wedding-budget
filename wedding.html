@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- CRITICAL: user-scalable=no prevents zoom on input focus -->
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Wedding Invitation — WeddingLedger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     :root{--gold:#C9A84C;--dark:#3d2e1a;--cream:#faf7f0;--muted:#8a7a60}
     body{background:var(--cream);font-family:'Jost',sans-serif;color:var(--dark);min-height:100vh}
+
+    /* Prevent zoom on inputs — font-size must be >= 16px */
+    input,select,textarea{font-size:16px !important}
+
     .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
       padding:60px 24px;text-align:center;position:relative;overflow:hidden}
     .hero::before{content:'';position:absolute;inset:0;
@@ -28,9 +33,10 @@
     .cd-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);line-height:1}
     .cd-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
     .btn-gold{background:linear-gradient(135deg,#9a7535,var(--gold));color:white;border:none;
-      border-radius:99px;padding:16px 40px;font-family:'Jost',sans-serif;font-size:14px;font-weight:600;
+      border-radius:99px;padding:16px 40px;font-family:'Jost',sans-serif;font-size:15px;font-weight:600;
       cursor:pointer;box-shadow:0 6px 20px rgba(154,117,53,.35);transition:transform .2s,box-shadow .2s}
     .btn-gold:hover{transform:translateY(-2px)}
+    .btn-gold:disabled{opacity:.6;transform:none;cursor:not-allowed}
     .scroll-hint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
       font-size:11px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;
       animation:bounce 2s infinite}
@@ -44,28 +50,47 @@
     .detail-icon{font-size:26px;margin-bottom:8px}
     .detail-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
     .detail-val{font-size:13px;font-weight:600;color:var(--dark);line-height:1.5}
+
+    /* ── RSVP form ── */
     .rsvp-wrap{max-width:480px;margin:0 auto;background:white;border-radius:24px;padding:36px;
       box-shadow:0 8px 40px rgba(0,0,0,.08);border:1px solid rgba(201,168,76,.2)}
     .rsvp-title{font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:20px}
-    .rsvp-btns{display:flex;gap:10px;margin-bottom:20px}
-    .rsvp-btn{flex:1;padding:12px;border:2px solid #e8e0d0;border-radius:10px;background:white;
-      font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+    .rsvp-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+    .rsvp-btn{padding:14px 10px;border:2px solid #e8e0d0;border-radius:12px;background:white;
+      font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;
+      display:flex;align-items:center;justify-content:center;gap:6px}
     .rsvp-btn.yes.on{border-color:#2a7a2a;background:#f0faf0;color:#2a5a2a}
     .rsvp-btn.no.on{border-color:#c04040;background:#fff0f0;color:#7a2020}
-    .form-group{margin-bottom:14px;text-align:left}
+    .form-group{margin-bottom:16px;text-align:left}
     .form-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
-      margin-bottom:5px;display:block}
-    .form-input{width:100%;padding:11px 14px;border:1.5px solid #e8e0d0;border-radius:10px;
-      font-family:'Jost',sans-serif;font-size:13px;outline:none;background:white}
-    .form-input:focus{border-color:var(--gold)}
-    .success-box{display:none;background:#f0faf0;border:1px solid #a0d0a0;border-radius:12px;
-      padding:16px;text-align:center;font-size:13px;color:#2a5a2a;margin-top:16px}
+      margin-bottom:6px;display:block;font-weight:600}
+    .form-input{width:100%;padding:13px 16px;border:1.5px solid #e8e0d0;border-radius:12px;
+      font-family:'Jost',sans-serif;font-size:16px;outline:none;background:white;
+      transition:border-color .15s;color:var(--dark)}
+    .form-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+    .form-input::placeholder{color:#bbb}
+    select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+    .divider-row{display:flex;align-items:center;gap:12px;margin:20px 0}
+    .divider-row hr{flex:1;border:none;border-top:1px solid #f0ece4}
+    .divider-row span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+    .success-box{display:none;border-radius:14px;padding:20px;text-align:center;margin-top:16px;animation:fadeIn .4s}
+    .success-box.ok{background:#f0faf0;border:1px solid #a0d0a0;color:#2a5a2a}
+    .success-box.err{background:#fff0f0;border:1px solid #f0a0a0;color:#7a2020}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .success-icon{font-size:36px;margin-bottom:10px}
+    .success-title{font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:6px}
+    .success-msg{font-size:13px;opacity:.8;line-height:1.6}
+
     footer{text-align:center;padding:32px 24px;border-top:1px solid #e8e0d0;font-size:12px;color:var(--muted)}
     footer a{color:var(--gold);text-decoration:none}
-    @media(max-width:460px){.details-grid{grid-template-columns:1fr}.rsvp-wrap{padding:24px 16px}}
+    @media(max-width:460px){
+      .details-grid{grid-template-columns:1fr}
+      .rsvp-wrap{padding:24px 16px;border-radius:16px}
+    }
   </style>
 </head>
 <body>
+
 <section class="hero">
   <div class="ornament">✦ ✦ ✦</div>
   <div class="together">Together with their families</div>
@@ -99,102 +124,301 @@
   <p class="section-sub">Kindly respond by <strong id="deadline">—</strong></p>
   <div class="rsvp-wrap">
     <div class="rsvp-title">Will you join us?</div>
+
+    <!-- Attend picker -->
     <div class="rsvp-btns">
       <button class="rsvp-btn yes on" id="bYes" onclick="pick('yes')">✅ Joyfully Accepts</button>
       <button class="rsvp-btn no"    id="bNo"  onclick="pick('no')">❌ Regretfully Declines</button>
     </div>
-    <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="rName" placeholder="Jane Smith"></div>
-    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="rEmail" type="email" placeholder="jane@email.com"></div>
-    <div id="mealFields">
-      <div class="form-group"><label class="form-label">Starter</label><input class="form-input" id="rStarter" placeholder="e.g. Soup"></div>
-      <div class="form-group"><label class="form-label">Main Course</label><input class="form-input" id="rMain" placeholder="e.g. Chicken"></div>
-      <div class="form-group"><label class="form-label">Dessert</label><input class="form-input" id="rDessert" placeholder="e.g. Cake"></div>
-      <div class="form-group"><label class="form-label">Dietary Requirements</label><input class="form-input" id="rDietary" placeholder="e.g. Vegan, gluten-free"></div>
-      <div class="form-group" style="display:flex;align-items:center;gap:10px">
-        <input type="checkbox" id="rPlus"><label style="font-size:13px;cursor:pointer" for="rPlus">Bringing a +1</label>
+
+    <!-- Name -->
+    <div class="form-group">
+      <label class="form-label">Full Name *</label>
+      <input class="form-input" id="rName" placeholder="Jane Smith" autocomplete="name">
+    </div>
+
+    <!-- Email -->
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" id="rEmail" type="email" placeholder="jane@email.com" autocomplete="email">
+    </div>
+
+    <!-- Fields shown only when attending -->
+    <div id="attendingFields">
+      <!-- Dietary / allergies always shown when attending -->
+      <div class="form-group">
+        <label class="form-label">Dietary Requirements / Allergies</label>
+        <input class="form-input" id="rDietary" placeholder="e.g. Vegan, nut allergy, gluten-free">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank if none</div>
+      </div>
+
+      <!-- Menu choices — only shown if couple has set a menu -->
+      <div id="menuSection" style="display:none">
+        <div class="divider-row"><hr><span>🍽 Menu Choices</span><hr></div>
+        <div id="menuChoices"></div>
+      </div>
+
+      <!-- +1 -->
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+        <input type="checkbox" id="rPlus" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
+        <label for="rPlus" style="font-size:14px;font-weight:500;cursor:pointer">Bringing a +1 guest</label>
+      </div>
+      <div id="plusNameRow" style="display:none;margin-bottom:16px">
+        <input class="form-input" id="rPlusName" placeholder="+1 guest full name">
       </div>
     </div>
-    <div class="form-group"><label class="form-label">Message (optional)</label>
-      <textarea class="form-input" id="rMsg" rows="2" placeholder="Congratulations! …" style="resize:vertical"></textarea></div>
-    <button class="btn-gold" onclick="submitRsvp()" style="width:100%">Send RSVP 💌</button>
-    <div class="success-box" id="successBox"></div>
+
+    <!-- Message -->
+    <div class="form-group">
+      <label class="form-label">Message <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <textarea class="form-input" id="rMsg" rows="2" placeholder="Congratulations! …" style="resize:none"></textarea>
+    </div>
+
+    <button class="btn-gold" id="submitBtn" onclick="submitRsvp()" style="width:100%;margin-top:4px">Send RSVP 💌</button>
+    <div class="success-box" id="successBox">
+      <div class="success-icon" id="successIcon"></div>
+      <div class="success-title" id="successTitle"></div>
+      <div class="success-msg" id="successMsg"></div>
+    </div>
   </div>
 </div>
 
 <footer>Made with 💍 <a href="https://pamupro.github.io/wedding-budget/" target="_blank">WeddingLedger</a></footer>
 
 <script>
-const SUPABASE_URL='https://bqggtyguhedlyfffjkkw.supabase.co';
-const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
-let rsvp='yes', pageUserId=null;
+const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const ANON_KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 
-async function init(){
-  const slug=new URLSearchParams(window.location.search).get('slug');
-  if(!slug){document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Jost,sans-serif;text-align:center"><div><div style="font-size:48px">💍</div><h2 style="margin:16px 0 8px">Page not found</h2><p style="color:#8a7a60">This invitation link is invalid.</p></div></div>';return;}
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/profiles?page_slug=eq.${encodeURIComponent(slug)}&select=*`,{headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
-  const rows=await r.json();
-  if(!rows||!rows.length){document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Jost,sans-serif;text-align:center"><div><div style="font-size:48px">💍</div><h2 style="margin:16px 0 8px">Invitation not found</h2><p style="color:#8a7a60">This wedding page doesn\'t exist.</p></div></div>';return;}
-  const p=rows[0]; pageUserId=p.user_id;
-  document.title=`${p.name1||''} & ${p.name2||''} — Wedding`;
-  document.getElementById('n1').textContent=p.name1||'';
-  document.getElementById('n2').textContent=p.name2||'';
-  if(p.page_message) document.getElementById('pageMsg').textContent=p.page_message;
-  if(p.wedding_date){
-    const d=new Date(p.wedding_date);
-    const fmt=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    document.getElementById('heroDate').textContent=fmt;
-    document.getElementById('dDate').textContent=fmt;
-    const dl=new Date(d); dl.setDate(dl.getDate()-28);
-    document.getElementById('deadline').textContent=dl.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+let rsvp = 'yes';
+let pageUserId = null;
+let menuCfg = { courses: [] };   // loaded from settings
+let existingGuestId = null;      // if guest already in DB, we PATCH instead of POST
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  const slug = new URLSearchParams(window.location.search).get('slug');
+  if(!slug) { showBroken('This invitation link is invalid.'); return; }
+
+  const r = await fetch(
+    SUPABASE_URL+'/rest/v1/profiles?page_slug=eq.'+encodeURIComponent(slug)+'&select=*',
+    { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer '+ANON_KEY } }
+  );
+  const rows = await r.json();
+  if(!rows || !rows.length) { showBroken("This wedding page doesn't exist."); return; }
+
+  const p = rows[0];
+  pageUserId = p.user_id;
+
+  document.title = (p.name1||'') + ' & ' + (p.name2||'') + ' — Wedding';
+  document.getElementById('n1').textContent = p.name1 || '';
+  document.getElementById('n2').textContent = p.name2 || '';
+  if(p.page_message) document.getElementById('pageMsg').textContent = p.page_message;
+
+  if(p.wedding_date) {
+    const d   = new Date(p.wedding_date);
+    const fmt = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('heroDate').textContent = fmt;
+    document.getElementById('dDate').textContent    = fmt;
+    const dl = new Date(d); dl.setDate(dl.getDate()-28);
+    document.getElementById('deadline').textContent = dl.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
     startCountdown(d);
   }
-}
 
-function startCountdown(wd){
-  const tick=()=>{
-    const diff=wd-new Date();
-    if(diff<=0){document.getElementById('cd').innerHTML='<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;color:var(--gold)">Today is the day! 🎉</div>';return;}
-    const dd=Math.floor(diff/86400000),hh=Math.floor((diff%86400000)/3600000),mm=Math.floor((diff%3600000)/60000),ss=Math.floor((diff%60000)/1000);
-    document.getElementById('cd').innerHTML=[[dd,'Days'],[hh,'Hours'],[mm,'Mins'],[ss,'Secs']].map(([n,l])=>`<div class="cd-unit"><div class="cd-num">${String(n).padStart(2,'0')}</div><div class="cd-label">${l}</div></div>`).join('');
-  };
-  tick();setInterval(tick,1000);
-}
+  // Load menu config from settings
+  const ms = await fetch(
+    SUPABASE_URL+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.menu_config',
+    { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer '+ANON_KEY } }
+  );
+  const mrows = await ms.json();
+  if(mrows && mrows[0] && mrows[0].value) {
+    try {
+      menuCfg = JSON.parse(mrows[0].value);
+      if(menuCfg.courses && menuCfg.courses.length) buildMenuChoices();
+    } catch(e) {}
+  }
 
-function pick(s){
-  rsvp=s;
-  document.getElementById('bYes').classList.toggle('on',s==='yes');
-  document.getElementById('bNo').classList.toggle('on',s==='no');
-  document.getElementById('mealFields').style.display=s==='yes'?'block':'none';
-}
-
-async function submitRsvp(){
-  const name=document.getElementById('rName').value.trim();
-  if(!name){alert('Please enter your name');return;}
-  const btn=document.querySelector('.btn-gold');
-  btn.disabled=true; btn.textContent='Sending…';
-  const data={user_id:pageUserId,name,
-    email:document.getElementById('rEmail').value.trim()||null,
-    rsvp_status:rsvp,
-    starter:document.getElementById('rStarter').value.trim()||null,
-    main:document.getElementById('rMain').value.trim()||null,
-    dessert:document.getElementById('rDessert').value.trim()||null,
-    dietary:document.getElementById('rDietary').value.trim()||null,
-    plus_one:document.getElementById('rPlus').checked,
-    notes:document.getElementById('rMsg').value.trim()||null,
-    responded_at:new Date().toISOString()};
-  const res=await fetch(`${SUPABASE_URL}/rest/v1/guests`,{method:'POST',
-    headers:{'Content-Type':'application/json','apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Prefer':'return=minimal'},
-    body:JSON.stringify(data)});
-  const box=document.getElementById('successBox');
-  box.style.display='block';
-  if(res.ok||res.status===201){
-    btn.textContent='RSVP Sent ✓';
-    box.innerHTML=rsvp==='yes'?`🎉 We can't wait to see you, <strong>${name}</strong>!`:`💌 Thank you, <strong>${name}</strong>. You'll be missed!`;
-  } else {
-    btn.disabled=false; btn.textContent='Send RSVP 💌';
-    box.style.background='#fff0f0'; box.style.color='#c04040'; box.textContent='Something went wrong — please try again.';
+  // Pre-fill name from URL param (when sent via WhatsApp link with ?name=...)
+  const urlName = new URLSearchParams(window.location.search).get('name');
+  if(urlName) {
+    document.getElementById('rName').value = decodeURIComponent(urlName);
+    // Check if this guest already exists so we can update instead of insert
+    await lookupExistingGuest(decodeURIComponent(urlName));
   }
 }
+
+// ── LOOK UP EXISTING GUEST ────────────────────────────────────────────────────
+async function lookupExistingGuest(name) {
+  if(!pageUserId || !name) return;
+  const r = await fetch(
+    SUPABASE_URL+'/rest/v1/guests?user_id=eq.'+pageUserId+'&name=eq.'+encodeURIComponent(name)+'&select=id&limit=1',
+    { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer '+ANON_KEY } }
+  );
+  const rows = await r.json();
+  if(rows && rows[0]) {
+    existingGuestId = rows[0].id;
+  }
+}
+
+// Also check on name blur — handles manual typing
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('rName').addEventListener('blur', async () => {
+    const name = document.getElementById('rName').value.trim();
+    existingGuestId = null; // reset
+    if(name) await lookupExistingGuest(name);
+  });
+  document.getElementById('rPlus').addEventListener('change', () => {
+    document.getElementById('plusNameRow').style.display =
+      document.getElementById('rPlus').checked ? 'block' : 'none';
+  });
+});
+
+// ── BUILD MENU CHOICES ────────────────────────────────────────────────────────
+function buildMenuChoices() {
+  const section = document.getElementById('menuSection');
+  const wrap    = document.getElementById('menuChoices');
+  section.style.display = 'block';
+  wrap.innerHTML = '';
+  menuCfg.courses.forEach((course, i) => {
+    const div = document.createElement('div');
+    div.className = 'form-group';
+    const label = document.createElement('label');
+    label.className = 'form-label';
+    label.textContent = course.name;
+    div.appendChild(label);
+    if(course.options && course.options.length) {
+      const sel = document.createElement('select');
+      sel.className = 'form-input';
+      sel.id = 'mChoice_'+i;
+      const blank = document.createElement('option');
+      blank.value = ''; blank.textContent = '— Choose '+course.name+' —';
+      sel.appendChild(blank);
+      course.options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt; o.textContent = opt;
+        sel.appendChild(o);
+      });
+      div.appendChild(sel);
+    } else {
+      const inp = document.createElement('input');
+      inp.className = 'form-input';
+      inp.id = 'mChoice_'+i;
+      inp.placeholder = 'Your '+course.name+' choice';
+      div.appendChild(inp);
+    }
+    wrap.appendChild(div);
+  });
+}
+
+// ── COUNTDOWN ─────────────────────────────────────────────────────────────────
+function startCountdown(wd) {
+  const tick = () => {
+    const diff = wd - new Date();
+    if(diff <= 0) {
+      document.getElementById('cd').innerHTML =
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;color:var(--gold)">Today is the day! 🎉</div>';
+      return;
+    }
+    const dd=Math.floor(diff/86400000), hh=Math.floor((diff%86400000)/3600000),
+          mm=Math.floor((diff%3600000)/60000), ss=Math.floor((diff%60000)/1000);
+    document.getElementById('cd').innerHTML =
+      [[dd,'Days'],[hh,'Hours'],[mm,'Mins'],[ss,'Secs']]
+      .map(([n,l])=>'<div class="cd-unit"><div class="cd-num">'+String(n).padStart(2,'0')+'</div><div class="cd-label">'+l+'</div></div>')
+      .join('');
+  };
+  tick(); setInterval(tick, 1000);
+}
+
+// ── RSVP PICK ─────────────────────────────────────────────────────────────────
+function pick(s) {
+  rsvp = s;
+  document.getElementById('bYes').classList.toggle('on', s==='yes');
+  document.getElementById('bNo').classList.toggle('on',  s==='no');
+  document.getElementById('attendingFields').style.display = s==='yes' ? 'block' : 'none';
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────────
+async function submitRsvp() {
+  const name = document.getElementById('rName').value.trim();
+  if(!name) {
+    document.getElementById('rName').focus();
+    document.getElementById('rName').style.borderColor = '#c04040';
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  // Collect meal choices
+  const mealData = {};
+  (menuCfg.courses||[]).forEach((c,i) => {
+    const el = document.getElementById('mChoice_'+i);
+    if(el) mealData[c.field] = el.value.trim() || null;
+  });
+
+  const data = {
+    user_id:      pageUserId,
+    name,
+    email:        document.getElementById('rEmail').value.trim() || null,
+    rsvp_status:  rsvp,
+    dietary:      rsvp==='yes' ? (document.getElementById('rDietary').value.trim()||null) : null,
+    plus_one:     rsvp==='yes' ? document.getElementById('rPlus').checked : false,
+    plus_one_name:rsvp==='yes' ? (document.getElementById('rPlusName')?.value.trim()||null) : null,
+    notes:        document.getElementById('rMsg').value.trim() || null,
+    responded_at: new Date().toISOString(),
+    ...mealData
+  };
+
+  // Re-check for existing guest by name if not already found
+  if(!existingGuestId) await lookupExistingGuest(name);
+
+  let res;
+  if(existingGuestId) {
+    // ── UPDATE existing guest (PATCH) ──────────────────────────────────────────
+    res = await fetch(
+      SUPABASE_URL+'/rest/v1/guests?id=eq.'+existingGuestId,
+      { method: 'PATCH',
+        headers: { 'Content-Type':'application/json','apikey':ANON_KEY,
+                   'Authorization':'Bearer '+ANON_KEY,'Prefer':'return=minimal' },
+        body: JSON.stringify(data) }
+    );
+  } else {
+    // ── CREATE new guest (POST) ────────────────────────────────────────────────
+    res = await fetch(
+      SUPABASE_URL+'/rest/v1/guests',
+      { method: 'POST',
+        headers: { 'Content-Type':'application/json','apikey':ANON_KEY,
+                   'Authorization':'Bearer '+ANON_KEY,'Prefer':'return=minimal' },
+        body: JSON.stringify(data) }
+    );
+  }
+
+  const box = document.getElementById('successBox');
+  if(res.ok || res.status===201 || res.status===204) {
+    btn.textContent = 'RSVP Sent ✓';
+    document.querySelector('.rsvp-wrap').innerHTML = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:52px;margin-bottom:16px">${rsvp==='yes'?'🎉':'💌'}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:10px">
+          ${rsvp==='yes'?'See you there!':'You will be missed'}
+        </div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.7">
+          ${rsvp==='yes'
+            ? 'We can\'t wait to celebrate with you, <strong>'+name+'</strong>!<br>We\'ll be in touch with more details soon. 💍'
+            : 'Thank you for letting us know, <strong>'+name+'</strong>.<br>You\'ll be in our hearts on the day. 🤍'}
+        </div>
+      </div>`;
+  } else {
+    btn.disabled = false; btn.textContent = 'Send RSVP 💌';
+    box.style.display = 'block';
+    box.className = 'success-box err';
+    box.innerHTML = '<div style="font-size:13px">Something went wrong — please try again.</div>';
+  }
+}
+
+function showBroken(msg) {
+  document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Jost,sans-serif;text-align:center;padding:24px"><div><div style="font-size:48px;margin-bottom:16px">💍</div><h2 style="margin-bottom:8px">Invitation not found</h2><p style="color:#8a7a60">'+msg+'</p></div></div>';
+}
+
 init();
 </script>
 </body>
