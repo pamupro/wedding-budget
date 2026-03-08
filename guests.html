@@ -502,8 +502,9 @@
 const SB = 'https://bqggtyguhedlyfffjkkw.supabase.co';
 const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 const uid = localStorage.getItem('wl_uid');
-const tok = localStorage.getItem('wl_token');
-if(!uid || !tok) location.href = 'login.html';
+if(!uid || !localStorage.getItem('wl_token')) location.href = 'login.html';
+// Always read token fresh — never cache it, it can expire
+function getTok() { return localStorage.getItem('wl_token'); }
 
 let guests=[], prof={}, menuCfg={courses:[]};
 let filt='all', selIds=new Set(), csvRows=[];
@@ -511,12 +512,15 @@ let msgKind='', msgPeeps=[];
 
 // ── RAW SUPABASE HELPERS ──────────────────────────────────────────────────────
 async function h() {
-  const t = await DB.getValidToken(tok);
+  const t = await DB.getValidToken(getTok());
   return DB._h(t);
 }
 async function sbGet(path) {
   const r = await fetch(SB+'/rest/v1/'+path, {headers: await h()});
-  if(!r.ok) { console.error('GET',path,r.status); return []; }
+  if(!r.ok) {
+    console.error('GET',path,r.status);
+    return null;  // null = failed, [] = genuinely empty — poll checks for null
+  }
   return r.json();
 }
 async function sbPost(table, data) {
@@ -603,10 +607,19 @@ function startRealtime() {
   }
 }
 
+async function manualRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  if(btn) { btn.textContent = '⏳'; btn.disabled = true; }
+  await refreshGuests();
+  if(btn) { btn.textContent = '🔄'; btn.disabled = false; }
+  toast('Guest list refreshed');
+}
+
 async function refreshGuests() {
   try {
     const fresh = await sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc');
-    if(!fresh || !Array.isArray(fresh)) return;
+    if(!fresh || !Array.isArray(fresh) || fresh.length === 0 && guests.length > 0) return;
+    // Guard: if server returns empty but we have guests, it's likely an auth blip — skip
 
     // Detect meaningful changes and toast
     fresh.forEach(newG => {
