@@ -466,3 +466,16 @@ textarea.modal-input{resize:vertical;min-height:90px;}
   0%,100% { opacity:1; transform:scale(1); }
   50% { opacity:0.5; transform:scale(1.3); }
 }
+
+/* ── VENDOR RATING & ATTACHMENT ── */
+.vc-rating {
+  padding: 4px 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.vc-attachment {
+  min-height: 0;
+}
+.vc-attachment label:hover {
+  color: var(--gold) !important;
+}
