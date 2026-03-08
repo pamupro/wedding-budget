@@ -252,19 +252,29 @@ async function changeCurrency(code){
   updateLiveRateBadge();
 }
 
-// Format amount from GBP base to active currency
+// Format GBP amount into active currency for display
 function fmt(gbp){
   if(!gbp && gbp!==0) return '—';
-  const c=CURRENCIES[activeCurrency];
-  const v=gbp*(c.rate||1);
-  return c.symbol+v.toLocaleString(c.locale,{minimumFractionDigits:0,maximumFractionDigits:0});
+  const c = CURRENCIES[activeCurrency];
+  const v = gbp * (c.rate || 1);
+  // Use 0 decimal for large currencies (LKR, INR), 2 for others
+  const decimals = (c.rate > 50) ? 0 : 2;
+  return c.symbol + v.toLocaleString(c.locale, {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
 }
-// Show £ equivalent when viewing in another currency
+
+// Always show £ equivalent as secondary line
+// If already in GBP — no secondary line needed
+// If in another currency — show live £ rate
 function fmtGBP(gbp){
   if(!gbp && gbp!==0) return null;
-  if(activeCurrency==='GBP') return null;
-  return '£'+Number(gbp).toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:2});
+  if(activeCurrency === 'GBP') return null; // already showing £, no need for secondary
+  // Show £ equivalent using live rate
+  return '£' + Number(gbp).toLocaleString('en-GB', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
+
+// NEW: show the "other currency" conversion below £ primary
+// Used when activeCurrency=GBP to show e.g. "LKR 175,001" isn't needed
+// Used when activeCurrency=LKR to show "£421.76" — this is fmtGBP above
 // Fetch live exchange rates and update CURRENCIES
 async function fetchLiveRates(){
   try {
@@ -1042,29 +1052,62 @@ function confirmResetData(){
 }
 
 async function resetAllData(){
-  showToast('Deleting data…');
+  showToast('Resetting data…');
   try {
-    // Delete all vendors (cascade deletes payments)
+    // Delete all payments first
+    for(const p of [...payments]){
+      await DB.del('payments', p.id, accessToken);
+    }
+    payments = [];
+
+    // For vendors: clear their data but keep the 5 default ones
+    const DEFAULT_CATEGORIES = ['Wedding Planner','Venue','Catering','Photography','Music / DJ'];
+    const toDelete = [];
+    const toKeep = [];
+
+    // Sort: keep up to 5 that match default categories, delete the rest
+    let kept = 0;
     for(const v of [...vendors]){
-      for(const p of payments.filter(p=>p.vendor_id===v.id)){
-        await DB.del('payments', p.id, accessToken);
+      if(kept < 5 && DEFAULT_CATEGORIES.includes(v.category)){
+        toKeep.push(v);
+        kept++;
+      } else {
+        toDelete.push(v);
       }
+    }
+
+    // Delete extra vendors
+    for(const v of toDelete){
       await DB.del('vendors', v.id, accessToken);
     }
+
+    // Clear kept vendors' data (reset name, cost, notes, due date)
+    for(const v of toKeep){
+      await fetch(`${DB.SUPABASE_URL}/rest/v1/vendors?id=eq.${v.id}`, {
+        method:'PATCH',
+        headers:{...DB._h(accessToken),'Prefer':'return=minimal'},
+        body:JSON.stringify({name:'', total_cost:0, notes:'', due_date:null, due_amount:null, due_note:''})
+      });
+      v.name=''; v.total_cost=0; v.notes=''; v.due_date=null; v.due_amount=null; v.due_note='';
+    }
+
+    vendors = toKeep;
+
     // Delete all tasks
     for(const t of [...tasks]){
       await DB.del('tasks', t.id, accessToken);
     }
-    // Reset local state
-    vendors=[]; payments=[]; tasks=[];
-    spendLimit=0;
-    // Clear spend limit in DB
+    tasks = [];
+
+    // Reset spend limit
+    spendLimit = 0;
     await DB.upsertSetting(userId,'spend_limit','0',accessToken);
     const el=document.getElementById('spendLimit'); if(el) el.value='';
     const el2=document.getElementById('settingsSpendLimit'); if(el2) el2.value='';
+
     renderVendors(); updateStats();
     closeSettingsModal();
-    showToast('✅ All data reset successfully');
+    showToast('✅ Data reset — 5 default vendors kept');
   } catch(e) {
     showToast('Reset failed — please try again', true);
     console.error(e);
