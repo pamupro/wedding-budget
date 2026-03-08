@@ -191,7 +191,7 @@ async function loadVendors() {
       vendors.push(r[0]);
     }
   }
-  renderVendors(); updateStats(); updateVendorLimitUI();
+  renderVendors(); updateStats(); updateVendorLimitUI(); renderChart();
 }
 
 async function loadPayments() {
@@ -243,7 +243,7 @@ function setCurrencyUI(code){activeCurrency=code;const sel=document.getElementBy
 async function changeCurrency(code){
   activeCurrency=code;
   await DB.upsertSetting(userId,'currency',code,accessToken);
-  renderVendors(); updateStats();
+  renderVendors(); updateStats(); renderChart();
   const rate = CURRENCIES[code].rate;
   const msg = code==='GBP'
     ? 'Currency: British Pound (£) ✓'
@@ -541,7 +541,7 @@ async function addVendor(){
   const r=await DB.post('vendors',data,accessToken);
   vendors.push(r[0]);
   ['newVendorName','newVendorCategory','newVendorTotal','newVendorNotes'].forEach(id=>document.getElementById(id).value='');
-  renderVendors();updateStats();updateVendorLimitUI();showToast('Vendor added! 🎉');
+  renderVendors();updateStats();updateVendorLimitUI();renderChart();showToast('Vendor added! 🎉');
 }
 
 async function deleteVendor(id){
@@ -550,7 +550,7 @@ async function deleteVendor(id){
   await DB.del('vendors',id,accessToken);
   payments=payments.filter(p=>p.vendor_id!==id);
   vendors=vendors.filter(v=>v.id!==id);
-  renderVendors();updateStats();updateVendorLimitUI();showToast('Vendor deleted');
+  renderVendors();updateStats();updateVendorLimitUI();renderChart();showToast('Vendor deleted');
 }
 
 // ─── EDIT MODAL ──────────────────────────────────────────────────────────────
@@ -580,7 +580,7 @@ async function submitEdit(){
   };
   await DB.patch('vendors',id,data,accessToken);
   Object.assign(v,data);
-  closeEditModal();renderVendors();updateStats();showToast('Vendor updated ✓');
+  closeEditModal();renderVendors();updateStats();renderChart();showToast('Vendor updated ✓');
 }
 
 // ─── PAYMENT MODAL ───────────────────────────────────────────────────────────
@@ -611,7 +611,7 @@ async function submitPayment(){
     note:document.getElementById('pmtNote').value.trim()};
   const r=await DB.post('payments',data,accessToken);
   payments.push(r[0]);
-  closePaymentModal();renderVendors();updateStats();showToast('Payment recorded ✓');
+  closePaymentModal();renderVendors();updateStats();renderChart();showToast('Payment recorded ✓');
 }
 async function deletePayment(id){
   if(!confirm('Delete this payment?')) return;
@@ -1013,6 +1013,271 @@ function showToast(msg,isError=false){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.className='toast show'+(isError?' error':'');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='toast';},3500);
+}
+
+// ─── BUDGET CHART ────────────────────────────────────────────────────────────
+
+let budgetChart = null;
+let chartType = 'doughnut';
+
+const CHART_COLORS = [
+  '#C9A84C','#8B6914','#D4B896','#5C4A2A','#E8D5B0',
+  '#9B8560','#F0E6CF','#7A6040','#BFA878','#4A3820'
+];
+
+function setChartType(type) {
+  chartType = type;
+  const btnD = document.getElementById('btnDoughnut');
+  const btnB = document.getElementById('btnBar');
+  if(btnD && btnB) {
+    if(type === 'doughnut') {
+      btnD.style.background = 'var(--gold)'; btnD.style.color = 'white';
+      btnB.style.background = 'var(--warm)'; btnB.style.color = 'var(--charcoal)';
+    } else {
+      btnB.style.background = 'var(--gold)'; btnB.style.color = 'white';
+      btnD.style.background = 'var(--warm)'; btnD.style.color = 'var(--charcoal)';
+    }
+  }
+  renderChart();
+}
+
+function renderChart() {
+  const canvas = document.getElementById('budgetChart');
+  const empty  = document.getElementById('chartEmpty');
+  if(!canvas) return;
+
+  // Build category data
+  const catMap = {};
+  vendors.forEach(v => {
+    if(!v.name || !v.total_cost) return;
+    const cat = v.category || v.name;
+    catMap[cat] = (catMap[cat] || 0) + parseFloat(v.total_cost || 0);
+  });
+
+  const labels = Object.keys(catMap);
+  const data   = Object.values(catMap);
+
+  if(!labels.length) {
+    canvas.style.display = 'none';
+    if(empty) empty.style.display = 'block';
+    return;
+  }
+  canvas.style.display = 'block';
+  if(empty) empty.style.display = 'none';
+
+  // Convert to active currency for display
+  const displayData = data.map(v => parseFloat((v * CURRENCIES[activeCurrency].rate).toFixed(2)));
+  const sym = CURRENCIES[activeCurrency].symbol;
+
+  // Destroy existing chart
+  if(budgetChart) { budgetChart.destroy(); budgetChart = null; }
+
+  const ctx = canvas.getContext('2d');
+
+  if(chartType === 'doughnut') {
+    budgetChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: displayData, backgroundColor: CHART_COLORS.slice(0, labels.length),
+          borderWidth: 2, borderColor: '#faf7f0', hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { font:{family:'Jost',size:12}, padding:16, color:'#5C4A2A' }},
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${sym}${ctx.parsed.toLocaleString()}` }}
+        },
+        cutout: '62%'
+      }
+    });
+  } else {
+    budgetChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: `Budget (${sym})`,
+          data: displayData,
+          backgroundColor: CHART_COLORS.slice(0, labels.length),
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${sym}${ctx.parsed.y.toLocaleString()}` }}
+        },
+        scales: {
+          y: { ticks: { callback: v => sym + v.toLocaleString(), font:{family:'Jost'} },
+               grid: { color: 'rgba(0,0,0,0.05)' }},
+          x: { ticks: { font:{family:'Jost',size:11} }, grid: { display:false }}
+        }
+      }
+    });
+  }
+}
+
+// ─── PDF EXPORT ───────────────────────────────────────────────────────────────
+
+async function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  if(!jsPDF) { showToast('PDF library not loaded yet — try again', true); return; }
+
+  showToast('Generating PDF…');
+
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const sym = CURRENCIES[activeCurrency].symbol;
+  const pageW = 210;
+  const margin = 18;
+  let y = margin;
+
+  // ── HEADER
+  doc.setFillColor(250, 247, 240);
+  doc.rect(0, 0, pageW, 38, 'F');
+  doc.setFontSize(22);
+  doc.setTextColor(90, 70, 30);
+  doc.setFont('helvetica', 'bold');
+  doc.text('WeddingLedger', margin, 16);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(140, 110, 60);
+  const n1 = profile?.name1 || '', n2 = profile?.name2 || '';
+  const coupleStr = n1 && n2 ? `${n1} & ${n2}` : n1 || n2 || 'Budget Report';
+  doc.text(coupleStr, margin, 24);
+  doc.setFontSize(9);
+  doc.setTextColor(160, 130, 80);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}`, margin, 31);
+  if(profile?.wedding_date) {
+    doc.text(`Wedding Date: ${formatDateLong(profile.wedding_date)}`, pageW - margin, 31, {align:'right'});
+  }
+
+  // Gold line
+  doc.setDrawColor(201, 168, 76);
+  doc.setLineWidth(0.8);
+  doc.line(margin, 38, pageW - margin, 38);
+
+  y = 50;
+
+  // ── SUMMARY STATS
+  const total = vendors.reduce((s,v) => s + parseFloat(v.total_cost||0), 0);
+  const paid  = payments.reduce((s,p) => s + parseFloat(p.amount||0), 0);
+  const rem   = total - paid;
+  const pct   = total > 0 ? Math.round((paid/total)*100) : 0;
+
+  const toDisp = v => sym + (v * CURRENCIES[activeCurrency].rate).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const stats = [
+    { label:'Total Budget', value: toDisp(total), color:[60,120,60] },
+    { label:'Total Paid',   value: toDisp(paid),  color:[60,100,180] },
+    { label:'Remaining',    value: toDisp(rem),    color: rem > 0 ? [180,80,80] : [60,120,60] },
+    { label:'Paid',         value: pct + '%',      color:[130,100,50] },
+  ];
+  const boxW = (pageW - margin*2 - 9) / 4;
+  stats.forEach((s, i) => {
+    const x = margin + i * (boxW + 3);
+    doc.setFillColor(250,245,235);
+    doc.roundedRect(x, y, boxW, 20, 3, 3, 'F');
+    doc.setFontSize(7); doc.setTextColor(130,100,50); doc.setFont('helvetica','normal');
+    doc.text(s.label.toUpperCase(), x + boxW/2, y + 6, {align:'center'});
+    doc.setFontSize(11); doc.setFont('helvetica','bold');
+    doc.setTextColor(...s.color);
+    doc.text(s.value, x + boxW/2, y + 15, {align:'center'});
+  });
+
+  y += 28;
+
+  // ── BUDGET CHART as image
+  const chartCanvas = document.getElementById('budgetChart');
+  if(chartCanvas && vendors.some(v => v.total_cost > 0)) {
+    try {
+      const imgData = chartCanvas.toDataURL('image/png');
+      const chartH = 65;
+      doc.addImage(imgData, 'PNG', margin, y, pageW - margin*2, chartH);
+      y += chartH + 8;
+    } catch(e) { console.log('Chart not captured:', e); }
+  }
+
+  // ── VENDOR TABLE
+  doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(90,70,30);
+  doc.text('Vendor Breakdown', margin, y); y += 6;
+
+  const tableRows = vendors
+    .filter(v => v.name)
+    .map(v => {
+      const vPaid = payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+      const vRem  = Math.max(0,(v.total_cost||0) - vPaid);
+      const status = v.total_cost > 0 && vPaid >= v.total_cost ? 'Paid ✓'
+                   : vPaid > 0 ? 'Partial' : 'Not Paid';
+      return [
+        v.icon + ' ' + v.name,
+        v.category || '—',
+        toDisp(v.total_cost || 0),
+        toDisp(vPaid),
+        toDisp(vRem),
+        status
+      ];
+    });
+
+  if(tableRows.length) {
+    doc.autoTable({
+      startY: y,
+      head: [['Vendor','Category','Total','Paid','Remaining','Status']],
+      body: tableRows,
+      theme: 'grid',
+      styles: { font:'helvetica', fontSize:9, cellPadding:3, textColor:[60,50,30] },
+      headStyles: { fillColor:[201,168,76], textColor:[255,255,255], fontStyle:'bold', fontSize:9 },
+      alternateRowStyles: { fillColor:[250,247,240] },
+      columnStyles: { 0:{cellWidth:38}, 1:{cellWidth:28}, 2:{cellWidth:25}, 3:{cellWidth:25}, 4:{cellWidth:25}, 5:{cellWidth:22} },
+      margin: { left:margin, right:margin }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // ── PAYMENT HISTORY
+  if(payments.length) {
+    if(y > 240) { doc.addPage(); y = margin; }
+    doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(90,70,30);
+    doc.text('Payment History', margin, y); y += 6;
+
+    const pmtRows = payments.map(p => {
+      const vendor = vendors.find(v=>v.id===p.vendor_id);
+      return [
+        vendor ? vendor.icon + ' ' + vendor.name : '—',
+        toDisp(p.amount),
+        p.payment_date ? new Date(p.payment_date+'T00:00:00').toLocaleDateString('en-GB') : '—',
+        p.method || '—',
+        p.note || ''
+      ];
+    }).sort((a,b) => a[2] > b[2] ? -1 : 1);
+
+    doc.autoTable({
+      startY: y,
+      head: [['Vendor','Amount','Date','Method','Note']],
+      body: pmtRows,
+      theme: 'grid',
+      styles: { font:'helvetica', fontSize:9, cellPadding:3, textColor:[60,50,30] },
+      headStyles: { fillColor:[90,70,30], textColor:[255,255,255], fontStyle:'bold' },
+      alternateRowStyles: { fillColor:[250,247,240] },
+      margin: { left:margin, right:margin }
+    });
+  }
+
+  // ── FOOTER on each page
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(180,150,100); doc.setFont('helvetica','normal');
+    doc.text('WeddingLedger — pamupro.github.io/wedding-budget', margin, 292);
+    doc.text(`Page ${i} of ${pageCount}`, pageW-margin, 292, {align:'right'});
+  }
+
+  // ── SAVE
+  const fileName = coupleStr ? `WeddingLedger_${coupleStr.replace(' & ','_and_')}.pdf` : 'WeddingLedger_Budget.pdf';
+  doc.save(fileName);
+  showToast('📄 PDF downloaded!');
 }
 
 // ─── PASSWORD RESET & ACCOUNT RESET ─────────────────────────────────────────
