@@ -8,224 +8,146 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ── Stats bar ── */
-    .stats-strip{display:flex;gap:0;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+    .stats-strip{display:flex;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:64px;z-index:10}
     .stats-strip::-webkit-scrollbar{display:none}
-    .stat-pill{flex:1;min-width:90px;padding:16px 12px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:.15s}
+    .stat-pill{flex:1;min-width:90px;padding:16px 10px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:.15s;user-select:none}
     .stat-pill:last-child{border-right:none}
     .stat-pill:hover,.stat-pill.active{background:#fdf9f0}
     .stat-pill.active .stat-num{color:var(--gold)}
-    .stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--charcoal);line-height:1;display:block}
-    .stat-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px;display:block}
-
-    /* ── Toolbar ── */
-    .guest-toolbar{display:flex;align-items:center;gap:10px;padding:14px 24px;background:white;
-      border-bottom:1px solid var(--border);flex-wrap:wrap;position:sticky;top:64px;z-index:10}
-    .search-box{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;
-      background:var(--cream);border:1.5px solid var(--border);border-radius:99px;padding:9px 16px}
-    .search-box input{background:none;border:none;outline:none;font-family:'Jost',sans-serif;
-      font-size:13px;color:var(--charcoal);width:100%}
-    .search-box input::placeholder{color:var(--muted)}
-    .toolbar-select{padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;
-      font-family:'Jost',sans-serif;font-size:12px;background:white;outline:none;cursor:pointer;color:var(--charcoal)}
-
-    /* ── Guest cards (mobile-first grid) ── */
-    .guest-grid{padding:20px 24px;display:grid;gap:12px;
-      grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-    .guest-card{background:white;border-radius:14px;border:1.5px solid var(--border);
-      padding:16px;transition:.2s;position:relative}
-    .guest-card:hover{border-color:rgba(201,168,76,.4);box-shadow:0 4px 16px rgba(0,0,0,.06)}
-    .guest-card.selected{border-color:var(--gold);background:#fdf9f0}
-    .gc-top{display:flex;align-items:flex-start;gap:12px}
-    .gc-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e8d8b0);
-      display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;
-      font-size:18px;font-weight:600;color:var(--charcoal);flex-shrink:0}
-    .gc-name{font-size:14px;font-weight:600;color:var(--charcoal);margin-bottom:2px}
-    .gc-meta{font-size:11px;color:var(--muted)}
-    .gc-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-    .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600}
-    .badge-yes{background:#e8f5e8;color:#2a5a2a}
-    .badge-no{background:#fde8e8;color:#7a2a2a}
-    .badge-maybe{background:#fff3cd;color:#7a5a00}
-    .badge-pending{background:#f0f0f0;color:#666}
-    .badge-dietary{background:#fdf0ff;color:#6a2a7a}
-    .badge-plusone{background:#e8f0ff;color:#2a3a7a}
-    .badge-menu{background:#fff8e8;color:#7a5a00}
-    .gc-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-    .gc-btn{flex:1;padding:7px 10px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;
-      font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;
-      color:var(--charcoal);transition:.15s;display:flex;align-items:center;justify-content:center;gap:4px}
-    .gc-btn:hover{border-color:var(--gold);color:var(--gold);background:#fdf9f0}
-    .gc-btn.whatsapp:hover{border-color:#25D366;color:#25D366;background:#f0fff4}
-    .gc-btn.email:hover{border-color:#4a90d9;color:#4a90d9;background:#f0f5ff}
-    .gc-btn.danger:hover{border-color:#c04040;color:#c04040;background:#fff0f0}
-    .gc-check{position:absolute;top:14px;right:14px}
-
-    /* ── Group header ── */
-    .group-divider{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:4px 0}
-    .group-divider-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;
-      color:var(--muted);font-weight:600;white-space:nowrap}
-    .group-divider-line{flex:1;height:1px;background:var(--border)}
-
-    /* ── Empty ── */
-    .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px}
-    .empty-icon{font-size:52px;margin-bottom:14px}
-    .empty-title{font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px}
-    .empty-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
-
-    /* ── Bulk bar ── */
-    .bulk-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-      background:var(--charcoal);color:white;border-radius:99px;padding:12px 20px;
-      display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,.25);
-      z-index:100;white-space:nowrap;flex-wrap:wrap;max-width:calc(100vw - 48px)}
-    .bulk-btn{border:none;border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;
-      font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
-
-    /* ── Message modal ── */
-    .msg-preview{background:var(--cream);border-radius:12px;padding:14px;font-size:13px;
-      line-height:1.7;color:var(--charcoal);border:1px solid var(--border);white-space:pre-wrap;
-      margin-bottom:12px;min-height:80px}
-    .msg-vars{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-    .msg-var{background:white;border:1px solid var(--border);border-radius:6px;padding:3px 10px;
-      font-size:11px;cursor:pointer;font-family:monospace;color:var(--charcoal)}
-    .msg-var:hover{border-color:var(--gold);color:var(--gold)}
-
-    /* ── Menu settings ── */
-    .menu-course{background:var(--cream);border-radius:10px;padding:12px;margin-bottom:10px}
-    .course-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .course-title{font-size:12px;font-weight:600;color:var(--charcoal)}
-    .option-chip{display:inline-flex;align-items:center;gap:4px;background:white;border:1px solid var(--border);
-      border-radius:99px;padding:4px 10px;font-size:12px;margin:3px;cursor:pointer}
-    .option-chip .del{color:var(--muted);font-size:10px}
-    .option-chip .del:hover{color:#c04040}
-
-    @media(max-width:680px){
-      .guest-toolbar{padding:10px 14px;top:56px}
-      .guest-grid{padding:14px;grid-template-columns:1fr}
-      .stats-strip{position:sticky;top:56px;z-index:9}
-    }
+    .stat-num{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--charcoal);line-height:1;display:block}
+    .stat-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:3px;display:block}
+    .toolbar{display:flex;align-items:center;gap:10px;padding:14px 24px;background:white;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .search-wrap{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--border);border-radius:99px;padding:9px 16px}
+    .search-wrap input{background:none;border:none;outline:none;font-family:'Jost',sans-serif;font-size:13px;color:var(--charcoal);width:100%}
+    .tbar-sel{padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;font-family:'Jost',sans-serif;font-size:12px;background:white;outline:none;cursor:pointer}
+    .grid{padding:20px 24px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+    .gcard{background:white;border-radius:14px;border:1.5px solid var(--border);padding:16px;transition:.2s;position:relative}
+    .gcard:hover{border-color:rgba(201,168,76,.5);box-shadow:0 4px 16px rgba(0,0,0,.07)}
+    .gcard.sel{border-color:var(--gold);background:#fdf9f0}
+    .gcard-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+    .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e4d4a0);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--charcoal);flex-shrink:0}
+    .gname{font-size:14px;font-weight:600;color:var(--charcoal);margin-bottom:2px}
+    .gmeta{font-size:11px;color:var(--muted)}
+    .gcheck{position:absolute;top:14px;right:14px;width:16px;height:16px;cursor:pointer;accent-color:var(--gold)}
+    .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;margin:2px}
+    .b-yes{background:#e8f5e8;color:#1a5a1a}
+    .b-no{background:#fde8e8;color:#7a1a1a}
+    .b-maybe{background:#fff3cd;color:#7a5000}
+    .b-pend{background:#f0f0f0;color:#555}
+    .b-diet{background:#fdf0ff;color:#6a006a}
+    .b-plus{background:#e8f0ff;color:#1a2a7a}
+    .b-menu{background:#fff8e8;color:#7a5000}
+    .gactions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .gbtn{padding:6px 10px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--charcoal);transition:.15s;display:inline-flex;align-items:center;gap:4px}
+    .gbtn:hover{border-color:var(--gold);color:var(--gold)}
+    .gbtn.wa:hover{border-color:#25D366;color:#25D366}
+    .gbtn.em:hover{border-color:#4a90d9;color:#4a90d9}
+    .gbtn.dl:hover{border-color:#c04040;color:#c04040}
+    .grp-head{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:4px 0}
+    .grp-head span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+    .grp-head hr{flex:1;border:none;border-top:1px solid var(--border);margin:0}
+    .empty-box{grid-column:1/-1;text-align:center;padding:60px 20px}
+    .empty-box .ei{font-size:52px;margin-bottom:14px}
+    .empty-box h3{font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px}
+    .empty-box p{font-size:13px;color:var(--muted);margin-bottom:20px}
+    .bulk-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:white;border-radius:99px;padding:12px 20px;display:none;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:200;flex-wrap:wrap;max-width:calc(100vw - 32px)}
+    .bb{border:none;border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+    .msg-prev-box{background:var(--cream);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;border:1px solid var(--border);white-space:pre-wrap;margin-bottom:12px;min-height:80px}
+    .vchip{background:white;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:monospace;display:inline-block;margin:2px}
+    .vchip:hover{border-color:var(--gold);color:var(--gold)}
+    .tab-row{display:flex;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+    .mtab{flex:1;padding:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;font-family:'Jost',sans-serif;color:var(--muted);transition:.15s}
+    .mtab.on{color:var(--gold);background:#fdf9f0}
+    .course-box{background:var(--cream);border-radius:10px;padding:12px;margin-bottom:10px}
+    .opt-chip{display:inline-flex;align-items:center;gap:4px;background:white;border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:12px;margin:2px}
+    .drop-label{border:2px dashed var(--border);border-radius:12px;padding:28px;cursor:pointer;transition:.2s;text-align:center;display:block}
+    .drop-label:hover{border-color:var(--gold);background:#fdf9f0}
+    @media(max-width:680px){.toolbar{padding:10px 14px}.grid{padding:12px;grid-template-columns:1fr}.stats-strip{top:56px}}
   </style>
 </head>
 <body>
 
-<!-- ── TOPBAR ── -->
 <nav class="topbar">
-  <div style="display:flex;align-items:center;gap:16px">
+  <div style="display:flex;align-items:center;gap:14px">
     <a href="dashboard.html" class="topbar-logo">Wedding<span>Ledger</span></a>
-    <span style="color:var(--border)">|</span>
+    <span style="color:var(--border);font-size:18px">|</span>
     <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--muted);font-style:italic">Guest List</span>
   </div>
   <div class="topbar-right">
-    <button onclick="openMenuSettings()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu Settings</button>
-    <button onclick="openImportModal()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import</button>
-    <button onclick="exportGuestCSV()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
+    <button onclick="openMenuModal()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu</button>
+    <button onclick="openImport()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import</button>
+    <button onclick="doExport()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
     <a href="dashboard.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">← Dashboard</a>
-    <button class="btn-primary" onclick="openAddGuest()" style="padding:8px 18px;font-size:13px">+ Add Guest</button>
-    <button class="hamburger-btn" onclick="toggleMobileNav()" id="hamburgerBtn">☰</button>
+    <button class="btn-primary" onclick="openAdd()" style="padding:8px 18px;font-size:13px">+ Add Guest</button>
+    <button class="hamburger-btn" onclick="toggleMobileNav()">☰</button>
   </div>
 </nav>
 
-<!-- ── MOBILE DRAWER ── -->
 <div class="mobile-nav-drawer" id="mobileNavDrawer">
-  <button class="mobile-nav-item" onclick="openAddGuest();closeMobileNav()">+ Add Guest</button>
-  <button class="mobile-nav-item" onclick="openMenuSettings();closeMobileNav()">🍽 Menu Settings</button>
-  <button class="mobile-nav-item" onclick="openImportModal();closeMobileNav()">📥 Import CSV</button>
-  <button class="mobile-nav-item" onclick="exportGuestCSV();closeMobileNav()">📤 Export</button>
-  <button class="mobile-nav-item" onclick="location.href='seating.html'">🪑 Seating Chart</button>
+  <button class="mobile-nav-item" onclick="openAdd();closeMobileNav()">+ Add Guest</button>
+  <button class="mobile-nav-item" onclick="openMenuModal();closeMobileNav()">🍽 Menu Settings</button>
+  <button class="mobile-nav-item" onclick="openImport();closeMobileNav()">📥 Import CSV</button>
+  <button class="mobile-nav-item" onclick="doExport();closeMobileNav()">📤 Export CSV</button>
   <button class="mobile-nav-item" onclick="location.href='dashboard.html'">← Dashboard</button>
 </div>
 
 <main style="padding-top:64px;min-height:100vh;background:var(--cream)">
-
-  <!-- ── Stats strip ── -->
   <div class="stats-strip">
-    <div class="stat-pill active" id="pill-all" onclick="setFilter('all',this)">
-      <span class="stat-num" id="statTotal">0</span>
-      <span class="stat-label">Invited</span>
-    </div>
-    <div class="stat-pill" id="pill-yes" onclick="setFilter('yes',this)">
-      <span class="stat-num" id="statYes" style="color:#2a7a2a">0</span>
-      <span class="stat-label">✅ Attending</span>
-    </div>
-    <div class="stat-pill" id="pill-no" onclick="setFilter('no',this)">
-      <span class="stat-num" id="statNo" style="color:#c04040">0</span>
-      <span class="stat-label">❌ Declined</span>
-    </div>
-    <div class="stat-pill" id="pill-pending" onclick="setFilter('pending',this)">
-      <span class="stat-num" id="statPending" style="color:#8a6020">0</span>
-      <span class="stat-label">⏳ Pending</span>
-    </div>
-    <div class="stat-pill" id="pill-maybe" onclick="setFilter('maybe',this)">
-      <span class="stat-num" id="statMaybe">0</span>
-      <span class="stat-label">🤔 Maybe</span>
-    </div>
-    <div class="stat-pill" style="cursor:default">
-      <span class="stat-num" id="statPlusOnes" style="color:var(--gold)">0</span>
-      <span class="stat-label">+1 Guests</span>
-    </div>
+    <div class="stat-pill active" id="pill-all"  onclick="setF('all',this)"><span class="stat-num" id="sAll">0</span><span class="stat-lbl">Invited</span></div>
+    <div class="stat-pill" id="pill-yes"          onclick="setF('yes',this)"><span class="stat-num" id="sYes" style="color:#2a7a2a">0</span><span class="stat-lbl">✅ Attending</span></div>
+    <div class="stat-pill" id="pill-no"           onclick="setF('no',this)"><span class="stat-num" id="sNo" style="color:#c04040">0</span><span class="stat-lbl">❌ Declined</span></div>
+    <div class="stat-pill" id="pill-pending"      onclick="setF('pending',this)"><span class="stat-num" id="sPend" style="color:#8a6020">0</span><span class="stat-lbl">⏳ Pending</span></div>
+    <div class="stat-pill" id="pill-maybe"        onclick="setF('maybe',this)"><span class="stat-num" id="sMaybe">0</span><span class="stat-lbl">🤔 Maybe</span></div>
+    <div class="stat-pill" style="cursor:default"><span class="stat-num" id="sPlus" style="color:var(--gold)">0</span><span class="stat-lbl">+1 Guests</span></div>
   </div>
-
-  <!-- ── Toolbar ── -->
-  <div class="guest-toolbar">
-    <div class="search-box">
-      <span style="color:var(--muted);font-size:14px">🔍</span>
-      <input id="guestSearch" placeholder="Search guests…" oninput="renderGuests()">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span style="color:var(--muted)">🔍</span>
+      <input id="searchQ" placeholder="Search guests…" oninput="renderList()">
     </div>
-    <select class="toolbar-select" id="groupFilter" onchange="renderGuests()">
-      <option value="">All Groups</option>
-    </select>
-    <select class="toolbar-select" id="sortBy" onchange="renderGuests()">
+    <select class="tbar-sel" id="grpSel" onchange="renderList()"><option value="">All Groups</option></select>
+    <select class="tbar-sel" id="sortSel" onchange="renderList()">
       <option value="name">Sort: Name</option>
       <option value="rsvp">Sort: RSVP</option>
       <option value="group">Sort: Group</option>
-      <option value="newest">Sort: Newest</option>
+      <option value="new">Sort: Newest</option>
     </select>
-    <span style="font-size:12px;color:var(--muted);white-space:nowrap" id="guestCountLabel"></span>
+    <span id="cntLbl" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
   </div>
-
-  <!-- ── Guest Cards ── -->
-  <div class="guest-grid" id="guestGrid"></div>
-
-  <!-- ── Bulk bar ── -->
+  <div class="grid" id="guestGrid"></div>
   <div class="bulk-bar" id="bulkBar">
-    <span style="font-size:13px;font-weight:600" id="bulkCount"></span>
-    <button class="bulk-btn" onclick="bulkWhatsApp()" style="background:#25D366;color:white">💬 WhatsApp All</button>
-    <button class="bulk-btn" onclick="bulkEmail()" style="background:#4a90d9;color:white">✉️ Email All</button>
-    <button class="bulk-btn" onclick="bulkRSVP('yes')" style="background:#2a7a2a;color:white">✅ Mark Attending</button>
-    <button class="bulk-btn" onclick="bulkRSVP('no')" style="background:#c04040;color:white">❌ Mark Declined</button>
-    <button class="bulk-btn" onclick="bulkDelete()" style="background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.3)">🗑 Delete</button>
-    <button onclick="clearSelection()" style="background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:18px;padding:4px">✕</button>
+    <span id="bulkLbl" style="font-size:13px;font-weight:600"></span>
+    <button class="bb" onclick="bkWA()"        style="background:#25D366;color:white">💬 WhatsApp</button>
+    <button class="bb" onclick="bkEmail()"     style="background:#4a90d9;color:white">✉️ Email</button>
+    <button class="bb" onclick="bkRsvp('yes')" style="background:#2a7a2a;color:white">✅ Attending</button>
+    <button class="bb" onclick="bkRsvp('no')"  style="background:#c04040;color:white">❌ Declined</button>
+    <button class="bb" onclick="bkDel()"       style="background:rgba(255,255,255,.12);color:white">🗑 Delete</button>
+    <button onclick="clearSel()" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:4px">✕</button>
   </div>
 </main>
 
-<!-- ══════════════════════════════════════════════════════
-     ADD / EDIT GUEST MODAL
-══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="guestModal" style="display:none" onclick="if(event.target===this)closeGuestModal()">
-  <div class="modal" style="max-width:540px">
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="editModal" style="display:none" onclick="if(event.target===this)closeEdit()">
+  <div class="modal" style="max-width:520px">
     <div class="modal-header">
-      <h3 class="modal-title" id="guestModalTitle">Add Guest</h3>
-      <button class="modal-close" onclick="closeGuestModal()">✕</button>
+      <h3 class="modal-title" id="editTitle">Add Guest</h3>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
     </div>
     <div class="modal-body">
-
-      <!-- Tabs -->
-      <div style="display:flex;gap:0;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:18px">
-        <button class="modal-tab active" id="tab-details" onclick="switchTab('details')">👤 Details</button>
-        <button class="modal-tab" id="tab-meal" onclick="switchTab('meal')" id="tabMeal">🍽 Meal</button>
-        <button class="modal-tab" id="tab-contact" onclick="switchTab('contact')">📱 Contact</button>
+      <div class="tab-row">
+        <button class="mtab on"  id="t-info"    onclick="showTab('info')">👤 Info</button>
+        <button class="mtab"     id="t-meal"    onclick="showTab('meal')">🍽 Meal</button>
+        <button class="mtab"     id="t-contact" onclick="showTab('contact')">📱 Contact</button>
       </div>
 
-      <!-- Details tab -->
-      <div id="panel-details">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div style="grid-column:1/-1">
-            <label class="modal-label">Full Name *</label>
-            <input type="text" id="gName" class="modal-input" placeholder="Jane Smith">
-          </div>
+      <!-- Info tab -->
+      <div id="p-info">
+        <label class="modal-label">Full Name *</label>
+        <input id="fName" class="modal-input" placeholder="Jane Smith" style="margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div>
             <label class="modal-label">RSVP Status</label>
-            <select id="gRsvp" class="modal-input">
+            <select id="fRsvp" class="modal-input">
               <option value="pending">⏳ Pending</option>
               <option value="yes">✅ Attending</option>
               <option value="no">❌ Declined</option>
@@ -234,58 +156,50 @@
           </div>
           <div>
             <label class="modal-label">Group / Side</label>
-            <input type="text" id="gGroup" class="modal-input" placeholder="e.g. Bride's side" list="groupList">
-            <datalist id="groupList"></datalist>
-          </div>
-          <div style="grid-column:1/-1">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px">
-              <input type="checkbox" id="gPlusOne" onchange="togglePlusOne(this)">
-              <span style="font-size:13px;color:var(--charcoal)">This guest is bringing a +1</span>
-            </label>
-            <div id="plusOneRow" style="display:none">
-              <input type="text" id="gPlusOneName" class="modal-input" placeholder="+1 guest name">
-            </div>
-          </div>
-          <div style="grid-column:1/-1">
-            <label class="modal-label">Notes</label>
-            <textarea id="gNotes" class="modal-input" rows="2" placeholder="Any notes…" style="resize:vertical"></textarea>
+            <input id="fGroup" class="modal-input" placeholder="e.g. Bride side" list="grpDL">
+            <datalist id="grpDL"></datalist>
           </div>
         </div>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:8px">
+          <input type="checkbox" id="fPlus" onchange="togglePlusRow()">
+          <span style="font-size:13px">Bringing a +1</span>
+        </label>
+        <div id="plusRow" style="display:none;margin-bottom:12px">
+          <input id="fPlusName" class="modal-input" placeholder="+1 guest name">
+        </div>
+        <label class="modal-label">Notes</label>
+        <textarea id="fNotes" class="modal-input" rows="2" style="resize:vertical" placeholder="Any notes…"></textarea>
       </div>
 
       <!-- Meal tab -->
-      <div id="panel-meal" style="display:none">
-        <div id="noMenuMsg" style="text-align:center;padding:24px;color:var(--muted)">
+      <div id="p-meal" style="display:none">
+        <div id="noMenuMsg" style="text-align:center;padding:24px">
           <div style="font-size:32px;margin-bottom:10px">🍽</div>
           <div style="font-size:13px;font-weight:600;margin-bottom:6px">No menu set up yet</div>
-          <div style="font-size:12px;margin-bottom:14px">Add your menu courses in Menu Settings (top bar) first, then assign meals to guests here.</div>
-          <button class="btn-secondary" onclick="closeGuestModal();openMenuSettings()">Open Menu Settings</button>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Only needed for set menus — leave empty for buffets.</div>
+          <button class="btn-secondary" onclick="closeEdit();openMenuModal()">Open Menu Settings</button>
         </div>
-        <div id="menuFields" style="display:none">
+        <div id="mealFields" style="display:none">
           <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px">
-            ✨ Optional — only fill in if your wedding has a set menu
+            Optional — only for set menus, not buffets
           </div>
-          <div id="dynamicMealFields"></div>
-          <div style="margin-top:14px">
-            <label class="modal-label">Dietary Requirements & Allergies</label>
-            <input type="text" id="gDietary" class="modal-input" placeholder="e.g. Vegan, nut allergy, gluten-free">
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank if none</div>
-          </div>
+          <div id="dynMeal"></div>
+          <label class="modal-label">Dietary Requirements / Allergies</label>
+          <input id="fDiet" class="modal-input" placeholder="e.g. Vegan, nut allergy">
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Leave blank if none</div>
         </div>
       </div>
 
       <!-- Contact tab -->
-      <div id="panel-contact" style="display:none">
-        <div style="background:var(--warm);border-radius:10px;padding:12px 14px;font-size:12px;
-          color:var(--muted);margin-bottom:16px;line-height:1.6">
-          📱 Contact details are used to send WhatsApp RSVP reminders and email confirmations.<br>
-          <strong>Both are optional</strong> — you can also contact guests manually.
+      <div id="p-contact" style="display:none">
+        <div style="background:var(--warm);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+          📱 Used for WhatsApp &amp; email invitations. <strong>Both are optional</strong> — you can contact guests manually too.
         </div>
         <label class="modal-label">Email Address</label>
-        <input type="email" id="gEmail" class="modal-input" placeholder="jane@email.com" style="margin-bottom:12px">
-        <label class="modal-label">WhatsApp / Phone Number</label>
+        <input type="email" id="fEmail" class="modal-input" placeholder="jane@email.com" style="margin-bottom:12px">
+        <label class="modal-label">WhatsApp / Phone</label>
         <div style="display:flex;gap:8px;margin-bottom:4px">
-          <select id="gPhoneCode" class="modal-input" style="width:130px;flex-shrink:0">
+          <select id="fCode" class="modal-input" style="width:130px;flex-shrink:0">
             <option value="44">🇬🇧 +44</option>
             <option value="1">🇺🇸 +1</option>
             <option value="94">🇱🇰 +94</option>
@@ -293,701 +207,681 @@
             <option value="91">🇮🇳 +91</option>
             <option value="65">🇸🇬 +65</option>
             <option value="971">🇦🇪 +971</option>
-            <option value="33">🇫🇷 +33</option>
-            <option value="49">🇩🇪 +49</option>
             <option value="92">🇵🇰 +92</option>
             <option value="880">🇧🇩 +880</option>
+            <option value="33">🇫🇷 +33</option>
+            <option value="49">🇩🇪 +49</option>
           </select>
-          <input type="tel" id="gPhone" class="modal-input" placeholder="7700 900 123">
+          <input type="tel" id="fPhone" class="modal-input" placeholder="7700 900 123">
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Enter number without leading 0</div>
-
+        <div style="font-size:11px;color:var(--muted);margin-bottom:16px">No leading 0 needed</div>
         <div style="border-top:1px solid var(--border);padding-top:14px">
-          <div style="font-size:12px;font-weight:600;color:var(--charcoal);margin-bottom:10px">Quick Actions</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:10px">Quick Send</div>
           <div style="display:flex;gap:8px">
-            <button class="gc-btn whatsapp" id="quickWhatsApp" onclick="quickSendWhatsApp()" style="flex:1;padding:10px">
-              💬 Send WhatsApp
-            </button>
-            <button class="gc-btn email" id="quickEmail" onclick="quickSendEmail()" style="flex:1;padding:10px">
-              ✉️ Send Email
-            </button>
+            <button class="gbtn wa" onclick="quickWA()" style="flex:1;justify-content:center;padding:10px;font-size:12px">💬 WhatsApp Now</button>
+            <button class="gbtn em" onclick="quickEmail()" style="flex:1;justify-content:center;padding:10px;font-size:12px">✉️ Email Now</button>
           </div>
         </div>
       </div>
 
-      <input type="hidden" id="gEditId">
+      <input type="hidden" id="fId">
       <div style="display:flex;gap:10px;margin-top:18px">
-        <button class="btn-secondary" onclick="closeGuestModal()" style="flex:1">Cancel</button>
-        <button class="btn-primary" onclick="saveGuest()" style="flex:2" id="saveGuestBtn">Save Guest</button>
+        <button class="btn-secondary" onclick="closeEdit()" style="flex:1">Cancel</button>
+        <button class="btn-primary" id="saveBtn" onclick="saveGuest()" style="flex:2">Save Guest</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     MESSAGE MODAL (WhatsApp / Email)
-══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="msgModal" style="display:none" onclick="if(event.target===this)closeMsgModal()">
-  <div class="modal" style="max-width:500px">
-    <div class="modal-header">
-      <h3 class="modal-title" id="msgModalTitle">Send Message</h3>
-      <button class="modal-close" onclick="closeMsgModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;
-        color:var(--muted);margin-bottom:14px;line-height:1.6">
-        Use <code style="background:white;border-radius:4px;padding:1px 5px">{name}</code>,
-        <code style="background:white;border-radius:4px;padding:1px 5px">{couple}</code>,
-        <code style="background:white;border-radius:4px;padding:1px 5px">{date}</code>,
-        <code style="background:white;border-radius:4px;padding:1px 5px">{rsvp_url}</code> as variables.
-        Click a variable to insert it.
-      </div>
-      <div class="msg-vars">
-        <span class="msg-var" onclick="insertVar('{name}')">&#123;name&#125;</span>
-        <span class="msg-var" onclick="insertVar('{couple}')">&#123;couple&#125;</span>
-        <span class="msg-var" onclick="insertVar('{date}')">&#123;date&#125;</span>
-        <span class="msg-var" onclick="insertVar('{rsvp_url}')">&#123;rsvp_url&#125;</span>
-      </div>
-      <label class="modal-label">Message Template</label>
-      <textarea id="msgTemplate" class="modal-input" rows="6" oninput="updateMsgPreview()"
-        style="font-family:monospace;font-size:12px;resize:vertical;margin-bottom:12px"></textarea>
-      <label class="modal-label">Preview (for first recipient)</label>
-      <div class="msg-preview" id="msgPreview"></div>
-      <div id="msgRecipientInfo" style="font-size:12px;color:var(--muted);margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px">
-        <button class="btn-secondary" onclick="closeMsgModal()" style="flex:1">Cancel</button>
-        <button class="btn-primary" id="msgSendBtn" onclick="sendMessages()" style="flex:2">Send</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     MENU SETTINGS MODAL
-══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="menuModal" style="display:none" onclick="if(event.target===this)closeMenuSettings()">
+<!-- MESSAGE MODAL -->
+<div class="modal-overlay" id="msgModal" style="display:none" onclick="if(event.target===this)closeMsg()">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
-      <h3 class="modal-title">🍽 Menu Settings</h3>
-      <button class="modal-close" onclick="closeMenuSettings()">✕</button>
+      <h3 class="modal-title" id="msgTitle">Send Message</h3>
+      <button class="modal-close" onclick="closeMsg()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--warm);border-radius:10px;padding:12px 14px;font-size:12px;
-        color:var(--muted);margin-bottom:16px;line-height:1.6">
-        Only set up a menu if your wedding has a <strong>set menu</strong> — leave empty for buffets or no meal choice.
-        Guests will be asked to choose from these options when you send the RSVP.
+      <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+        Click a variable to insert it into your message
       </div>
-      <div id="courseList"></div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input type="text" id="newCourseName" class="modal-input" placeholder="Course name (e.g. Starter)" style="flex:1">
-        <button class="btn-secondary" onclick="addCourse()" style="padding:0 16px">+ Add</button>
+      <div style="margin-bottom:12px">
+        <span class="vchip" onclick="insV('{name}')">&#123;name&#125;</span>
+        <span class="vchip" onclick="insV('{couple}')">&#123;couple&#125;</span>
+        <span class="vchip" onclick="insV('{date}')">&#123;date&#125;</span>
+        <span class="vchip" onclick="insV('{rsvp_url}')">&#123;rsvp_url&#125;</span>
       </div>
-      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;display:flex;gap:8px">
-        <button class="btn-secondary" onclick="closeMenuSettings()" style="flex:1">Done</button>
-        <button class="btn-primary" onclick="saveMenuSettings()" style="flex:2">Save Menu</button>
+      <label class="modal-label">Message Template</label>
+      <textarea id="msgTpl" class="modal-input" rows="6" oninput="updatePrev()" style="font-family:monospace;font-size:12px;resize:vertical;margin-bottom:12px"></textarea>
+      <label class="modal-label">Preview (first recipient)</label>
+      <div class="msg-prev-box" id="msgPrevBox"></div>
+      <div id="msgInfo" style="font-size:12px;color:var(--muted);margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" onclick="closeMsg()" style="flex:1">Cancel</button>
+        <button class="btn-primary" id="msgBtn" onclick="doSend()" style="flex:2">Send</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     IMPORT MODAL
-══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target===this)closeImportModal()">
+<!-- MENU MODAL -->
+<div class="modal-overlay" id="menuModal" style="display:none" onclick="if(event.target===this)closeMenuModal()">
   <div class="modal" style="max-width:460px">
     <div class="modal-header">
-      <h3 class="modal-title">📥 Import from CSV</h3>
-      <button class="modal-close" onclick="closeImportModal()">✕</button>
+      <h3 class="modal-title">🍽 Menu Settings</h3>
+      <button class="modal-close" onclick="closeMenuModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--warm);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.7">
-        CSV headers: <strong>name, email, phone, group, rsvp, dietary, notes</strong><br>
-        Only <strong>name</strong> is required.
+      <div style="background:var(--warm);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+        Only set up courses if you have a <strong>set menu</strong>. Leave empty for buffets or casual receptions.
       </div>
-      <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;
-        border:2px dashed var(--border);border-radius:12px;padding:28px;cursor:pointer;
-        transition:.2s;text-align:center" id="dropZone" onclick="document.getElementById('csvFile').click()">
-        <span style="font-size:36px;margin-bottom:8px">📂</span>
-        <span style="font-size:13px;font-weight:600;color:var(--charcoal)">Click to choose CSV</span>
-        <span style="font-size:11px;color:var(--muted);margin-top:4px">or drag & drop</span>
+      <div id="courseList"></div>
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <input id="newCourseName" class="modal-input" style="flex:1" placeholder="Course name (e.g. Starter)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCourse()}">
+        <button class="btn-secondary" onclick="addCourse()" style="padding:0 16px">+ Add</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <button class="btn-secondary" onclick="closeMenuModal()" style="flex:1">Done</button>
+        <button class="btn-primary" onclick="saveMenu()" style="flex:2">Save Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target===this)closeImport()">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <h3 class="modal-title">📥 Import from CSV</h3>
+      <button class="modal-close" onclick="closeImport()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--warm);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+        Required column: <strong>name</strong><br>
+        Optional: email, phone, group, rsvp, dietary, notes
+      </div>
+      <label class="drop-label" onclick="document.getElementById('csvFile').click()">
+        <div style="font-size:36px;margin-bottom:8px">📂</div>
+        <div style="font-size:13px;font-weight:600;color:var(--charcoal)">Click to choose CSV</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">or drag and drop</div>
         <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="previewCSV(this)">
       </label>
-      <div id="csvPreview" style="display:none;margin-top:12px"></div>
+      <div id="csvPrev" style="display:none;margin-top:12px"></div>
       <div style="display:flex;gap:10px;margin-top:14px">
-        <button class="btn-secondary" onclick="downloadCSVTemplate()" style="flex:1">⬇ Template</button>
-        <button class="btn-primary" id="importBtn" onclick="importCSV()" style="flex:2;display:none">Import</button>
+        <button class="btn-secondary" onclick="dlTemplate()" style="flex:1">⬇ Template</button>
+        <button class="btn-primary" id="importBtn" onclick="doImport()" style="flex:2;display:none">Import Guests</button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
+
 <script src="db.js"></script>
 <script>
-const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
-let userId = localStorage.getItem('wl_uid');
-let accessToken = localStorage.getItem('wl_token');
-let guests = [], profile = {}, menuConfig = { courses: [] };
-let currentFilter = 'all', selectedIds = new Set(), csvData = [];
-let msgType = '', msgTargets = [];
-let activeTab = 'details';
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const SB = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+const uid = localStorage.getItem('wl_uid');
+const tok = localStorage.getItem('wl_token');
+if(!uid || !tok) location.href = 'login.html';
 
-if(!userId || !accessToken) location.href = 'login.html';
+let guests=[], prof={}, menuCfg={courses:[]};
+let filt='all', selIds=new Set(), csvRows=[];
+let msgKind='', msgPeeps=[];
+
+// ── RAW SUPABASE HELPERS ──────────────────────────────────────────────────────
+async function h() {
+  const t = await DB.getValidToken(tok);
+  return DB._h(t);
+}
+async function sbGet(path) {
+  const r = await fetch(SB+'/rest/v1/'+path, {headers: await h()});
+  if(!r.ok) { console.error('GET',path,r.status); return []; }
+  return r.json();
+}
+async function sbPost(table, data) {
+  const hd = await h();
+  hd['Prefer'] = 'return=representation';
+  const r = await fetch(SB+'/rest/v1/'+table, {method:'POST',headers:hd,body:JSON.stringify(data)});
+  if(!r.ok) { console.error('POST',table,r.status,await r.text()); return null; }
+  const rows = await r.json();
+  return Array.isArray(rows) ? rows[0] : null;
+}
+async function sbPatch(qs, data) {
+  const hd = await h();
+  hd['Prefer'] = 'return=minimal';
+  const r = await fetch(SB+'/rest/v1/'+qs, {method:'PATCH',headers:hd,body:JSON.stringify(data)});
+  if(!r.ok) console.error('PATCH',qs,r.status);
+  return r.ok;
+}
+async function sbDel(qs) {
+  const r = await fetch(SB+'/rest/v1/'+qs, {method:'DELETE',headers: await h()});
+  if(!r.ok) console.error('DEL',qs,r.status);
+  return r.ok;
+}
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function init() {
-  const [g, p] = await Promise.all([
-    DB.query(`guests?user_id=eq.${userId}&order=created_at.asc`, accessToken),
-    DB.query(`profiles?user_id=eq.${userId}&select=name1,name2,wedding_date,page_slug`, accessToken)
-  ]);
-  guests = g || [];
-  profile = p?.[0] || {};
-  // Load menu config from settings
-  const s = await DB.query(`settings?user_id=eq.${userId}&key=eq.menu_config`, accessToken);
-  if(s?.[0]?.value) try{ menuConfig = JSON.parse(s[0].value); }catch(e){}
-  populateGroups();
-  renderGuests();
-  updateStats();
+  try {
+    const [g,p,s] = await Promise.all([
+      sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc'),
+      sbGet('profiles?user_id=eq.'+uid+'&select=name1,name2,wedding_date,page_slug'),
+      sbGet('settings?user_id=eq.'+uid+'&key=eq.menu_config')
+    ]);
+    guests = g || [];
+    prof   = (p && p[0]) ? p[0] : {};
+    if(s && s[0] && s[0].value) {
+      try { menuCfg = JSON.parse(s[0].value); } catch(e) {}
+    }
+    rebuildGroupSel();
+    renderList();
+    updateStats();
+  } catch(e) {
+    console.error('init failed', e);
+    toast('Could not load guests', true);
+  }
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
-function populateGroups() {
-  const groups = [...new Set(guests.map(g => g.group_label).filter(Boolean))];
-  const sel = document.getElementById('groupFilter');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">All Groups</option>' +
-    groups.map(g => `<option ${g===cur?'selected':''}>${esc(g)}</option>`).join('');
-  const dl = document.getElementById('groupList');
-  if(dl) dl.innerHTML = groups.map(g => `<option value="${esc(g)}">`).join('');
+function rebuildGroupSel() {
+  const groups = [...new Set(guests.map(g=>g.group_label).filter(Boolean))];
+  const s = document.getElementById('grpSel'), cur = s.value;
+  s.innerHTML = '<option value="">All Groups</option>' +
+    groups.map(g => '<option'+(g===cur?' selected':'')+'>'+esc(g)+'</option>').join('');
+  const dl = document.getElementById('grpDL');
+  if(dl) dl.innerHTML = groups.map(g => '<option value="'+esc(g)+'">').join('');
 }
 
-function setFilter(f, el) {
-  currentFilter = f;
+function setF(f, el) {
+  filt = f;
   document.querySelectorAll('.stat-pill').forEach(p => p.classList.remove('active'));
-  if(el) el.classList.add('active');
-  renderGuests();
+  el.classList.add('active');
+  renderList();
 }
 
-function renderGuests() {
-  const search = document.getElementById('guestSearch').value.toLowerCase();
-  const group  = document.getElementById('groupFilter').value;
-  const sort   = document.getElementById('sortBy').value;
+function renderList() {
+  const q  = (document.getElementById('searchQ').value || '').toLowerCase();
+  const gr = document.getElementById('grpSel').value || '';
+  const so = document.getElementById('sortSel').value || 'name';
 
   let list = guests.filter(g => {
-    if(currentFilter === 'yes'     && g.rsvp_status !== 'yes')    return false;
-    if(currentFilter === 'no'      && g.rsvp_status !== 'no')     return false;
-    if(currentFilter === 'pending' && g.rsvp_status !== 'pending' && g.rsvp_status !== null && g.rsvp_status !== '') return false;
-    if(currentFilter === 'maybe'   && g.rsvp_status !== 'maybe')  return false;
-    if(group && g.group_label !== group) return false;
-    if(search && !g.name?.toLowerCase().includes(search) &&
-       !(g.email||'').toLowerCase().includes(search) &&
-       !(g.group_label||'').toLowerCase().includes(search)) return false;
+    const st = g.rsvp_status || 'pending';
+    if(filt === 'yes'     && st !== 'yes')    return false;
+    if(filt === 'no'      && st !== 'no')     return false;
+    if(filt === 'pending' && st !== 'pending') return false;
+    if(filt === 'maybe'   && st !== 'maybe')  return false;
+    if(gr && g.group_label !== gr)            return false;
+    if(q  && !(g.name||'').toLowerCase().includes(q) &&
+             !(g.email||'').toLowerCase().includes(q)) return false;
     return true;
   });
 
-  if(sort==='name')   list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-  if(sort==='rsvp')   list.sort((a,b) => (a.rsvp_status||'').localeCompare(b.rsvp_status||''));
-  if(sort==='group')  list.sort((a,b) => (a.group_label||'').localeCompare(b.group_label||''));
-  if(sort==='newest') list.reverse();
+  if(so === 'name')  list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  if(so === 'rsvp')  list.sort((a,b) => (a.rsvp_status||'').localeCompare(b.rsvp_status||''));
+  if(so === 'group') list.sort((a,b) => (a.group_label||'').localeCompare(b.group_label||''));
+  if(so === 'new')   list.reverse();
 
-  document.getElementById('guestCountLabel').textContent = `${list.length} guest${list.length!==1?'s':''}`;
+  document.getElementById('cntLbl').textContent = list.length + ' guest' + (list.length!==1?'s':'');
+
   const grid = document.getElementById('guestGrid');
-
   if(!list.length) {
-    grid.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">👥</div>
-      <div class="empty-title">${search ? 'No guests found' : currentFilter==='all' ? 'No guests yet' : 'None in this category'}</div>
-      <div class="empty-sub">${search ? 'Try a different search' : currentFilter==='all' ? 'Click + Add Guest to start building your list' : 'Guests will appear here as you update RSVPs'}</div>
-      ${currentFilter==='all'&&!search?`<button class="btn-primary" onclick="openAddGuest()">+ Add First Guest</button>`:''}
-    </div>`;
+    grid.innerHTML = '<div class="empty-box"><div class="ei">👥</div><h3>' +
+      (q ? 'No guests found' : filt==='all' ? 'No guests yet' : 'None here') + '</h3><p>' +
+      (q ? 'Try a different search' : filt==='all' ? 'Click + Add Guest to start' : '') + '</p>' +
+      (filt==='all' && !q ? '<button class="btn-primary" onclick="openAdd()">+ Add First Guest</button>' : '') +
+      '</div>';
     return;
   }
 
-  // Group by group_label
+  // Group cards
   const grouped = {};
   list.forEach(g => {
-    const k = g.group_label || '__none__';
+    const k = g.group_label || '';
     if(!grouped[k]) grouped[k] = [];
     grouped[k].push(g);
   });
 
-  grid.innerHTML = Object.entries(grouped).map(([grp, gs]) => `
-    ${grp!=='__none__'?`<div class="group-divider">
-      <span class="group-divider-label">👥 ${esc(grp)} — ${gs.length}</span>
-      <div class="group-divider-line"></div>
-    </div>`:''}
-    ${gs.map(g => renderCard(g)).join('')}
-  `).join('');
+  let html = '';
+  for(const [k,gs] of Object.entries(grouped)) {
+    if(k) html += '<div class="grp-head"><span>👥 '+esc(k)+' — '+gs.length+'</span><hr></div>';
+    gs.forEach(g => { html += buildCard(g); });
+  }
+  grid.innerHTML = html;
 }
 
-function renderCard(g) {
-  const rsvpMap = {yes:'badge-yes',no:'badge-no',maybe:'badge-maybe',pending:'badge-pending'};
-  const rsvpLabel = {yes:'✅ Attending',no:'❌ Declined',maybe:'🤔 Maybe',pending:'⏳ Pending'};
-  const status = g.rsvp_status || 'pending';
-  const initials = (g.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  const hasMeals = menuConfig.courses?.length > 0;
-  const hasPhone = g.phone && g.phone.length > 4;
-  const hasEmail = g.email && g.email.includes('@');
+function buildCard(g) {
+  const sc = {yes:'b-yes', no:'b-no', maybe:'b-maybe', pending:'b-pend'};
+  const sl = {yes:'✅ Attending', no:'❌ Declined', maybe:'🤔 Maybe', pending:'⏳ Pending'};
+  const st  = g.rsvp_status || 'pending';
+  const ini = (g.name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const hasPh = !!(g.phone && g.phone.replace(/[^\d]/g,'').length > 5);
+  const hasEm = !!(g.email && g.email.indexOf('@') > 0);
+  const hasMn = !!(menuCfg.courses && menuCfg.courses.length && g.main);
+  const checked = selIds.has(g.id) ? ' checked' : '';
+  const selCls  = selIds.has(g.id) ? ' sel' : '';
+  const gid = g.id;
 
-  return `<div class="guest-card ${selectedIds.has(g.id)?'selected':''}" id="gc-${g.id}">
-    <input type="checkbox" class="gc-check" value="${g.id}"
-      onchange="toggleSelect('${g.id}',this)" ${selectedIds.has(g.id)?'checked':''}>
-    <div class="gc-top">
-      <div class="gc-avatar">${initials}</div>
-      <div style="flex:1;min-width:0">
-        <div class="gc-name">${esc(g.name)}</div>
-        <div class="gc-meta">${g.email ? esc(g.email) : g.phone ? '📱 '+esc(g.phone) : 'No contact info'}</div>
-      </div>
-    </div>
-    <div class="gc-badges">
-      <span class="badge ${rsvpMap[status]}">${rsvpLabel[status]}</span>
-      ${g.plus_one ? `<span class="badge badge-plusone">+1${g.plus_one_name?' ('+esc(g.plus_one_name)+')':''}</span>` : ''}
-      ${g.dietary ? `<span class="badge badge-dietary">🌿 ${esc(g.dietary)}</span>` : ''}
-      ${hasMeals && g.main ? `<span class="badge badge-menu">🍽 ${esc(g.main)}</span>` : ''}
-      ${g.notes ? `<span style="font-size:11px;color:var(--muted);font-style:italic">💬 ${esc(g.notes)}</span>` : ''}
-    </div>
-    <div class="gc-actions">
-      <button class="gc-btn" onclick="editGuest('${g.id}')">✏️ Edit</button>
-      ${hasPhone ? `<button class="gc-btn whatsapp" onclick="sendWhatsApp('${g.id}')">💬 WA</button>` : ''}
-      ${hasEmail ? `<button class="gc-btn email" onclick="sendEmail('${g.id}')">✉️ Email</button>` : ''}
-      <button class="gc-btn" onclick="quickRsvp('${g.id}')">🔄 RSVP</button>
-      <button class="gc-btn danger" onclick="deleteGuest('${g.id}')">🗑</button>
-    </div>
-  </div>`;
+  let badges = '<span class="badge '+sc[st]+'">'+sl[st]+'</span>';
+  if(g.plus_one) badges += '<span class="badge b-plus">+1'+(g.plus_one_name?' ('+esc(g.plus_one_name)+')':'')+'</span>';
+  if(g.dietary)  badges += '<span class="badge b-diet">🌿 '+esc(g.dietary)+'</span>';
+  if(hasMn)      badges += '<span class="badge b-menu">🍽 '+esc(g.main)+'</span>';
+
+  let actions = '<button class="gbtn" onclick="editGuest(\''+gid+'\')">✏️ Edit</button>';
+  if(hasPh) actions += '<button class="gbtn wa" onclick="sendWA(\''+gid+'\')">💬 WhatsApp</button>';
+  if(hasEm) actions += '<button class="gbtn em" onclick="sendEM(\''+gid+'\')">✉️ Email</button>';
+  actions += '<button class="gbtn" onclick="cycleRsvp(\''+gid+'\')" title="Cycle RSVP">🔄 RSVP</button>';
+  actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">🗑</button>';
+
+  return '<div class="gcard'+selCls+'" id="gc-'+gid+'">' +
+    '<input type="checkbox" class="gcheck"'+checked+' onchange="toggleSel(\''+gid+'\',this)">' +
+    '<div class="gcard-top">' +
+      '<div class="avatar">'+ini+'</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="gname">'+esc(g.name)+'</div>' +
+        '<div class="gmeta">'+(hasEm ? esc(g.email) : hasPh ? '📱 '+esc(g.phone) : '<i style="opacity:.5">No contact saved</i>')+'</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">'+badges+'</div>' +
+    (g.notes ? '<div style="font-size:11px;color:var(--muted);font-style:italic;margin-bottom:4px">💬 '+esc(g.notes)+'</div>' : '') +
+    '<div class="gactions">'+actions+'</div>' +
+  '</div>';
 }
 
 function updateStats() {
-  document.getElementById('statTotal').textContent   = guests.length;
-  document.getElementById('statYes').textContent     = guests.filter(g=>g.rsvp_status==='yes').length;
-  document.getElementById('statNo').textContent      = guests.filter(g=>g.rsvp_status==='no').length;
-  document.getElementById('statPending').textContent = guests.filter(g=>!g.rsvp_status||g.rsvp_status==='pending').length;
-  document.getElementById('statMaybe').textContent   = guests.filter(g=>g.rsvp_status==='maybe').length;
-  document.getElementById('statPlusOnes').textContent= guests.filter(g=>g.plus_one).length;
+  const cnt = s => guests.filter(g => (g.rsvp_status||'pending') === s).length;
+  document.getElementById('sAll').textContent  = guests.length;
+  document.getElementById('sYes').textContent  = cnt('yes');
+  document.getElementById('sNo').textContent   = cnt('no');
+  document.getElementById('sPend').textContent = cnt('pending') + guests.filter(g=>!g.rsvp_status).length;
+  document.getElementById('sMaybe').textContent= cnt('maybe');
+  document.getElementById('sPlus').textContent = guests.filter(g=>g.plus_one).length;
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
-function switchTab(tab) {
-  activeTab = tab;
-  ['details','meal','contact'].forEach(t => {
-    document.getElementById('panel-'+t).style.display = t===tab?'block':'none';
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+function showTab(t) {
+  ['info','meal','contact'].forEach(x => {
+    document.getElementById('p-'+x).style.display  = x===t ? 'block' : 'none';
+    document.getElementById('t-'+x).classList.toggle('on', x===t);
   });
-  if(tab==='meal') renderMealFields();
+  if(t === 'meal') buildMealFields();
+}
+function togglePlusRow() {
+  document.getElementById('plusRow').style.display =
+    document.getElementById('fPlus').checked ? 'block' : 'none';
 }
 
 // ── ADD / EDIT ────────────────────────────────────────────────────────────────
-function openAddGuest() {
-  document.getElementById('guestModalTitle').textContent = 'Add Guest';
-  ['gName','gEmail','gPhone','gGroup','gDietary','gNotes','gPlusOneName'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.value='';
+function clearForm() {
+  ['fName','fGroup','fDiet','fNotes','fPlusName','fEmail','fPhone'].forEach(id => {
+    const e = document.getElementById(id); if(e) e.value = '';
   });
-  document.getElementById('gRsvp').value = 'pending';
-  document.getElementById('gPhoneCode').value = '44';
-  document.getElementById('gPlusOne').checked = false;
-  document.getElementById('plusOneRow').style.display='none';
-  document.getElementById('gEditId').value = '';
-  switchTab('details');
-  document.getElementById('guestModal').style.display='flex';
+  document.getElementById('fRsvp').value  = 'pending';
+  document.getElementById('fCode').value  = '44';
+  document.getElementById('fPlus').checked = false;
+  document.getElementById('plusRow').style.display = 'none';
+  document.getElementById('fId').value = '';
 }
-
+function openAdd() {
+  document.getElementById('editTitle').textContent = 'Add Guest';
+  clearForm();
+  showTab('info');
+  document.getElementById('editModal').style.display = 'flex';
+}
 function editGuest(id) {
-  const g = guests.find(x=>x.id===id);
+  const g = guests.find(x => x.id === id);
   if(!g) return;
-  document.getElementById('guestModalTitle').textContent = 'Edit Guest';
-  document.getElementById('gName').value    = g.name||'';
-  document.getElementById('gEmail').value   = g.email||'';
-  document.getElementById('gGroup').value   = g.group_label||'';
-  document.getElementById('gDietary').value = g.dietary||'';
-  document.getElementById('gNotes').value   = g.notes||'';
-  document.getElementById('gRsvp').value    = g.rsvp_status||'pending';
-  document.getElementById('gPlusOne').checked = g.plus_one||false;
-  document.getElementById('gPlusOneName').value = g.plus_one_name||'';
-  document.getElementById('plusOneRow').style.display = g.plus_one?'block':'none';
-  document.getElementById('gEditId').value  = id;
-  // Phone
+  document.getElementById('editTitle').textContent = 'Edit Guest';
+  clearForm();
+  document.getElementById('fName').value   = g.name  || '';
+  document.getElementById('fRsvp').value   = g.rsvp_status || 'pending';
+  document.getElementById('fGroup').value  = g.group_label || '';
+  document.getElementById('fDiet').value   = g.dietary || '';
+  document.getElementById('fNotes').value  = g.notes  || '';
+  document.getElementById('fEmail').value  = g.email  || '';
+  document.getElementById('fPlus').checked = !!g.plus_one;
+  document.getElementById('plusRow').style.display = g.plus_one ? 'block' : 'none';
+  document.getElementById('fPlusName').value = g.plus_one_name || '';
+  document.getElementById('fId').value = id;
   if(g.phone) {
-    const match = g.phone.match(/^\+?(\d{1,3})(\d+)$/);
-    if(match) { document.getElementById('gPhoneCode').value = match[1]||'44'; document.getElementById('gPhone').value = match[2]; }
-    else document.getElementById('gPhone').value = g.phone;
-  } else { document.getElementById('gPhone').value=''; }
-  // Meal fields
-  if(g.starter) document.getElementById('gStarter_0') && (document.getElementById('gStarter_0').value=g.starter);
-  switchTab('details');
-  document.getElementById('guestModal').style.display='flex';
+    const clean = g.phone.replace(/^\+/,'');
+    const codes = ['971','880','44','94','61','91','65','92','33','49','1'];
+    let code='44', num=clean;
+    for(const c of codes) { if(clean.startsWith(c)){code=c; num=clean.slice(c.length); break;} }
+    document.getElementById('fCode').value  = code;
+    document.getElementById('fPhone').value = num;
+  }
+  showTab('info');
+  document.getElementById('editModal').style.display = 'flex';
 }
-
-function closeGuestModal() { document.getElementById('guestModal').style.display='none'; }
-function togglePlusOne(cb) { document.getElementById('plusOneRow').style.display = cb.checked?'block':'none'; }
+function closeEdit() { document.getElementById('editModal').style.display = 'none'; }
 
 async function saveGuest() {
-  const name = document.getElementById('gName').value.trim();
-  if(!name) { showToast('Name is required',true); return; }
-  const editId = document.getElementById('gEditId').value;
-  const btn = document.getElementById('saveGuestBtn');
-  btn.textContent='Saving…'; btn.disabled=true;
+  const name = document.getElementById('fName').value.trim();
+  if(!name) { toast('Name is required', true); return; }
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
 
-  // Collect meal choices
+  const code = document.getElementById('fCode').value;
+  const num  = document.getElementById('fPhone').value.trim().replace(/^0+/,'');
   const mealData = {};
-  menuConfig.courses?.forEach((c,i) => {
-    const el = document.getElementById(`meal_${i}`);
-    if(el) mealData[c.field] = el.value.trim()||null;
+  (menuCfg.courses||[]).forEach((c,i) => {
+    const el = document.getElementById('meal_'+i);
+    if(el) mealData[c.field] = el.value.trim() || null;
   });
 
-  const phoneCode = document.getElementById('gPhoneCode').value;
-  const phoneNum  = document.getElementById('gPhone').value.trim().replace(/^0/,'');
-  const fullPhone = phoneNum ? `+${phoneCode}${phoneNum}` : null;
-
   const data = {
-    user_id:       userId,
+    user_id:       uid,
     name,
-    email:         document.getElementById('gEmail').value.trim()||null,
-    phone:         fullPhone,
-    rsvp_status:   document.getElementById('gRsvp').value,
-    group_label:   document.getElementById('gGroup').value.trim()||null,
-    dietary:       document.getElementById('gDietary').value.trim()||null,
-    notes:         document.getElementById('gNotes').value.trim()||null,
-    plus_one:      document.getElementById('gPlusOne').checked,
-    plus_one_name: document.getElementById('gPlusOneName').value.trim()||null,
-    starter:       mealData.starter||null,
-    main:          mealData.main||null,
-    dessert:       mealData.dessert||null,
+    email:         document.getElementById('fEmail').value.trim() || null,
+    phone:         num ? '+'+code+num : null,
+    rsvp_status:   document.getElementById('fRsvp').value,
+    group_label:   document.getElementById('fGroup').value.trim() || null,
+    dietary:       document.getElementById('fDiet').value.trim() || null,
+    notes:         document.getElementById('fNotes').value.trim() || null,
+    plus_one:      document.getElementById('fPlus').checked,
+    plus_one_name: document.getElementById('fPlusName').value.trim() || null,
     ...mealData
   };
 
   try {
-    if(editId) {
-      await DB.patch(`guests?id=eq.${editId}`, data, accessToken);
-      const i=guests.findIndex(x=>x.id===editId);
-      if(i>=0) guests[i]={...guests[i],...data};
-      showToast('Guest updated ✅');
+    const id = document.getElementById('fId').value;
+    if(id) {
+      await sbPatch('guests?id=eq.'+id, data);
+      const i = guests.findIndex(x=>x.id===id);
+      if(i >= 0) guests[i] = Object.assign({}, guests[i], data);
+      toast('Guest updated ✅');
     } else {
-      const row = await DB.post('guests', data, accessToken);
+      const row = await sbPost('guests', data);
       if(row) guests.push(row);
-      showToast('Guest added ✅');
+      toast('Guest added ✅');
     }
-    closeGuestModal();
-    populateGroups(); renderGuests(); updateStats();
-  } catch(e) { showToast('Save failed',true); console.error(e); }
-  finally { btn.textContent='Save Guest'; btn.disabled=false; }
+    closeEdit();
+    rebuildGroupSel(); renderList(); updateStats();
+  } catch(e) {
+    console.error(e); toast('Save failed', true);
+  } finally {
+    btn.textContent = 'Save Guest'; btn.disabled = false;
+  }
 }
 
-async function quickRsvp(id) {
-  const g = guests.find(x=>x.id===id);
-  if(!g) return;
+async function cycleRsvp(id) {
+  const g = guests.find(x=>x.id===id); if(!g) return;
   const order = ['pending','yes','maybe','no'];
-  const cur = order.indexOf(g.rsvp_status||'pending');
-  const next = order[(cur+1)%order.length];
-  await DB.patch(`guests?id=eq.${id}`, {rsvp_status:next}, accessToken);
+  const next  = order[(order.indexOf(g.rsvp_status||'pending')+1) % order.length];
+  await sbPatch('guests?id=eq.'+id, {rsvp_status: next});
   g.rsvp_status = next;
-  renderGuests(); updateStats();
-  showToast({pending:'⏳ Pending',yes:'✅ Attending',maybe:'🤔 Maybe',no:'❌ Declined'}[next]);
+  renderList(); updateStats();
+  toast({pending:'⏳ Pending',yes:'✅ Attending',maybe:'🤔 Maybe',no:'❌ Declined'}[next]);
 }
 
-async function deleteGuest(id) {
+async function delGuest(id) {
   if(!confirm('Remove this guest?')) return;
-  await DB.del(`guests?id=eq.${id}`, accessToken);
+  await sbDel('guests?id=eq.'+id);
   guests = guests.filter(g=>g.id!==id);
-  selectedIds.delete(id);
-  renderGuests(); updateStats(); updateBulkBar();
-  showToast('Guest removed');
+  selIds.delete(id);
+  renderList(); updateStats(); updateBulkBar();
+  toast('Guest removed');
 }
 
 // ── SELECTION ─────────────────────────────────────────────────────────────────
-function toggleSelect(id, cb) {
-  if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+function toggleSel(id, cb) {
+  if(cb.checked) selIds.add(id); else selIds.delete(id);
   const card = document.getElementById('gc-'+id);
-  if(card) card.classList.toggle('selected', cb.checked);
+  if(card) card.classList.toggle('sel', cb.checked);
   updateBulkBar();
 }
-function clearSelection() {
-  selectedIds.clear();
-  document.querySelectorAll('.gc-check').forEach(c=>c.checked=false);
-  document.querySelectorAll('.guest-card').forEach(c=>c.classList.remove('selected'));
+function clearSel() {
+  selIds.clear();
+  document.querySelectorAll('.gcheck').forEach(c=>c.checked=false);
+  document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('sel'));
   updateBulkBar();
 }
 function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
-  bar.style.display = selectedIds.size>0 ? 'flex' : 'none';
-  document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
+  bar.style.display = selIds.size > 0 ? 'flex' : 'none';
+  document.getElementById('bulkLbl').textContent = selIds.size+' selected';
 }
-async function bulkRSVP(status) {
-  const ids=[...selectedIds];
-  for(const id of ids) {
-    await DB.patch(`guests?id=eq.${id}`, {rsvp_status:status}, accessToken);
-    const g=guests.find(x=>x.id===id); if(g) g.rsvp_status=status;
+async function bkRsvp(status) {
+  for(const id of [...selIds]) {
+    await sbPatch('guests?id=eq.'+id, {rsvp_status:status});
+    const g = guests.find(x=>x.id===id); if(g) g.rsvp_status = status;
   }
-  clearSelection(); renderGuests(); updateStats();
-  showToast(`${ids.length} guests updated`);
+  const n = selIds.size;
+  clearSel(); renderList(); updateStats(); toast(n+' guests updated');
 }
-async function bulkDelete() {
-  if(!confirm(`Delete ${selectedIds.size} guests?`)) return;
-  for(const id of [...selectedIds]) {
-    await DB.del(`guests?id=eq.${id}`, accessToken);
-    guests=guests.filter(g=>g.id!==id);
+async function bkDel() {
+  if(!confirm('Delete '+selIds.size+' guests?')) return;
+  for(const id of [...selIds]) {
+    await sbDel('guests?id=eq.'+id);
+    guests = guests.filter(g=>g.id!==id);
   }
-  clearSelection(); renderGuests(); updateStats();
-  showToast('Guests deleted');
+  clearSel(); renderList(); updateStats(); toast('Guests deleted');
+}
+function bkWA() {
+  const t = [...selIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g&&g.phone);
+  if(!t.length) { toast('No phone numbers in selection', true); return; }
+  openMsg('whatsapp', t);
+}
+function bkEmail() {
+  const t = [...selIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g&&g.email);
+  if(!t.length) { toast('No emails in selection', true); return; }
+  openMsg('email', t);
 }
 
-// ── WHATSAPP & EMAIL ──────────────────────────────────────────────────────────
-const DEFAULT_WA_MSG = `Hi {name}! 🎊\n\nWe'd love for you to join us at our wedding!\n\n📅 {date}\n💑 {couple}\n\nPlease RSVP here: {rsvp_url}\n\nWith love 💍`;
-const DEFAULT_EMAIL_SUBJ = `You're invited! {couple}'s Wedding`;
-const DEFAULT_EMAIL_MSG  = `Hi {name},\n\nWe are so excited to invite you to celebrate our wedding! 🎊\n\n📅 Date: {date}\n\nPlease RSVP at: {rsvp_url}\n\nWith love,\n{couple}`;
+// ── MESSAGES ──────────────────────────────────────────────────────────────────
+const WA_TPL   = 'Hi {name}! \uD83C\uDF8A\n\nYou are warmly invited to our wedding!\n\n\uD83D\uDCC5 {date}\n\uD83D\uDC91 {couple}\n\nPlease RSVP here: {rsvp_url}\n\nWith love \uD83D\uDC8D';
+const EM_SUBJ  = '{couple} Wedding Invitation \uD83D\uDC8D';
+const EM_BODY  = 'Hi {name},\n\nWe would love for you to join us to celebrate our wedding!\n\n\uD83D\uDCC5 {date}\n\nPlease RSVP here:\n{rsvp_url}\n\nWith so much love,\n{couple}';
 
-function getRsvpUrl() {
-  const slug = profile?.page_slug;
-  return slug ? `https://pamupro.github.io/wedding-budget/wedding.html?slug=${slug}` : 'https://pamupro.github.io/wedding-budget/';
+function rsvpUrl() {
+  const sl = prof.page_slug;
+  return sl ? 'https://pamupro.github.io/wedding-budget/wedding.html?slug='+sl
+            : 'https://pamupro.github.io/wedding-budget/';
 }
-
-function fillTemplate(tpl, guest) {
-  const coupleName = [profile.name1, profile.name2].filter(Boolean).join(' & ') || 'The Couple';
-  const weddingDate = profile.wedding_date
-    ? new Date(profile.wedding_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
-    : 'TBC';
+function fillTpl(tpl, g) {
+  const couple = [prof.name1, prof.name2].filter(Boolean).join(' & ') || 'The Couple';
+  const date   = prof.wedding_date
+    ? new Date(prof.wedding_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    : 'Date TBC';
   return tpl
-    .replace(/\{name\}/g, guest.name||'Guest')
-    .replace(/\{couple\}/g, coupleName)
-    .replace(/\{date\}/g, weddingDate)
-    .replace(/\{rsvp_url\}/g, getRsvpUrl());
+    .replace(/\{name\}/g,     g.name||'Guest')
+    .replace(/\{couple\}/g,   couple)
+    .replace(/\{date\}/g,     date)
+    .replace(/\{rsvp_url\}/g, rsvpUrl());
 }
 
-function sendWhatsApp(id) {
-  const g = guests.find(x=>x.id===id);
-  if(!g?.phone) { showToast('No phone number saved for this guest',true); return; }
-  openMsgModal('whatsapp', [g]);
+function sendWA(id) { const g=guests.find(x=>x.id===id); if(!g?.phone){toast('No phone saved',true);return;} openMsg('whatsapp',[g]); }
+function sendEM(id) { const g=guests.find(x=>x.id===id); if(!g?.email){toast('No email saved',true);return;} openMsg('email',[g]); }
+
+function quickWA() {
+  const code = document.getElementById('fCode').value;
+  const num  = document.getElementById('fPhone').value.trim().replace(/^0+/,'');
+  if(!num) { toast('Enter a phone number first', true); return; }
+  const name = document.getElementById('fName').value.trim() || 'Guest';
+  window.open('https://wa.me/'+code+num+'?text='+encodeURIComponent(fillTpl(WA_TPL,{name})), '_blank');
 }
-function sendEmail(id) {
-  const g = guests.find(x=>x.id===id);
-  if(!g?.email) { showToast('No email saved for this guest',true); return; }
-  openMsgModal('email', [g]);
-}
-function bulkWhatsApp() {
-  const targets = [...selectedIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g?.phone);
-  if(!targets.length) { showToast('None of the selected guests have a phone number',true); return; }
-  openMsgModal('whatsapp', targets);
-}
-function bulkEmail() {
-  const targets = [...selectedIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g?.email);
-  if(!targets.length) { showToast('None of the selected guests have an email',true); return; }
-  openMsgModal('email', targets);
+function quickEmail() {
+  const email = document.getElementById('fEmail').value.trim();
+  if(!email) { toast('Enter an email first', true); return; }
+  const name = document.getElementById('fName').value.trim() || 'Guest';
+  window.open('mailto:'+email+'?subject='+encodeURIComponent(fillTpl(EM_SUBJ,{name}))+'&body='+encodeURIComponent(fillTpl(EM_BODY,{name})), '_blank');
 }
 
-// Quick send from Contact tab
-function quickSendWhatsApp() {
-  const phone = document.getElementById('gPhone').value.trim();
-  const code  = document.getElementById('gPhoneCode').value;
-  const name  = document.getElementById('gName').value.trim();
-  if(!phone) { showToast('Enter a phone number first',true); return; }
-  const fullPhone = '+'+code+phone.replace(/^0/,'');
-  const msg = fillTemplate(DEFAULT_WA_MSG, {name: name||'Guest'});
-  window.open(`https://wa.me/${fullPhone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
-}
-function quickSendEmail() {
-  const email = document.getElementById('gEmail').value.trim();
-  const name  = document.getElementById('gName').value.trim();
-  if(!email) { showToast('Enter an email address first',true); return; }
-  const subj = fillTemplate(DEFAULT_EMAIL_SUBJ, {name: name||'Guest'});
-  const body = fillTemplate(DEFAULT_EMAIL_MSG,  {name: name||'Guest'});
-  window.open(`mailto:${email}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`, '_blank');
-}
-
-function openMsgModal(type, targets) {
-  msgType = type; msgTargets = targets;
-  const isWA = type==='whatsapp';
-  document.getElementById('msgModalTitle').textContent = isWA ? '💬 Send WhatsApp Message' : '✉️ Send Email';
-  document.getElementById('msgSendBtn').textContent = isWA
-    ? `💬 Open WhatsApp (${targets.length})`
-    : `✉️ Open Email Client (${targets.length})`;
-  document.getElementById('msgTemplate').value = isWA ? DEFAULT_WA_MSG : DEFAULT_EMAIL_MSG;
-  document.getElementById('msgRecipientInfo').textContent =
-    `Will send to: ${targets.slice(0,3).map(g=>g.name).join(', ')}${targets.length>3?` +${targets.length-3} more`:''}`;
-  updateMsgPreview();
+function openMsg(kind, peeps) {
+  msgKind=kind; msgPeeps=peeps;
+  document.getElementById('msgTitle').textContent   = kind==='whatsapp' ? '💬 Send WhatsApp' : '✉️ Send Email';
+  document.getElementById('msgBtn').textContent     = kind==='whatsapp' ? '💬 Open WhatsApp ('+peeps.length+')' : '✉️ Open Email ('+peeps.length+')';
+  document.getElementById('msgTpl').value           = kind==='whatsapp' ? WA_TPL : EM_BODY;
+  document.getElementById('msgInfo').textContent    = 'To: '+peeps.slice(0,3).map(g=>g.name).join(', ')+(peeps.length>3?' +more':'');
+  updatePrev();
   document.getElementById('msgModal').style.display='flex';
 }
-
-function closeMsgModal() { document.getElementById('msgModal').style.display='none'; }
-
-function updateMsgPreview() {
-  const tpl = document.getElementById('msgTemplate').value;
-  const preview = msgTargets.length ? fillTemplate(tpl, msgTargets[0]) : tpl;
-  document.getElementById('msgPreview').textContent = preview;
+function closeMsg() { document.getElementById('msgModal').style.display='none'; }
+function updatePrev() {
+  const tpl = document.getElementById('msgTpl').value;
+  document.getElementById('msgPrevBox').textContent = msgPeeps.length ? fillTpl(tpl, msgPeeps[0]) : tpl;
 }
-
-function insertVar(v) {
-  const ta = document.getElementById('msgTemplate');
-  const pos = ta.selectionStart;
-  ta.value = ta.value.slice(0,pos) + v + ta.value.slice(ta.selectionEnd);
-  ta.setSelectionRange(pos+v.length, pos+v.length);
-  ta.focus();
-  updateMsgPreview();
+function insV(v) {
+  const ta = document.getElementById('msgTpl');
+  const p  = ta.selectionStart;
+  ta.value = ta.value.slice(0,p)+v+ta.value.slice(ta.selectionEnd);
+  ta.setSelectionRange(p+v.length,p+v.length);
+  ta.focus(); updatePrev();
 }
-
-function sendMessages() {
-  const tpl = document.getElementById('msgTemplate').value;
-  if(msgType==='whatsapp') {
-    // Open WhatsApp for each (one at a time in browser)
-    msgTargets.forEach((g,i) => {
-      const msg  = fillTemplate(tpl, g);
-      const num  = (g.phone||'').replace(/\D/g,'');
-      setTimeout(() => window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank'), i*800);
+function doSend() {
+  const tpl = document.getElementById('msgTpl').value;
+  if(msgKind === 'whatsapp') {
+    msgPeeps.forEach((g,i) => {
+      const num = (g.phone||'').replace(/[^\d]/g,'');
+      setTimeout(() => window.open('https://wa.me/'+num+'?text='+encodeURIComponent(fillTpl(tpl,g)),'_blank'), i*700);
     });
-    closeMsgModal(); clearSelection();
-    showToast(`💬 Opening WhatsApp for ${msgTargets.length} guest${msgTargets.length>1?'s':''}…`);
   } else {
-    // Email: open mailto for each
-    msgTargets.forEach((g,i) => {
-      const coupleName = [profile.name1,profile.name2].filter(Boolean).join(' & ')||'The Couple';
-      const subj = fillTemplate(DEFAULT_EMAIL_SUBJ, g);
-      const body = fillTemplate(tpl, g);
-      setTimeout(()=>window.open(`mailto:${g.email}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,'_blank'), i*600);
+    msgPeeps.forEach((g,i) => {
+      setTimeout(() => window.open('mailto:'+g.email+'?subject='+encodeURIComponent(fillTpl(EM_SUBJ,g))+'&body='+encodeURIComponent(fillTpl(tpl,g)),'_blank'), i*500);
     });
-    closeMsgModal(); clearSelection();
-    showToast(`✉️ Opening email for ${msgTargets.length} guest${msgTargets.length>1?'s':''}…`);
   }
+  closeMsg(); clearSel();
+  toast('Opened '+msgPeeps.length+' '+(msgKind==='whatsapp'?'WhatsApp':'email')+' window'+(msgPeeps.length>1?'s':'')+'…');
 }
 
-// ── MENU SETTINGS ─────────────────────────────────────────────────────────────
-function openMenuSettings() {
-  renderCourseList();
-  document.getElementById('menuModal').style.display='flex';
-}
-function closeMenuSettings() { document.getElementById('menuModal').style.display='none'; }
+// ── MENU ──────────────────────────────────────────────────────────────────────
+function openMenuModal()  { buildCourseList(); document.getElementById('menuModal').style.display='flex'; }
+function closeMenuModal() { document.getElementById('menuModal').style.display='none'; }
 
-function renderCourseList() {
+function buildCourseList() {
   const el = document.getElementById('courseList');
-  if(!menuConfig.courses?.length) {
-    el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No courses yet — add your first course below</div>`;
+  if(!menuCfg.courses || !menuCfg.courses.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No courses yet — add one below</div>';
     return;
   }
-  el.innerHTML = menuConfig.courses.map((c,i)=>`
-    <div class="menu-course">
-      <div class="course-header">
-        <span class="course-title">${esc(c.name)}</span>
-        <button onclick="removeCourse(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px">✕</button>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px" id="opts-${i}">
-        ${(c.options||[]).map((o,j)=>`
-          <span class="option-chip">${esc(o)}<span class="del" onclick="removeOption(${i},${j})">✕</span></span>
-        `).join('')}
-      </div>
-      <div style="display:flex;gap:6px">
-        <input type="text" id="optInput-${i}" class="modal-input" style="flex:1;padding:7px 12px;font-size:12px"
-          placeholder="Add option (e.g. Chicken)" onkeydown="if(event.key==='Enter')addOption(${i})">
-        <button class="btn-secondary" onclick="addOption(${i})" style="padding:0 12px;font-size:12px">+ Add</button>
-      </div>
-    </div>
-  `).join('');
+  let html = '';
+  menuCfg.courses.forEach((c,i) => {
+    const opts = (c.options||[]).map((o,j) =>
+      '<span class="opt-chip">'+esc(o)+
+      '<span style="color:var(--muted);font-size:10px;cursor:pointer;margin-left:4px" onclick="rmOpt('+i+','+j+')">✕</span>'+
+      '</span>'
+    ).join('');
+    html += '<div class="course-box">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+        '<span style="font-size:12px;font-weight:600">'+esc(c.name)+'</span>'+
+        '<button onclick="rmCourse('+i+')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:0">✕</button>'+
+      '</div>'+
+      '<div style="margin-bottom:8px">'+(opts||'<span style="font-size:11px;color:var(--muted)">No options yet</span>')+'</div>'+
+      '<div style="display:flex;gap:6px">'+
+        '<input id="oi-'+i+'" class="modal-input" style="flex:1;padding:7px 10px;font-size:12px" placeholder="Add option (e.g. Chicken)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addOpt('+i+')}">'+
+        '<button class="btn-secondary" onclick="addOpt('+i+')" style="padding:0 12px;font-size:12px">+ Add</button>'+
+      '</div>'+
+    '</div>';
+  });
+  el.innerHTML = html;
 }
-
 function addCourse() {
-  const name = document.getElementById('newCourseName').value.trim();
-  if(!name) return;
-  const field = name.toLowerCase().replace(/\s+/g,'_');
-  menuConfig.courses.push({name, field, options:[]});
-  document.getElementById('newCourseName').value='';
-  renderCourseList();
+  const inp=document.getElementById('newCourseName'); const n=inp.value.trim(); if(!n)return;
+  menuCfg.courses.push({name:n, field:n.toLowerCase().replace(/\s+/g,'_'), options:[]});
+  inp.value=''; buildCourseList();
 }
-function removeCourse(i) { menuConfig.courses.splice(i,1); renderCourseList(); }
-function addOption(ci) {
-  const inp = document.getElementById(`optInput-${ci}`);
-  const val = inp.value.trim(); if(!val) return;
-  menuConfig.courses[ci].options.push(val); inp.value='';
-  renderCourseList();
+function rmCourse(i)     { menuCfg.courses.splice(i,1); buildCourseList(); }
+function addOpt(ci)      { const inp=document.getElementById('oi-'+ci); const v=inp.value.trim(); if(!v)return; menuCfg.courses[ci].options.push(v); inp.value=''; buildCourseList(); }
+function rmOpt(ci,oi)    { menuCfg.courses[ci].options.splice(oi,1); buildCourseList(); }
+async function saveMenu() {
+  await DB.upsertSetting(uid,'menu_config',JSON.stringify(menuCfg),tok);
+  closeMenuModal(); toast('🍽 Menu saved!');
 }
-function removeOption(ci,oi) { menuConfig.courses[ci].options.splice(oi,1); renderCourseList(); }
-
-async function saveMenuSettings() {
-  await DB.upsertSetting(userId,'menu_config',JSON.stringify(menuConfig),accessToken);
-  closeMenuSettings();
-  showToast('🍽 Menu saved!');
-}
-
-function renderMealFields() {
-  const noMsg = document.getElementById('noMenuMsg');
-  const fields = document.getElementById('menuFields');
-  if(!menuConfig.courses?.length) { noMsg.style.display='block'; fields.style.display='none'; return; }
-  noMsg.style.display='none'; fields.style.display='block';
-  const editId = document.getElementById('gEditId').value;
-  const g = editId ? guests.find(x=>x.id===editId) : {};
-  document.getElementById('dynamicMealFields').innerHTML = menuConfig.courses.map((c,i)=>`
-    <div style="margin-bottom:12px">
-      <label class="modal-label">${esc(c.name)}</label>
-      ${c.options?.length
-        ? `<select id="meal_${i}" class="modal-input">
-            <option value="">— Choose ${esc(c.name)} —</option>
-            ${c.options.map(o=>`<option ${(g?.[c.field]||'')=== o?'selected':''}>${esc(o)}</option>`).join('')}
-           </select>`
-        : `<input type="text" id="meal_${i}" class="modal-input"
-            placeholder="Enter ${esc(c.name)} choice"
-            value="${esc(g?.[c.field]||'')}">`
-      }
-    </div>
-  `).join('');
+function buildMealFields() {
+  const nm=document.getElementById('noMenuMsg'), mf=document.getElementById('mealFields');
+  if(!menuCfg.courses||!menuCfg.courses.length){nm.style.display='block';mf.style.display='none';return;}
+  nm.style.display='none'; mf.style.display='block';
+  const id=document.getElementById('fId').value;
+  const g=(id&&guests.find(x=>x.id===id))||{};
+  let html='';
+  menuCfg.courses.forEach((c,i) => {
+    html += '<div style="margin-bottom:12px"><label class="modal-label">'+esc(c.name)+'</label>';
+    if(c.options && c.options.length) {
+      html += '<select id="meal_'+i+'" class="modal-input"><option value="">— Choose '+esc(c.name)+' —</option>';
+      c.options.forEach(o => { html += '<option'+(g[c.field]===o?' selected':'')+'>'+esc(o)+'</option>'; });
+      html += '</select>';
+    } else {
+      html += '<input id="meal_'+i+'" class="modal-input" placeholder="Enter choice" value="'+esc(g[c.field]||'')+'">';
+    }
+    html += '</div>';
+  });
+  document.getElementById('dynMeal').innerHTML = html;
 }
 
 // ── CSV ────────────────────────────────────────────────────────────────────────
-function openImportModal() { document.getElementById('importModal').style.display='flex'; }
-function closeImportModal() { document.getElementById('importModal').style.display='none'; csvData=[]; }
+function openImport()  { document.getElementById('importModal').style.display='flex'; }
+function closeImport() { document.getElementById('importModal').style.display='none'; csvRows=[]; }
 
-function previewCSV(input) {
-  const file=input.files[0]; if(!file) return;
+function previewCSV(inp) {
+  const f=inp.files[0]; if(!f) return;
   const reader=new FileReader();
-  reader.onload=e=>{
-    const lines=e.target.result.split('\n').map(l=>l.split(',').map(c=>c.trim().replace(/^"|"$/g,'')));
-    const headers=lines[0].map(h=>h.toLowerCase().trim());
-    csvData=lines.slice(1).filter(r=>r[0]).map(row=>{
-      const obj={}; headers.forEach((h,i)=>obj[h]=row[i]||'');
-      return {user_id:userId,name:obj.name,email:obj.email||null,
-        phone:obj.phone||null,group_label:obj.group||null,
-        rsvp_status:obj.rsvp||'pending',dietary:obj.dietary||null,notes:obj.notes||null};
-    });
-    document.getElementById('csvPreview').style.display='block';
-    document.getElementById('csvPreview').innerHTML=`
-      <div style="background:#f0faf0;border:1px solid #a0d0a0;border-radius:10px;padding:12px;font-size:12px">
-        ✅ <strong>${csvData.length} guests</strong> ready to import
-        <div style="color:var(--muted);margin-top:4px">${csvData.slice(0,3).map(g=>g.name).join(', ')}${csvData.length>3?'…':''}</div>
-      </div>`;
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
+    const hdr   = lines[0].map(h => h.toLowerCase().trim());
+    csvRows = lines.slice(1)
+      .filter(r => r.join('').trim())
+      .map(row => {
+        const o = {}; hdr.forEach((h,i) => o[h] = row[i]||'');
+        return {user_id:uid, name:o.name, email:o.email||null, phone:o.phone||null,
+          group_label:o.group||null, rsvp_status:o.rsvp||'pending',
+          dietary:o.dietary||null, notes:o.notes||null};
+      })
+      .filter(r => r.name);
+    document.getElementById('csvPrev').style.display='block';
+    document.getElementById('csvPrev').innerHTML =
+      '<div style="background:#f0faf0;border:1px solid #a0d0a0;border-radius:10px;padding:12px;font-size:12px">'+
+      '✅ <strong>'+csvRows.length+' guests</strong> ready'+
+      '<div style="color:var(--muted);margin-top:3px">'+csvRows.slice(0,3).map(g=>g.name).join(', ')+(csvRows.length>3?'…':'')+'</div></div>';
     document.getElementById('importBtn').style.display='block';
   };
-  reader.readAsText(file);
+  reader.readAsText(f);
 }
-async function importCSV() {
-  if(!csvData.length) return;
+
+async function doImport() {
+  if(!csvRows.length) return;
   const btn=document.getElementById('importBtn'); btn.textContent='Importing…'; btn.disabled=true;
-  let count=0;
-  for(const g of csvData){ const r=await DB.post('guests',g,accessToken); if(r){guests.push(r);count++;} }
-  closeImportModal(); populateGroups(); renderGuests(); updateStats();
-  showToast(`✅ Imported ${count} guests!`);
+  let n=0;
+  for(const g of csvRows){ const r=await sbPost('guests',g); if(r){guests.push(r);n++;} }
+  closeImport(); rebuildGroupSel(); renderList(); updateStats();
+  toast('✅ Imported '+n+' guests!');
+  btn.textContent='Import Guests'; btn.disabled=false;
 }
-function downloadCSVTemplate() {
-  const csv='name,email,phone,group,rsvp,dietary,notes\nJane Smith,jane@email.com,+447700900123,Bride\'s side,yes,,\nJohn Doe,,+447700900456,Groom\'s side,pending,Vegan,';
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+
+function dlTemplate() {
+  const rows = ['name,email,phone,group,rsvp,dietary,notes',
+    'Jane Smith,jane@email.com,+447700900123,Brides side,yes,,',
+    'John Doe,,+447700900456,Grooms side,pending,Vegan,'];
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));
   a.download='guests_template.csv'; a.click();
 }
-function exportGuestCSV() {
-  const rows=[['Name','Email','Phone','RSVP','Group','Starter','Main','Dessert','Dietary','Plus One','Notes']];
-  guests.forEach(g=>rows.push([g.name,g.email||'',g.phone||'',g.rsvp_status||'',g.group_label||'',g.starter||'',g.main||'',g.dessert||'',g.dietary||'',g.plus_one?'Yes':'No',g.notes||'']));
-  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='WeddingLedger_Guests.csv'; a.click(); showToast('📤 Exported!');
+
+function doExport() {
+  const hdr = ['Name','Email','Phone','RSVP','Group','Dietary','Plus One','Notes'];
+  const rows = [hdr.join(',')];
+  guests.forEach(g => {
+    const row = [g.name,g.email||'',g.phone||'',g.rsvp_status||'',g.group_label||'',
+      g.dietary||'',g.plus_one?'Yes':'No',g.notes||''];
+    rows.push(row.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(','));
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));
+  a.download='WeddingLedger_Guests.csv'; a.click(); toast('📤 Exported!');
 }
 
 // ── UTILS ──────────────────────────────────────────────────────────────────────
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' error':'')+' show';setTimeout(()=>t.classList.remove('show'),3200);}
-function toggleMobileNav(){document.getElementById('mobileNavDrawer').classList.toggle('open');}
-function closeMobileNav(){document.getElementById('mobileNavDrawer').classList.remove('open');}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg, err) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(err?' error':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+function toggleMobileNav() { document.getElementById('mobileNavDrawer').classList.toggle('open'); }
+function closeMobileNav()  { document.getElementById('mobileNavDrawer').classList.remove('open'); }
 
 init();
 </script>
-
-<style>
-/* Modal tab style */
-.modal-tab{flex:1;padding:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;
-  background:none;font-family:'Jost',sans-serif;color:var(--muted);border-bottom:2px solid transparent;
-  transition:.15s}
-.modal-tab.active{color:var(--gold);background:#fdf9f0;border-bottom-color:var(--gold)}
-</style>
 </body>
 </html>
