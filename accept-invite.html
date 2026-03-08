@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Join Partner Budget — WeddingLedger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;background:#faf7f0;font-family:'Jost',sans-serif;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{background:white;border-radius:20px;padding:40px 36px;max-width:440px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.08);text-align:center}
+    .logo{font-family:'Cormorant Garamond',serif;font-size:26px;color:#5C4A2A;margin-bottom:32px}
+    .logo span{color:#C9A84C;font-style:italic}
+    .icon{font-size:56px;margin-bottom:16px}
+    h1{font-family:'Cormorant Garamond',serif;font-size:26px;color:#3d2e1a;margin-bottom:10px}
+    p{font-size:14px;color:#8a7a60;line-height:1.6;margin-bottom:24px}
+    .from-name{font-size:18px;font-weight:700;color:#C9A84C;margin:8px 0 20px}
+    .btn{display:block;width:100%;padding:14px;border:none;border-radius:99px;font-family:'Jost',sans-serif;
+      font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:all 0.2s}
+    .btn-gold{background:linear-gradient(135deg,#9a7535,#C9A84C);color:white;box-shadow:0 4px 14px rgba(154,117,53,0.3)}
+    .btn-ghost{background:transparent;color:#8a7a60;border:1.5px solid #e8e0d0}
+    .input{width:100%;padding:12px 16px;border:1.5px solid #e8e0d0;border-radius:10px;font-family:'Jost',sans-serif;
+      font-size:14px;outline:none;margin-bottom:12px}
+    .input:focus{border-color:#C9A84C}
+    .label{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#8a7a60;margin-bottom:6px;display:block;text-align:left}
+    .status{padding:14px 20px;border-radius:12px;font-size:13px;margin-bottom:16px}
+    .status.error{background:#fff0f0;color:#c04040;border:1px solid #f5c0c0}
+    .status.success{background:#f0faf0;color:#2a5a2a;border:1px solid #a0d0a0}
+    .status.loading{background:#fdf9f0;color:#8a6020;border:1px solid #e8d090}
+    #step-loading,#step-invalid,#step-login,#step-signup,#step-success{display:none}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Wedding<span>Ledger</span></div>
+
+  <!-- Loading -->
+  <div id="step-loading">
+    <div class="icon">⏳</div>
+    <h1>Checking invite…</h1>
+    <p>Please wait a moment.</p>
+  </div>
+
+  <!-- Invalid token -->
+  <div id="step-invalid">
+    <div class="icon">❌</div>
+    <h1>Invite Not Found</h1>
+    <p>This invite link is invalid or has already been used. Ask your partner to send a new invite.</p>
+    <button class="btn btn-ghost" onclick="location.href='index.html'">Go to Home</button>
+  </div>
+
+  <!-- Login to accept -->
+  <div id="step-login">
+    <div class="icon">💌</div>
+    <h1>You're Invited!</h1>
+    <p>invited you to plan your wedding budget together on WeddingLedger.</p>
+    <div id="fromName" class="from-name"></div>
+    <div id="step-login-form">
+      <div class="status loading" id="loginInfo">Sign in to your existing account, or create a new one to accept.</div>
+      <label class="label">Your Email</label>
+      <input type="email" id="loginEmail" class="input" placeholder="your@email.com">
+      <label class="label">Password</label>
+      <input type="password" id="loginPassword" class="input" placeholder="Your password">
+      <div id="loginError" class="status error" style="display:none"></div>
+      <button class="btn btn-gold" onclick="doLogin()">Sign In & Accept Invite 💍</button>
+      <button class="btn btn-ghost" onclick="showSignup()">Create New Account Instead</button>
+    </div>
+    <div id="step-signup-form" style="display:none">
+      <label class="label">Your Name</label>
+      <input type="text" id="signupName" class="input" placeholder="Your name">
+      <label class="label">Email</label>
+      <input type="email" id="signupEmail" class="input" placeholder="your@email.com">
+      <label class="label">Password</label>
+      <input type="password" id="signupPass" class="input" placeholder="Choose a password">
+      <div id="signupError" class="status error" style="display:none"></div>
+      <button class="btn btn-gold" onclick="doSignup()">Create Account & Accept 💍</button>
+      <button class="btn btn-ghost" onclick="showLogin()">Sign In to Existing Account</button>
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div id="step-success">
+    <div class="icon">💑</div>
+    <h1>You're Linked!</h1>
+    <p>You and your partner are now planning together. All your budgets, vendors and payments are shared in real time.</p>
+    <div class="status success">✅ Accounts linked — opening your dashboard…</div>
+    <button class="btn btn-gold" onclick="location.href='dashboard.html'">Open Dashboard 💍</button>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script>
+const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+
+let inviteToken = null;
+let inviteData  = null;
+
+function show(id) {
+  ['step-loading','step-invalid','step-login','step-success'].forEach(s => {
+    document.getElementById(s).style.display = s===id ? 'block' : 'none';
+  });
+}
+function showSignup(){ document.getElementById('step-login-form').style.display='none'; document.getElementById('step-signup-form').style.display='block'; }
+function showLogin() { document.getElementById('step-signup-form').style.display='none'; document.getElementById('step-login-form').style.display='block'; }
+
+async function init() {
+  show('step-loading');
+  const params = new URLSearchParams(window.location.search);
+  inviteToken = params.get('token');
+  if(!inviteToken){ show('step-invalid'); return; }
+
+  // Fetch invite
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/invites?token=eq.${inviteToken}&select=*`, {
+    headers:{ 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+  });
+  const rows = await r.json();
+  if(!rows || !rows.length || rows[0].status !== 'pending'){ show('step-invalid'); return; }
+  inviteData = rows[0];
+
+  // Get sender's profile name
+  const pr = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${inviteData.from_user_id}&select=name1,name2`, {
+    headers:{ 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+  });
+  const profiles = await pr.json();
+  const p = profiles[0] || {};
+  const senderName = p.name1 && p.name2 ? `${p.name1} & ${p.name2}` : p.name1 || 'Your partner';
+  document.getElementById('fromName').textContent = senderName;
+  // Pre-fill email if invite has it
+  document.getElementById('loginEmail').value = inviteData.to_email || '';
+  document.getElementById('signupEmail').value = inviteData.to_email || '';
+  show('step-login');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  const err   = document.getElementById('loginError');
+  err.style.display = 'none';
+  if(!email||!pass){ err.textContent='Please fill in all fields'; err.style.display='block'; return; }
+
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+    body: JSON.stringify({email, password:pass})
+  });
+  const d = await r.json();
+  if(!d.access_token){ err.textContent = d.error_description || 'Login failed'; err.style.display='block'; return; }
+  localStorage.setItem('wl_token', d.access_token);
+  localStorage.setItem('wl_refresh', d.refresh_token||'');
+  localStorage.setItem('wl_uid', d.user.id);
+  await acceptInvite(d.user.id, d.access_token);
+}
+
+async function doSignup() {
+  const name  = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass  = document.getElementById('signupPass').value;
+  const err   = document.getElementById('signupError');
+  err.style.display = 'none';
+  if(!name||!email||!pass){ err.textContent='Please fill in all fields'; err.style.display='block'; return; }
+
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+    body: JSON.stringify({email, password:pass})
+  });
+  const d = await r.json();
+  if(!d.user){ err.textContent = d.error_description || 'Signup failed'; err.style.display='block'; return; }
+
+  // Create profile
+  const token = d.access_token || SUPABASE_ANON_KEY;
+  await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`,'Prefer':'return=minimal'},
+    body: JSON.stringify({user_id:d.user.id, name1:name, email})
+  });
+  if(d.access_token){
+    localStorage.setItem('wl_token', d.access_token);
+    localStorage.setItem('wl_refresh', d.refresh_token||'');
+    localStorage.setItem('wl_uid', d.user.id);
+    await acceptInvite(d.user.id, d.access_token);
+  } else {
+    err.textContent = 'Account created! Please check your email to confirm, then sign in.';
+    err.style.display='block'; err.className='status success';
+  }
+}
+
+async function acceptInvite(userId, token) {
+  // Get partner's profile id
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${inviteData.from_user_id}&select=id`, {
+    headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`}
+  });
+  const rows = await r.json();
+  if(!rows||!rows.length){ alert('Could not find partner profile'); return; }
+  const partnerProfileId = rows[0].id;
+
+  // Get own profile id
+  const r2 = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}&select=id`, {
+    headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`}
+  });
+  const rows2 = await r2.json();
+  if(!rows2||!rows2.length){ alert('Profile not found'); return; }
+  const myProfileId = rows2[0].id;
+
+  // Call link_partners function
+  await fetch(`${SUPABASE_URL}/rest/v1/rpc/link_partners`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`},
+    body: JSON.stringify({user_a: myProfileId, user_b: partnerProfileId})
+  });
+
+  // Mark invite as accepted
+  await fetch(`${SUPABASE_URL}/rest/v1/invites?token=eq.${inviteToken}`, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`,'Prefer':'return=minimal'},
+    body: JSON.stringify({status:'accepted', accepted_at: new Date().toISOString()})
+  });
+
+  show('step-success');
+  setTimeout(()=>{ location.href='dashboard.html'; }, 3000);
+}
+
+init();
+</script>
+</body>
+</html>
