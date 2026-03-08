@@ -460,3 +460,9 @@ textarea.modal-input{resize:vertical;min-height:90px;}
   .bottom-grid{grid-template-columns:1fr;}
   .couple-hero{padding:40px 20px 16px;}
 }
+
+/* ── PARTNER LINKING ── */
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.5; transform:scale(1.3); }
+}
