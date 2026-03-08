@@ -882,10 +882,12 @@ const WA_TPL   = 'Hi {name}! \uD83C\uDF8A\n\nYou are warmly invited to our weddi
 const EM_SUBJ  = '{couple} Wedding Invitation \uD83D\uDC8D';
 const EM_BODY  = 'Hi {name},\n\nWe would love for you to join us to celebrate our wedding!\n\n\uD83D\uDCC5 {date}\n\nPlease RSVP here:\n{rsvp_url}\n\nWith so much love,\n{couple}';
 
-function rsvpUrl() {
-  const sl = prof.page_slug;
-  return sl ? 'https://pamupro.github.io/wedding-budget/wedding.html?slug='+sl
-            : 'https://pamupro.github.io/wedding-budget/';
+function rsvpUrl(guestName) {
+  const sl   = prof.page_slug;
+  const base = sl ? 'https://pamupro.github.io/wedding-budget/wedding.html?slug='+sl
+                  : 'https://pamupro.github.io/wedding-budget/';
+  // Append guest name so wedding page can pre-fill & match existing record
+  return guestName ? base+'&name='+encodeURIComponent(guestName) : base;
 }
 function fillTpl(tpl, g) {
   const couple = [prof.name1, prof.name2].filter(Boolean).join(' & ') || 'The Couple';
@@ -896,7 +898,7 @@ function fillTpl(tpl, g) {
     .replace(/\{name\}/g,     g.name||'Guest')
     .replace(/\{couple\}/g,   couple)
     .replace(/\{date\}/g,     date)
-    .replace(/\{rsvp_url\}/g, rsvpUrl());
+    .replace(/\{rsvp_url\}/g, rsvpUrl(g.name));
 }
 
 function sendWA(id) { const g=guests.find(x=>x.id===id); if(!g?.phone){toast('No phone saved',true);return;} openMsg('whatsapp',[g]); }
