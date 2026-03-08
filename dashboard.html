@@ -211,6 +211,33 @@ window.addEventListener('load', function(){
   </div>
 </section>
 
+<!-- ── PAYMENT TIMELINE ──────────────────────────────────────────────────── -->
+<section class="bottom-section" style="padding-top:0">
+  <div class="section-inner">
+    <div class="summary-card" style="padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <h3 class="card-title" style="margin:0">💳 Payment Timeline</h3>
+        <div style="display:flex;gap:8px">
+          <button onclick="setTimelineFilter('all')" id="tlAll"
+            style="background:var(--gold);color:white;border:none;border-radius:99px;padding:6px 14px;
+            font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer">All</button>
+          <button onclick="setTimelineFilter('paid')" id="tlPaid"
+            style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
+            border-radius:99px;padding:6px 14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Paid</button>
+          <button onclick="setTimelineFilter('upcoming')" id="tlUpcoming"
+            style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
+            border-radius:99px;padding:6px 14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Upcoming</button>
+        </div>
+      </div>
+      <div id="paymentTimeline">
+        <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">
+          No payments recorded yet
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ── CHECKLIST ─────────────────────────────────────────────────────────── -->
 <section class="checklist-section">
   <div class="section-inner">
@@ -467,6 +494,24 @@ window.addEventListener('load', function(){
       <div style="margin-bottom:20px">
         <textarea id="settingsNotes" class="modal-input" rows="4" placeholder="Notes about your wedding..." style="resize:vertical"></textarea>
         <button class="btn-secondary" onclick="saveNotesFromSettings()" style="margin-top:8px">Save Notes</button>
+      </div>
+
+      <div class="settings-section-title" style="color:#2a7a2a;border-color:#a0d0a0">🎁 Referral</div>
+      <div style="background:#f0faf0;border:1px solid #a0d0a0;border-radius:12px;padding:14px;margin-bottom:20px">
+        <div style="font-size:12px;color:#2a5a2a;margin-bottom:8px;font-weight:600">Your referral code:</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <code id="myReferralCode" style="background:white;border:1px solid #a0d0a0;border-radius:8px;
+            padding:8px 14px;font-size:16px;font-weight:700;color:#2a5a2a;letter-spacing:2px;flex:1;text-align:center">—</code>
+          <button onclick="copyReferralCode()" class="btn-secondary" style="border-color:#a0d0a0;color:#2a5a2a;padding:8px 14px">
+            📋 Copy
+          </button>
+        </div>
+        <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.5">
+          Share this code with friends. When they sign up and subscribe, you both get <strong>£2 off your first month</strong>!
+        </div>
+        <button onclick="shareReferral()" class="btn-secondary" style="width:100%;margin-top:10px;border-color:#a0d0a0;color:#2a5a2a">
+          🔗 Share Invite Link
+        </button>
       </div>
 
       <div class="settings-section-title" style="color:#c04040;border-color:#f5c0c0">⚠️ Account</div>
