@@ -213,7 +213,7 @@ async function loadTasks() {
 async function loadSettings() {
   const rows=await DB.query(`settings?user_id=eq.${userId}`,accessToken);
   rows.forEach(r=>{
-    if(r.key==='spend_limit'){spendLimit=parseFloat(r.value)||0;const el=document.getElementById('spendLimit');if(el)el.value=spendLimit||'';}
+    if(r.key==='spend_limit'){spendLimit=parseFloat(r.value)||0;const el=document.getElementById('spendLimit');if(el)el.value=spendLimit||'';const el2=document.getElementById('settingsSpendLimit');if(el2)el2.value=spendLimit||'';}
     if(r.key==='wedding_notes'){notes=r.value;const el=document.getElementById('weddingNotes');if(el)el.value=notes;}
     if(r.key==='share_token') shareToken=r.value;
     if(r.key==='share_enabled') shareEnabled=r.value==='true';
@@ -521,9 +521,11 @@ async function addVendor(){
   }
   const name=document.getElementById('newVendorName').value.trim();
   if(!name){showToast('Please enter a vendor name',true);return;}
+  const rawCost=parseFloat(document.getElementById('newVendorTotal').value)||0;
+  const gbpCost=rawCost/CURRENCIES[activeCurrency].rate; // always store in GBP
   const data={user_id:userId,icon:selectedIcon,
     category:document.getElementById('newVendorCategory').value.trim()||'Custom',
-    name,total_cost:parseFloat(document.getElementById('newVendorTotal').value)||0,
+    name,total_cost:gbpCost,
     notes:document.getElementById('newVendorNotes').value.trim(),
     due_date:null,due_amount:null,due_note:''};
   const r=await DB.post('vendors',data,accessToken);
@@ -547,10 +549,10 @@ function openEditModal(id){
   activeEditVendorId=id;
   document.getElementById('editVendorName').value=v.name||'';
   document.getElementById('editVendorCategory').value=v.category||'';
-  document.getElementById('editVendorTotal').value=v.total_cost||'';
+  document.getElementById('editVendorTotal').value=v.total_cost?(v.total_cost*CURRENCIES[activeCurrency].rate).toFixed(2):'';
   document.getElementById('editVendorNotes').value=v.notes||'';
   document.getElementById('editDueDate').value=v.due_date||'';
-  document.getElementById('editDueAmount').value=v.due_amount||'';
+  document.getElementById('editDueAmount').value=v.due_amount?(v.due_amount*CURRENCIES[activeCurrency].rate).toFixed(2):'';
   document.getElementById('editDueNote').value=v.due_note||'';
   document.getElementById('editModal').style.display='flex';
 }
@@ -560,10 +562,10 @@ async function submitEdit(){
   const data={
     name:document.getElementById('editVendorName').value.trim(),
     category:document.getElementById('editVendorCategory').value.trim(),
-    total_cost:parseFloat(document.getElementById('editVendorTotal').value)||0,
+    total_cost:(parseFloat(document.getElementById('editVendorTotal').value)||0)/CURRENCIES[activeCurrency].rate,
     notes:document.getElementById('editVendorNotes').value.trim(),
     due_date:document.getElementById('editDueDate').value||null,
-    due_amount:parseFloat(document.getElementById('editDueAmount').value)||null,
+    due_amount:document.getElementById('editDueAmount').value?(parseFloat(document.getElementById('editDueAmount').value)||0)/CURRENCIES[activeCurrency].rate:null,
     due_note:document.getElementById('editDueNote').value.trim()
   };
   await DB.patch('vendors',id,data,accessToken);
@@ -936,11 +938,11 @@ function updateStats(){
 }
 
 async function saveLimit(){
+  // Spend limit is always entered and stored in GBP — no conversion
   const input=parseFloat(document.getElementById('spendLimit').value)||0;
-  // Convert from selected currency to GBP for storage
-  const gbpAmount=input/CURRENCIES[activeCurrency].rate;
-  spendLimit=gbpAmount;
-  await DB.upsertSetting(userId,'spend_limit',gbpAmount,accessToken);
+  spendLimit=input;
+  await DB.upsertSetting(userId,'spend_limit',input,accessToken);
+  const el=document.getElementById('settingsSpendLimit'); if(el) el.value=input||'';
   updateStats();showToast('Spend limit saved ✓');
 }
 async function saveNotes(){
@@ -1001,6 +1003,72 @@ function showToast(msg,isError=false){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.className='toast show'+(isError?' error':'');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='toast';},3500);
+}
+
+// ─── PASSWORD RESET & ACCOUNT RESET ─────────────────────────────────────────
+
+async function sendPasswordReset(){
+  const btn = event.target;
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  try {
+    // Get user email from Supabase auth
+    const r = await fetch(`${DB.SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'apikey': DB.ANON_KEY, 'Authorization': `Bearer ${accessToken}` }
+    });
+    const user = await r.json();
+    const email = user.email;
+    if(!email) throw new Error('Could not get email');
+
+    const res = await fetch(`${DB.SUPABASE_URL}/auth/v1/recover`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY },
+      body: JSON.stringify({ email })
+    });
+    if(!res.ok) throw new Error('Reset failed');
+    showToast(`✅ Password reset email sent to ${email}`);
+    btn.textContent = '✅ Email sent!';
+    setTimeout(()=>{ btn.textContent='🔑 Reset Password — send email link'; btn.disabled=false; }, 4000);
+  } catch(e) {
+    showToast('Could not send reset email — try again', true);
+    btn.textContent = '🔑 Reset Password — send email link'; btn.disabled = false;
+  }
+}
+
+function confirmResetData(){
+  const confirmed = window.confirm(
+    '⚠️ Are you sure you want to delete ALL your vendors, payments and tasks?\n\nThis cannot be undone. Your account and settings will be kept.'
+  );
+  if(confirmed) resetAllData();
+}
+
+async function resetAllData(){
+  showToast('Deleting data…');
+  try {
+    // Delete all vendors (cascade deletes payments)
+    for(const v of [...vendors]){
+      for(const p of payments.filter(p=>p.vendor_id===v.id)){
+        await DB.del('payments', p.id, accessToken);
+      }
+      await DB.del('vendors', v.id, accessToken);
+    }
+    // Delete all tasks
+    for(const t of [...tasks]){
+      await DB.del('tasks', t.id, accessToken);
+    }
+    // Reset local state
+    vendors=[]; payments=[]; tasks=[];
+    spendLimit=0;
+    // Clear spend limit in DB
+    await DB.upsertSetting(userId,'spend_limit','0',accessToken);
+    const el=document.getElementById('spendLimit'); if(el) el.value='';
+    const el2=document.getElementById('settingsSpendLimit'); if(el2) el2.value='';
+    renderVendors(); updateStats();
+    closeSettingsModal();
+    showToast('✅ All data reset successfully');
+  } catch(e) {
+    showToast('Reset failed — please try again', true);
+    console.error(e);
+  }
 }
 
 // ─── WELCOME SETUP MODAL ─────────────────────────────────────────────────────
@@ -1099,6 +1167,7 @@ async function saveProfileSettings() {
 }
 
 async function saveSpendLimitFromSettings() {
+  // Always stored as GBP — no conversion
   const val = parseFloat(document.getElementById('settingsSpendLimit').value)||0;
   spendLimit = val;
   await DB.upsertSetting(userId,'spend_limit',val,accessToken);
