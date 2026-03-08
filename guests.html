@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Guest List — WeddingLedger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .guests-header{background:white;border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:64px;z-index:10}
+    .guests-stats{display:flex;gap:12px;flex-wrap:wrap}
+    .gstat{background:var(--warm);border-radius:10px;padding:10px 16px;text-align:center;min-width:80px}
+    .gstat-num{font-size:22px;font-weight:700;color:var(--gold);font-family:'Cormorant Garamond',serif}
+    .gstat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+    .guest-table{width:100%;border-collapse:collapse}
+    .guest-table th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:10px 14px;background:var(--warm);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+    .guest-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--charcoal);vertical-align:middle}
+    .guest-table tr:hover td{background:#fdfaf4}
+    .rsvp-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+    .rsvp-yes{background:#e8f5e8;color:#2a5a2a}
+    .rsvp-no{background:#fde8e8;color:#7a2a2a}
+    .rsvp-maybe{background:#fff3cd;color:#7a5a00}
+    .rsvp-pending{background:#f0f0f0;color:#666}
+    .guest-actions{display:flex;gap:6px;opacity:0;transition:.2s}
+    .guest-table tr:hover .guest-actions{opacity:1}
+    .btn-icon{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:12px;color:var(--muted)}
+    .btn-icon:hover{border-color:var(--gold);color:var(--gold)}
+    .filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-tab{background:var(--warm);border:1.5px solid var(--border);border-radius:99px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;color:var(--charcoal);transition:.15s}
+    .filter-tab.active{background:var(--gold);color:white;border-color:var(--gold)}
+    .group-header{background:#fdf9f0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border)}
+    .empty-guests{text-align:center;padding:60px 20px;color:var(--muted)}
+    .empty-guests-icon{font-size:48px;margin-bottom:12px}
+    .import-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:.2s}
+    .import-area:hover{border-color:var(--gold);background:#fdf9f0}
+    .meal-select{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:'Jost',sans-serif;background:white;cursor:pointer}
+    .meal-select:focus{outline:none;border-color:var(--gold)}
+    @media(max-width:680px){
+      .guests-header{top:56px;padding:12px 16px}
+      .guest-table th:nth-child(n+4){display:none}
+      .guest-table td:nth-child(n+4){display:none}
+      .gstat{min-width:60px;padding:8px 10px}
+      .gstat-num{font-size:18px}
+    }
+  </style>
+</head>
+<body>
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div class="topbar-left">
+    <a href="dashboard.html" class="logo-link"><span class="logo-text">Wedding<span class="logo-italic">Ledger</span></span></a>
+  </div>
+  <div class="topbar-right">
+    <select class="currency-select" id="currencySelect" onchange="changeCurrency(this.value)">
+      <option value="GBP">£ GBP</option><option value="USD">$ USD</option>
+      <option value="EUR">€ EUR</option><option value="LKR">₨ LKR</option>
+      <option value="AUD">A$ AUD</option><option value="INR">₹ INR</option><option value="SGD">S$ SGD</option>
+    </select>
+    <a href="dashboard.html" class="topbar-btn" style="color:var(--muted);text-decoration:none">← Dashboard</a>
+    <button class="btn-primary" onclick="openAddGuest()" style="padding:8px 16px;font-size:13px">+ Add Guest</button>
+    <button onclick="openImportModal()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import CSV</button>
+    <button onclick="exportGuestCSV()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
+    <button class="hamburger-btn" onclick="toggleMobileNav()" id="hamburgerBtn">☰</button>
+  </div>
+</nav>
+<div class="mobile-nav-drawer" id="mobileNavDrawer">
+  <button class="mobile-nav-item" onclick="openAddGuest();closeMobileNav()">+ Add Guest</button>
+  <button class="mobile-nav-item" onclick="openImportModal();closeMobileNav()">📥 Import CSV</button>
+  <button class="mobile-nav-item" onclick="exportGuestCSV();closeMobileNav()">📤 Export CSV</button>
+  <button class="mobile-nav-item" onclick="location.href='dashboard.html'">← Dashboard</button>
+</div>
+
+<main style="padding-top:64px;min-height:100vh;background:var(--cream)">
+  <!-- Stats bar -->
+  <div class="guests-header">
+    <div class="guests-stats">
+      <div class="gstat"><div class="gstat-num" id="statTotal">0</div><div class="gstat-label">Invited</div></div>
+      <div class="gstat"><div class="gstat-num" id="statYes" style="color:#2a7a2a">0</div><div class="gstat-label">Attending</div></div>
+      <div class="gstat"><div class="gstat-num" id="statNo" style="color:#c04040">0</div><div class="gstat-label">Declined</div></div>
+      <div class="gstat"><div class="gstat-num" id="statPending" style="color:#8a6020">0</div><div class="gstat-label">Pending</div></div>
+      <div class="gstat"><div class="gstat-num" id="statPlusOnes">0</div><div class="gstat-label">+1s</div></div>
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-tab" onclick="setFilter('yes',this)">✅ Attending</button>
+      <button class="filter-tab" onclick="setFilter('no',this)">❌ Declined</button>
+      <button class="filter-tab" onclick="setFilter('pending',this)">⏳ Pending</button>
+    </div>
+  </div>
+
+  <!-- Search + group filter -->
+  <div style="padding:16px 24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <input type="search" id="guestSearch" placeholder="🔍 Search guests…"
+      oninput="renderGuests()"
+      style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid var(--border);
+      border-radius:99px;font-family:'Jost',sans-serif;font-size:13px;outline:none;background:white">
+    <select id="groupFilter" onchange="renderGuests()"
+      style="padding:10px 14px;border:1.5px solid var(--border);border-radius:99px;
+      font-family:'Jost',sans-serif;font-size:13px;background:white;outline:none;cursor:pointer">
+      <option value="">All Groups</option>
+    </select>
+    <div style="font-size:12px;color:var(--muted)" id="guestCountLabel"></div>
+  </div>
+
+  <!-- Guest table -->
+  <div style="padding:0 24px 24px;overflow-x:auto">
+    <div style="background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06)">
+      <table class="guest-table" id="guestTable">
+        <thead>
+          <tr>
+            <th style="width:32px"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+            <th>Name</th>
+            <th>RSVP</th>
+            <th class="desktop-only">Email</th>
+            <th class="desktop-only">Meal</th>
+            <th class="desktop-only">Dietary</th>
+            <th class="desktop-only">Table</th>
+            <th class="desktop-only">Group</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="guestBody">
+          <tr><td colspan="9"><div class="empty-guests"><div class="empty-guests-icon">👥</div><div>No guests yet — add your first guest!</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bulk actions bar (shows when guests selected) -->
+  <div id="bulkBar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--charcoal);color:white;border-radius:99px;padding:12px 24px;
+    display:none;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:100;white-space:nowrap">
+    <span id="bulkCount" style="font-size:13px;font-weight:600"></span>
+    <button onclick="bulkRSVP('yes')" style="background:#2a7a2a;border:none;color:white;border-radius:99px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Jost',sans-serif">✅ Mark Attending</button>
+    <button onclick="bulkRSVP('no')" style="background:#c04040;border:none;color:white;border-radius:99px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Jost',sans-serif">❌ Mark Declined</button>
+    <button onclick="bulkDelete()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:99px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:'Jost',sans-serif">🗑 Delete</button>
+    <button onclick="clearSelection()" style="background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;font-size:16px">✕</button>
+  </div>
+</main>
+
+<!-- ADD / EDIT GUEST MODAL -->
+<div class="modal-overlay" id="guestModal" style="display:none" onclick="if(event.target===this)closeGuestModal()">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="guestModalTitle">Add Guest</h3>
+      <button class="modal-close" onclick="closeGuestModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="grid-column:1/-1">
+          <label class="modal-label">Full Name *</label>
+          <input type="text" id="gName" class="modal-input" placeholder="Jane Smith">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="modal-label">Email</label>
+          <input type="email" id="gEmail" class="modal-input" placeholder="jane@email.com">
+        </div>
+        <div>
+          <label class="modal-label">RSVP Status</label>
+          <select id="gRsvp" class="modal-input">
+            <option value="pending">⏳ Pending</option>
+            <option value="yes">✅ Attending</option>
+            <option value="no">❌ Declined</option>
+            <option value="maybe">🤔 Maybe</option>
+          </select>
+        </div>
+        <div>
+          <label class="modal-label">Group</label>
+          <input type="text" id="gGroup" class="modal-input" placeholder="e.g. Bride's side" list="groupList">
+          <datalist id="groupList"></datalist>
+        </div>
+        <div>
+          <label class="modal-label">Starter</label>
+          <input type="text" id="gStarter" class="modal-input" placeholder="e.g. Soup">
+        </div>
+        <div>
+          <label class="modal-label">Main</label>
+          <input type="text" id="gMain" class="modal-input" placeholder="e.g. Chicken">
+        </div>
+        <div>
+          <label class="modal-label">Dessert</label>
+          <input type="text" id="gDessert" class="modal-input" placeholder="e.g. Cake">
+        </div>
+        <div>
+          <label class="modal-label">Dietary Requirements</label>
+          <input type="text" id="gDietary" class="modal-input" placeholder="e.g. Vegan, Gluten-free">
+        </div>
+        <div style="grid-column:1/-1">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+            <input type="checkbox" id="gPlusOne" onchange="togglePlusOne(this)">
+            <span style="font-size:13px;color:var(--charcoal)">Bringing a +1</span>
+          </label>
+        </div>
+        <div id="plusOneNameRow" style="grid-column:1/-1;display:none">
+          <label class="modal-label">+1 Name</label>
+          <input type="text" id="gPlusOneName" class="modal-input" placeholder="+1 guest name">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="modal-label">Notes</label>
+          <textarea id="gNotes" class="modal-input" rows="2" placeholder="Any notes…" style="resize:vertical"></textarea>
+        </div>
+      </div>
+      <input type="hidden" id="gEditId">
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn-secondary" onclick="closeGuestModal()" style="flex:1">Cancel</button>
+        <button class="btn-primary" onclick="saveGuest()" style="flex:2">Save Guest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 class="modal-title">📥 Import Guests from CSV</h3>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--warm);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.7">
+        CSV must have headers: <strong>name, email, group, rsvp, starter, main, dessert, dietary</strong><br>
+        Only <strong>name</strong> is required. Download a template below.
+      </div>
+      <div class="import-area" onclick="document.getElementById('csvFile').click()">
+        <div style="font-size:32px;margin-bottom:8px">📂</div>
+        <div style="font-size:13px;font-weight:600;color:var(--charcoal)">Click to choose CSV file</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">or drag and drop</div>
+        <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="previewCSV(this)">
+      </div>
+      <div id="csvPreview" style="display:none;margin-top:12px"></div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn-secondary" onclick="downloadCSVTemplate()" style="flex:1">⬇ Template</button>
+        <button class="btn-primary" id="importBtn" onclick="importCSV()" style="flex:2;display:none">Import Guests</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="db.js"></script>
+<script>
+const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+let userId = localStorage.getItem('wl_uid');
+let accessToken = localStorage.getItem('wl_token');
+let guests = [];
+let seatingTables = [];
+let currentFilter = 'all';
+let selectedIds = new Set();
+let csvData = [];
+
+if(!userId || !accessToken) location.href = 'login.html';
+
+async function init() {
+  await loadGuests();
+  await loadTables();
+  renderGuests();
+  updateStats();
+}
+
+async function loadGuests() {
+  guests = await DB.query(`guests?user_id=eq.${userId}&order=created_at.asc`, accessToken);
+}
+async function loadTables() {
+  seatingTables = await DB.query(`seating_tables?user_id=eq.${userId}&order=created_at.asc`, accessToken);
+  populateGroupFilter();
+}
+
+function populateGroupFilter() {
+  const groups = [...new Set(guests.map(g => g.group_label).filter(Boolean))];
+  const sel = document.getElementById('groupFilter');
+  sel.innerHTML = '<option value="">All Groups</option>' +
+    groups.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+  // Also populate datalist
+  const dl = document.getElementById('groupList');
+  if(dl) dl.innerHTML = groups.map(g => `<option value="${esc(g)}">`).join('');
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGuests();
+}
+
+function renderGuests() {
+  const search = document.getElementById('guestSearch').value.toLowerCase();
+  const group  = document.getElementById('groupFilter').value;
+  let list = guests.filter(g => {
+    if(currentFilter === 'yes' && g.rsvp_status !== 'yes') return false;
+    if(currentFilter === 'no'  && g.rsvp_status !== 'no')  return false;
+    if(currentFilter === 'pending' && !['pending','maybe'].includes(g.rsvp_status)) return false;
+    if(group && g.group_label !== group) return false;
+    if(search && !g.name.toLowerCase().includes(search) && !(g.email||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  document.getElementById('guestCountLabel').textContent = `${list.length} guest${list.length!==1?'s':''}`;
+
+  const tbody = document.getElementById('guestBody');
+  if(!list.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-guests"><div class="empty-guests-icon">👥</div><div>${search?'No guests found':'No guests yet — click + Add Guest to start'}</div></div></td></tr>`;
+    return;
+  }
+
+  // Group by group_label
+  const groups = {};
+  list.forEach(g => {
+    const k = g.group_label || 'General';
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(g);
+  });
+
+  tbody.innerHTML = Object.entries(groups).map(([grp, gs]) => `
+    <tr><td colspan="9" class="group-header">👥 ${esc(grp)} (${gs.length})</td></tr>
+    ${gs.map(g => {
+      const tbl = seatingTables.find(t => t.id === g.table_id);
+      return `<tr data-id="${g.id}">
+        <td><input type="checkbox" class="guest-cb" value="${g.id}" onchange="toggleSelect('${g.id}',this)" ${selectedIds.has(g.id)?'checked':''}></td>
+        <td>
+          <div style="font-weight:600">${esc(g.name)}</div>
+          ${g.plus_one ? `<div style="font-size:11px;color:var(--muted)">+1: ${esc(g.plus_one_name||'Guest')}</div>` : ''}
+        </td>
+        <td><span class="rsvp-badge rsvp-${g.rsvp_status||'pending'}">${{yes:'✅ Yes',no:'❌ No',maybe:'🤔 Maybe',pending:'⏳ Pending'}[g.rsvp_status||'pending']}</span></td>
+        <td class="desktop-only" style="color:var(--muted)">${esc(g.email||'—')}</td>
+        <td class="desktop-only">
+          <select class="meal-select" onchange="saveMeal('${g.id}','main',this.value)">
+            <option value="">— main —</option>
+            ${getMealOptions('main', g.main)}
+          </select>
+        </td>
+        <td class="desktop-only" style="font-size:12px;color:${g.dietary?'var(--charcoal)':'var(--muted)'}">${esc(g.dietary||'—')}</td>
+        <td class="desktop-only" style="font-size:12px">${tbl ? `<span style="background:${tbl.color}22;border:1px solid ${tbl.color};border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">${esc(tbl.name)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td class="desktop-only" style="font-size:12px;color:var(--muted)">${esc(g.group_label||'—')}</td>
+        <td>
+          <div class="guest-actions">
+            <button class="btn-icon" onclick="editGuest('${g.id}')">✏️</button>
+            <button class="btn-icon" onclick="deleteGuest('${g.id}')" style="color:#c04040">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}
+  `).join('');
+}
+
+function getMealOptions(type, current) {
+  const opts = ['Chicken','Beef','Fish','Vegetarian','Vegan','Lamb','Pasta'];
+  return opts.map(o => `<option ${o===current?'selected':''}>${o}</option>`).join('');
+}
+
+async function saveMeal(guestId, field, val) {
+  await DB.patch(`guests?id=eq.${guestId}`, { [field]: val }, accessToken);
+  const g = guests.find(x => x.id === guestId);
+  if(g) g[field] = val;
+}
+
+function updateStats() {
+  const yes = guests.filter(g => g.rsvp_status==='yes').length;
+  const no  = guests.filter(g => g.rsvp_status==='no').length;
+  const pend= guests.filter(g => !g.rsvp_status||g.rsvp_status==='pending'||g.rsvp_status==='maybe').length;
+  const p1  = guests.filter(g => g.plus_one).length;
+  document.getElementById('statTotal').textContent   = guests.length;
+  document.getElementById('statYes').textContent     = yes;
+  document.getElementById('statNo').textContent      = no;
+  document.getElementById('statPending').textContent = pend;
+  document.getElementById('statPlusOnes').textContent= p1;
+}
+
+function openAddGuest() {
+  document.getElementById('guestModalTitle').textContent = 'Add Guest';
+  document.getElementById('gName').value = '';
+  document.getElementById('gEmail').value = '';
+  document.getElementById('gRsvp').value = 'pending';
+  document.getElementById('gGroup').value = '';
+  document.getElementById('gStarter').value = '';
+  document.getElementById('gMain').value = '';
+  document.getElementById('gDessert').value = '';
+  document.getElementById('gDietary').value = '';
+  document.getElementById('gNotes').value = '';
+  document.getElementById('gPlusOne').checked = false;
+  document.getElementById('gPlusOneName').value = '';
+  document.getElementById('plusOneNameRow').style.display = 'none';
+  document.getElementById('gEditId').value = '';
+  document.getElementById('guestModal').style.display = 'flex';
+}
+
+function editGuest(id) {
+  const g = guests.find(x => x.id === id);
+  if(!g) return;
+  document.getElementById('guestModalTitle').textContent = 'Edit Guest';
+  document.getElementById('gName').value    = g.name || '';
+  document.getElementById('gEmail').value   = g.email || '';
+  document.getElementById('gRsvp').value    = g.rsvp_status || 'pending';
+  document.getElementById('gGroup').value   = g.group_label || '';
+  document.getElementById('gStarter').value = g.starter || '';
+  document.getElementById('gMain').value    = g.main || '';
+  document.getElementById('gDessert').value = g.dessert || '';
+  document.getElementById('gDietary').value = g.dietary || '';
+  document.getElementById('gNotes').value   = g.notes || '';
+  document.getElementById('gPlusOne').checked = g.plus_one || false;
+  document.getElementById('gPlusOneName').value = g.plus_one_name || '';
+  document.getElementById('plusOneNameRow').style.display = g.plus_one ? 'block' : 'none';
+  document.getElementById('gEditId').value  = id;
+  document.getElementById('guestModal').style.display = 'flex';
+}
+
+function closeGuestModal() { document.getElementById('guestModal').style.display = 'none'; }
+
+function togglePlusOne(cb) {
+  document.getElementById('plusOneNameRow').style.display = cb.checked ? 'block' : 'none';
+}
+
+async function saveGuest() {
+  const name = document.getElementById('gName').value.trim();
+  if(!name) { showToast('Name is required', true); return; }
+  const editId = document.getElementById('gEditId').value;
+  const data = {
+    user_id: userId,
+    name,
+    email:        document.getElementById('gEmail').value.trim() || null,
+    rsvp_status:  document.getElementById('gRsvp').value,
+    group_label:  document.getElementById('gGroup').value.trim() || null,
+    starter:      document.getElementById('gStarter').value.trim() || null,
+    main:         document.getElementById('gMain').value.trim() || null,
+    dessert:      document.getElementById('gDessert').value.trim() || null,
+    dietary:      document.getElementById('gDietary').value.trim() || null,
+    notes:        document.getElementById('gNotes').value.trim() || null,
+    plus_one:     document.getElementById('gPlusOne').checked,
+    plus_one_name:document.getElementById('gPlusOneName').value.trim() || null,
+  };
+  if(editId) {
+    await DB.patch(`guests?id=eq.${editId}`, data, accessToken);
+    const i = guests.findIndex(x => x.id === editId);
+    if(i>=0) guests[i] = {...guests[i], ...data};
+    showToast('Guest updated ✅');
+  } else {
+    const row = await DB.post('guests', data, accessToken);
+    if(row) guests.push(row);
+    showToast('Guest added ✅');
+  }
+  closeGuestModal();
+  populateGroupFilter();
+  renderGuests();
+  updateStats();
+}
+
+async function deleteGuest(id) {
+  if(!confirm('Remove this guest?')) return;
+  await DB.del(`guests?id=eq.${id}`, accessToken);
+  guests = guests.filter(g => g.id !== id);
+  renderGuests(); updateStats();
+  showToast('Guest removed');
+}
+
+// ── Selection
+function toggleSelect(id, cb) {
+  if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateBulkBar();
+}
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.guest-cb').forEach(c => {
+    c.checked = cb.checked;
+    if(cb.checked) selectedIds.add(c.value); else selectedIds.delete(c.value);
+  });
+  updateBulkBar();
+}
+function clearSelection() {
+  selectedIds.clear();
+  document.querySelectorAll('.guest-cb').forEach(c => c.checked=false);
+  document.getElementById('selectAll').checked = false;
+  updateBulkBar();
+}
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  if(selectedIds.size > 0) {
+    bar.style.display = 'flex';
+    document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+async function bulkRSVP(status) {
+  for(const id of selectedIds) {
+    await DB.patch(`guests?id=eq.${id}`, { rsvp_status: status }, accessToken);
+    const g = guests.find(x => x.id === id);
+    if(g) g.rsvp_status = status;
+  }
+  clearSelection(); renderGuests(); updateStats();
+  showToast(`${selectedIds.size||'Guests'} marked as ${status==='yes'?'attending':'declined'}`);
+}
+async function bulkDelete() {
+  if(!confirm(`Delete ${selectedIds.size} guests?`)) return;
+  for(const id of selectedIds) {
+    await DB.del(`guests?id=eq.${id}`, accessToken);
+    guests = guests.filter(g => g.id !== id);
+  }
+  clearSelection(); renderGuests(); updateStats();
+  showToast('Guests deleted');
+}
+
+// ── CSV Import/Export
+function openImportModal() { document.getElementById('importModal').style.display='flex'; }
+function closeImportModal() { document.getElementById('importModal').style.display='none'; csvData=[]; }
+
+function previewCSV(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').map(l=>l.split(',').map(c=>c.trim().replace(/^"|"$/g,'')));
+    const headers = lines[0].map(h=>h.toLowerCase());
+    csvData = lines.slice(1).filter(r=>r[0]).map(row => {
+      const obj = {};
+      headers.forEach((h,i) => obj[h] = row[i]||'');
+      return { user_id:userId, name:obj.name, email:obj.email||null, group_label:obj.group||null,
+        rsvp_status:obj.rsvp||'pending', starter:obj.starter||null, main:obj.main||null,
+        dessert:obj.dessert||null, dietary:obj.dietary||null };
+    });
+    document.getElementById('csvPreview').style.display='block';
+    document.getElementById('csvPreview').innerHTML = `
+      <div style="background:#f0faf0;border:1px solid #a0d0a0;border-radius:10px;padding:12px;font-size:12px">
+        ✅ Found <strong>${csvData.length} guests</strong> ready to import
+        <div style="color:var(--muted);margin-top:4px">Preview: ${csvData.slice(0,3).map(g=>g.name).join(', ')}${csvData.length>3?'…':''}</div>
+      </div>`;
+    document.getElementById('importBtn').style.display='block';
+  };
+  reader.readAsText(file);
+}
+
+async function importCSV() {
+  if(!csvData.length) return;
+  const btn = document.getElementById('importBtn');
+  btn.textContent = 'Importing…'; btn.disabled=true;
+  let count=0;
+  for(const g of csvData) {
+    const row = await DB.post('guests', g, accessToken);
+    if(row) { guests.push(row); count++; }
+  }
+  closeImportModal();
+  populateGroupFilter(); renderGuests(); updateStats();
+  showToast(`✅ Imported ${count} guests!`);
+}
+
+function downloadCSVTemplate() {
+  const csv = 'name,email,group,rsvp,starter,main,dessert,dietary\nJane Smith,jane@email.com,Bride\'s side,yes,Soup,Chicken,Cake,\nJohn Doe,john@email.com,Groom\'s side,pending,,,, Gluten-free';
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'guests_template.csv'; a.click();
+}
+
+function exportGuestCSV() {
+  const rows = [['Name','Email','RSVP','Group','Starter','Main','Dessert','Dietary','Plus One','Notes']];
+  guests.forEach(g => rows.push([g.name,g.email||'',g.rsvp_status||'',g.group_label||'',
+    g.starter||'',g.main||'',g.dessert||'',g.dietary||'',g.plus_one?'Yes':'No',g.notes||'']));
+  const csv = rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'WeddingLedger_Guests.csv'; a.click();
+  showToast('📤 Guests exported!');
+}
+
+function toggleMobileNav() { document.getElementById('mobileNavDrawer').classList.toggle('open'); }
+function closeMobileNav()  { document.getElementById('mobileNavDrawer').classList.remove('open'); }
+
+function showToast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(err?' error':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+init();
+</script>
+</body>
+</html>

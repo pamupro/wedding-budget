@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Day-of Timeline — WeddingLedger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .timeline-wrap{max-width:780px;margin:0 auto;padding:24px}
+    .tl-event{display:flex;gap:0;margin-bottom:0;position:relative}
+    .tl-time-col{width:80px;min-width:80px;text-align:right;padding-right:16px;padding-top:4px}
+    .tl-time{font-size:13px;font-weight:600;color:var(--charcoal);font-family:'Cormorant Garamond',serif;font-size:16px}
+    .tl-line-col{width:32px;min-width:32px;display:flex;flex-direction:column;align-items:center}
+    .tl-dot{width:14px;height:14px;border-radius:50%;border:3px solid;background:white;flex-shrink:0;margin-top:6px;z-index:1}
+    .tl-line{width:2px;background:var(--border);flex:1;margin-top:2px}
+    .tl-content-col{flex:1;padding-bottom:24px;padding-left:12px}
+    .tl-card{background:white;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);
+      border:1.5px solid var(--border);transition:.2s;cursor:pointer}
+    .tl-card:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(201,168,76,.15)}
+    .tl-card-title{font-size:15px;font-weight:600;color:var(--charcoal);margin-bottom:4px}
+    .tl-card-meta{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+    .cat-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;
+      padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
+    .cat-ceremony{background:#fff3cd;color:#7a5a00}
+    .cat-reception{background:#e8f5e8;color:#2a5a2a}
+    .cat-vendor{background:#e8f0ff;color:#2a3a7a}
+    .cat-personal{background:#ffe8f5;color:#7a2a5a}
+    .cat-general{background:#f0f0f0;color:#555}
+    .public-banner{background:linear-gradient(135deg,#9a7535,#C9A84C);color:white;padding:14px 24px;
+      border-radius:14px;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+    @media(max-width:500px){
+      .tl-time-col{width:56px;min-width:56px}
+      .tl-time{font-size:13px}
+    }
+  </style>
+</head>
+<body>
+<nav class="topbar" id="topbarNav">
+  <div class="topbar-left">
+    <a href="dashboard.html" class="logo-link"><span class="logo-text">Wedding<span class="logo-italic">Ledger</span></span></a>
+  </div>
+  <div class="topbar-right" id="topbarRight">
+    <button onclick="openAddEvent()" class="btn-primary" style="padding:8px 16px;font-size:13px">+ Add Event</button>
+    <button onclick="shareTimeline()" class="topbar-btn" style="color:var(--muted)">🔗 Share</button>
+    <a href="dashboard.html" class="topbar-btn" style="color:var(--muted);text-decoration:none">← Dashboard</a>
+  </div>
+</nav>
+
+<main style="padding-top:64px;min-height:100vh;background:var(--cream)">
+  <div class="timeline-wrap">
+    <!-- Public view banner -->
+    <div id="publicBanner" style="display:none" class="public-banner">
+      <span style="font-size:24px">💍</span>
+      <div>
+        <div style="font-weight:700;font-size:15px" id="publicTitle">Wedding Day Timeline</div>
+        <div style="font-size:12px;opacity:.85" id="publicSubtitle">Read-only view</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--charcoal);margin-bottom:4px">
+          📅 Day-of Timeline
+        </h1>
+        <div style="font-size:13px;color:var(--muted)" id="weddingDateLabel"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <select id="catFilter" onchange="renderTimeline()" style="padding:8px 12px;border:1.5px solid var(--border);
+          border-radius:99px;font-size:12px;font-family:'Jost',sans-serif;background:white;outline:none">
+          <option value="">All</option>
+          <option value="ceremony">Ceremony</option>
+          <option value="reception">Reception</option>
+          <option value="vendor">Vendor</option>
+          <option value="personal">Personal</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="timelineList"></div>
+
+    <div id="emptyTimeline" style="display:none;text-align:center;padding:60px 20px">
+      <div style="font-size:48px;margin-bottom:12px">📅</div>
+      <div style="font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:8px">No events yet</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Build your perfect wedding day schedule</div>
+      <button onclick="loadDefaults()" class="btn-secondary">✨ Load default schedule</button>
+    </div>
+  </div>
+</main>
+
+<!-- ADD/EDIT EVENT MODAL -->
+<div class="modal-overlay" id="eventModal" style="display:none" onclick="if(event.target===this)closeEventModal()">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="eventModalTitle">Add Event</h3>
+      <button class="modal-close" onclick="closeEventModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="modal-label">Time *</label>
+          <input type="time" id="eTime" class="modal-input">
+        </div>
+        <div>
+          <label class="modal-label">Duration (mins)</label>
+          <input type="number" id="eDuration" class="modal-input" value="30" min="5" step="5">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="modal-label">Event Title *</label>
+          <input type="text" id="eTitle" class="modal-input" placeholder="e.g. Bride arrives at venue">
+        </div>
+        <div>
+          <label class="modal-label">Category</label>
+          <select id="eCategory" class="modal-input">
+            <option value="general">General</option>
+            <option value="ceremony">💒 Ceremony</option>
+            <option value="reception">🥂 Reception</option>
+            <option value="vendor">🎤 Vendor</option>
+            <option value="personal">💑 Personal</option>
+          </select>
+        </div>
+        <div>
+          <label class="modal-label">Location</label>
+          <input type="text" id="eLocation" class="modal-input" placeholder="e.g. Main Hall">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="modal-label">Description / Notes</label>
+          <textarea id="eDesc" class="modal-input" rows="3" placeholder="Any details for vendors or family…" style="resize:vertical"></textarea>
+        </div>
+      </div>
+      <input type="hidden" id="eEditId">
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn-secondary" onclick="closeEventModal()" style="flex:1">Cancel</button>
+        <button class="btn-primary" onclick="saveEvent()" style="flex:2">Save Event</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="db.js"></script>
+<script>
+const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+let userId = localStorage.getItem('wl_uid');
+let accessToken = localStorage.getItem('wl_token');
+let events = [];
+let isPublic = false;
+let publicUserId = null;
+
+const CATEGORIES = {
+  general:   {label:'General',   color:'#888',   emoji:'📌'},
+  ceremony:  {label:'Ceremony',  color:'#C9A84C',emoji:'💒'},
+  reception: {label:'Reception', color:'#2a7a2a',emoji:'🥂'},
+  vendor:    {label:'Vendor',    color:'#2a4a9a',emoji:'🎤'},
+  personal:  {label:'Personal',  color:'#9a2a7a',emoji:'💑'},
+};
+
+async function init() {
+  // Check if public view (uid in URL)
+  const params = new URLSearchParams(window.location.search);
+  publicUserId = params.get('uid');
+  if(publicUserId) {
+    isPublic = true;
+    document.getElementById('topbarRight').style.display='none';
+    document.getElementById('publicBanner').style.display='flex';
+    await loadPublicTimeline(publicUserId);
+  } else {
+    if(!userId||!accessToken){ location.href='login.html'; return; }
+    await loadEvents();
+  }
+  renderTimeline();
+}
+
+async function loadEvents() {
+  events = await DB.query(`timeline_events?user_id=eq.${userId}&order=time.asc`, accessToken);
+  // Load wedding date
+  const p = await DB.query(`profiles?user_id=eq.${userId}&select=name1,name2,wedding_date`, accessToken);
+  if(p&&p[0]) {
+    const {name1,name2,wedding_date} = p[0];
+    if(name1||name2) document.getElementById('publicTitle').textContent = `${name1||''} & ${name2||''} — Wedding Day`;
+    if(wedding_date) document.getElementById('weddingDateLabel').textContent =
+      '📅 ' + new Date(wedding_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+}
+
+async function loadPublicTimeline(uid) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/timeline_events?user_id=eq.${uid}&order=time.asc`,
+    { headers:{'apikey':ANON_KEY,'Authorization':`Bearer ${ANON_KEY}`} });
+  events = await res.json();
+  const pr = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=name1,name2,wedding_date`,
+    { headers:{'apikey':ANON_KEY,'Authorization':`Bearer ${ANON_KEY}`} });
+  const prof = await pr.json();
+  if(prof&&prof[0]) {
+    const {name1,name2,wedding_date} = prof[0];
+    document.title = `${name1||''} & ${name2||''} — Wedding Timeline`;
+    document.getElementById('publicTitle').textContent = `${name1||''} & ${name2||''} — Wedding Day`;
+    if(wedding_date) document.getElementById('publicSubtitle').textContent =
+      new Date(wedding_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('weddingDateLabel').textContent = document.getElementById('publicSubtitle').textContent;
+  }
+}
+
+function renderTimeline() {
+  const filter = document.getElementById('catFilter')?.value||'';
+  let list = events.filter(e => !filter || e.category===filter);
+  list.sort((a,b) => a.time > b.time ? 1 : -1);
+  const el = document.getElementById('timelineList');
+  const empty = document.getElementById('emptyTimeline');
+
+  if(!list.length) {
+    el.innerHTML=''; if(empty) empty.style.display='block'; return;
+  }
+  if(empty) empty.style.display='none';
+
+  el.innerHTML = list.map((ev,i) => {
+    const cat = CATEGORIES[ev.category||'general'];
+    const isLast = i===list.length-1;
+    return `<div class="tl-event">
+      <div class="tl-time-col">
+        <div class="tl-time">${formatTime(ev.time)}</div>
+      </div>
+      <div class="tl-line-col">
+        <div class="tl-dot" style="border-color:${cat.color};background:white"></div>
+        ${!isLast?`<div class="tl-line"></div>`:''}
+      </div>
+      <div class="tl-content-col">
+        <div class="tl-card" onclick="${isPublic?'':'openEditEvent(\''+ev.id+'\')'}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="flex:1">
+              <div class="tl-card-title">${cat.emoji} ${esc(ev.title)}</div>
+              <div class="tl-card-meta">
+                <span>${ev.duration||30} mins</span>
+                ${ev.location?`<span>📍 ${esc(ev.location)}</span>`:''}
+                <span class="cat-badge cat-${ev.category||'general'}">${cat.label}</span>
+              </div>
+              ${ev.description?`<div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">${esc(ev.description)}</div>`:''}
+            </div>
+            ${!isPublic?`<button onclick="event.stopPropagation();deleteEvent('${ev.id}')"
+              style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px;flex-shrink:0">✕</button>`:''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatTime(t) {
+  if(!t) return '';
+  const [h,m] = t.split(':');
+  const hh = parseInt(h);
+  const ampm = hh>=12?'pm':'am';
+  const h12 = hh%12||12;
+  return `${h12}:${m}<span style="font-size:10px;color:var(--muted)">${ampm}</span>`;
+}
+
+function openAddEvent() {
+  document.getElementById('eventModalTitle').textContent='Add Event';
+  document.getElementById('eTime').value='';
+  document.getElementById('eDuration').value='30';
+  document.getElementById('eTitle').value='';
+  document.getElementById('eCategory').value='general';
+  document.getElementById('eLocation').value='';
+  document.getElementById('eDesc').value='';
+  document.getElementById('eEditId').value='';
+  document.getElementById('eventModal').style.display='flex';
+}
+
+function openEditEvent(id) {
+  const ev = events.find(x=>x.id===id);
+  if(!ev) return;
+  document.getElementById('eventModalTitle').textContent='Edit Event';
+  document.getElementById('eTime').value=ev.time||'';
+  document.getElementById('eDuration').value=ev.duration||30;
+  document.getElementById('eTitle').value=ev.title||'';
+  document.getElementById('eCategory').value=ev.category||'general';
+  document.getElementById('eLocation').value=ev.location||'';
+  document.getElementById('eDesc').value=ev.description||'';
+  document.getElementById('eEditId').value=id;
+  document.getElementById('eventModal').style.display='flex';
+}
+function closeEventModal(){ document.getElementById('eventModal').style.display='none'; }
+
+async function saveEvent() {
+  const time  = document.getElementById('eTime').value;
+  const title = document.getElementById('eTitle').value.trim();
+  if(!time||!title){ showToast('Time and title are required',true); return; }
+  const editId = document.getElementById('eEditId').value;
+  const data = { user_id:userId, time, title,
+    duration: parseInt(document.getElementById('eDuration').value)||30,
+    category: document.getElementById('eCategory').value,
+    location: document.getElementById('eLocation').value.trim()||null,
+    description: document.getElementById('eDesc').value.trim()||null };
+  if(editId) {
+    await DB.patch(`timeline_events?id=eq.${editId}`, data, accessToken);
+    const i=events.findIndex(x=>x.id===editId);
+    if(i>=0) events[i]={...events[i],...data};
+    showToast('Event updated ✅');
+  } else {
+    const row=await DB.post('timeline_events',data,accessToken);
+    if(row) events.push(row);
+    showToast('Event added ✅');
+  }
+  closeEventModal(); renderTimeline();
+}
+
+async function deleteEvent(id) {
+  if(!confirm('Remove this event?')) return;
+  await DB.del(`timeline_events?id=eq.${id}`,accessToken);
+  events=events.filter(x=>x.id!==id);
+  renderTimeline(); showToast('Event removed');
+}
+
+async function loadDefaults() {
+  const defaults=[
+    {time:'07:00',title:'Bride & Bridal Party Hair & Makeup',category:'personal',duration:180,location:'Bridal Suite'},
+    {time:'09:00',title:'Groom & Groomsmen Get Ready',category:'personal',duration:120,location:'Groom\'s Suite'},
+    {time:'10:30',title:'Photographer Arrives',category:'vendor',duration:30,location:'Venue'},
+    {time:'11:00',title:'Flowers & Decorations Delivered',category:'vendor',duration:60,location:'Ceremony Hall'},
+    {time:'12:00',title:'Bridal Party Photos',category:'personal',duration:60,location:'Gardens'},
+    {time:'13:00',title:'Guests Arrive & Take Seats',category:'ceremony',duration:30,location:'Ceremony Hall'},
+    {time:'13:30',title:'Ceremony Begins',category:'ceremony',duration:45,location:'Ceremony Hall'},
+    {time:'14:15',title:'Confetti & Congratulations',category:'ceremony',duration:30,location:'Venue Entrance'},
+    {time:'14:45',title:'Couple & Family Photos',category:'personal',duration:60,location:'Gardens'},
+    {time:'15:30',title:'Drinks Reception',category:'reception',duration:90,location:'Courtyard'},
+    {time:'17:00',title:'Guests Seated for Dinner',category:'reception',duration:30,location:'Dining Hall'},
+    {time:'17:30',title:'Wedding Breakfast Served',category:'reception',duration:90,location:'Dining Hall'},
+    {time:'18:30',title:'Speeches',category:'reception',duration:45,location:'Dining Hall'},
+    {time:'19:30',title:'Evening Guests Arrive',category:'reception',duration:30,location:'Main Hall'},
+    {time:'20:00',title:'First Dance',category:'reception',duration:15,location:'Dance Floor'},
+    {time:'20:15',title:'Band / DJ Starts',category:'vendor',duration:240,location:'Main Hall'},
+    {time:'23:30',title:'Last Dance & Bouquet Toss',category:'reception',duration:30,location:'Dance Floor'},
+    {time:'00:00',title:'Carriages / Taxis Arranged',category:'general',duration:30,location:'Venue Entrance'},
+  ];
+  for(const d of defaults){
+    const row=await DB.post('timeline_events',{...d,user_id:userId},accessToken);
+    if(row) events.push(row);
+  }
+  renderTimeline(); showToast('✨ Default schedule loaded!');
+}
+
+function shareTimeline() {
+  const url = `${window.location.origin}${window.location.pathname}?uid=${userId}`;
+  if(navigator.clipboard) navigator.clipboard.writeText(url);
+  showToast('🔗 Public link copied!');
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' error':'')+' show';setTimeout(()=>t.classList.remove('show'),3000);}
+
+init();
+</script>
+</body>
+</html>

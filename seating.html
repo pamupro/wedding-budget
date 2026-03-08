@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Seating Chart — WeddingLedger</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body{overflow:hidden}
+    .seating-layout{display:flex;height:calc(100vh - 64px);margin-top:64px}
+    .sidebar{width:280px;min-width:280px;background:white;border-right:1px solid var(--border);
+      display:flex;flex-direction:column;overflow:hidden}
+    .sidebar-tabs{display:flex;border-bottom:1px solid var(--border)}
+    .sidebar-tab{flex:1;padding:12px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;
+      border:none;background:none;font-family:'Jost',sans-serif;color:var(--muted);border-bottom:2px solid transparent}
+    .sidebar-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+    .sidebar-panel{flex:1;overflow-y:auto;padding:12px}
+    .canvas-wrap{flex:1;position:relative;overflow:hidden;background:#f5f0e8;
+      background-image:radial-gradient(circle,#c9a84c22 1px,transparent 1px);
+      background-size:30px 30px}
+    #seatingCanvas{width:100%;height:100%;cursor:default}
+    .table-node{position:absolute;cursor:grab;user-select:none;transform:translate(-50%,-50%);text-align:center}
+    .table-node:active{cursor:grabbing}
+    .table-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;
+      flex-direction:column;border:3px solid;box-shadow:0 4px 16px rgba(0,0,0,0.12);
+      transition:box-shadow .2s,transform .2s;background:white}
+    .table-node.selected .table-circle{box-shadow:0 0 0 4px var(--gold),0 4px 20px rgba(0,0,0,0.2)}
+    .table-rect{border-radius:12px;display:flex;align-items:center;justify-content:center;
+      flex-direction:column;border:3px solid;box-shadow:0 4px 16px rgba(0,0,0,0.12);
+      transition:box-shadow .2s;background:white}
+    .table-label{font-size:12px;font-weight:700;color:var(--charcoal);font-family:'Jost',sans-serif}
+    .table-count{font-size:10px;color:var(--muted);margin-top:2px}
+    .guest-chip{background:white;border:1px solid var(--border);border-radius:8px;padding:6px 10px;
+      font-size:12px;cursor:grab;margin-bottom:6px;display:flex;align-items:center;gap:8px;
+      transition:.15s;user-select:none}
+    .guest-chip:hover{border-color:var(--gold);background:#fdf9f0}
+    .guest-chip.assigned{opacity:.4;text-decoration:line-through;cursor:default}
+    .guest-chip.dragging{opacity:.5;transform:rotate(2deg)}
+    .table-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px;
+      margin-bottom:10px;cursor:pointer;transition:.15s}
+    .table-card:hover,.table-card.active{border-color:var(--gold);background:#fdf9f0}
+    .color-swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid white;
+      box-shadow:0 0 0 1px #ccc;flex-shrink:0;transition:.15s}
+    .color-swatch:hover,.color-swatch.active{box-shadow:0 0 0 2px var(--gold)}
+    .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:8px;z-index:5}
+    .tool-btn{background:white;border:1.5px solid var(--border);border-radius:99px;padding:8px 14px;
+      font-size:12px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.08);
+      transition:.15s;white-space:nowrap}
+    .tool-btn:hover{border-color:var(--gold);color:var(--gold)}
+    .zoom-controls{position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px}
+    .zoom-btn{background:white;border:1.5px solid var(--border);border-radius:10px;width:36px;height:36px;
+      font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center}
+    .drop-target{outline:3px dashed var(--gold);outline-offset:-3px;background:#fdf9f066}
+    @media(max-width:680px){
+      .sidebar{width:100%;min-width:0;height:200px;border-right:none;border-top:1px solid var(--border);order:2}
+      .seating-layout{flex-direction:column}
+      .canvas-wrap{flex:1;order:1}
+      body{overflow:auto}
+    }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-left">
+    <a href="dashboard.html" class="logo-link"><span class="logo-text">Wedding<span class="logo-italic">Ledger</span></span></a>
+  </div>
+  <div class="topbar-right">
+    <span style="font-size:12px;color:var(--muted)" id="saveStatus">All saved ✓</span>
+    <button onclick="addTable()" class="btn-primary" style="padding:8px 16px;font-size:13px">+ Add Table</button>
+    <a href="guests.html" class="topbar-btn" style="color:var(--muted);text-decoration:none">👥 Guests</a>
+    <a href="dashboard.html" class="topbar-btn" style="color:var(--muted);text-decoration:none">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="seating-layout">
+  <!-- Canvas -->
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="toolbar">
+      <button class="tool-btn" onclick="resetView()">🔄 Reset View</button>
+      <button class="tool-btn" onclick="autoLayout()">✨ Auto Layout</button>
+      <button class="tool-btn" onclick="printChart()">🖨 Print</button>
+    </div>
+    <div id="tablesContainer" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoom(0.1)">+</button>
+      <button class="zoom-btn" onclick="zoom(-0.1)" style="font-size:20px">−</button>
+    </div>
+    <div id="dropHint" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      text-align:center;pointer-events:none">
+      <div style="font-size:48px">🪑</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:8px">Drop guest onto a table</div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab active" onclick="showTab('guests',this)">👥 Unassigned</button>
+      <button class="sidebar-tab" onclick="showTab('tables',this)">🪑 Tables</button>
+    </div>
+    <div class="sidebar-panel" id="panelGuests">
+      <input type="search" id="sidebarSearch" placeholder="🔍 Filter guests…" oninput="renderSidebar()"
+        style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:99px;
+        font-size:12px;font-family:'Jost',sans-serif;outline:none;margin-bottom:10px">
+      <div id="guestChips"></div>
+    </div>
+    <div class="sidebar-panel" id="panelTables" style="display:none">
+      <div id="tableCards"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Table Edit Modal -->
+<div class="modal-overlay" id="tableModal" style="display:none" onclick="if(event.target===this)closeTableModal()">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3 class="modal-title">Edit Table</h3>
+      <button class="modal-close" onclick="closeTableModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Table Name</label>
+      <input type="text" id="tName" class="modal-input" style="margin-bottom:12px">
+      <label class="modal-label">Capacity</label>
+      <input type="number" id="tCapacity" class="modal-input" min="2" max="30" style="margin-bottom:12px">
+      <label class="modal-label">Shape</label>
+      <select id="tShape" class="modal-input" style="margin-bottom:12px">
+        <option value="round">⭕ Round</option>
+        <option value="rectangular">▭ Rectangular</option>
+      </select>
+      <label class="modal-label">Colour</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        ${['#C9A84C','#9a7535','#2a7a2a','#2a4a7a','#7a2a5a','#c04040','#555','#8a6020'].map(c=>
+          `<div class="color-swatch" style="background:${c}" data-color="${c}" onclick="selectColor('${c}',this)"></div>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="tEditId">
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" onclick="deleteTableConfirm()" style="color:#c04040;border-color:#f5c0c0">🗑 Delete</button>
+        <button class="btn-secondary" onclick="closeTableModal()" style="flex:1">Cancel</button>
+        <button class="btn-primary" onclick="saveTable()" style="flex:2">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="db.js"></script>
+<script>
+let userId = localStorage.getItem('wl_uid');
+let accessToken = localStorage.getItem('wl_token');
+let guests = [], tables = [];
+let dragGuest = null, dragTable = null;
+let scale = 1, offsetX = 0, offsetY = 0;
+let selectedTableId = null;
+let selectedColor = '#C9A84C';
+let saveTimer = null;
+
+if(!userId||!accessToken) location.href='login.html';
+
+async function init() {
+  guests = await DB.query(`guests?user_id=eq.${userId}&order=name.asc`, accessToken);
+  tables = await DB.query(`seating_tables?user_id=eq.${userId}&order=created_at.asc`, accessToken);
+  if(!tables.length) await createDefaultTables();
+  renderCanvas();
+  renderSidebar();
+  renderTableCards();
+  setupDrop();
+}
+
+async function createDefaultTables() {
+  const defaults = ['Top Table','Table 1','Table 2','Table 3'];
+  for(let i=0;i<defaults.length;i++) {
+    const t = await DB.post('seating_tables', {
+      user_id:userId, name:defaults[i], capacity:8, shape:i===0?'rectangular':'round',
+      position_x:150+((i%2)*350), position_y:150+(Math.floor(i/2)*280), color:'#C9A84C'
+    }, accessToken);
+    if(t) tables.push(t);
+  }
+}
+
+function renderCanvas() {
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = '';
+  tables.forEach(t => {
+    const assigned = guests.filter(g => g.table_id === t.id);
+    const div = document.createElement('div');
+    div.className = 'table-node' + (selectedTableId===t.id?' selected':'');
+    div.id = 'tnode-'+t.id;
+    div.style.left = t.position_x+'px';
+    div.style.top  = t.position_y+'px';
+    const size = Math.max(100, Math.min(160, 80 + t.capacity*5));
+    const inner = t.shape==='round'
+      ? `<div class="table-circle" style="width:${size}px;height:${size}px;border-color:${t.color}">`
+      : `<div class="table-rect" style="width:${size+40}px;height:${size*0.7}px;border-color:${t.color}">`;
+    div.innerHTML = `${inner}
+        <div class="table-label">${esc(t.name)}</div>
+        <div class="table-count" style="color:${assigned.length>=t.capacity?'#c04040':'var(--muted)'}">
+          ${assigned.length}/${t.capacity}
+        </div>
+      </div>
+      ${assigned.length ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:${size+40}px">
+        ${assigned.slice(0,6).map(g=>`<span style="font-size:9px;background:${t.color}22;border:1px solid ${t.color}44;
+          border-radius:99px;padding:1px 6px;white-space:nowrap">${esc(g.name.split(' ')[0])}</span>`).join('')}
+        ${assigned.length>6?`<span style="font-size:9px;color:var(--muted)">+${assigned.length-6}</span>`:''}
+      </div>` : ''}`;
+    makeDraggable(div, t);
+    div.addEventListener('dblclick', () => openTableModal(t.id));
+    div.addEventListener('click', e => { e.stopPropagation(); selectedTableId=t.id; renderCanvas(); renderTableCards(); });
+    container.appendChild(div);
+  });
+  // Deselect on canvas click
+  document.getElementById('canvasWrap').onclick = () => { selectedTableId=null; renderCanvas(); };
+}
+
+function makeDraggable(el, table) {
+  let sx,sy,ox,oy,moved=false;
+  el.onmousedown = e => {
+    if(e.button!==0) return;
+    if(e.target.tagName==='BUTTON') return;
+    sx=e.clientX; sy=e.clientY; ox=table.position_x; oy=table.position_y; moved=false;
+    e.preventDefault();
+    const mm = ev => {
+      const dx=ev.clientX-sx, dy=ev.clientY-sy;
+      if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+      table.position_x = Math.max(60, ox+dx);
+      table.position_y = Math.max(60, oy+dy);
+      el.style.left = table.position_x+'px';
+      el.style.top  = table.position_y+'px';
+    };
+    const mu = () => {
+      document.removeEventListener('mousemove',mm);
+      document.removeEventListener('mouseup',mu);
+      if(moved) scheduleSave(table);
+    };
+    document.addEventListener('mousemove',mm);
+    document.addEventListener('mouseup',mu);
+  };
+}
+
+async function scheduleSave(table) {
+  document.getElementById('saveStatus').textContent = 'Saving…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    await DB.patch(`seating_tables?id=eq.${table.id}`, { position_x:table.position_x, position_y:table.position_y }, accessToken);
+    document.getElementById('saveStatus').textContent = 'All saved ✓';
+  }, 800);
+}
+
+function setupDrop() {
+  // Guest chips → tables (drag from sidebar, drop on table node)
+  document.addEventListener('dragstart', e => {
+    if(e.target.classList.contains('guest-chip')) {
+      dragGuest = e.target.dataset.id;
+      e.target.classList.add('dragging');
+      document.getElementById('dropHint').style.display='block';
+    }
+  });
+  document.addEventListener('dragend', e => {
+    if(e.target.classList.contains('guest-chip')) e.target.classList.remove('dragging');
+    document.getElementById('dropHint').style.display='none';
+    document.querySelectorAll('.table-node').forEach(n=>n.classList.remove('drop-target'));
+  });
+  document.addEventListener('dragover', e => {
+    const node = e.target.closest('.table-node');
+    if(node) { e.preventDefault(); node.classList.add('drop-target'); }
+  });
+  document.addEventListener('dragleave', e => {
+    const node = e.target.closest('.table-node');
+    if(node) node.classList.remove('drop-target');
+  });
+  document.addEventListener('drop', async e => {
+    const node = e.target.closest('.table-node');
+    if(!node || !dragGuest) return;
+    e.preventDefault();
+    node.classList.remove('drop-target');
+    const tableId = node.id.replace('tnode-','');
+    const table = tables.find(t=>t.id===tableId);
+    const assigned = guests.filter(g=>g.table_id===tableId);
+    if(table && assigned.length >= table.capacity) { showToast('Table is full!',true); return; }
+    await DB.patch(`guests?id=eq.${dragGuest}`, { table_id:tableId }, accessToken);
+    const g = guests.find(x=>x.id===dragGuest);
+    if(g) g.table_id = tableId;
+    dragGuest = null;
+    renderCanvas(); renderSidebar(); renderTableCards();
+    showToast('Guest seated ✅');
+  });
+}
+
+function renderSidebar() {
+  const search = (document.getElementById('sidebarSearch')?.value||'').toLowerCase();
+  const unassigned = guests.filter(g => !g.table_id && g.name.toLowerCase().includes(search));
+  const el = document.getElementById('guestChips');
+  if(!unassigned.length) {
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">
+      ${guests.filter(g=>!g.table_id).length===0?'🎉 All guests seated!':'No matching guests'}</div>`;
+    return;
+  }
+  el.innerHTML = unassigned.map(g => `
+    <div class="guest-chip" draggable="true" data-id="${g.id}">
+      <span style="width:28px;height:28px;border-radius:50%;background:var(--warm);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">
+        ${g.name.charAt(0).toUpperCase()}
+      </span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.name)}</div>
+        ${g.dietary?`<div style="font-size:10px;color:var(--muted)">${esc(g.dietary)}</div>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTableCards() {
+  const el = document.getElementById('tableCards');
+  el.innerHTML = tables.map(t => {
+    const assigned = guests.filter(g=>g.table_id===t.id);
+    return `<div class="table-card ${selectedTableId===t.id?'active':''}" onclick="focusTable('${t.id}')">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
+        <div style="font-weight:600;font-size:13px;flex:1">${esc(t.name)}</div>
+        <div style="font-size:11px;color:${assigned.length>=t.capacity?'#c04040':'var(--muted)'}">
+          ${assigned.length}/${t.capacity}
+        </div>
+        <button onclick="event.stopPropagation();openTableModal('${t.id}')" class="btn-icon">✏️</button>
+      </div>
+      ${assigned.length?`<div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${assigned.map(g=>`<span style="font-size:11px;background:var(--warm);border-radius:6px;padding:2px 8px;
+          cursor:pointer" onclick="event.stopPropagation();unassignGuest('${g.id}')" title="Click to unassign">
+          ${esc(g.name.split(' ')[0])} ✕</span>`).join('')}
+      </div>`:`<div style="font-size:11px;color:var(--muted)">Empty — drag guests here</div>`}
+    </div>`;
+  }).join('');
+}
+
+function focusTable(id) {
+  selectedTableId = id;
+  renderCanvas(); renderTableCards();
+  const node = document.getElementById('tnode-'+id);
+  if(node) node.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+async function unassignGuest(guestId) {
+  await DB.patch(`guests?id=eq.${guestId}`, { table_id:null }, accessToken);
+  const g = guests.find(x=>x.id===guestId);
+  if(g) g.table_id = null;
+  renderCanvas(); renderSidebar(); renderTableCards();
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.sidebar-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panelGuests').style.display = tab==='guests'?'block':'none';
+  document.getElementById('panelTables').style.display = tab==='tables'?'block':'none';
+}
+
+async function addTable() {
+  const name = `Table ${tables.length+1}`;
+  const wrap = document.getElementById('canvasWrap');
+  const cx = wrap.clientWidth/2 + (Math.random()-0.5)*200;
+  const cy = wrap.clientHeight/2 + (Math.random()-0.5)*200;
+  const t = await DB.post('seating_tables', {
+    user_id:userId, name, capacity:8, shape:'round',
+    position_x:cx, position_y:cy, color:'#C9A84C'
+  }, accessToken);
+  if(t) { tables.push(t); renderCanvas(); renderTableCards(); showToast('Table added'); }
+}
+
+function openTableModal(id) {
+  const t = tables.find(x=>x.id===id);
+  if(!t) return;
+  document.getElementById('tName').value     = t.name;
+  document.getElementById('tCapacity').value = t.capacity;
+  document.getElementById('tShape').value    = t.shape;
+  document.getElementById('tEditId').value   = id;
+  selectedColor = t.color;
+  document.querySelectorAll('.color-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.color===t.color);
+  });
+  document.getElementById('tableModal').style.display='flex';
+}
+function closeTableModal() { document.getElementById('tableModal').style.display='none'; }
+function selectColor(c,el) {
+  selectedColor=c;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+async function saveTable() {
+  const id = document.getElementById('tEditId').value;
+  const data = {
+    name:     document.getElementById('tName').value.trim(),
+    capacity: parseInt(document.getElementById('tCapacity').value),
+    shape:    document.getElementById('tShape').value,
+    color:    selectedColor
+  };
+  await DB.patch(`seating_tables?id=eq.${id}`, data, accessToken);
+  const t = tables.find(x=>x.id===id);
+  if(t) Object.assign(t,data);
+  closeTableModal(); renderCanvas(); renderTableCards();
+  showToast('Table saved ✅');
+}
+
+async function deleteTableConfirm() {
+  const id = document.getElementById('tEditId').value;
+  if(!confirm('Delete this table? Guests will be unassigned.')) return;
+  // Unassign all guests
+  for(const g of guests.filter(x=>x.table_id===id)) {
+    await DB.patch(`guests?id=eq.${g.id}`, {table_id:null}, accessToken);
+    g.table_id = null;
+  }
+  await DB.del(`seating_tables?id=eq.${id}`, accessToken);
+  tables = tables.filter(t=>t.id!==id);
+  closeTableModal(); renderCanvas(); renderSidebar(); renderTableCards();
+  showToast('Table deleted');
+}
+
+function autoLayout() {
+  const wrap = document.getElementById('canvasWrap');
+  const W=wrap.clientWidth, H=wrap.clientHeight;
+  const cols = Math.ceil(Math.sqrt(tables.length));
+  tables.forEach((t,i) => {
+    t.position_x = 150 + (i%cols) * Math.min(280, (W-200)/cols);
+    t.position_y = 150 + Math.floor(i/cols) * 250;
+    DB.patch(`seating_tables?id=eq.${t.id}`, {position_x:t.position_x,position_y:t.position_y}, accessToken);
+  });
+  renderCanvas(); showToast('✨ Layout applied');
+}
+
+function resetView() { scale=1; offsetX=0; offsetY=0; renderCanvas(); }
+function zoom(d) { scale=Math.max(0.4,Math.min(2,scale+d)); document.getElementById('tablesContainer').style.transform=`scale(${scale})`; }
+
+function printChart() {
+  window.print();
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg,err=false) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(err?' error':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+init();
+</script>
+</body>
+</html>
