@@ -882,12 +882,12 @@ const WA_TPL   = 'Hi {name}! \uD83C\uDF8A\n\nYou are warmly invited to our weddi
 const EM_SUBJ  = '{couple} Wedding Invitation \uD83D\uDC8D';
 const EM_BODY  = 'Hi {name},\n\nWe would love for you to join us to celebrate our wedding!\n\n\uD83D\uDCC5 {date}\n\nPlease RSVP here:\n{rsvp_url}\n\nWith so much love,\n{couple}';
 
-function rsvpUrl(guestName) {
+function rsvpUrl(g) {
+  // Use guest ID so the RSVP page patches the exact record — no duplicates
   const sl   = prof.page_slug;
-  const base = sl ? 'https://pamupro.github.io/wedding-budget/wedding.html?slug='+sl
-                  : 'https://pamupro.github.io/wedding-budget/';
-  // Append guest name so wedding page can pre-fill & match existing record
-  return guestName ? base+'&name='+encodeURIComponent(guestName) : base;
+  if(!sl) return 'https://pamupro.github.io/wedding-budget/';
+  const base = 'https://pamupro.github.io/wedding-budget/wedding.html?slug='+sl;
+  return g && g.id ? base+'&gid='+g.id : base;
 }
 function fillTpl(tpl, g) {
   const couple = [prof.name1, prof.name2].filter(Boolean).join(' & ') || 'The Couple';
@@ -898,7 +898,7 @@ function fillTpl(tpl, g) {
     .replace(/\{name\}/g,     g.name||'Guest')
     .replace(/\{couple\}/g,   couple)
     .replace(/\{date\}/g,     date)
-    .replace(/\{rsvp_url\}/g, rsvpUrl(g.name));
+    .replace(/\{rsvp_url\}/g, rsvpUrl(g));
 }
 
 function sendWA(id) { const g=guests.find(x=>x.id===id); if(!g?.phone){toast('No phone saved',true);return;} openMsg('whatsapp',[g]); }
@@ -909,7 +909,7 @@ function quickWA() {
   const num  = document.getElementById('fPhone').value.trim().replace(/^0+/,'');
   if(!num) { toast('Enter a phone number first', true); return; }
   const name = document.getElementById('fName').value.trim() || 'Guest';
-  window.open('https://wa.me/'+code+num+'?text='+encodeURIComponent(fillTpl(WA_TPL,{name})), '_blank');
+  window.open('https://wa.me/'+code+num+'?text='+encodeURIComponent(fillTpl(WA_TPL,{name, id: document.getElementById('fId').value||null})), '_blank');
 }
 function quickEmail() {
   const email = document.getElementById('fEmail').value.trim();
