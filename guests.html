@@ -44,6 +44,7 @@
     .gbtn.wa:hover{border-color:#25D366;color:#25D366}
     .gbtn.em:hover{border-color:#4a90d9;color:#4a90d9}
     .gbtn.dl:hover{border-color:#c04040;color:#c04040}
+    .gbtn.share-btn:hover{border-color:var(--gold);color:var(--gold)}
     .grp-head{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:4px 0}
     .grp-head span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
     .grp-head hr{flex:1;border:none;border-top:1px solid var(--border);margin:0}
@@ -572,7 +573,7 @@ let pollTimer = null;
 function startRealtime() {
   // ── Polling: refresh guests from DB every 10 seconds ──────────────────────
   // Simple, guaranteed to work regardless of Realtime status
-  pollTimer = setInterval(refreshGuests, 10000);
+  pollTimer = setInterval(refreshGuests, 5000);  // every 5s
 
   // ── WebSocket Realtime: instant push when guest row changes ───────────────
   try {
@@ -605,23 +606,33 @@ function startRealtime() {
 async function refreshGuests() {
   try {
     const fresh = await sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc');
-    if(!fresh) return;
-    // Detect changes and show toasts
+    if(!fresh || !Array.isArray(fresh)) return;
+
+    // Detect meaningful changes and toast
     fresh.forEach(newG => {
       const old = guests.find(g => g.id === newG.id);
-      if(old && old.rsvp_status !== newG.rsvp_status && newG.rsvp_status !== 'pending') {
-        const emoji = newG.rsvp_status === 'yes' ? '✅' : newG.rsvp_status === 'no' ? '❌' : '🤔';
-        const label = newG.rsvp_status === 'yes' ? 'Attending' : newG.rsvp_status === 'no' ? 'Declined' : 'Maybe';
-        toast(emoji + ' ' + (newG.name||'Guest') + ' — ' + label);
-      }
-      if(!old && newG.user_id === uid) {
+      if(!old) {
+        // Brand new guest added via RSVP form
         toast('🎉 New RSVP from ' + (newG.name||'guest'));
+      } else {
+        // Existing guest updated
+        if(old.rsvp_status !== newG.rsvp_status) {
+          const emoji = newG.rsvp_status==='yes'?'✅':newG.rsvp_status==='no'?'❌':'🤔';
+          const label = newG.rsvp_status==='yes'?'Attending':newG.rsvp_status==='no'?'Declined':'Maybe';
+          toast(emoji+' '+(newG.name||'Guest')+' — '+label);
+        } else if(old.name !== newG.name && newG.name && newG.name.trim().split(' ').length >= 2) {
+          // Name was completed (last name added)
+          toast('✏️ '+(newG.name||'Guest')+' completed their name');
+        }
       }
     });
+
     guests = fresh;
     renderList();
     updateStats();
-  } catch(e) { /* silent fail on poll */ }
+  } catch(e) {
+    console.warn('Poll error:', e);
+  }
 }
 
 function handleRealtimeEvent(payload) {
@@ -733,6 +744,7 @@ function buildCard(g) {
   if(hasPh) actions += '<button class="gbtn wa" onclick="sendWA(\''+gid+'\')">💬 WhatsApp</button>';
   if(hasEm) actions += '<button class="gbtn em" onclick="sendEM(\''+gid+'\')">✉️ Email</button>';
   actions += '<button class="gbtn" onclick="cycleRsvp(\''+gid+'\')" title="Cycle RSVP">🔄 RSVP</button>';
+  actions += '<button class="gbtn share-btn" id="sb-'+gid+'" onclick="copyRsvpLink(\''+gid+'\')" title="Copy RSVP link">🔗 Link</button>';
   actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">🗑</button>';
 
   return '<div class="gcard'+selCls+'" id="gc-'+gid+'">' +
@@ -992,6 +1004,25 @@ function bkEmail() {
 const WA_TPL   = 'Hi {name}! \uD83C\uDF8A\n\nYou are warmly invited to our wedding!\n\n\uD83D\uDCC5 {date}\n\uD83D\uDC91 {couple}\n\nPlease RSVP here: {rsvp_url}\n\nWith love \uD83D\uDC8D';
 const EM_SUBJ  = '{couple} Wedding Invitation \uD83D\uDC8D';
 const EM_BODY  = 'Hi {name},\n\nWe would love for you to join us to celebrate our wedding!\n\n\uD83D\uDCC5 {date}\n\nPlease RSVP here:\n{rsvp_url}\n\nWith so much love,\n{couple}';
+
+function copyRsvpLink(gid) {
+  const g = guests.find(x => x.id === gid);
+  if(!g) return;
+  const url = rsvpUrl(g);
+  // Try clipboard API first, fall back to prompt
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      toast('🔗 RSVP link copied for ' + (g.name||'guest'));
+      // Flash the button
+      const btn = document.getElementById('sb-'+gid);
+      if(btn) { btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent='🔗 Link',2000); }
+    }).catch(() => {
+      prompt('Copy this RSVP link:', url);
+    });
+  } else {
+    prompt('Copy this RSVP link for ' + (g.name||'guest') + ':', url);
+  }
+}
 
 function rsvpUrl(g) {
   // Use guest ID so the RSVP page patches the exact record — no duplicates
