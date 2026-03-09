@@ -764,15 +764,17 @@ function renderList() {
 function tryParseJSON(v) {
   try { return JSON.parse(v); } catch(e) { return []; }
 }
-function familyCount(g, rsvpFilter) {
-  const fam = Array.isArray(g.family_members) ? g.family_members
+function getFam(g) {
+  return Array.isArray(g.family_members) ? g.family_members
     : (g.family_members ? tryParseJSON(g.family_members) : []);
+}
+function familyCount(g, rsvpFilter) {
+  const fam = getFam(g);
   if(!fam || !fam.length) return 0;
   if(rsvpFilter) return fam.filter(m => (m.rsvp||'yes') === rsvpFilter).length;
   return fam.length;
 }
 function totalGuestCount() {
-  // Total = all main guests + all family members regardless of their rsvp
   return guests.reduce((sum, g) => sum + 1 + familyCount(g), 0);
 }
 
@@ -789,7 +791,7 @@ function buildCard(g) {
   const gid = g.id;
 
   let badges = '<span class="badge '+sc[st]+'">'+sl[st]+'</span>';
-  const fam = Array.isArray(g.family_members) ? g.family_members : (g.family_members ? tryParseJSON(g.family_members) : []);
+  const fam = getFam(g);
   if(fam && fam.length) {
     fam.forEach(m => {
       const fn = [m.first, m.last].filter(Boolean).join(' ');
@@ -830,27 +832,26 @@ function buildCard(g) {
 }
 
 function updateStats() {
-  // Main guest count by status + family members with matching individual rsvp
-  function cntWithFamily(status) {
+  // Count every person independently — main guest by rsvp_status, each family member by their own m.rsvp
+  function countAll(status) {
     let total = 0;
     guests.forEach(g => {
-      if((g.rsvp_status||'pending') === status) {
-        total += 1; // main guest
-        total += familyCount(g, status === 'yes' ? 'yes'
-          : status === 'no' ? 'no'
-          : status === 'maybe' ? 'maybe' : null);
-      }
+      // Main guest
+      if((g.rsvp_status||'pending') === status) total++;
+      // Each family member counted by their OWN rsvp, independent of main guest
+      const fam = getFam(g);
+      fam.forEach(m => {
+        if((m.rsvp||'yes') === status) total++;
+      });
     });
     return total;
   }
-  const pendingGuests = guests.filter(g => !g.rsvp_status || g.rsvp_status === 'pending');
-  const pendingTotal  = pendingGuests.reduce((sum, g) => sum + 1 + familyCount(g), 0);
 
   document.getElementById('sAll').textContent   = totalGuestCount();
-  document.getElementById('sYes').textContent   = cntWithFamily('yes');
-  document.getElementById('sNo').textContent    = cntWithFamily('no');
-  document.getElementById('sPend').textContent  = pendingTotal;
-  document.getElementById('sMaybe').textContent = cntWithFamily('maybe');
+  document.getElementById('sYes').textContent   = countAll('yes');
+  document.getElementById('sNo').textContent    = countAll('no');
+  document.getElementById('sPend').textContent  = countAll('pending');
+  document.getElementById('sMaybe').textContent = countAll('maybe');
   document.getElementById('sPlus').textContent  = guests.reduce((s,g)=>s+familyCount(g),0);
 }
 
