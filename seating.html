@@ -5,256 +5,469 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <title>Seating Chart — WeddingLedger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    body{overflow:hidden}
-    .seating-layout{display:flex;height:calc(100vh - 64px);margin-top:64px}
+    :root{--sidebar-w:300px}
+    body{overflow:hidden;margin:0}
 
-    /* Canvas */
-    .canvas-wrap{flex:1;position:relative;overflow:hidden;background:#f5f0e8;
-      background-image:radial-gradient(circle,#c9a84c22 1px,transparent 1px);
-      background-size:30px 30px;cursor:default}
-    #tablesContainer{position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0}
+    /* ── Nav ── */
+    .sc-nav{
+      position:fixed;top:0;left:0;right:0;height:56px;z-index:300;
+      background:white;border-bottom:1.5px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 20px;gap:12px;
+    }
+    .sc-logo{
+      font-family:'Cormorant Garamond',serif;font-size:20px;
+      color:var(--charcoal);text-decoration:none;font-style:italic;font-weight:600;
+    }
+    .sc-logo em{color:var(--gold);font-style:italic}
+    .sc-title{
+      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+      border-left:1px solid var(--border);padding-left:14px;margin-left:4px;
+    }
+    .sc-nav-right{display:flex;align-items:center;gap:6px}
+    .sc-save{font-size:11px;color:var(--muted);font-family:'Jost',sans-serif;margin-right:6px}
+    .nav-pill{
+      padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);
+      background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
+      cursor:pointer;color:var(--charcoal);text-decoration:none;transition:.15s;
+      display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+    }
+    .nav-pill:hover{border-color:var(--gold);color:var(--gold)}
+    .nav-pill.gold{background:var(--gold);border-color:var(--gold);color:white}
+    .nav-pill.gold:hover{background:#b8943c}
 
-    /* Toolbar */
-    .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:6px;z-index:5;flex-wrap:wrap}
-    .tool-btn{background:white;border:1.5px solid var(--border);border-radius:99px;padding:7px 13px;
-      font-size:12px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;
-      box-shadow:0 2px 8px rgba(0,0,0,.08);transition:.15s;white-space:nowrap;color:var(--charcoal)}
+    /* ── Layout ── */
+    .sc-layout{display:flex;height:calc(100vh - 56px);margin-top:56px}
+
+    /* ── Canvas ── */
+    .sc-canvas{
+      flex:1;position:relative;overflow:hidden;
+      background:#f5f0e8;
+      background-image:radial-gradient(circle,rgba(201,168,76,.18) 1px,transparent 1px);
+      background-size:28px 28px;
+      cursor:default;
+    }
+    #tableLayer{
+      position:absolute;top:0;left:0;
+      width:100%;height:100%;
+      transform-origin:0 0;
+    }
+
+    /* ── Add table bar ── */
+    .add-bar{
+      position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+      display:flex;gap:8px;z-index:10;
+      background:white;border:1.5px solid var(--border);
+      border-radius:99px;padding:6px 8px;
+      box-shadow:0 4px 20px rgba(0,0,0,.12);
+    }
+    .add-btn{
+      padding:7px 16px;border-radius:99px;border:none;
+      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
+      cursor:pointer;transition:.15s;
+      display:flex;align-items:center;gap:6px;white-space:nowrap;
+      background:transparent;color:var(--charcoal);
+    }
+    .add-btn:hover{background:#f5f0e8;color:var(--gold)}
+    .add-btn svg{flex-shrink:0}
+    .add-bar-divider{width:1px;background:var(--border);margin:4px 0}
+
+    /* ── Toolbar ── */
+    .sc-toolbar{
+      position:absolute;top:14px;left:14px;
+      display:flex;gap:6px;z-index:10;
+    }
+    .tool-btn{
+      padding:7px 14px;border-radius:99px;
+      background:white;border:1.5px solid var(--border);
+      font-family:'Jost',sans-serif;font-size:11px;font-weight:600;
+      cursor:pointer;transition:.15s;color:var(--charcoal);
+      box-shadow:0 2px 8px rgba(0,0,0,.07);white-space:nowrap;
+    }
     .tool-btn:hover{border-color:var(--gold);color:var(--gold)}
-    .tool-btn.active{background:var(--gold);color:white;border-color:var(--gold)}
 
-    /* Add table type buttons */
-    .add-table-bar{position:absolute;top:12px;right:12px;display:flex;gap:6px;z-index:5}
-    .add-type-btn{background:white;border:1.5px solid var(--border);border-radius:99px;
-      padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;
-      font-family:'Jost',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.08);
-      transition:.15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
-    .add-type-btn:hover{border-color:var(--gold);color:var(--gold)}
-
-    /* Table nodes */
-    .table-node{position:absolute;cursor:grab;user-select:none;
-      transform:translate(-50%,-50%);text-align:center}
-    .table-node:active{cursor:grabbing}
-    .table-node.selected .table-shape{box-shadow:0 0 0 3px var(--gold),0 4px 20px rgba(0,0,0,.2)!important}
-
-    .table-shape{display:flex;align-items:center;justify-content:center;
-      flex-direction:column;border:3px solid;background:white;
-      box-shadow:0 4px 16px rgba(0,0,0,.1);transition:box-shadow .2s,transform .2s}
-    .shape-round{border-radius:50%}
-    .shape-rect{border-radius:10px}
-    /* Long table — very wide, narrow height */
-    .shape-long{border-radius:8px}
-
-    .table-label{font-size:11px;font-weight:700;color:var(--charcoal);font-family:'Jost',sans-serif;
-      pointer-events:none;line-height:1.2}
-    .table-count{font-size:10px;color:var(--muted);margin-top:2px;pointer-events:none}
-
-    /* Rotate handle on selected long/rect table */
-    .rotate-handle{position:absolute;top:-22px;left:50%;transform:translateX(-50%);
-      width:22px;height:22px;border-radius:50%;background:var(--gold);
+    /* ── Zoom ── */
+    .zoom-wrap{
+      position:absolute;bottom:20px;right:20px;
+      display:flex;flex-direction:column;gap:6px;z-index:10;
+    }
+    .zoom-btn{
+      width:36px;height:36px;border-radius:10px;
+      background:white;border:1.5px solid var(--border);
+      font-size:18px;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      font-size:12px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);
-      color:white;z-index:10;transition:.15s}
-    .rotate-handle:hover{transform:translateX(-50%) scale(1.15)}
-
-    /* Guest mini chips on table */
-    .table-guests{margin-top:4px;display:flex;flex-wrap:wrap;justify-content:center;
-      gap:2px;max-width:200px;pointer-events:none}
-    .tg-chip{font-size:9px;border-radius:99px;padding:1px 6px;white-space:nowrap}
-
-    /* Zoom controls */
-    .zoom-controls{position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:5}
-    .zoom-btn{background:white;border:1.5px solid var(--border);border-radius:10px;width:36px;height:36px;
-      font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.1);
-      display:flex;align-items:center;justify-content:center;transition:.15s}
+      box-shadow:0 2px 8px rgba(0,0,0,.08);transition:.15s;
+      font-family:'Jost',sans-serif;font-weight:300;
+    }
     .zoom-btn:hover{border-color:var(--gold);color:var(--gold)}
 
-    /* Drop highlight */
-    .drop-target .table-shape{outline:3px dashed var(--gold);outline-offset:2px;background:#fdf9f0!important}
+    /* ── Table nodes ── */
+    .tnode{
+      position:absolute;cursor:grab;user-select:none;
+      display:flex;flex-direction:column;align-items:center;
+      transform:translate(-50%,-50%);
+    }
+    .tnode:active{cursor:grabbing}
+    .tnode.sel .tshape{
+      box-shadow:0 0 0 3px var(--gold),0 6px 24px rgba(0,0,0,.18)!important;
+    }
+    .tshape{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      border:2.5px solid;background:white;
+      box-shadow:0 3px 14px rgba(0,0,0,.1);
+      transition:box-shadow .2s;position:relative;
+    }
+    .tshape.round{border-radius:50%}
+    .tshape.rect{border-radius:10px}
+    .tshape.long{border-radius:8px}
+    .t-name{
+      font-family:'Jost',sans-serif;font-size:11px;font-weight:700;
+      color:#2a2010;pointer-events:none;text-align:center;
+      padding:0 6px;line-height:1.2;
+    }
+    .t-count{
+      font-size:9px;font-family:'Jost',sans-serif;
+      margin-top:2px;pointer-events:none;
+    }
+    .t-guests{
+      margin-top:5px;display:flex;flex-wrap:wrap;
+      justify-content:center;gap:2px;max-width:220px;
+      pointer-events:none;
+    }
+    .tg{
+      font-size:9px;border-radius:99px;padding:1px 6px;
+      white-space:nowrap;font-family:'Jost',sans-serif;
+    }
+    /* Rotate handle */
+    .rot-btn{
+      position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+      width:24px;height:24px;border-radius:50%;
+      background:var(--gold);color:white;
+      font-size:13px;cursor:pointer;z-index:5;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 2px 8px rgba(0,0,0,.2);border:none;
+      transition:.15s;pointer-events:auto;
+    }
+    .rot-btn:hover{transform:translateX(-50%) scale(1.15)}
+    .drop-hi .tshape{
+      outline:3px dashed var(--gold);outline-offset:3px;
+      background:#fdf9f0!important;
+    }
 
     /* ── Sidebar ── */
-    .sidebar{width:300px;min-width:300px;background:white;border-left:1px solid var(--border);
-      display:flex;flex-direction:column;overflow:hidden}
-    .sidebar-tabs{display:flex;border-bottom:1px solid var(--border)}
-    .sidebar-tab{flex:1;padding:11px 6px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;
-      border:none;background:none;font-family:'Jost',sans-serif;color:var(--muted);
-      border-bottom:2px solid transparent;transition:.15s}
-    .sidebar-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
-    .sidebar-panel{flex:1;overflow-y:auto;padding:12px}
+    .sc-sidebar{
+      width:var(--sidebar-w);min-width:var(--sidebar-w);
+      background:white;border-left:1.5px solid var(--border);
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .sb-tabs{display:flex;border-bottom:1.5px solid var(--border)}
+    .sb-tab{
+      flex:1;padding:12px 6px;font-size:12px;font-weight:600;
+      text-align:center;cursor:pointer;border:none;background:none;
+      font-family:'Jost',sans-serif;color:var(--muted);
+      border-bottom:2.5px solid transparent;transition:.15s;
+    }
+    .sb-tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+    .sb-body{flex:1;overflow-y:auto;padding:14px}
+    .sb-search{
+      width:100%;box-sizing:border-box;padding:9px 14px;
+      border:1.5px solid var(--border);border-radius:99px;
+      font-family:'Jost',sans-serif;font-size:12px;outline:none;
+      margin-bottom:12px;transition:.15s;
+    }
+    .sb-search:focus{border-color:var(--gold)}
 
-    /* Guest list — family grouped boxes */
-    .family-box{background:#faf7f0;border:1.5px solid #e8e0d0;border-radius:12px;
-      margin-bottom:8px;overflow:hidden}
-    .family-box-head{padding:8px 12px;display:flex;align-items:center;gap:8px;
-      background:#f5f0e8;border-bottom:1px solid #e8e0d0;cursor:pointer}
-    .family-box-name{font-size:12px;font-weight:700;color:var(--charcoal);flex:1}
-    .family-box-count{font-size:10px;color:var(--muted)}
-    .family-box-body{padding:6px 8px;display:flex;flex-direction:column;gap:4px}
-    .guest-chip{background:white;border:1px solid var(--border);border-radius:8px;
-      padding:7px 10px;font-size:12px;cursor:grab;display:flex;align-items:center;
-      gap:8px;transition:.15s;user-select:none}
-    .guest-chip:hover{border-color:var(--gold);background:#fdf9f0}
-    .guest-chip.assigned{opacity:.4;text-decoration:line-through;cursor:default;pointer-events:none}
-    .guest-chip.dragging{opacity:.5;transform:rotate(2deg)}
-    .solo-chip{margin-bottom:4px}
+    /* Family box */
+    .fam-box{
+      background:#faf8f4;border:1.5px solid #e8e0d0;
+      border-radius:12px;margin-bottom:8px;overflow:hidden;
+    }
+    .fam-head{
+      padding:8px 12px;display:flex;align-items:center;gap:8px;
+      background:#f5f0e8;border-bottom:1px solid #e8e0d0;
+    }
+    .fam-av{
+      width:26px;height:26px;border-radius:50%;
+      background:var(--gold);color:white;
+      font-size:11px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Jost',sans-serif;flex-shrink:0;
+    }
+    .fam-name{font-size:12px;font-weight:700;color:var(--charcoal);flex:1}
+    .fam-ct{font-size:10px;color:var(--muted)}
+    .fam-body{padding:6px 8px;display:flex;flex-direction:column;gap:4px}
 
-    /* Table cards in sidebar */
-    .table-card{background:white;border:1.5px solid var(--border);border-radius:12px;
-      padding:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
-    .table-card:hover,.table-card.active{border-color:var(--gold);background:#fdf9f0}
-    .tc-guest{font-size:11px;background:var(--warm);border-radius:6px;padding:2px 8px;
-      cursor:pointer;transition:.15s;display:inline-block;margin:2px}
-    .tc-guest:hover{background:#f0e0c0;text-decoration:line-through}
+    /* Guest chip */
+    .gchip{
+      background:white;border:1px solid var(--border);border-radius:8px;
+      padding:7px 10px;font-size:12px;cursor:grab;
+      display:flex;align-items:center;gap:8px;
+      transition:.15s;user-select:none;
+    }
+    .gchip:hover{border-color:var(--gold);background:#fdf9f0}
+    .gchip.done{opacity:.35;cursor:default;pointer-events:none;text-decoration:line-through}
+    .gchip.drag{opacity:.4;transform:rotate(2deg)}
+    .gchip-sub{padding-left:16px;background:#f9f7f3}
+    .solo-label{
+      font-size:10px;font-weight:700;letter-spacing:.1em;
+      text-transform:uppercase;color:var(--muted);
+      margin:10px 0 6px 2px;
+    }
 
-    /* Colour swatches */
-    .color-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;
-      border:2px solid white;box-shadow:0 0 0 1px #ccc;flex-shrink:0;transition:.15s}
-    .color-swatch:hover,.color-swatch.active{box-shadow:0 0 0 2px var(--gold)}
+    /* Table cards */
+    .tc{
+      background:white;border:1.5px solid var(--border);
+      border-radius:12px;padding:12px;margin-bottom:8px;
+      cursor:pointer;transition:.15s;
+    }
+    .tc:hover,.tc.on{border-color:var(--gold);background:#fdf9f0}
+    .tc-bar{height:3px;border-radius:2px;background:#f0ece4;margin:6px 0 8px;overflow:hidden}
+    .tc-fill{height:100%;border-radius:2px;transition:.3s}
+    .tg-pill{
+      font-size:11px;background:#f5f0e8;border-radius:6px;
+      padding:2px 8px;cursor:pointer;transition:.15s;
+      display:inline-block;margin:2px;
+    }
+    .tg-pill:hover{background:#f0e0c0;text-decoration:line-through}
 
-    @media(max-width:680px){
-      .sidebar{width:100%;min-width:0;height:220px;border-left:none;border-top:1px solid var(--border);order:2}
-      .seating-layout{flex-direction:column}
-      .canvas-wrap{flex:1;order:1}
+    /* ── Modal ── */
+    .sc-modal-bg{
+      position:fixed;inset:0;background:rgba(0,0,0,.45);
+      z-index:600;display:none;align-items:center;justify-content:center;
+      padding:20px;backdrop-filter:blur(4px);
+    }
+    .sc-modal-bg.open{display:flex}
+    .sc-modal{
+      background:white;border-radius:20px;width:100%;max-width:420px;
+      box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:hidden;
+    }
+    .sc-modal-head{
+      padding:20px 24px 16px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .sc-modal-title{
+      font-family:'Cormorant Garamond',serif;font-size:20px;
+      font-weight:600;color:var(--charcoal);
+    }
+    .sc-modal-close{
+      width:32px;height:32px;border-radius:50%;border:none;
+      background:#f5f0e8;cursor:pointer;font-size:16px;
+      display:flex;align-items:center;justify-content:center;transition:.15s;
+    }
+    .sc-modal-close:hover{background:#e8e0d0}
+    .sc-modal-body{padding:20px 24px 24px;max-height:70vh;overflow-y:auto}
+
+    .m-label{
+      font-size:10px;font-weight:700;letter-spacing:.12em;
+      text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;
+    }
+    .m-input{
+      width:100%;box-sizing:border-box;
+      padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;
+      font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:.15s;
+    }
+    .m-input:focus{border-color:var(--gold)}
+    .pill-group{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+    .pill-opt{
+      padding:7px 14px;border-radius:99px;border:1.5px solid var(--border);
+      background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
+      cursor:pointer;transition:.15s;color:var(--muted);
+    }
+    .pill-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
+    .cap-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .cap-btn{
+      width:34px;height:34px;border-radius:50%;
+      border:1.5px solid var(--border);background:white;
+      font-size:20px;cursor:pointer;transition:.15s;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Jost',sans-serif;font-weight:300;
+    }
+    .cap-btn:hover{border-color:var(--gold);color:var(--gold)}
+    .cap-num{
+      width:60px;text-align:center;padding:8px;
+      border:1.5px solid var(--border);border-radius:10px;
+      font-size:16px;font-weight:700;font-family:'Jost',sans-serif;
+      outline:none;
+    }
+    .color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .cswatch{
+      width:24px;height:24px;border-radius:50%;cursor:pointer;
+      border:2.5px solid white;box-shadow:0 0 0 1.5px #ccc;transition:.15s;
+    }
+    .cswatch.on{box-shadow:0 0 0 2.5px var(--gold)}
+    .m-foot{display:flex;gap:8px;margin-top:4px}
+
+    /* Toast */
+    .toast{
+      position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);
+      background:#2a2010;color:white;padding:11px 22px;border-radius:99px;
+      font-size:13px;font-weight:500;opacity:0;transition:all .3s;
+      pointer-events:none;z-index:999;white-space:nowrap;
+      font-family:'Jost',sans-serif;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.err{background:#c04040}
+
+    /* Empty state */
+    .empty-canvas{
+      position:absolute;top:50%;left:calc(50% - var(--sidebar-w)/2);
+      transform:translate(-50%,-50%);text-align:center;pointer-events:none;
+    }
+    .empty-canvas svg{opacity:.15;margin-bottom:12px}
+    .empty-canvas p{font-family:'Jost',sans-serif;font-size:13px;color:var(--muted)}
+
+    @media(max-width:700px){
+      :root{--sidebar-w:100%}
+      .sc-sidebar{width:100%;min-width:0;height:200px;border-left:none;border-top:1.5px solid var(--border);order:2}
+      .sc-layout{flex-direction:column}
+      .sc-canvas{order:1}
       body{overflow:auto}
-      .add-table-bar{top:auto;bottom:70px;right:12px;flex-direction:column}
+      .add-bar{flex-wrap:wrap;border-radius:16px}
     }
   </style>
 </head>
 <body>
-<nav class="topbar">
-  <div class="topbar-left">
-    <a href="dashboard.html" class="logo-link">
-      <span class="logo-text">Wedding<span class="logo-italic">Ledger</span></span>
-    </a>
-    <span class="topbar-divider" style="margin:0 10px;color:var(--border)">|</span>
-    <span style="font-size:13px;color:var(--muted);font-family:'Jost',sans-serif">Seating Chart</span>
+
+<!-- Nav -->
+<nav class="sc-nav">
+  <div style="display:flex;align-items:center;gap:0">
+    <a href="dashboard.html" class="sc-logo">Wedding<em>Ledger</em></a>
+    <span class="sc-title">Seating</span>
   </div>
-  <div class="topbar-right">
-    <span style="font-size:12px;color:var(--muted)" id="saveStatus">All saved ✓</span>
-    <a href="guests.html"    class="topbar-btn" style="color:var(--muted);text-decoration:none">Guests</a>
-    <a href="dashboard.html" class="topbar-btn" style="color:var(--muted);text-decoration:none">← Dashboard</a>
+  <div class="sc-nav-right">
+    <span class="sc-save" id="saveStatus">All saved ✓</span>
+    <a href="guests.html"    class="nav-pill">Guests</a>
+    <a href="dashboard.html" class="nav-pill">← Dashboard</a>
   </div>
 </nav>
 
-<div class="seating-layout">
+<div class="sc-layout">
+
   <!-- Canvas -->
-  <div class="canvas-wrap" id="canvasWrap">
-    <div class="toolbar">
-      <button class="tool-btn" onclick="resetView()">Reset View</button>
-      <button class="tool-btn" onclick="autoLayout()">✨ Auto Layout</button>
-      <button class="tool-btn" onclick="printChart()">Print</button>
+  <div class="sc-canvas" id="cnv">
+
+    <!-- Toolbar -->
+    <div class="sc-toolbar">
+      <button class="tool-btn" onclick="resetView()">Reset</button>
+      <button class="tool-btn" onclick="doAutoLayout()">✨ Auto Layout</button>
+      <button class="tool-btn" onclick="window.print()">Print</button>
     </div>
 
-    <!-- Add table buttons top-right -->
-    <div class="add-table-bar">
-      <button class="add-type-btn" onclick="addTable('round')" title="Round table">
-        <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        Round
+    <!-- Table layer -->
+    <div id="tableLayer"></div>
+
+    <!-- Empty hint -->
+    <div class="empty-canvas" id="emptyHint" style="display:none">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect x="8" y="20" width="48" height="24" rx="6" stroke="#8a7a60" stroke-width="2"/>
+        <circle cx="16" cy="32" r="3" fill="#8a7a60"/>
+        <circle cx="32" cy="32" r="3" fill="#8a7a60"/>
+        <circle cx="48" cy="32" r="3" fill="#8a7a60"/>
+      </svg>
+      <p>Add a table below to get started</p>
+    </div>
+
+    <!-- Add table bar -->
+    <div class="add-bar">
+      <button class="add-btn" onclick="addTable('round')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+        </svg> Round
       </button>
-      <button class="add-type-btn" onclick="addTable('rectangular')" title="Rectangular table">
-        <svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        Rectangle
+      <div class="add-bar-divider"></div>
+      <button class="add-btn" onclick="addTable('rect')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1.5" y="4.5" width="13" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        </svg> Rectangle
       </button>
-      <button class="add-type-btn" onclick="addTable('long')" title="Long banquet table">
-        <svg width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="5" width="16" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        Long Table
+      <div class="add-bar-divider"></div>
+      <button class="add-btn" onclick="addTable('long')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="0.5" y="5.5" width="15" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+        </svg> Long Table
       </button>
     </div>
 
-    <div id="tablesContainer"></div>
-
-    <div class="zoom-controls">
-      <button class="zoom-btn" onclick="doZoom(0.15)">+</button>
-      <button class="zoom-btn" onclick="doZoom(-0.15)" style="font-size:20px">−</button>
+    <!-- Zoom -->
+    <div class="zoom-wrap">
+      <button class="zoom-btn" onclick="doZoom(.15)">+</button>
+      <button class="zoom-btn" onclick="doZoom(-.15)" style="font-size:22px;font-weight:200">−</button>
     </div>
   </div>
 
   <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="sidebar-tabs">
-      <button class="sidebar-tab active" id="tabGuests" onclick="showTab('guests',this)">Unassigned</button>
-      <button class="sidebar-tab"        id="tabTables" onclick="showTab('tables',this)">Tables</button>
+  <div class="sc-sidebar">
+    <div class="sb-tabs">
+      <button class="sb-tab on" onclick="showTab('guests',this)">Unassigned</button>
+      <button class="sb-tab"    onclick="showTab('tables',this)">Tables</button>
     </div>
-    <div class="sidebar-panel" id="panelGuests">
-      <input type="search" id="sidebarSearch" placeholder="Filter guests…" oninput="renderSidebar()"
-        style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:99px;
-        font-size:12px;font-family:'Jost',sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box">
-      <div id="guestChips"></div>
+    <div class="sb-body" id="panGuests">
+      <input class="sb-search" id="sbSearch" placeholder="Filter guests…" oninput="renderSidebar()">
+      <div id="guestList"></div>
     </div>
-    <div class="sidebar-panel" id="panelTables" style="display:none">
-      <div id="tableCards"></div>
+    <div class="sb-body" id="panTables" style="display:none">
+      <div id="tableList"></div>
     </div>
   </div>
 </div>
 
-<!-- Table Edit Modal -->
-<div class="modal-overlay" id="tableModal" style="display:none" onclick="if(event.target===this)closeTableModal()">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header">
-      <h3 class="modal-title" id="modalTitle">Edit Table</h3>
-      <button class="modal-close" onclick="closeTableModal()">✕</button>
+<!-- Edit Modal -->
+<div class="sc-modal-bg" id="editModal" onclick="if(event.target===this)closeModal()">
+  <div class="sc-modal">
+    <div class="sc-modal-head">
+      <span class="sc-modal-title">Edit Table</span>
+      <button class="sc-modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <label class="modal-label">Table Name</label>
-      <input type="text" id="tName" class="modal-input" style="margin-bottom:12px">
+    <div class="sc-modal-body">
+      <label class="m-label">Name</label>
+      <input class="m-input" id="mName" style="margin-bottom:14px">
 
-      <label class="modal-label">Shape</label>
-      <div style="display:flex;gap:8px;margin-bottom:14px" id="shapePicker">
-        <button class="shape-pick on" data-v="round"       onclick="pickShape(this)">⭕ Round</button>
-        <button class="shape-pick"    data-v="rectangular" onclick="pickShape(this)">▭ Rectangle</button>
-        <button class="shape-pick"    data-v="long"        onclick="pickShape(this)">═══ Long</button>
+      <label class="m-label">Shape</label>
+      <div class="pill-group" id="shapePills">
+        <button class="pill-opt on" data-v="round" onclick="pickShape(this)">⭕ Round</button>
+        <button class="pill-opt"    data-v="rect"  onclick="pickShape(this)">▭ Rectangle</button>
+        <button class="pill-opt"    data-v="long"  onclick="pickShape(this)">═ Long</button>
       </div>
 
-      <!-- Capacity — smart per shape -->
-      <div id="capacitySection">
-        <label class="modal-label">Seats <span id="capHint" style="font-weight:400;color:var(--muted);font-size:11px"></span></label>
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <button onclick="adjustCap(-1)" style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);
-            background:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
-          <input type="number" id="tCapacity" class="modal-input" min="1" max="60"
-            style="margin-bottom:0;text-align:center;width:70px;flex-shrink:0">
-          <button onclick="adjustCap(1)"  style="width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);
-            background:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
-        </div>
-        <!-- Long table head chairs toggle -->
-        <div id="headChairToggle" style="display:none;margin-bottom:14px;padding:10px 12px;
-          background:#faf7f0;border-radius:10px;border:1px solid #e8e0d0">
-          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Head Chairs</div>
-          <div style="display:flex;gap:8px">
-            <button class="hc-opt on" data-v="0" onclick="pickHeadChairs(this)">None</button>
-            <button class="hc-opt"    data-v="1" onclick="pickHeadChairs(this)">1 end</button>
-            <button class="hc-opt"    data-v="2" onclick="pickHeadChairs(this)">Both ends</button>
-          </div>
-          <div style="font-size:10px;color:var(--muted);margin-top:6px">
-            Head chairs sit at the short ends of the long table
-          </div>
+      <label class="m-label">Seats <span id="capHint" style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted)"></span></label>
+      <div class="cap-row">
+        <button class="cap-btn" onclick="adjCap(-1)">−</button>
+        <input  class="cap-num" type="number" id="mCap" min="1" max="60">
+        <button class="cap-btn" onclick="adjCap(1)">+</button>
+        <span style="font-size:12px;color:var(--muted);font-family:'Jost',sans-serif" id="capLabel"></span>
+      </div>
+
+      <div id="headRow" style="display:none;margin-bottom:14px;padding:10px 12px;background:#faf8f4;border-radius:10px;border:1px solid #e8e0d0">
+        <label class="m-label" style="margin-bottom:6px">Head chairs (short ends)</label>
+        <div class="pill-group" id="headPills" style="margin-bottom:0">
+          <button class="pill-opt on" data-v="0" onclick="pickHead(this)">None</button>
+          <button class="pill-opt"    data-v="1" onclick="pickHead(this)">1 end</button>
+          <button class="pill-opt"    data-v="2" onclick="pickHead(this)">Both ends</button>
         </div>
       </div>
 
-      <!-- Rotation — only for rect/long -->
-      <div id="rotateSection" style="display:none">
-        <label class="modal-label">Rotation</label>
-        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="rotatePicker">
-          <button class="rot-opt on" data-v="0"   onclick="pickRotation(this)">0°</button>
-          <button class="rot-opt"    data-v="45"  onclick="pickRotation(this)">45°</button>
-          <button class="rot-opt"    data-v="90"  onclick="pickRotation(this)">90°</button>
-          <button class="rot-opt"    data-v="135" onclick="pickRotation(this)">135°</button>
+      <div id="rotRow" style="display:none;margin-bottom:14px">
+        <label class="m-label">Rotation</label>
+        <div class="pill-group" id="rotPills">
+          <button class="pill-opt on" data-v="0"   onclick="pickRot(this)">0°</button>
+          <button class="pill-opt"    data-v="45"  onclick="pickRot(this)">45°</button>
+          <button class="pill-opt"    data-v="90"  onclick="pickRot(this)">90°</button>
+          <button class="pill-opt"    data-v="135" onclick="pickRot(this)">135°</button>
         </div>
       </div>
 
-      <label class="modal-label">Colour</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="colorSwatches">
-        ${['#C9A84C','#9a7535','#2a7a2a','#2a4a7a','#7a2a5a','#c04040','#555','#8a6020'].map(c=>
-          `<div class="color-swatch" style="background:${c}" data-color="${c}" onclick="selectColor('${c}',this)"></div>`
-        ).join('')}
-      </div>
-      <input type="hidden" id="tEditId">
-      <div style="display:flex;gap:10px">
-        <button class="btn-secondary" onclick="deleteTableConfirm()" style="color:#c04040;border-color:#f5c0c0">Delete</button>
-        <button class="btn-secondary" onclick="closeTableModal()" style="flex:1">Cancel</button>
-        <button class="btn-primary"   onclick="saveTable()" style="flex:2">Save Table</button>
+      <label class="m-label">Colour</label>
+      <div class="color-row" id="colorRow"></div>
+
+      <input type="hidden" id="mId">
+      <div class="m-foot">
+        <button class="btn-secondary" onclick="delTable()" style="color:#c04040;border-color:#fcc">Delete</button>
+        <button class="btn-secondary" onclick="closeModal()" style="flex:1">Cancel</button>
+        <button class="btn-primary"   onclick="saveModal()" style="flex:2">Save</button>
       </div>
     </div>
   </div>
@@ -262,306 +475,261 @@
 
 <div class="toast" id="toast"></div>
 <script src="db.js"></script>
-<style>
-  .shape-pick,.hc-opt,.rot-opt{
-    padding:6px 12px;border-radius:99px;border:1.5px solid var(--border);
-    background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
-    cursor:pointer;transition:.15s;color:var(--muted)
-  }
-  .shape-pick.on,.hc-opt.on,.rot-opt.on{
-    border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)
-  }
-</style>
 <script>
-const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
-let userId = localStorage.getItem('wl_uid');
-let accessToken = localStorage.getItem('wl_token');
-let guests = [], tables = [];
-let dragGuest = null;
-let scale = 1, panX = 0, panY = 0;
-let selectedTableId = null;
-let selectedColor = '#C9A84C';
-let selectedShape = 'round';
-let selectedRotation = 0;
-let selectedHeadChairs = 0;
-let saveTimer = null;
-let isPanning = false, panStart = null;
+// ── Constants ───────────────────────────────────────────────────────────────
+const SB      = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const COLORS  = ['#C9A84C','#9a7535','#2a7a2a','#2a4a7a','#7a2a5a','#c04040','#607080','#8a6020'];
 
-if(!userId || !accessToken) location.href = 'login.html';
+// ── State ───────────────────────────────────────────────────────────────────
+let uid   = localStorage.getItem('wl_uid');
+let tok   = localStorage.getItem('wl_token');
+let guests=[], tables=[];
+let scale=1, panX=0, panY=0;
+let selId=null, dragGid=null;
+let mShape='round', mRot=0, mHead=0, mColor=COLORS[0];
+let saveT=null;
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+if(!uid||!tok) location.href='login.html';
 
-async function init() {
-  try {
-    guests = await DB.query(`guests?user_id=eq.${userId}&order=name.asc`, accessToken) || [];
-    tables = await DB.query(`seating_tables?user_id=eq.${userId}&order=created_at.asc`, accessToken) || [];
-    if(!Array.isArray(tables)) tables = [];
-    if(!Array.isArray(guests))  guests = [];
-    if(!tables.length) await createDefaultTables();
-  } catch(e) {
-    console.error('Init error:', e);
-    guests = []; tables = [];
-  }
-  renderCanvas();
-  renderSidebar();
-  renderTableCards();
-  setupDrop();
-  setupPan();
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function $id(id){return document.getElementById(id)}
+function toast(msg,err){
+  const t=$id('toast');t.textContent=msg;
+  t.className='toast'+(err?' err':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function setSave(s){$id('saveStatus').textContent=s}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+async function init(){
+  try{
+    [guests,tables] = await Promise.all([
+      DB.query(`guests?user_id=eq.${uid}&order=name.asc`,tok),
+      DB.query(`seating_tables?user_id=eq.${uid}&order=created_at.asc`,tok)
+    ]);
+    guests = Array.isArray(guests)?guests:[];
+    tables = Array.isArray(tables)?tables:[];
+  }catch(e){console.error(e);guests=[];tables=[];}
+
+  if(!tables.length) await makeDefaults();
+  render(); renderSidebar(); renderTableList();
+  setupDrop(); setupPan();
 }
 
-async function createDefaultTables() {
-  const defaults = [
-    {name:'Top Table', shape:'long',  x:300, y:140},
-    {name:'Table 1',   shape:'round', x:200, y:350},
-    {name:'Table 2',   shape:'round', x:450, y:350},
+async function makeDefaults(){
+  const defs=[
+    {name:'Top Table',shape:'long', px:320,py:130},
+    {name:'Table 1', shape:'round',px:200,py:340},
+    {name:'Table 2', shape:'round',px:460,py:340},
+    {name:'Table 3', shape:'round',px:720,py:340},
   ];
-  for(const d of defaults) {
-    const payload = {
-      user_id:userId, name:d.name, capacity:8, shape:d.shape,
-      position_x:d.x, position_y:d.y, color:'#C9A84C'
-    };
-    // Add new columns only if migration has been run
-    try { payload.rotation = 0; payload.head_chairs = 0; } catch(e){}
-    const t = await DB.post('seating_tables', payload, accessToken);
-    if(t) tables.push(t);
+  for(const d of defs){
+    const row={user_id:uid,name:d.name,capacity:d.shape==='long'?12:8,
+      shape:d.shape,position_x:d.px,position_y:d.py,color:'#C9A84C'};
+    const r=await DB.post('seating_tables',row,tok);
+    if(r)tables.push(r);
   }
 }
 
-// ── Table dimensions per shape ──────────────────────────────────────────────
-function tableSize(t) {
-  const cap = t.capacity || 8;
-  if(t.shape === 'round') {
-    const s = Math.max(90, Math.min(150, 70 + cap * 5));
-    return {w:s, h:s};
-  }
-  if(t.shape === 'long') {
-    const w = Math.max(160, Math.min(320, 100 + cap * 16));
-    return {w, h:70};
-  }
-  // rectangular
-  const w = Math.max(110, Math.min(200, 80 + cap * 6));
-  return {w, h: Math.round(w * 0.65)};
+// ── Table geometry ──────────────────────────────────────────────────────────
+function tSize(t){
+  const cap=parseInt(t.capacity)||8;
+  const sh=t.shape||'round';
+  if(sh==='round'){const s=Math.max(86,Math.min(148,68+cap*5));return{w:s,h:s};}
+  if(sh==='long'){const w=Math.max(150,Math.min(310,90+cap*15));return{w,h:64};}
+  const w=Math.max(105,Math.min(190,78+cap*6));return{w,h:Math.round(w*.62)};
 }
 
 // ── Render canvas ────────────────────────────────────────────────────────────
-function renderCanvas() {
-  const container = document.getElementById('tablesContainer');
-  container.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
-  container.style.transformOrigin = '0 0';
-  container.innerHTML = '';
-
-  tables.forEach(t => {
-    const assigned = guests.filter(g => g.table_id === t.id);
-    const {w, h} = tableSize(t);
-    const rot = parseInt(t.rotation) || 0;
-    const shapeClass = t.shape === 'round' ? 'shape-round' : t.shape === 'long' ? 'shape-long' : 'shape-rect';
-    const isSelected = selectedTableId === t.id;
-
-    const node = document.createElement('div');
-    node.className = 'table-node' + (isSelected ? ' selected' : '');
-    node.id = 'tnode-' + t.id;
-    node.style.cssText = `left:${t.position_x}px;top:${t.position_y}px`;
-
-    // Rotate handle (only for rect/long when selected)
-    const showRotate = isSelected && t.shape !== 'round';
-    const rotHandle = showRotate
-      ? `<div class="rotate-handle" onclick="quickRotate('${t.id}')" title="Rotate 90°">↻</div>` : '';
-
-    // Guest name chips on table
-    const chipColor = t.color || '#C9A84C';
-    const chips = assigned.slice(0,8).map(g =>
-      `<span class="tg-chip" style="background:${chipColor}20;border:1px solid ${chipColor}44;color:${chipColor}">${esc(g.name.split(' ')[0])}</span>`
-    ).join('') + (assigned.length > 8 ? `<span class="tg-chip" style="color:var(--muted)">+${assigned.length-8}</span>` : '');
-
-    const countColor = assigned.length >= t.capacity ? '#c04040' : 'var(--muted)';
-
-    node.innerHTML = `
-      ${rotHandle}
-      <div class="table-shape ${shapeClass}"
-        style="width:${w}px;height:${h}px;border-color:${t.color};
-               transform:rotate(${rot}deg)">
-        <div class="table-label">${esc(t.name)}</div>
-        <div class="table-count" style="color:${countColor}">${assigned.length}/${t.capacity}</div>
-      </div>
-      ${assigned.length ? `<div class="table-guests">${chips}</div>` : ''}`;
-
-    makeDraggable(node, t);
-    node.addEventListener('dblclick', (e) => { e.stopPropagation(); openTableModal(t.id); });
-    node.addEventListener('click', (e) => {
-      e.stopPropagation();
-      selectedTableId = t.id;
-      renderCanvas(); renderTableCards();
-    });
-    container.appendChild(node);
-  });
-
-  // Deselect on canvas click
-  document.getElementById('canvasWrap').onclick = (e) => {
-    if(e.target === document.getElementById('canvasWrap') || e.target === container) {
-      selectedTableId = null; renderCanvas();
-    }
-  };
+function applyTransform(){
+  $id('tableLayer').style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
 }
 
-function quickRotate(id) {
-  const t = tables.find(x => x.id === id);
-  if(!t) return;
-  t.rotation = ((t.rotation || 0) + 90) % 360;
-  renderCanvas();
-  saveField(t, {rotation: t.rotation});
+function render(){
+  const layer=$id('tableLayer');
+  layer.innerHTML='';
+  $id('emptyHint').style.display=tables.length?'none':'block';
+
+  tables.forEach(t=>{
+    const assigned=guests.filter(g=>g.table_id===t.id);
+    const {w,h}=tSize(t);
+    const rot=parseInt(t.rotation)||0;
+    const col=t.color||COLORS[0];
+    const sh=t.shape||'round';
+    const full=assigned.length>=t.capacity;
+    const isSel=selId===t.id;
+
+    const node=document.createElement('div');
+    node.className='tnode'+(isSel?' sel':'');
+    node.id='tn-'+t.id;
+    node.style.cssText=`left:${t.position_x}px;top:${t.position_y}px`;
+
+    // Rotate handle
+    const rotHandle=(isSel&&sh!=='round')
+      ?`<button class="rot-btn" title="Rotate 90°" onclick="event.stopPropagation();qRot('${t.id}')">↻</button>`:'';
+
+    // Guest chips
+    const chips=assigned.slice(0,9).map(g=>
+      `<span class="tg" style="background:${col}18;border:1px solid ${col}44;color:${col}">${esc(g.name.split(' ')[0])}</span>`
+    ).join('')+(assigned.length>9?`<span class="tg" style="color:var(--muted)">+${assigned.length-9}</span>`:'');
+
+    node.innerHTML=`
+      ${rotHandle}
+      <div class="tshape ${sh}" style="width:${w}px;height:${h}px;border-color:${col};transform:rotate(${rot}deg)">
+        <div class="t-name">${esc(t.name)}</div>
+        <div class="t-count" style="color:${full?'#c04040':'var(--muted)'}">${assigned.length}/${t.capacity}</div>
+      </div>
+      ${assigned.length?`<div class="t-guests">${chips}</div>`:''}`;
+
+    makeDrag(node,t);
+    node.addEventListener('dblclick',e=>{e.stopPropagation();openModal(t.id)});
+    node.addEventListener('click',e=>{
+      e.stopPropagation();
+      selId=t.id; render(); renderTableList();
+    });
+    layer.appendChild(node);
+  });
+
+  applyTransform();
+  // Deselect on blank canvas click
+  $id('cnv').onclick=e=>{
+    if(e.target===$id('cnv')||e.target===$id('tableLayer')){
+      selId=null; render();
+    }
+  };
 }
 
 // ── Drag tables ──────────────────────────────────────────────────────────────
-function makeDraggable(el, table) {
-  let sx, sy, ox, oy, moved = false;
-  el.onmousedown = e => {
-    if(e.button !== 0 || e.target.classList.contains('rotate-handle')) return;
-    sx = e.clientX; sy = e.clientY;
-    ox = table.position_x; oy = table.position_y;
-    moved = false;
-    e.preventDefault(); e.stopPropagation();
-    const mm = ev => {
-      const dx = (ev.clientX-sx)/scale, dy = (ev.clientY-sy)/scale;
-      if(Math.abs(dx)+Math.abs(dy) > 3) moved = true;
-      table.position_x = Math.max(60, ox+dx);
-      table.position_y = Math.max(60, oy+dy);
-      el.style.left = table.position_x+'px';
-      el.style.top  = table.position_y+'px';
+function makeDrag(el,t){
+  let sx,sy,ox,oy,moved=false;
+  el.onmousedown=e=>{
+    if(e.button!==0)return;
+    if(e.target.classList.contains('rot-btn'))return;
+    e.preventDefault();e.stopPropagation();
+    sx=e.clientX;sy=e.clientY;ox=t.position_x;oy=t.position_y;moved=false;
+    const mm=ev=>{
+      const dx=(ev.clientX-sx)/scale,dy=(ev.clientY-sy)/scale;
+      if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
+      t.position_x=Math.max(50,ox+dx);t.position_y=Math.max(50,oy+dy);
+      el.style.left=t.position_x+'px';el.style.top=t.position_y+'px';
     };
-    const mu = () => {
-      document.removeEventListener('mousemove', mm);
-      document.removeEventListener('mouseup', mu);
-      if(moved) saveField(table, {position_x:table.position_x, position_y:table.position_y});
+    const mu=()=>{
+      document.removeEventListener('mousemove',mm);
+      document.removeEventListener('mouseup',mu);
+      if(moved)schedSave(t,{position_x:t.position_x,position_y:t.position_y});
     };
-    document.addEventListener('mousemove', mm);
-    document.addEventListener('mouseup', mu);
+    document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
   };
 }
 
-// ── Pan canvas ───────────────────────────────────────────────────────────────
-function setupPan() {
-  const wrap = document.getElementById('canvasWrap');
-  let startX, startY, startPX, startPY, panning = false;
-  wrap.addEventListener('mousedown', e => {
-    if(e.target !== wrap && !e.target.id === 'tablesContainer') return;
-    if(e.button !== 1 && !(e.button === 0 && e.altKey)) return;
-    panning = true; startX=e.clientX; startY=e.clientY; startPX=panX; startPY=panY;
-    wrap.style.cursor='grabbing'; e.preventDefault();
-  });
-  // Middle mouse or alt+drag to pan
-  wrap.addEventListener('mousemove', e => {
-    if(!panning) return;
-    panX = startPX + (e.clientX-startX);
-    panY = startPY + (e.clientY-startY);
-    document.getElementById('tablesContainer').style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
-  });
-  wrap.addEventListener('mouseup', () => { panning=false; wrap.style.cursor=''; });
-  wrap.addEventListener('wheel', e => { e.preventDefault(); doZoom(e.deltaY < 0 ? 0.1 : -0.1); }, {passive:false});
-  // Also allow plain left-click drag on empty canvas to pan
-  wrap.addEventListener('mousedown', e => {
-    if(e.button !== 0) return;
-    // Only pan if clicking directly on canvas or container (not on a table)
-    if(e.target !== wrap && e.target !== document.getElementById('tablesContainer')) return;
-    panning = true; startX=e.clientX; startY=e.clientY; startPX=panX; startPY=panY;
-    wrap.style.cursor = 'grabbing';
-  });
+function qRot(id){
+  const t=tables.find(x=>x.id===id);if(!t)return;
+  t.rotation=((parseInt(t.rotation)||0)+90)%360;
+  render();schedSave(t,{rotation:t.rotation});
 }
 
-function doZoom(d) {
-  scale = Math.max(0.3, Math.min(2.5, scale+d));
-  const c = document.getElementById('tablesContainer');
-  c.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
-  c.style.transformOrigin = '0 0';
-}
-
-// ── Drop guests onto tables ──────────────────────────────────────────────────
-function setupDrop() {
-  document.addEventListener('dragstart', e => {
-    if(e.target.classList.contains('guest-chip')) {
-      dragGuest = e.target.dataset.id;
-      e.target.classList.add('dragging');
+// ── Pan & zoom ───────────────────────────────────────────────────────────────
+function setupPan(){
+  const cnv=$id('cnv');
+  let panning=false,sx,sy,spx,spy;
+  cnv.addEventListener('mousedown',e=>{
+    // Pan on middle button OR alt+left drag OR direct canvas (no table) left drag
+    const onCanvas=e.target===cnv||e.target===$id('tableLayer');
+    if(e.button===1||(e.altKey&&e.button===0)||(e.button===0&&onCanvas)){
+      panning=true;sx=e.clientX;sy=e.clientY;spx=panX;spy=panY;
+      cnv.style.cursor='grabbing';e.preventDefault();
     }
   });
-  document.addEventListener('dragend', e => {
-    if(e.target.classList.contains('guest-chip')) e.target.classList.remove('dragging');
-    document.querySelectorAll('.table-node').forEach(n=>n.classList.remove('drop-target'));
-    dragGuest = null;
+  document.addEventListener('mousemove',e=>{
+    if(!panning)return;
+    panX=spx+(e.clientX-sx);panY=spy+(e.clientY-sy);applyTransform();
   });
-  document.addEventListener('dragover', e => {
-    const node = e.target.closest('.table-node');
-    if(node) { e.preventDefault(); node.classList.add('drop-target'); }
+  document.addEventListener('mouseup',()=>{panning=false;$id('cnv').style.cursor='default';});
+  cnv.addEventListener('wheel',e=>{e.preventDefault();doZoom(e.deltaY<0?.12:-.12);},{passive:false});
+}
+
+function doZoom(d){
+  scale=Math.max(.3,Math.min(2.5,scale+d));applyTransform();
+}
+function resetView(){scale=1;panX=0;panY=0;applyTransform();}
+
+// ── Drop guests ──────────────────────────────────────────────────────────────
+function setupDrop(){
+  document.addEventListener('dragstart',e=>{
+    if(e.target.classList.contains('gchip')){
+      dragGid=e.target.dataset.id;e.target.classList.add('drag');
+    }
   });
-  document.addEventListener('dragleave', e => {
-    const node = e.target.closest('.table-node');
-    if(node && !node.contains(e.relatedTarget)) node.classList.remove('drop-target');
+  document.addEventListener('dragend',e=>{
+    if(e.target.classList.contains('gchip'))e.target.classList.remove('drag');
+    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-hi'));
+    dragGid=null;
   });
-  document.addEventListener('drop', async e => {
-    const node = e.target.closest('.table-node');
-    if(!node || !dragGuest) return;
-    e.preventDefault();
-    node.classList.remove('drop-target');
-    const tableId = node.id.replace('tnode-','');
-    const table = tables.find(t=>t.id===tableId);
-    const assigned = guests.filter(g=>g.table_id===tableId);
-    if(table && assigned.length >= table.capacity) { showToast('Table is full!',true); return; }
-    await DB.patch(`guests?id=eq.${dragGuest}`, {table_id:tableId}, accessToken);
-    const g = guests.find(x=>x.id===dragGuest);
-    if(g) g.table_id = tableId;
-    dragGuest = null;
-    renderCanvas(); renderSidebar(); renderTableCards();
-    showToast('Guest seated ✓');
+  document.addEventListener('dragover',e=>{
+    const n=e.target.closest('.tnode');
+    if(n){e.preventDefault();n.classList.add('drop-hi');}
+  });
+  document.addEventListener('dragleave',e=>{
+    const n=e.target.closest('.tnode');
+    if(n&&!n.contains(e.relatedTarget))n.classList.remove('drop-hi');
+  });
+  document.addEventListener('drop',async e=>{
+    const n=e.target.closest('.tnode');
+    if(!n||!dragGid)return;
+    e.preventDefault();n.classList.remove('drop-hi');
+    const tid=n.id.replace('tn-','');
+    const tbl=tables.find(t=>t.id===tid);
+    const cnt=guests.filter(g=>g.table_id===tid).length;
+    if(tbl&&cnt>=tbl.capacity){toast('Table is full!',true);return;}
+    await DB.patch(`guests?id=eq.${dragGid}`,{table_id:tid},tok);
+    const g=guests.find(x=>x.id===dragGid);if(g)g.table_id=tid;
+    dragGid=null;
+    render();renderSidebar();renderTableList();
+    toast('Seated ✓');
   });
 }
 
-// ── Sidebar — grouped by family ──────────────────────────────────────────────
-function renderSidebar() {
-  const q = (document.getElementById('sidebarSearch')?.value||'').toLowerCase();
-  const unassigned = guests.filter(g => !g.table_id && g.name.toLowerCase().includes(q));
-  const el = document.getElementById('guestChips');
+// ── Sidebar — guests ─────────────────────────────────────────────────────────
+function getFam(g){
+  if(!g.family_members)return[];
+  try{return Array.isArray(g.family_members)?g.family_members:JSON.parse(g.family_members);}
+  catch(e){return[];}
+}
 
-  if(!unassigned.length) {
-    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">
-      ${guests.filter(g=>!g.table_id).length===0 ? '🎉 All guests seated!' : 'No matching guests'}</div>`;
+function renderSidebar(){
+  const q=($id('sbSearch')?.value||'').toLowerCase();
+  const unassigned=guests.filter(g=>!g.table_id&&g.name.toLowerCase().includes(q));
+  const el=$id('guestList');
+  if(!unassigned.length){
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;font-family:'Jost',sans-serif">
+      ${guests.filter(g=>!g.table_id).length===0?'🎉 All guests seated!':'No matching guests'}</div>`;
     return;
   }
+  const withFam=unassigned.filter(g=>getFam(g).length>0);
+  const solo   =unassigned.filter(g=>getFam(g).length===0);
+  let html='';
 
-  // Group: guests with family members first as a box, solo guests as single chips
-  const withFamily = unassigned.filter(g => {
-    const fam = getFam(g);
-    return fam && fam.length > 0;
-  });
-  const solo = unassigned.filter(g => {
-    const fam = getFam(g);
-    return !fam || fam.length === 0;
-  });
-
-  let html = '';
-
-  // Family boxes
-  withFamily.forEach(g => {
-    const fam = getFam(g);
-    const allMembers = [g, ...fam.map(m => ({...m, id: g.id+'_fam_'+m.first, isFamMember:true}))];
-    const ini = (g.name||'?').charAt(0).toUpperCase();
-    html += `<div class="family-box">
-      <div class="family-box-head">
-        <span style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;
-          display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${ini}</span>
-        <span class="family-box-name">${esc(g.name)}</span>
-        <span class="family-box-count">${fam.length+1} people</span>
+  withFam.forEach(g=>{
+    const fam=getFam(g);
+    const ini=(g.name||'?').charAt(0).toUpperCase();
+    html+=`<div class="fam-box">
+      <div class="fam-head">
+        <div class="fam-av">${ini}</div>
+        <span class="fam-name">${esc(g.name)}</span>
+        <span class="fam-ct">${fam.length+1} people</span>
       </div>
-      <div class="family-box-body">
-        <div class="guest-chip" draggable="true" data-id="${g.id}">
+      <div class="fam-body">
+        <div class="gchip" draggable="true" data-id="${g.id}">
           <div style="flex:1">
             <div style="font-weight:600;font-size:12px">${esc(g.name)}</div>
             <div style="font-size:10px;color:var(--muted)">Main guest</div>
           </div>
-          ${g.dietary ? `<span style="font-size:9px;background:#f0ece4;border-radius:4px;padding:1px 5px;color:var(--muted)">${esc(g.dietary)}</span>` : ''}
         </div>
-        ${fam.map(m => {
-          const fname = (m.first||'') + ' ' + (m.last||'');
-          return `<div class="guest-chip" style="background:#f9f7f3;padding-left:18px">
+        ${fam.map(m=>{
+          const fn=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
+          return`<div class="gchip gchip-sub">
             <div style="flex:1">
-              <div style="font-weight:500;font-size:12px">${esc(fname.trim()||'Family member')}</div>
+              <div style="font-weight:500;font-size:12px">${esc(fn)}</div>
               <div style="font-size:10px;color:var(--muted)">${esc(m.type||'family')}</div>
             </div>
           </div>`;
@@ -570,238 +738,197 @@ function renderSidebar() {
     </div>`;
   });
 
-  // Solo guests
-  if(solo.length) {
-    html += `<div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 6px;padding-left:2px">Individual Guests</div>`;
-    solo.forEach(g => {
-      const ini = (g.name||'?').charAt(0).toUpperCase();
-      html += `<div class="guest-chip solo-chip" draggable="true" data-id="${g.id}">
+  if(solo.length){
+    html+=`<div class="solo-label">Individual Guests</div>`;
+    solo.forEach(g=>{
+      const ini=(g.name||'?').charAt(0).toUpperCase();
+      html+=`<div class="gchip" draggable="true" data-id="${g.id}" style="margin-bottom:4px">
         <span style="width:28px;height:28px;border-radius:50%;background:var(--warm);
-          display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">${ini}</span>
+          display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">
+          ${ini}</span>
         <div style="flex:1;min-width:0">
           <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.name)}</div>
-          ${g.dietary ? `<div style="font-size:10px;color:var(--muted)">${esc(g.dietary)}</div>` : ''}
+          ${g.group_label?`<div style="font-size:10px;color:var(--muted)">${esc(g.group_label)}</div>`:''}
         </div>
       </div>`;
     });
   }
-
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
 
-function getFam(g) {
-  if(!g.family_members) return [];
-  try { return Array.isArray(g.family_members) ? g.family_members : JSON.parse(g.family_members); }
-  catch(e) { return []; }
-}
-
-// ── Tables panel ─────────────────────────────────────────────────────────────
-function renderTableCards() {
-  const el = document.getElementById('tableCards');
-  el.innerHTML = tables.map(t => {
-    const assigned = guests.filter(g=>g.table_id===t.id);
-    const pct = Math.round(assigned.length/t.capacity*100);
-    return `<div class="table-card ${selectedTableId===t.id?'active':''}" onclick="focusTable('${t.id}')">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+// ── Sidebar — tables ─────────────────────────────────────────────────────────
+function renderTableList(){
+  const el=$id('tableList');
+  if(!tables.length){
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;font-family:'Jost',sans-serif">No tables yet — add one below</div>`;
+    return;
+  }
+  el.innerHTML=tables.map(t=>{
+    const asgn=guests.filter(g=>g.table_id===t.id);
+    const pct=t.capacity?Math.round(asgn.length/t.capacity*100):0;
+    return`<div class="tc${selId===t.id?' on':''}" onclick="focusTable('${t.id}')">
+      <div style="display:flex;align-items:center;gap:8px">
         <div style="width:10px;height:10px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
-        <div style="font-weight:700;font-size:13px;flex:1">${esc(t.name)}</div>
-        <div style="font-size:11px;color:${assigned.length>=t.capacity?'#c04040':'var(--muted)'}">
-          ${assigned.length}/${t.capacity}
+        <div style="font-weight:700;font-size:13px;flex:1;font-family:'Jost',sans-serif">${esc(t.name)}</div>
+        <div style="font-size:11px;color:${asgn.length>=t.capacity?'#c04040':'var(--muted)'};font-family:'Jost',sans-serif">
+          ${asgn.length}/${t.capacity}
         </div>
-        <button onclick="event.stopPropagation();openTableModal('${t.id}')"
-          style="border:none;background:none;cursor:pointer;font-size:13px;padding:2px 6px;
-          border-radius:6px;color:var(--muted)" title="Edit">✏️</button>
+        <button onclick="event.stopPropagation();openModal('${t.id}')"
+          style="border:none;background:none;cursor:pointer;padding:3px 6px;
+          border-radius:6px;color:var(--muted);font-size:13px">✏️</button>
       </div>
-      <div style="height:3px;background:#f0ece4;border-radius:2px;margin-bottom:8px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${t.color};border-radius:2px;transition:.3s"></div>
-      </div>
-      ${assigned.length
-        ? `<div style="display:flex;flex-wrap:wrap">${assigned.map(g=>
-            `<span class="tc-guest" onclick="event.stopPropagation();unassignGuest('${g.id}')" title="Click to unassign">${esc(g.name.split(' ')[0])} ✕</span>`
-          ).join('')}</div>`
-        : `<div style="font-size:11px;color:var(--muted);font-style:italic">Empty — drag guests here</div>`}
+      <div class="tc-bar"><div class="tc-fill" style="width:${pct}%;background:${t.color}"></div></div>
+      ${asgn.length
+        ?`<div>${asgn.map(g=>`<span class="tg-pill" onclick="event.stopPropagation();unassign('${g.id}')" title="Remove">${esc(g.name.split(' ')[0])} ✕</span>`).join('')}</div>`
+        :`<div style="font-size:11px;color:var(--muted);font-style:italic;font-family:'Jost',sans-serif">Empty — drag guests here</div>`}
     </div>`;
   }).join('');
 }
 
-function focusTable(id) {
-  selectedTableId = id;
-  renderCanvas(); renderTableCards();
-  // Pan to centre table
-  const t = tables.find(x=>x.id===id);
-  if(t) {
-    const wrap = document.getElementById('canvasWrap');
-    panX = wrap.clientWidth/2  - t.position_x * scale;
-    panY = wrap.clientHeight/2 - t.position_y * scale;
-    document.getElementById('tablesContainer').style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+function focusTable(id){
+  selId=id; render(); renderTableList();
+  const t=tables.find(x=>x.id===id);
+  if(t){
+    const cnv=$id('cnv');
+    panX=cnv.clientWidth/2-t.position_x*scale;
+    panY=cnv.clientHeight/2-t.position_y*scale;
+    applyTransform();
   }
 }
 
-async function unassignGuest(guestId) {
-  await DB.patch(`guests?id=eq.${guestId}`, {table_id:null}, accessToken);
-  const g = guests.find(x=>x.id===guestId);
-  if(g) g.table_id = null;
-  renderCanvas(); renderSidebar(); renderTableCards();
+async function unassign(gid){
+  await DB.patch(`guests?id=eq.${gid}`,{table_id:null},tok);
+  const g=guests.find(x=>x.id===gid);if(g)g.table_id=null;
+  render();renderSidebar();renderTableList();
 }
 
-function showTab(tab, btn) {
-  document.querySelectorAll('.sidebar-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('panelGuests').style.display = tab==='guests' ? 'block' : 'none';
-  document.getElementById('panelTables').style.display = tab==='tables' ? 'block' : 'none';
+function showTab(tab,btn){
+  document.querySelectorAll('.sb-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  $id('panGuests').style.display=tab==='guests'?'block':'none';
+  $id('panTables').style.display=tab==='tables'?'block':'none';
 }
 
 // ── Add table ────────────────────────────────────────────────────────────────
-async function addTable(shape) {
-  const n = tables.filter(t=>t.shape===shape).length + 1;
-  const names = {round:'Table', rectangular:'Table', long:'Long Table'};
-  const name = names[shape] + ' ' + (tables.length+1);
-  const wrap = document.getElementById('canvasWrap');
-  const cx = (wrap.clientWidth/2  - panX) / scale + (Math.random()-0.5)*120;
-  const cy = (wrap.clientHeight/2 - panY) / scale + (Math.random()-0.5)*120;
-  const newPayload = {
-    user_id:userId, name, capacity: shape==='long'?12:8, shape,
-    position_x:Math.max(80,cx), position_y:Math.max(80,cy), color:'#C9A84C'
+async function addTable(shape){
+  const cnv=$id('cnv');
+  const px=Math.max(80,(cnv.clientWidth/2-panX)/scale+(Math.random()-.5)*160);
+  const py=Math.max(80,(cnv.clientHeight/2-panY)/scale+(Math.random()-.5)*160);
+  const cap=shape==='long'?12:8;
+  const num=tables.length+1;
+  const names={round:'Table',rect:'Table',long:'Long Table'};
+  const row={user_id:uid,name:names[shape]+' '+num,capacity:cap,shape,
+    position_x:Math.round(px),position_y:Math.round(py),color:COLORS[0]};
+  const r=await DB.post('seating_tables',row,tok);
+  if(r){tables.push(r);render();renderTableList();toast('Table added');}
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+function buildColorRow(){
+  $id('colorRow').innerHTML=COLORS.map(c=>
+    `<div class="cswatch${c===mColor?' on':''}" style="background:${c}" data-c="${c}"
+      onclick="pickColor('${c}',this)"></div>`
+  ).join('');
+}
+
+function openModal(id){
+  const t=tables.find(x=>x.id===id);if(!t)return;
+  $id('mName').value=t.name;
+  $id('mCap').value=t.capacity;
+  $id('mId').value=id;
+  mShape=t.shape||'round';mRot=parseInt(t.rotation)||0;
+  mHead=parseInt(t.head_chairs)||0;mColor=t.color||COLORS[0];
+  document.querySelectorAll('#shapePills .pill-opt').forEach(b=>b.classList.toggle('on',b.dataset.v===mShape));
+  document.querySelectorAll('#rotPills   .pill-opt').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.v)===mRot));
+  document.querySelectorAll('#headPills  .pill-opt').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.v)===mHead));
+  buildColorRow();updateModalShape();
+  $id('editModal').classList.add('open');
+}
+function closeModal(){$id('editModal').classList.remove('open')}
+
+function updateModalShape(){
+  const isLong=mShape==='long',isRound=mShape==='round';
+  $id('headRow').style.display=isLong?'block':'none';
+  $id('rotRow').style.display =isRound?'none':'block';
+  const hints={round:'seats around table',rect:'seats total',long:'seats along sides'};
+  $id('capHint').textContent='('+hints[mShape]+')';
+  const capV=parseInt($id('mCap').value)||8;
+  $id('capLabel').textContent=capV+' seat'+(capV!==1?'s':'');
+}
+
+function pickShape(btn){
+  document.querySelectorAll('#shapePills .pill-opt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');mShape=btn.dataset.v;updateModalShape();
+}
+function pickRot(btn){
+  document.querySelectorAll('#rotPills .pill-opt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');mRot=parseInt(btn.dataset.v);
+}
+function pickHead(btn){
+  document.querySelectorAll('#headPills .pill-opt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');mHead=parseInt(btn.dataset.v);
+}
+function pickColor(c,el){
+  mColor=c;
+  document.querySelectorAll('#colorRow .cswatch').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+}
+function adjCap(d){
+  const el=$id('mCap');
+  el.value=Math.max(1,Math.min(60,(parseInt(el.value)||8)+d));
+  $id('capLabel').textContent=el.value+' seat'+(el.value!=='1'?'s':'');
+}
+
+async function saveModal(){
+  const id=$id('mId').value;
+  const data={
+    name:$id('mName').value.trim(),
+    capacity:parseInt($id('mCap').value),
+    shape:mShape,color:mColor,rotation:mRot,head_chairs:mHead
   };
-  try { newPayload.rotation=0; newPayload.head_chairs=0; } catch(e){}
-  const t = await DB.post('seating_tables', newPayload, accessToken);
-  if(t) { tables.push(t); renderCanvas(); renderTableCards(); showToast('Table added'); }
-}
-
-// ── Modal ─────────────────────────────────────────────────────────────────────
-function openTableModal(id) {
-  const t = tables.find(x=>x.id===id);
-  if(!t) return;
-  document.getElementById('tName').value     = t.name;
-  document.getElementById('tCapacity').value = t.capacity;
-  document.getElementById('tEditId').value   = id;
-  selectedColor    = t.color || '#C9A84C';
-  selectedShape    = t.shape || 'round';
-  selectedRotation = t.rotation || 0;
-  selectedHeadChairs = t.head_chairs || 0;
-
-  // Shape picker
-  document.querySelectorAll('.shape-pick').forEach(b => b.classList.toggle('on', b.dataset.v === selectedShape));
-  updateModalForShape();
-
-  // Rotation
-  document.querySelectorAll('.rot-opt').forEach(b => b.classList.toggle('on', parseInt(b.dataset.v) === selectedRotation));
-
-  // Head chairs
-  document.querySelectorAll('.hc-opt').forEach(b => b.classList.toggle('on', parseInt(b.dataset.v) === selectedHeadChairs));
-
-  // Colours
-  document.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === selectedColor));
-
-  document.getElementById('tableModal').style.display = 'flex';
-}
-
-function updateModalForShape() {
-  const isRound = selectedShape === 'round';
-  const isLong  = selectedShape === 'long';
-  document.getElementById('rotateSection').style.display   = isRound ? 'none' : 'block';
-  document.getElementById('headChairToggle').style.display = isLong  ? 'block' : 'none';
-  const hints = {round:'seats around the table', rectangular:'seats total', long:'seats along sides'};
-  document.getElementById('capHint').textContent = '(' + hints[selectedShape] + ')';
-}
-
-function pickShape(btn) {
-  document.querySelectorAll('.shape-pick').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  selectedShape = btn.dataset.v;
-  updateModalForShape();
-}
-
-function pickRotation(btn) {
-  document.querySelectorAll('.rot-opt').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  selectedRotation = parseInt(btn.dataset.v);
-}
-
-function pickHeadChairs(btn) {
-  document.querySelectorAll('.hc-opt').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  selectedHeadChairs = parseInt(btn.dataset.v);
-}
-
-function adjustCap(d) {
-  const el = document.getElementById('tCapacity');
-  el.value = Math.max(1, Math.min(60, parseInt(el.value||8) + d));
-}
-
-function closeTableModal() { document.getElementById('tableModal').style.display='none'; }
-
-function selectColor(c, el) {
-  selectedColor = c;
-  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
-  el.classList.add('active');
-}
-
-async function saveTable() {
-  const id = document.getElementById('tEditId').value;
-  const data = {
-    name:     document.getElementById('tName').value.trim(),
-    capacity: parseInt(document.getElementById('tCapacity').value),
-    shape:    selectedShape,
-    color:    selectedColor
-  };
-  // Add rotation/head_chairs only if migration has been applied
-  const hasCols = tables.find(x=>x.id===id) && 'rotation' in (tables.find(x=>x.id===id)||{});
-  if(hasCols || true) { data.rotation = selectedRotation; data.head_chairs = selectedHeadChairs; }
-  await DB.patch(`seating_tables?id=eq.${id}`, data, accessToken);
-  const t = tables.find(x=>x.id===id);
-  if(t) Object.assign(t, data);
-  closeTableModal(); renderCanvas(); renderTableCards();
-  showToast('Table saved ✓');
-}
-
-async function deleteTableConfirm() {
-  const id = document.getElementById('tEditId').value;
-  if(!confirm('Delete this table? Guests will be unassigned.')) return;
-  for(const g of guests.filter(x=>x.table_id===id)) {
-    await DB.patch(`guests?id=eq.${g.id}`, {table_id:null}, accessToken);
-    g.table_id = null;
+  // Try saving rotation/head_chairs, ignore error if columns don't exist yet
+  try{await DB.patch(`seating_tables?id=eq.${id}`,data,tok);}
+  catch(e){
+    const safeData={name:data.name,capacity:data.capacity,shape:data.shape,color:data.color};
+    await DB.patch(`seating_tables?id=eq.${id}`,safeData,tok);
+    Object.assign(data,safeData);
   }
-  await DB.del(`seating_tables?id=eq.${id}`, accessToken);
-  tables = tables.filter(t=>t.id!==id);
-  closeTableModal(); renderCanvas(); renderSidebar(); renderTableCards();
-  showToast('Table deleted');
+  const t=tables.find(x=>x.id===id);if(t)Object.assign(t,data);
+  closeModal();render();renderTableList();toast('Saved ✓');
 }
 
-async function saveField(table, fields) {
-  document.getElementById('saveStatus').textContent = 'Saving…';
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    await DB.patch(`seating_tables?id=eq.${table.id}`, fields, accessToken);
-    document.getElementById('saveStatus').textContent = 'All saved ✓';
-  }, 700);
+async function delTable(){
+  const id=$id('mId').value;
+  if(!confirm('Delete this table? Guests will be unassigned.'))return;
+  for(const g of guests.filter(x=>x.table_id===id)){
+    await DB.patch(`guests?id=eq.${g.id}`,{table_id:null},tok);
+    g.table_id=null;
+  }
+  await DB.del(`seating_tables?id=eq.${id}`,tok);
+  tables=tables.filter(t=>t.id!==id);
+  closeModal();render();renderSidebar();renderTableList();toast('Deleted');
 }
 
-function autoLayout() {
-  const wrap = document.getElementById('canvasWrap');
-  const W = wrap.clientWidth, H = wrap.clientHeight;
-  const cols = Math.ceil(Math.sqrt(tables.length));
-  tables.forEach((t,i) => {
-    t.position_x = 160 + (i%cols) * Math.min(300,(W-200)/Math.max(cols,1));
-    t.position_y = 160 + Math.floor(i/cols) * 260;
-    DB.patch(`seating_tables?id=eq.${t.id}`, {position_x:t.position_x,position_y:t.position_y}, accessToken);
+// ── Auto layout ──────────────────────────────────────────────────────────────
+function doAutoLayout(){
+  const cnv=$id('cnv');
+  const W=cnv.clientWidth-120,H=cnv.clientHeight-120;
+  const cols=Math.ceil(Math.sqrt(tables.length));
+  tables.forEach((t,i)=>{
+    t.position_x=120+(i%cols)*Math.max(180,W/cols);
+    t.position_y=120+Math.floor(i/cols)*Math.max(200,H/Math.ceil(tables.length/cols));
+    schedSave(t,{position_x:t.position_x,position_y:t.position_y});
   });
-  renderCanvas(); showToast('Layout applied ✨');
+  render();toast('Layout applied ✨');
 }
 
-function resetView() {
-  scale=1; panX=0; panY=0;
-  const cont = document.getElementById('tablesContainer');
-  if(cont) { cont.style.transform=''; cont.style.transformOrigin='0 0'; }
-  renderCanvas();
-}
-
-function printChart() { window.print(); }
-
-function showToast(msg, err=false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast'+(err?' error':'')+' show';
-  setTimeout(()=>t.classList.remove('show'), 3000);
+// ── Save helper ──────────────────────────────────────────────────────────────
+function schedSave(t,fields){
+  setSave('Saving…');clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    await DB.patch(`seating_tables?id=eq.${t.id}`,fields,tok);
+    setSave('All saved ✓');
+  },700);
 }
 
 init();
