@@ -40,13 +40,20 @@
     .b-diet{background:#fdf0ff;color:#6a006a}
     .b-plus{background:#e8f0ff;color:#1a2a7a}
     .b-menu{background:#fff8e8;color:#7a5000}
-    .gactions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
-    .gbtn{padding:6px 10px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--charcoal);transition:.15s;display:inline-flex;align-items:center;gap:4px}
-    .gbtn:hover{border-color:var(--gold);color:var(--gold)}
-    .gbtn.wa:hover{border-color:#25D366;color:#25D366}
-    .gbtn.em:hover{border-color:#4a90d9;color:#4a90d9}
-    .gbtn.dl:hover{border-color:#c04040;color:#c04040}
-    .gbtn.share-btn:hover{border-color:var(--gold);color:var(--gold)}
+    .gactions{display:flex;gap:5px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .gbtn{padding:5px 12px;border-radius:99px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;letter-spacing:.02em}
+    .gbtn.edit    {background:#f0ece4;color:#5a4a2a}
+    .gbtn.edit:hover{background:#e4ddd0;color:#3d2e1a}
+    .gbtn.wa      {background:#e6f9ee;color:#1a6e3a}
+    .gbtn.wa:hover{background:#d0f0e0;color:#155a30}
+    .gbtn.em      {background:#e8f0fb;color:#2a5aaa}
+    .gbtn.em:hover{background:#d8e4f8;color:#1e4490}
+    .gbtn.rsvp-btn{background:#f5f0e8;color:#7a5a1a}
+    .gbtn.rsvp-btn:hover{background:#ede4d0;color:#5a3e10}
+    .gbtn.share-btn{background:#fdf6e3;color:#8a6a10}
+    .gbtn.share-btn:hover{background:#f5e8c0;color:#6a4e08}
+    .gbtn.dl      {background:#fdf0f0;color:#c04040}
+    .gbtn.dl:hover{background:#f8e0e0;color:#a02020}
     .grp-head{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:4px 0}
     .grp-head span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
     .grp-head hr{flex:1;border:none;border-top:1px solid var(--border);margin:0}
@@ -842,12 +849,12 @@ function buildCard(g) {
   if(g.dietary)  badges += '<span class="badge b-diet">🌿 '+esc(g.dietary)+'</span>';
   if(hasMn)      badges += '<span class="badge b-menu">🍽 '+esc(g.main)+'</span>';
 
-  let actions = '<button class="gbtn" onclick="editGuest(\''+gid+'\')">✏️ Edit</button>';
-  if(hasPh) actions += '<button class="gbtn wa" onclick="sendWA(\''+gid+'\')">💬 WhatsApp</button>';
-  if(hasEm) actions += '<button class="gbtn em" onclick="sendEM(\''+gid+'\')">✉️ Email</button>';
-  actions += '<button class="gbtn" onclick="cycleRsvp(\''+gid+'\')" title="Cycle RSVP">🔄 RSVP</button>';
-  actions += '<button class="gbtn share-btn" id="sb-'+gid+'" onclick="copyRsvpLink(\''+gid+'\')" title="Copy RSVP link">🔗 Link</button>';
-  actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">🗑</button>';
+  let actions = '<button class="gbtn edit" onclick="editGuest(\''+gid+'\')">Edit</button>';
+  if(hasPh) actions += '<button class="gbtn wa" onclick="sendWA(\''+gid+'\')">WhatsApp</button>';
+  if(hasEm) actions += '<button class="gbtn em" onclick="sendEM(\''+gid+'\')">Email</button>';
+  actions += '<button class="gbtn rsvp-btn" onclick="cycleRsvp(\''+gid+'\')" title="Cycle RSVP">RSVP</button>';
+  actions += '<button class="gbtn share-btn" id="sb-'+gid+'" onclick="copyRsvpLink(\''+gid+'\')" title="Copy RSVP link">Link</button>';
+  actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">Delete</button>';
 
   const noContact = !hasPh && !hasEm;
   return '<div class="gcard'+selCls+(noContact?' no-contact':'')+'" id="gc-'+gid+'">' +
