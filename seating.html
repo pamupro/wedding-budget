@@ -242,8 +242,8 @@
     .pchip.sub{padding-left:18px;background:#f9f7f3}
     .pchip.dragging{opacity:.3;transform:scale(.96)}
     .drag-badge{
-      font-size:9px;background:#f0ece4;border-radius:4px;
-      padding:2px 6px;color:var(--muted);flex-shrink:0;pointer-events:none;
+      font-size:10px;color:#c8b88a;flex-shrink:0;pointer-events:none;
+      opacity:.6;
     }
 
     /* Table cards */
@@ -418,19 +418,11 @@
       <span class="lp-label">Add Table</span>
       <button class="lp-btn" onclick="addTable('round')">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/></svg>
-        Round
-      </button>
-      <button class="lp-btn" onclick="addTable('oval')" style="margin-top:4px">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="7" rx="6" ry="3.8" stroke="currentColor" stroke-width="1.5"/></svg>
-        Oval
+        Round Table
       </button>
       <button class="lp-btn" onclick="addTable('rect')" style="margin-top:4px">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3.5" width="12" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
-        Rectangle
-      </button>
-      <button class="lp-btn" onclick="addTable('long')" style="margin-top:4px">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="4.5" width="14" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
-        Long Table
+        Rectangular Table
       </button>
     </div>
 
@@ -511,9 +503,7 @@
       <label class="mlbl">Shape</label>
       <div class="popts" id="ntShapeOpts">
         <button class="popt on" data-v="round" onclick="ntPickShape(this)">⭕ Round</button>
-        <button class="popt"    data-v="oval"  onclick="ntPickShape(this)">⬭ Oval</button>
         <button class="popt"    data-v="rect"  onclick="ntPickShape(this)">▭ Rectangle</button>
-        <button class="popt"    data-v="long"  onclick="ntPickShape(this)">═ Long</button>
       </div>
 
       <label class="mlbl">Number of Chairs <small id="ntCapHint" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)"></small></label>
@@ -839,14 +829,62 @@ function render(){
       `<span class="tg" style="background:${col}18;border:1px solid ${col}44;color:${col}">${esc(p.name.split(' ')[0])}</span>`
     ).join('')+(all.length>8?`<span class="tg" style="color:var(--muted)">+${all.length-8}</span>`:'');
 
+    // Build chair ring
+    const CPAD=24;
+    const wrapW=w+CPAD*2+16, wrapH=h+CPAD*2+16;
+    const hw2=wrapW/2, hh2=wrapH/2;
+    const chairPositions=[];
+    if(shCls==='round'||shCls==='oval'){
+      const rx=w/2+CPAD, ry=h/2+CPAD;
+      for(let i=0;i<cap;i++){
+        const a=(i/cap)*2*Math.PI-Math.PI/2;
+        chairPositions.push({cx:hw2+rx*Math.cos(a), cy:hh2+ry*Math.sin(a)});
+      }
+    } else {
+      // rect / long — top + bottom rows, sides if needed
+      const perRow=Math.ceil(cap/2), remain=cap-perRow;
+      const x0=hw2-w/2+14, x1=hw2+w/2-14;
+      const stepX=perRow>1?(x1-x0)/(perRow-1):0;
+      for(let i=0;i<perRow;i++) chairPositions.push({cx:x0+i*stepX, cy:hh2-h/2-CPAD});
+      for(let i=0;i<remain;i++) chairPositions.push({cx:x0+i*stepX, cy:hh2+h/2+CPAD});
+    }
+    // Apply table rotation to chair ring
+    const rotRad=rot*Math.PI/180;
+    const rotChairs=chairPositions.map(({cx,cy})=>{
+      const dx=cx-hw2, dy=cy-hh2;
+      return{cx:hw2+dx*Math.cos(rotRad)-dy*Math.sin(rotRad),
+             cy:hh2+dx*Math.sin(rotRad)+dy*Math.cos(rotRad)};
+    });
+    const chairDots=rotChairs.map((pos,i)=>{
+      const person=all[i];
+      const fn=person?firstName(person.name):'';
+      const filled=!!person;
+      return`<div style="position:absolute;
+        left:${pos.cx-11}px;top:${pos.cy-11}px;
+        width:22px;height:22px;border-radius:50%;
+        border:2px solid ${col};
+        background:${filled?col:'white'};
+        color:${filled?'white':col+'88'};
+        display:flex;align-items:center;justify-content:center;
+        font-size:8px;font-weight:700;font-family:'Jost',sans-serif;
+        box-shadow:0 1px 5px rgba(0,0,0,.12);
+        opacity:${filled?1:.6};
+        z-index:3;pointer-events:none;white-space:nowrap;overflow:hidden;"
+        title="${filled?esc(person.name):'Empty'}">${esc(fn.charAt(0))}</div>`;
+    }).join('');
+
     node.innerHTML=`
       ${rotH}
-      <div class="tshape ${shCls}" style="width:${w}px;height:${h}px;border-color:${col};transform:rotate(${rot}deg)"
-        ondblclick="openModal('${t.id}')">
-        <div class="tname" style="transform:rotate(${-rot}deg);max-width:${dw-16}px;word-break:break-word">${esc(t.name)}</div>
-        <div class="tcount" style="color:${full?'#c04040':'var(--muted)'};transform:rotate(${-rot}deg)">${cnt}/${cap}</div>
-      </div>
-      ${all.length?`<div class="tguests" style="max-width:${dw+40}px;transform:rotate(0deg)">${chips}</div>`:''}`;
+      <div style="position:relative;width:${wrapW}px;height:${wrapH}px">
+        ${chairDots}
+        <div class="tshape ${shCls}" ondblclick="openModal('${t.id}')"
+          style="position:absolute;left:${hw2-w/2}px;top:${hh2-h/2}px;
+            width:${w}px;height:${h}px;border-color:${col};
+            transform:rotate(${rot}deg);z-index:2">
+          <div class="t-name" style="transform:rotate(${-rot}deg);max-width:${dw-10}px">${esc(t.name)}</div>
+          <div class="t-ct" style="color:${full?'#c04040':'var(--muted)'};transform:rotate(${-rot}deg)">${cnt}/${cap}</div>
+        </div>
+      </div>`;
 
     // TABLE DRAG: mousedown on shape drags the whole table
     const shape=node.querySelector('.tshape');
@@ -970,7 +1008,7 @@ function renderSidebar(){
           <div style="font-size:10px;color:var(--muted)">${esc(mg.name)}</div>
         </div>
         ${sideTag}
-        <span class="drag-badge">drag</span>
+        <span class="drag-badge">⠿</span>
       </div>`;
     } else {
       // Family group — expandable box
@@ -1003,7 +1041,7 @@ function renderSidebar(){
                 </div>
                 <div style="font-size:10px;color:var(--muted)">${esc(p.type)}</div>
               </div>
-              <span class="drag-badge">drag</span>
+              <span class="drag-badge">⠿</span>
             </div>`;
           }).join('')}
         </div>
@@ -1140,62 +1178,48 @@ function ntUpdateHint(){
 
 function ntDrawPreview(){
   const cap=parseInt($('ntCap').value)||8;
-  const sh=ntShape;
+  const sh=ntShape==='rect'?'rect':'round';
   const col=ntColor||COLORS[0];
-  // Dimensions
+  const name=($('ntName')?.value||'New Table');
+  // Table dimensions
   let tw,th;
-  if(sh==='round'){const s=Math.max(70,Math.min(110,50+cap*4));tw=s;th=s;}
-  else if(sh==='oval'){tw=Math.max(90,Math.min(150,70+cap*6));th=Math.round(tw*.58);}
-  else if(sh==='long'){tw=Math.max(130,Math.min(200,80+cap*10));th=50;}
-  else{tw=Math.max(90,Math.min(150,70+cap*5));th=Math.round(tw*.6);}
-  const pad=20;
-  const wrapW=tw+pad*2+20, wrapH=th+pad*2+20;
-  const hw=wrapW/2, hh=wrapH/2;
-  // Build chair positions
+  if(sh==='round'){const s=Math.max(80,Math.min(110,60+cap*4));tw=s;th=s;}
+  else{tw=Math.max(100,Math.min(180,80+cap*8));th=Math.round(tw*.58);}
+  const PAD=22;
+  const ww=tw+PAD*2+16, wh=th+PAD*2+16;
+  const hw=ww/2, hh=wh/2;
+  // Chair positions
   const chairs=[];
-  if(sh==='round'||sh==='oval'){
-    const rx=tw/2+pad, ry=th/2+pad;
-    for(let i=0;i<cap;i++){
-      const a=(i/cap)*2*Math.PI-Math.PI/2;
-      chairs.push({cx:hw+rx*Math.cos(a),cy:hh+ry*Math.sin(a)});
-    }
-  } else if(sh==='long'){
-    const sideSeats=cap-ntHead;
-    const perSide=Math.ceil(sideSeats/2);
-    const x0=hw-tw/2+16, x1=hw+tw/2-16;
-    const step=perSide>1?(x1-x0)/(perSide-1):0;
-    for(let i=0;i<perSide;i++)chairs.push({cx:x0+i*step,cy:hh-th/2-pad});
-    for(let i=0;i<sideSeats-perSide;i++)chairs.push({cx:x0+i*step,cy:hh+th/2+pad});
-    if(ntHead>=1)chairs.push({cx:hw-tw/2-pad,cy:hh});
-    if(ntHead>=2)chairs.push({cx:hw+tw/2+pad,cy:hh});
+  if(sh==='round'){
+    const r=tw/2+PAD;
+    for(let i=0;i<cap;i++){const a=(i/cap)*2*Math.PI-Math.PI/2;chairs.push({cx:hw+r*Math.cos(a),cy:hh+r*Math.sin(a)});}
   } else {
-    const top=Math.ceil(cap/4), bot=Math.ceil(cap/4);
-    const sides=cap-top-bot;
-    const lft=Math.ceil(sides/2),rgt=sides-Math.ceil(sides/2);
-    const xs=top>1?(tw-32)/(top-1):0, ys=lft>1?(th-20)/(lft-1):0;
-    for(let i=0;i<top;i++)chairs.push({cx:hw-tw/2+16+i*xs,cy:hh-th/2-pad});
-    for(let i=0;i<bot;i++)chairs.push({cx:hw-tw/2+16+i*xs,cy:hh+th/2+pad});
-    for(let i=0;i<lft;i++)chairs.push({cx:hw-tw/2-pad,cy:hh-th/2+10+i*ys});
-    for(let i=0;i<rgt;i++)chairs.push({cx:hw+tw/2+pad,cy:hh-th/2+10+i*ys});
+    const perRow=Math.ceil(cap/2), rem=cap-perRow;
+    const x0=hw-tw/2+14, x1=hw+tw/2-14;
+    const step=perRow>1?(x1-x0)/(perRow-1):0;
+    for(let i=0;i<perRow;i++) chairs.push({cx:x0+i*step,cy:hh-th/2-PAD});
+    for(let i=0;i<rem;i++) chairs.push({cx:x0+i*step,cy:hh+th/2+PAD});
   }
-  const borderR=sh==='round'||sh==='oval'?'50%':sh==='long'?'6px':'8px';
-  const chairDots=chairs.map(({cx,cy})=>
-    `<div style="position:absolute;left:${cx-9}px;top:${cy-9}px;
-      width:18px;height:18px;border-radius:50%;
+  const br=sh==='round'?'50%':'10px';
+  const dots=chairs.map(({cx,cy})=>
+    `<div style="position:absolute;left:${cx-11}px;top:${cy-11}px;
+      width:22px;height:22px;border-radius:50%;
       border:2px solid ${col};background:white;
       box-shadow:0 1px 4px rgba(0,0,0,.1)"></div>`
   ).join('');
-  $('ntChairPreview').style.cssText=`position:relative;width:${wrapW}px;height:${wrapH}px`;
-  $('ntChairPreview').innerHTML=chairDots+
+  $('ntChairPreview').style.cssText=`position:relative;width:${ww}px;height:${wh}px;margin:0 auto`;
+  $('ntChairPreview').innerHTML=dots+
     `<div style="position:absolute;left:${hw-tw/2}px;top:${hh-th/2}px;
-      width:${tw}px;height:${th}px;border-radius:${borderR};
+      width:${tw}px;height:${th}px;border-radius:${br};
       border:2.5px solid ${col};background:white;
       box-shadow:0 3px 14px rgba(0,0,0,.1);
       display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:var(--ch);padding:0 6px;text-align:center">${esc($('ntName')?.value||'New Table')}</div>
-      <div style="font-size:10px;color:var(--muted);font-family:'Jost',sans-serif">${cap} seats</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;
+        color:var(--ch);padding:0 8px;text-align:center;line-height:1.2">${esc(name)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${cap} chairs</div>
     </div>`;
 }
+
 
 async function confirmNewTable(){
   const name=$('ntName').value.trim()||'Table '+(tables.length+1);
