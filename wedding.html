@@ -978,6 +978,25 @@ async function submitRsvp() {
   if(!first) { markErr('rFirst'); showErr('Please enter your first name.'); return; }
   if(!last)  { markErr('rLast');  showErr('Please enter your last name.'); return; }
 
+  // Family members — first AND last name both required
+  if(rsvpChoice === 'yes') {
+    for(let i = 0; i < rsvpFamily.length; i++) {
+      const m = rsvpFamily[i];
+      if(!m.first || !m.first.trim()) {
+        showErr('Please enter the first name for family member ' + (i+1) + '.');
+        renderRsvpFamily();
+        setTimeout(()=>document.getElementById('rsvpFamilyList')?.scrollIntoView({behavior:'smooth',block:'center'}),50);
+        return;
+      }
+      if(!m.last || !m.last.trim()) {
+        showErr('Please enter the last name for family member ' + (i+1) + '.');
+        renderRsvpFamily();
+        setTimeout(()=>document.getElementById('rsvpFamilyList')?.scrollIntoView({behavior:'smooth',block:'center'}),50);
+        return;
+      }
+    }
+  }
+
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Sending…';
 
