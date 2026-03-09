@@ -14,8 +14,8 @@
     /* Canvas */
     .canvas-wrap{flex:1;position:relative;overflow:hidden;background:#f5f0e8;
       background-image:radial-gradient(circle,#c9a84c22 1px,transparent 1px);
-      background-size:30px 30px}
-    #tablesContainer{position:absolute;top:0;left:0;width:200%;height:200%;transform-origin:top left}
+      background-size:30px 30px;cursor:default}
+    #tablesContainer{position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0}
 
     /* Toolbar */
     .toolbar{position:absolute;top:12px;left:12px;display:flex;gap:6px;z-index:5;flex-wrap:wrap}
@@ -292,9 +292,16 @@ if(!userId || !accessToken) location.href = 'login.html';
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function init() {
-  guests = await DB.query(`guests?user_id=eq.${userId}&order=name.asc`, accessToken);
-  tables = await DB.query(`seating_tables?user_id=eq.${userId}&order=created_at.asc`, accessToken);
-  if(!tables.length) await createDefaultTables();
+  try {
+    guests = await DB.query(`guests?user_id=eq.${userId}&order=name.asc`, accessToken) || [];
+    tables = await DB.query(`seating_tables?user_id=eq.${userId}&order=created_at.asc`, accessToken) || [];
+    if(!Array.isArray(tables)) tables = [];
+    if(!Array.isArray(guests))  guests = [];
+    if(!tables.length) await createDefaultTables();
+  } catch(e) {
+    console.error('Init error:', e);
+    guests = []; tables = [];
+  }
   renderCanvas();
   renderSidebar();
   renderTableCards();
@@ -309,10 +316,13 @@ async function createDefaultTables() {
     {name:'Table 2',   shape:'round', x:450, y:350},
   ];
   for(const d of defaults) {
-    const t = await DB.post('seating_tables', {
+    const payload = {
       user_id:userId, name:d.name, capacity:8, shape:d.shape,
-      position_x:d.x, position_y:d.y, color:'#C9A84C', rotation:0, head_chairs:0
-    }, accessToken);
+      position_x:d.x, position_y:d.y, color:'#C9A84C'
+    };
+    // Add new columns only if migration has been run
+    try { payload.rotation = 0; payload.head_chairs = 0; } catch(e){}
+    const t = await DB.post('seating_tables', payload, accessToken);
     if(t) tables.push(t);
   }
 }
@@ -337,12 +347,13 @@ function tableSize(t) {
 function renderCanvas() {
   const container = document.getElementById('tablesContainer');
   container.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  container.style.transformOrigin = '0 0';
   container.innerHTML = '';
 
   tables.forEach(t => {
     const assigned = guests.filter(g => g.table_id === t.id);
     const {w, h} = tableSize(t);
-    const rot = t.rotation || 0;
+    const rot = parseInt(t.rotation) || 0;
     const shapeClass = t.shape === 'round' ? 'shape-round' : t.shape === 'long' ? 'shape-long' : 'shape-rect';
     const isSelected = selectedTableId === t.id;
 
@@ -446,11 +457,21 @@ function setupPan() {
   });
   wrap.addEventListener('mouseup', () => { panning=false; wrap.style.cursor=''; });
   wrap.addEventListener('wheel', e => { e.preventDefault(); doZoom(e.deltaY < 0 ? 0.1 : -0.1); }, {passive:false});
+  // Also allow plain left-click drag on empty canvas to pan
+  wrap.addEventListener('mousedown', e => {
+    if(e.button !== 0) return;
+    // Only pan if clicking directly on canvas or container (not on a table)
+    if(e.target !== wrap && e.target !== document.getElementById('tablesContainer')) return;
+    panning = true; startX=e.clientX; startY=e.clientY; startPX=panX; startPY=panY;
+    wrap.style.cursor = 'grabbing';
+  });
 }
 
 function doZoom(d) {
   scale = Math.max(0.3, Math.min(2.5, scale+d));
-  document.getElementById('tablesContainer').style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  const c = document.getElementById('tablesContainer');
+  c.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  c.style.transformOrigin = '0 0';
 }
 
 // ── Drop guests onto tables ──────────────────────────────────────────────────
@@ -638,11 +659,12 @@ async function addTable(shape) {
   const wrap = document.getElementById('canvasWrap');
   const cx = (wrap.clientWidth/2  - panX) / scale + (Math.random()-0.5)*120;
   const cy = (wrap.clientHeight/2 - panY) / scale + (Math.random()-0.5)*120;
-  const t = await DB.post('seating_tables', {
+  const newPayload = {
     user_id:userId, name, capacity: shape==='long'?12:8, shape,
-    position_x:Math.max(80,cx), position_y:Math.max(80,cy),
-    color:'#C9A84C', rotation:0, head_chairs:0
-  }, accessToken);
+    position_x:Math.max(80,cx), position_y:Math.max(80,cy), color:'#C9A84C'
+  };
+  try { newPayload.rotation=0; newPayload.head_chairs=0; } catch(e){}
+  const t = await DB.post('seating_tables', newPayload, accessToken);
   if(t) { tables.push(t); renderCanvas(); renderTableCards(); showToast('Table added'); }
 }
 
@@ -718,13 +740,14 @@ function selectColor(c, el) {
 async function saveTable() {
   const id = document.getElementById('tEditId').value;
   const data = {
-    name:        document.getElementById('tName').value.trim(),
-    capacity:    parseInt(document.getElementById('tCapacity').value),
-    shape:       selectedShape,
-    color:       selectedColor,
-    rotation:    selectedRotation,
-    head_chairs: selectedHeadChairs
+    name:     document.getElementById('tName').value.trim(),
+    capacity: parseInt(document.getElementById('tCapacity').value),
+    shape:    selectedShape,
+    color:    selectedColor
   };
+  // Add rotation/head_chairs only if migration has been applied
+  const hasCols = tables.find(x=>x.id===id) && 'rotation' in (tables.find(x=>x.id===id)||{});
+  if(hasCols || true) { data.rotation = selectedRotation; data.head_chairs = selectedHeadChairs; }
   await DB.patch(`seating_tables?id=eq.${id}`, data, accessToken);
   const t = tables.find(x=>x.id===id);
   if(t) Object.assign(t, data);
@@ -766,7 +789,12 @@ function autoLayout() {
   renderCanvas(); showToast('Layout applied ✨');
 }
 
-function resetView() { scale=1; panX=0; panY=0; renderCanvas(); }
+function resetView() {
+  scale=1; panX=0; panY=0;
+  const cont = document.getElementById('tablesContainer');
+  if(cont) { cont.style.transform=''; cont.style.transformOrigin='0 0'; }
+  renderCanvas();
+}
 
 function printChart() { window.print(); }
 
