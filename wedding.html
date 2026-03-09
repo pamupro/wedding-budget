@@ -12,49 +12,76 @@
     body{background:var(--cream);font-family:'Jost',sans-serif;color:var(--dark);min-height:100vh}
     input,select,textarea{font-size:16px !important}
 
+    /* ── Grand entrance animations ── */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+    @keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
+    @keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes goldPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0)}
+      50%{box-shadow:0 0 0 10px rgba(201,168,76,.15)}}
+    @keyframes petals{0%{opacity:0;transform:translateY(-20px) rotate(0deg)}
+      100%{opacity:1;transform:translateY(0) rotate(15deg)}}
+    @keyframes lineGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+    @keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    .anim-fade-up{animation:fadeUp .7s ease both}
+    .anim-fade-in{animation:fadeIn .6s ease both}
+    .anim-scale-in{animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1) both}
+    .anim-delay-1{animation-delay:.1s}
+    .anim-delay-2{animation-delay:.2s}
+    .anim-delay-3{animation-delay:.3s}
+    .anim-delay-4{animation-delay:.4s}
+    .anim-delay-5{animation-delay:.5s}
+
     .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
       padding:60px 24px;text-align:center;position:relative;overflow:hidden}
     .hero::before{content:'';position:absolute;inset:0;
       background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,.12) 0%,transparent 60%),
       radial-gradient(ellipse at 50% 100%,rgba(201,168,76,.08) 0%,transparent 60%);pointer-events:none}
-    .ornament{font-size:18px;color:var(--gold);letter-spacing:8px;margin-bottom:20px;opacity:.7}
+    .ornament{font-size:18px;color:var(--gold);letter-spacing:8px;margin-bottom:20px;opacity:.7;animation:shimmer 3s ease-in-out infinite}
     .together{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
-    .names{font-family:'Cormorant Garamond',serif;font-size:clamp(52px,12vw,96px);color:var(--dark);line-height:1;margin-bottom:8px}
+    .names{font-family:'Cormorant Garamond',serif;font-size:clamp(52px,12vw,96px);color:var(--dark);line-height:1;margin-bottom:8px;animation:fadeUp .9s .2s ease both}
     .names .amp{color:var(--gold);font-style:italic;font-size:.85em;padding:0 12px}
     .divider{display:flex;align-items:center;gap:16px;margin:24px auto;width:240px}
-    .divider-line{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent)}
-    .date-main{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,26px);font-weight:600;margin-bottom:4px}
+    .divider-line{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);animation:lineGrow .8s .5s ease both;transform-origin:center}
+    .date-main{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,26px);font-weight:600;margin-bottom:4px;animation:fadeUp .8s .4s ease both;opacity:0;animation-fill-mode:both}
     .cd-row{display:flex;gap:20px;justify-content:center;margin-bottom:40px;flex-wrap:wrap}
     .cd-unit{text-align:center}
-    .cd-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);line-height:1}
+    .cd-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);line-height:1;animation:countUp .6s .6s ease both;opacity:0}
     .cd-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
     .btn-gold{background:linear-gradient(135deg,#9a7535,var(--gold));color:white;border:none;
       border-radius:99px;padding:16px 40px;font-family:'Jost',sans-serif;font-size:15px;font-weight:600;
       cursor:pointer;box-shadow:0 6px 20px rgba(154,117,53,.35);transition:transform .15s}
-    .btn-gold:hover{transform:translateY(-2px)}
+    .btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(154,117,53,.45)}
+    .btn-gold:not(:disabled){animation:goldPulse 3s 2s ease infinite}
     .btn-gold:disabled{opacity:.55;transform:none;cursor:not-allowed}
     .scroll-hint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);
       font-size:11px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;animation:bounce 2s infinite}
     @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
 
     .section{padding:60px 24px;text-align:center}
+    .section-title{animation:fadeUp .6s ease both}
     .section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(26px,5vw,38px);margin-bottom:8px}
     .section-sub{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.7;
       max-width:500px;margin-left:auto;margin-right:auto}
     .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:560px;margin:0 auto 32px}
     .detail-card{background:white;border-radius:16px;padding:22px;
-      box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(201,168,76,.2)}
+      box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(201,168,76,.2);
+      animation:fadeUp .5s ease both;opacity:0}
     .detail-icon{font-size:26px;margin-bottom:8px}
     .detail-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
     .detail-val{font-size:13px;font-weight:600;color:var(--dark);line-height:1.5}
 
     /* ── RSVP card ── */
     .rsvp-wrap{max-width:480px;margin:0 auto;background:white;border-radius:24px;padding:36px;
-      box-shadow:0 8px 40px rgba(0,0,0,.08);border:1px solid rgba(201,168,76,.2)}
+      box-shadow:0 8px 40px rgba(0,0,0,.08);border:1px solid rgba(201,168,76,.2);
+      animation:scaleIn .6s cubic-bezier(.34,1.2,.64,1) both}
 
     /* greeting banner */
     .greet-banner{display:flex;align-items:center;gap:14px;background:#fdf9f0;
-      border:1.5px solid rgba(201,168,76,.3);border-radius:14px;padding:14px 16px;margin-bottom:24px}
+      border:1.5px solid rgba(201,168,76,.3);border-radius:14px;padding:14px 16px;margin-bottom:24px;
+      animation:fadeUp .4s ease both}
     .greet-avatar{width:44px;height:44px;border-radius:50%;
       background:linear-gradient(135deg,#f0e8d0,#e4d4a0);
       display:flex;align-items:center;justify-content:center;
@@ -69,8 +96,11 @@
       font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;
       display:flex;flex-direction:column;align-items:center;gap:5px}
     .att-btn .ab-icon{font-size:24px}
-    .att-btn.yes.on{border-color:var(--green);background:#f0faf0;color:var(--green)}
-    .att-btn.no.on{border-color:var(--red);background:#fff0f0;color:var(--red)}
+    .att-btn.yes.on{border-color:var(--green);background:#f0faf0;color:var(--green);
+      animation:goldPulse .5s ease}
+    .att-btn.no.on{border-color:var(--red);background:#fff0f0;color:var(--red);
+      animation:goldPulse .5s ease}
+    .att-btn:active{transform:scale(.97)}
     .att-btn:hover:not(.on){border-color:var(--gold);background:#fdf9f0}
 
     /* section divider */
@@ -99,14 +129,36 @@
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
       background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
     .fhint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
-    .rfmrow{display:flex;align-items:center;gap:8px;background:#faf7f0;border-radius:10px;
-      padding:9px 10px;border:1.5px solid #e8e0d0}
-    .rfmrow input,.rfmrow select{flex:1;min-width:0;padding:10px 12px;border:1.5px solid #e8e0d0;
-      border-radius:10px;font-family:'Jost',sans-serif;font-size:16px;background:white;outline:none;color:var(--dark)}
-    .rfmrow input:focus,.rfmrow select:focus{border-color:var(--gold)}
-    .rfm-del{width:34px;height:34px;border-radius:8px;border:none;background:#fff0f0;
-      color:#c04040;cursor:pointer;font-size:16px;display:flex;align-items:center;
-      justify-content:center;flex-shrink:0}
+    /* family member cards on RSVP form */
+    .rfmrow{background:white;border-radius:16px;border:1.5px solid #e8e0d0;padding:16px;
+      margin-bottom:10px;box-shadow:0 3px 12px rgba(0,0,0,.06);
+      animation:rfmIn .3s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes rfmIn{from{opacity:0;transform:translateY(-10px) scale(.97)}to{opacity:1;transform:none}}
+    .rfmrow-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .rfmrow-badge{display:flex;align-items:center;gap:8px}
+    .rfmrow-num{width:26px;height:26px;border-radius:50%;
+      background:linear-gradient(135deg,var(--gold),#a07030);
+      display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:700;color:white}
+    .rfmrow-typesel{padding:5px 12px;border-radius:99px;border:1.5px solid #e8e0d0;
+      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
+      background:#faf7f0;color:var(--dark);outline:none;cursor:pointer}
+    .rfmrow-typesel:focus{border-color:var(--gold)}
+    .rfm-del{width:32px;height:32px;border-radius:10px;border:none;background:#fff0f0;
+      color:#c04040;cursor:pointer;font-size:15px;display:flex;align-items:center;
+      justify-content:center;flex-shrink:0;transition:.15s}
+    .rfm-del:hover{background:#fdd;transform:scale(1.1)}
+    .rfmrow-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .rfmrow-field{display:flex;flex-direction:column;gap:5px}
+    .rfmrow-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;
+      text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:4px}
+    .rfmrow-lbl .req{color:var(--gold);font-size:11px}
+    .rfmrow-inp{padding:12px 14px;border:1.5px solid #e8e0d0;border-radius:12px;
+      font-family:'Jost',sans-serif;font-size:16px;background:white;
+      color:var(--dark);outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
+    .rfmrow-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
+    .rfmrow-inp.err{border-color:#f0a060;box-shadow:0 0 0 3px rgba(240,160,96,.1)}
+    .rfmrow-errmsg{font-size:10px;color:#c04040}
     .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
     /* known-field read-only display */
@@ -256,7 +308,7 @@
             <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">
               Family Members <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span>
             </div>
-            <button type="button" onclick="addRsvpMember()"
+            <button type="button" onclick="addRsvpMember(); this.style.transform='scale(.9)'; setTimeout(()=>this.style.transform='',150)"
               style="padding:5px 12px;border-radius:8px;border:1.5px dashed var(--gold);
               background:white;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;
               font-weight:700;cursor:pointer">+ Add Member</button>
@@ -547,7 +599,13 @@ function pickAtt(s) {
   rsvpChoice = s;
   document.getElementById('bYes').classList.toggle('on', s==='yes');
   document.getElementById('bNo').classList.toggle('on',  s==='no');
-  document.getElementById('attendingFields').style.display = s==='yes' ? 'block' : 'none';
+  const af = document.getElementById('attendingFields');
+  if(s==='yes') {
+    af.style.display='block';
+    af.style.animation='fadeUp .35s ease';
+  } else {
+    af.style.display='none';
+  }
 }
 
 // ── Family members on RSVP form ──────────────────────────────────────────────
@@ -565,25 +623,34 @@ function renderRsvpFamily() {
   const wrap = document.getElementById('rsvpFamilyList');
   if(!wrap) return;
   wrap.innerHTML = rsvpFamily.map((m,i)=>`
-    <div class="rfmrow" style="flex-wrap:wrap;gap:6px">
-      <div style="flex:1.2;min-width:100px;display:flex;flex-direction:column;gap:2px">
-        <input placeholder="First name *" value="${(m.first||'').replace(/"/g,'&quot;')}"
-          oninput="rsvpFamily[${i}].first=this.value"
-          style="width:100%;${!m.first?'border-color:#f0a060;':''}" >
-        ${!m.first?'<span style="font-size:10px;color:#c04040">Required</span>':''}
+    <div class="rfmrow">
+      <div class="rfmrow-head">
+        <div class="rfmrow-badge">
+          <div class="rfmrow-num">${i+1}</div>
+          <select class="rfmrow-typesel" onchange="rsvpFamily[${i}].type=this.value">
+            <option value="spouse" ${m.type==='spouse'?'selected':''}>💑 Spouse / Partner</option>
+            <option value="child"  ${m.type==='child' ?'selected':''}>👶 Child</option>
+            <option value="other"  ${m.type==='other' ?'selected':''}>👤 Other</option>
+          </select>
+        </div>
+        <button class="rfm-del" onclick="removeRsvpMember(${i})">✕</button>
       </div>
-      <div style="flex:1.2;min-width:100px;display:flex;flex-direction:column;gap:2px">
-        <input placeholder="Last name *" value="${(m.last||'').replace(/"/g,'&quot;')}"
-          oninput="rsvpFamily[${i}].last=this.value"
-          style="width:100%;${!m.last?'border-color:#f0a060;':''}" >
-        ${!m.last?'<span style="font-size:10px;color:#c04040">Required</span>':''}
+      <div class="rfmrow-fields">
+        <div class="rfmrow-field">
+          <div class="rfmrow-lbl">First Name <span class="req">*</span></div>
+          <input class="rfmrow-inp${!m.first?' err':''}" placeholder="e.g. Jane"
+            value="${(m.first||'').replace(/"/g,'&quot;')}"
+            oninput="rsvpFamily[${i}].first=this.value">
+          ${!m.first?'<div class="rfmrow-errmsg">Required</div>':''}
+        </div>
+        <div class="rfmrow-field">
+          <div class="rfmrow-lbl">Last Name <span class="req">*</span></div>
+          <input class="rfmrow-inp${!m.last?' err':''}" placeholder="e.g. Smith"
+            value="${(m.last||'').replace(/"/g,'&quot;')}"
+            oninput="rsvpFamily[${i}].last=this.value">
+          ${!m.last?'<div class="rfmrow-errmsg">Required</div>':''}
+        </div>
       </div>
-      <select onchange="rsvpFamily[${i}].type=this.value" style="flex:.9;min-width:90px">
-        <option value="spouse" ${m.type==='spouse'?'selected':''}>💑 Spouse</option>
-        <option value="child"  ${m.type==='child' ?'selected':''}>👶 Child</option>
-        <option value="other"  ${m.type==='other' ?'selected':''}>👤 Other</option>
-      </select>
-      <button class="rfm-del" onclick="removeRsvpMember(${i})">✕</button>
     </div>`).join('');
 }
 
