@@ -49,14 +49,17 @@
         radial-gradient(ellipse at 50% -10%,rgba(201,168,76,.18) 0%,transparent 50%);
       pointer-events:none;z-index:1}
     /* Floating particles */
-    /* Sparkle dots — simple opacity pulse, no transform */
-    .sparkle{position:absolute;pointer-events:none;z-index:5;
-      color:rgba(201,168,76,.8);font-size:14px;line-height:1;
-      text-shadow:0 0 6px rgba(201,168,76,.5),0 0 14px rgba(201,168,76,.3);
-      animation:sparklePulse ease-in-out infinite}
+    /* Sparkle overlay — fixed so overflow:hidden on hero never clips them */
+    #sparkleCanvas{position:fixed;inset:0;pointer-events:none;z-index:50;
+      overflow:visible}
+    .sparkle{position:fixed;pointer-events:none;z-index:50;
+      color:rgba(201,168,76,.85);line-height:1;
+      text-shadow:0 0 8px rgba(201,168,76,.6),0 0 18px rgba(201,168,76,.25);
+      animation:sparklePulse ease-in-out infinite;
+      font-family:'Cormorant Garamond',serif}
     @keyframes sparklePulse{
-      0%,100%{opacity:0}
-      50%{opacity:1}
+      0%,100%{opacity:0;transform:scale(.7)}
+      50%{opacity:1;transform:scale(1)}
     }
     /* All hero content above overlays */
     .hero>*:not(.hero-bg){position:relative;z-index:2}
@@ -1057,34 +1060,58 @@ function loadGallery(profile) {
 }
 
 function spawnParticles() {
+  // Remove any previous sparkles
+  document.querySelectorAll('.sparkle').forEach(s => s.remove());
+
+  // Only show while hero is visible
   const hero = document.getElementById('heroSection');
   if(!hero) return;
-  // Remove any old sparkles first
-  hero.querySelectorAll('.sparkle').forEach(s => s.remove());
 
-  // Exact grid: 8 left, 8 right, 5 centre — guaranteed symmetric
-  const COLS = {
-    L: [3, 7, 5, 9, 4, 8, 6, 11],   // left x%
-    R: [89,93,91,95,90,94,92,87],    // right x%
-    C: [44,48,52,46,50]              // centre x%
-  };
-  const ROWS = [12,25,38,52,65,76,87,19]; // y positions %
+  // Fixed-position sparkles mapped to viewport % — perfectly symmetric
+  // LEFT column (5–13vw), RIGHT column (87–95vw), CENTRE (45–55vw)
+  const positions = [
+    // LEFT — 8 sparkles
+    { x:'4vw',  y:'10vh' }, { x:'8vw',  y:'24vh' },
+    { x:'5vw',  y:'40vh' }, { x:'10vw', y:'55vh' },
+    { x:'7vw',  y:'68vh' }, { x:'3vw',  y:'80vh' },
+    { x:'11vw', y:'32vh' }, { x:'6vw',  y:'85vh' },
+    // RIGHT — 8 sparkles
+    { x:'90vw', y:'12vh' }, { x:'94vw', y:'26vh' },
+    { x:'88vw', y:'42vh' }, { x:'92vw', y:'58vh' },
+    { x:'96vw', y:'70vh' }, { x:'86vw', y:'82vh' },
+    { x:'93vw', y:'20vh' }, { x:'89vw', y:'88vh' },
+    // CENTRE — 3 sparkles (subtle)
+    { x:'48vw', y:'8vh'  }, { x:'52vw', y:'92vh' }, { x:'50vw', y:'50vh' },
+  ];
 
-  const all = [];
-  COLS.L.forEach((x,i) => all.push([x, ROWS[i]]));
-  COLS.R.forEach((x,i) => all.push([x, ROWS[i]]));
-  COLS.C.forEach((x,i) => all.push([x, [15,35,55,70,85][i]]));
+  const chars = ['✦','✧','✦','✧','✦'];
 
-  all.forEach(([x, y], i) => {
+  positions.forEach(({ x, y }, i) => {
     const s = document.createElement('div');
     s.className = 'sparkle';
-    s.textContent = i % 3 === 0 ? '✦' : '✧';
-    const dur  = (2.5 + (i % 5) * 0.6).toFixed(1);
-    const del  = ((i * 0.31) % 4).toFixed(1);
-    const size = 8 + (i % 4) * 3;
-    s.style.cssText = `left:${x}%;top:${y}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${del}s`;
-    hero.appendChild(s);
+    s.textContent = chars[i % chars.length];
+    const size = 9 + (i % 5) * 2.5;
+    const dur  = (2.2 + (i % 6) * 0.5).toFixed(1);
+    const del  = ((i * 0.37) % 5).toFixed(1);
+    s.style.cssText = [
+      `left:${x}`,
+      `top:${y}`,
+      `font-size:${size.toFixed(0)}px`,
+      `animation-duration:${dur}s`,
+      `animation-delay:${del}s`,
+    ].join(';');
+    document.body.appendChild(s);
   });
+
+  // Remove sparkles when user scrolls past hero
+  const cleanup = () => {
+    const heroBottom = hero.getBoundingClientRect().bottom;
+    if(heroBottom < 0) {
+      document.querySelectorAll('.sparkle').forEach(s => s.remove());
+      window.removeEventListener('scroll', cleanup);
+    }
+  };
+  window.addEventListener('scroll', cleanup, { passive:true });
 }
 
 // ── AI-powered smart photo centering ─────────────────────────────────────────
