@@ -159,6 +159,17 @@
     .rfmrow-inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
     .rfmrow-inp.err{border-color:#f0a060;box-shadow:0 0 0 3px rgba(240,160,96,.1)}
     .rfmrow-errmsg{font-size:10px;color:#c04040}
+    /* per-member RSVP pills */
+    .fm-rsvp-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+    .fm-rsvp-btn{flex:1;min-width:60px;padding:8px 4px;border-radius:10px;
+      border:1.5px solid #e8e0d0;background:white;font-family:'Jost',sans-serif;
+      font-size:11px;font-weight:600;cursor:pointer;transition:.2s;
+      display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted)}
+    .fm-rsvp-btn .fm-rsvp-icon{font-size:16px}
+    .fm-rsvp-btn:hover:not(.on){border-color:var(--gold);background:#fdf9f0}
+    .fm-rsvp-btn.on-yes{border-color:var(--green);background:#f0faf0;color:var(--green)}
+    .fm-rsvp-btn.on-no{border-color:var(--red);background:#fff0f0;color:var(--red)}
+    .fm-rsvp-btn.on-maybe{border-color:#c9a84c;background:#fdf9f0;color:#7a5000}
     .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
     /* known-field read-only display */
@@ -432,7 +443,7 @@ async function loadGuest(gid) {
   if(g.family_members) {
     try {
       const fam = Array.isArray(g.family_members) ? g.family_members : JSON.parse(g.family_members);
-      fam.forEach(m => addRsvpMember(m));
+      fam.forEach(m => addRsvpMember({...m, rsvp: m.rsvp || 'yes'}));
     } catch(e) {
       // Migrate old plus_one
       if(g.plus_one && g.plus_one_name) {
@@ -612,7 +623,7 @@ function pickAtt(s) {
 let rsvpFamily = [];
 
 function addRsvpMember(data) {
-  rsvpFamily.push(data || {first:'', last:'', type:'spouse'});
+  rsvpFamily.push(data || {first:'', last:'', type:'spouse', rsvp:'yes'});
   renderRsvpFamily();
 }
 function removeRsvpMember(i) {
@@ -651,7 +662,38 @@ function renderRsvpFamily() {
           ${!m.last?'<div class="rfmrow-errmsg">Required</div>':''}
         </div>
       </div>
+      <!-- Per-member RSVP -->
+      <div style="margin-top:10px">
+        <div class="rfmrow-lbl" style="margin-bottom:7px">Will they be attending?</div>
+        <div class="fm-rsvp-row">
+          <button type="button" class="fm-rsvp-btn ${(m.rsvp||'yes')==='yes'?'on-yes':''}"
+            onclick="setFmRsvp(${i},'yes',this)">
+            <span class="fm-rsvp-icon">✅</span>Attending
+          </button>
+          <button type="button" class="fm-rsvp-btn ${(m.rsvp||'yes')==='maybe'?'on-maybe':''}"
+            onclick="setFmRsvp(${i},'maybe',this)">
+            <span class="fm-rsvp-icon">🤔</span>Maybe
+          </button>
+          <button type="button" class="fm-rsvp-btn ${(m.rsvp||'yes')==='no'?'on-no':''}"
+            onclick="setFmRsvp(${i},'no',this)">
+            <span class="fm-rsvp-icon">❌</span>Can't come
+          </button>
+        </div>
+      </div>
     </div>`).join('');
+}
+
+function setFmRsvp(idx, val, btn) {
+  rsvpFamily[idx].rsvp = val;
+  // Update button styles in this card only
+  const card = btn.closest('.rfmrow');
+  card.querySelectorAll('.fm-rsvp-btn').forEach(b => {
+    b.classList.remove('on-yes','on-maybe','on-no');
+  });
+  btn.classList.add('on-'+val);
+  // Bounce animation
+  btn.style.transform = 'scale(.92)';
+  setTimeout(()=>btn.style.transform='', 150);
 }
 
 function buildMenuChoices() {
@@ -764,7 +806,7 @@ async function submitRsvp() {
     phone,
     rsvp_status:   rsvpChoice,
     dietary:       rsvpChoice==='yes' ? (document.getElementById('rDietary')?.value.trim()||null) : null,
-    family_members: rsvpChoice==='yes' ? rsvpFamily.filter(m=>m.first||m.last) : [],
+    family_members: rsvpChoice==='yes' ? rsvpFamily.filter(m=>m.first||m.last).map(m=>({...m,rsvp:m.rsvp||'yes'})) : [],
     plus_one:       rsvpChoice==='yes' && rsvpFamily.filter(m=>m.first||m.last).length > 0,
     plus_one_name:  rsvpChoice==='yes' ? rsvpFamily.filter(m=>m.first||m.last).map(m=>[m.first,m.last].filter(Boolean).join(' ')).join(', ')||null : null,
     notes:         document.getElementById('rMsg').value.trim() || null,
