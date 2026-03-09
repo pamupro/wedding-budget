@@ -565,12 +565,20 @@ function renderRsvpFamily() {
   const wrap = document.getElementById('rsvpFamilyList');
   if(!wrap) return;
   wrap.innerHTML = rsvpFamily.map((m,i)=>`
-    <div class="rfmrow">
-      <input placeholder="First name" value="${(m.first||'').replace(/"/g,'&quot;')}"
-        oninput="rsvpFamily[${i}].first=this.value" style="flex:1.2">
-      <input placeholder="Last name"  value="${(m.last||'').replace(/"/g,'&quot;')}"
-        oninput="rsvpFamily[${i}].last=this.value" style="flex:1.2">
-      <select onchange="rsvpFamily[${i}].type=this.value" style="flex:.9">
+    <div class="rfmrow" style="flex-wrap:wrap;gap:6px">
+      <div style="flex:1.2;min-width:100px;display:flex;flex-direction:column;gap:2px">
+        <input placeholder="First name *" value="${(m.first||'').replace(/"/g,'&quot;')}"
+          oninput="rsvpFamily[${i}].first=this.value"
+          style="width:100%;${!m.first?'border-color:#f0a060;':''}" >
+        ${!m.first?'<span style="font-size:10px;color:#c04040">Required</span>':''}
+      </div>
+      <div style="flex:1.2;min-width:100px;display:flex;flex-direction:column;gap:2px">
+        <input placeholder="Last name *" value="${(m.last||'').replace(/"/g,'&quot;')}"
+          oninput="rsvpFamily[${i}].last=this.value"
+          style="width:100%;${!m.last?'border-color:#f0a060;':''}" >
+        ${!m.last?'<span style="font-size:10px;color:#c04040">Required</span>':''}
+      </div>
+      <select onchange="rsvpFamily[${i}].type=this.value" style="flex:.9;min-width:90px">
         <option value="spouse" ${m.type==='spouse'?'selected':''}>💑 Spouse</option>
         <option value="child"  ${m.type==='child' ?'selected':''}>👶 Child</option>
         <option value="other"  ${m.type==='other' ?'selected':''}>👤 Other</option>
