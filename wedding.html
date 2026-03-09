@@ -38,26 +38,43 @@
       padding:60px 24px;text-align:center;position:relative;overflow:hidden;
       background:#1a1208}
     /* Photo background layer */
-    .hero-bg{position:absolute;inset:-10%;background-size:cover;background-position:center;
-      background-attachment:fixed;transition:opacity 1.2s ease;opacity:0;
-      filter:brightness(.45) saturate(1.1)}
+    .hero-bg{position:absolute;inset:-15%;background-size:cover;background-position:center top;
+      transition:opacity 1.4s ease;opacity:0;will-change:transform;
+      filter:brightness(.42) saturate(1.15)}
     .hero-bg.loaded{opacity:1}
     /* Gradient overlays on top of photo */
     .hero::before{content:'';position:absolute;inset:0;
       background:
-        radial-gradient(ellipse at 50% 0%,rgba(201,168,76,.15) 0%,transparent 50%),
-        radial-gradient(ellipse at 50% 100%,rgba(0,0,0,.4) 0%,transparent 60%),
-        linear-gradient(to bottom,rgba(0,0,0,.25) 0%,transparent 40%,transparent 60%,rgba(0,0,0,.5) 100%);
+        linear-gradient(160deg,
+          rgba(61,46,26,.72) 0%,
+          rgba(42,33,18,.55) 30%,
+          rgba(20,15,8,.35) 55%,
+          rgba(61,46,26,.65) 100%),
+        radial-gradient(ellipse at 50% 110%,rgba(201,168,76,.22) 0%,transparent 55%),
+        radial-gradient(ellipse at 50% -10%,rgba(201,168,76,.18) 0%,transparent 50%);
       pointer-events:none;z-index:1}
     /* Floating particles */
-    .hero-particle{position:absolute;width:2px;height:2px;background:rgba(201,168,76,.6);
-      border-radius:50%;animation:particleFloat linear infinite;pointer-events:none;z-index:1}
+    /* Floating gold orbs */
+    .hero-particle{position:absolute;border-radius:50%;
+      animation:particleFloat linear infinite;pointer-events:none;z-index:1}
     @keyframes particleFloat{
-      0%{transform:translateY(100vh) translateX(0) scale(0);opacity:0}
-      10%{opacity:1}
-      90%{opacity:.6}
-      100%{transform:translateY(-20vh) translateX(var(--drift)) scale(1.5);opacity:0}
+      0%{transform:translateY(100vh) translateX(0) scale(0) rotate(0deg);opacity:0}
+      8%{opacity:1}
+      92%{opacity:.5}
+      100%{transform:translateY(-15vh) translateX(var(--drift)) scale(var(--peak)) rotate(360deg);opacity:0}
     }
+    /* CSS sparkles */
+    .sparkle{position:absolute;pointer-events:none;z-index:3;animation:sparklePop ease-in-out infinite}
+    @keyframes sparklePop{
+      0%,100%{opacity:0;transform:scale(0) rotate(0deg)}
+      50%{opacity:1;transform:scale(1) rotate(180deg)}
+    }
+    .sparkle::before,.sparkle::after{content:'✦';position:absolute;
+      font-size:var(--sz);color:rgba(201,168,76,var(--op));
+      text-shadow:0 0 8px rgba(201,168,76,.6)}
+    .sparkle::after{content:'✦';transform:rotate(45deg);
+      font-size:calc(var(--sz) * .6);top:-.3em;left:.2em;
+      color:rgba(255,235,160,var(--op))}
     /* All hero content above overlays */
     .hero>*:not(.hero-bg){position:relative;z-index:2}
     /* When photo loaded — text becomes white */
@@ -80,7 +97,7 @@
     .date-main{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,4vw,26px);font-weight:600;margin-bottom:4px;animation:fadeUp .8s .4s ease both;opacity:0;animation-fill-mode:both}
     .cd-row{display:flex;gap:20px;justify-content:center;margin-bottom:40px;flex-wrap:wrap}
     .cd-unit{text-align:center}
-    .cd-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);line-height:1;animation:countUp .6s .6s ease both;opacity:0}
+    .cd-num{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold);line-height:1;transition:color .3s}
     .cd-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
     .btn-gold{background:linear-gradient(135deg,#9a7535,var(--gold));color:white;border:none;
       border-radius:99px;padding:16px 40px;font-family:'Jost',sans-serif;font-size:15px;font-weight:600;
@@ -843,17 +860,29 @@ function buildMenuChoices() {
 
 function startCountdown(wd) {
   const el = document.getElementById('cd');
+  // Build static structure once — only update the text nodes
+  const units = [['cdD','Days'],['cdH','Hours'],['cdM','Mins'],['cdS','Secs']];
+  el.innerHTML = units.map(([id,l])=>
+    `<div class="cd-unit" style="animation:fadeUp .6s ease both;opacity:0;animation-fill-mode:both">
+      <div class="cd-num" id="${id}">00</div>
+      <div class="cd-label">${l}</div>
+    </div>`).join('');
+
   const tick = () => {
     const diff = wd - new Date();
     if(diff <= 0) {
-      el.innerHTML = '<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;color:var(--gold)">Today is the day! 🎉</div>';
+      el.innerHTML = '<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;color:var(--gold);animation:fadeUp .5s ease">Today is the day! 🎉</div>';
       return;
     }
     const dd=Math.floor(diff/86400000), hh=Math.floor((diff%86400000)/3600000),
           mm=Math.floor((diff%3600000)/60000), ss=Math.floor((diff%60000)/1000);
-    el.innerHTML = [[dd,'Days'],[hh,'Hours'],[mm,'Mins'],[ss,'Secs']]
-      .map(([n,l])=>'<div class="cd-unit"><div class="cd-num">'+String(n).padStart(2,'0')+'</div><div class="cd-label">'+l+'</div></div>')
-      .join('');
+    // Only update text — no DOM rebuild, no flicker
+    const dEl=document.getElementById('cdD'), hEl=document.getElementById('cdH'),
+          mEl=document.getElementById('cdM'), sEl=document.getElementById('cdS');
+    if(dEl) dEl.textContent = String(dd).padStart(2,'0');
+    if(hEl) hEl.textContent = String(hh).padStart(2,'0');
+    if(mEl) mEl.textContent = String(mm).padStart(2,'0');
+    if(sEl) sEl.textContent = String(ss).padStart(2,'0');
   };
   tick(); setInterval(tick,1000);
 }
@@ -1020,21 +1049,48 @@ function loadGallery(profile) {
 function spawnParticles() {
   const hero = document.getElementById('heroSection');
   if(!hero) return;
-  for(let i=0; i<18; i++) {
+
+  // Gold orbs floating up
+  for(let i=0; i<22; i++) {
     setTimeout(() => {
       const p = document.createElement('div');
       p.className = 'hero-particle';
-      p.style.cssText = `
-        left:${Math.random()*100}%;
-        bottom:0;
-        width:${Math.random()*3+1}px;
-        height:${Math.random()*3+1}px;
-        --drift:${(Math.random()-0.5)*120}px;
-        animation-duration:${Math.random()*8+6}s;
-        animation-delay:${Math.random()*4}s;
-        opacity:0`;
+      const sz = Math.random()*5+2;
+      const isGold = Math.random() > 0.4;
+      p.style.cssText = [
+        `left:${Math.random()*100}%`,
+        `bottom:${Math.random()*20}%`,
+        `width:${sz}px`,
+        `height:${sz}px`,
+        `background:${isGold?'rgba(201,168,76,.7)':'rgba(255,235,180,.5)'}`,
+        `box-shadow:0 0 ${sz*2}px ${isGold?'rgba(201,168,76,.4)':'rgba(255,235,180,.3)'}`,
+        `--drift:${(Math.random()-0.5)*160}px`,
+        `--peak:${Math.random()*1.5+0.8}`,
+        `animation-duration:${Math.random()*10+7}s`,
+        `animation-delay:${Math.random()*6}s`,
+        `opacity:0`
+      ].join(';');
       hero.appendChild(p);
-    }, i * 200);
+    }, i * 180);
+  }
+
+  // Sparkle stars scattered across hero
+  for(let i=0; i<12; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'sparkle';
+      const sz = (Math.random()*10+8)+'px';
+      const op = (Math.random()*0.5+0.3).toFixed(2);
+      s.style.cssText = [
+        `left:${5+Math.random()*90}%`,
+        `top:${10+Math.random()*75}%`,
+        `--sz:${sz}`,
+        `--op:${op}`,
+        `animation-duration:${(Math.random()*3+2).toFixed(1)}s`,
+        `animation-delay:${(Math.random()*4).toFixed(1)}s`
+      ].join(';');
+      hero.appendChild(s);
+    }, i * 300);
   }
 }
 
@@ -1071,8 +1127,9 @@ document.addEventListener('keydown', e=>{
 window.addEventListener('scroll', () => {
   const bg = document.getElementById('heroBg');
   if(!bg || !bg.classList.contains('loaded')) return;
-  const y = window.scrollY;
-  bg.style.transform = `translateY(${y * 0.3}px)`;
+  // Use transform for parallax — works on iOS Safari unlike background-attachment:fixed
+  const y = Math.min(window.scrollY, window.innerHeight);
+  bg.style.transform = `translateY(${y * 0.25}px) scale(1.05)`;
 }, {passive:true});
 </script>
 </body>
