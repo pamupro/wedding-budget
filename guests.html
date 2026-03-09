@@ -885,7 +885,7 @@ function updateStats() {
   document.getElementById('sNo').textContent    = countAll('no');
   document.getElementById('sPend').textContent  = countAll('pending');
   document.getElementById('sMaybe').textContent = countAll('maybe');
-  document.getElementById('sPlus').textContent  = guests.reduce((s,g)=>s+familyCount(g),0);
+  document.getElementById('sPlus').textContent  = guests.filter(g=>familyCount(g)>0).length;
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
