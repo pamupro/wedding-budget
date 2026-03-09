@@ -159,6 +159,15 @@
     .side-picker{display:flex;gap:6px;flex-wrap:wrap}
     .side-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
     .side-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
+    /* family member rows */
+    .fmrow{display:flex;align-items:center;gap:8px;background:var(--cream);border-radius:10px;padding:8px 10px;border:1.5px solid var(--border)}
+    .fmrow input,.fmrow select{flex:1;min-width:0;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;background:white;outline:none;color:var(--charcoal)}
+    .fmrow input:focus,.fmrow select:focus{border-color:var(--gold)}
+    .fmrow .fm-del{width:28px;height:28px;border-radius:6px;border:none;background:#fff0f0;color:#c04040;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .fm-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700}
+    .fm-spouse{background:#e8f0ff;color:#1a3090}
+    .fm-child{background:#fff3cd;color:#7a5000}
+    .fm-other{background:#f0f0f0;color:#555}
     @media(max-width:560px){
       .gmodal{flex-direction:column;border-radius:20px 20px 0 0;max-height:92vh;width:100%;position:fixed;bottom:0}
       .gmodal-aside{width:100%;flex-direction:row;padding:14px 16px;gap:6px;justify-content:flex-start}
@@ -213,7 +222,7 @@
     <div class="stat-pill" id="pill-no"           onclick="setF('no',this)"><span class="stat-num" id="sNo" style="color:#c04040">0</span><span class="stat-lbl">❌ Declined</span></div>
     <div class="stat-pill" id="pill-pending"      onclick="setF('pending',this)"><span class="stat-num" id="sPend" style="color:#8a6020">0</span><span class="stat-lbl">⏳ Pending</span></div>
     <div class="stat-pill" id="pill-maybe"        onclick="setF('maybe',this)"><span class="stat-num" id="sMaybe">0</span><span class="stat-lbl">🤔 Maybe</span></div>
-    <div class="stat-pill" style="cursor:default"><span class="stat-num" id="sPlus" style="color:var(--gold)">0</span><span class="stat-lbl">+1 Guests</span></div>
+    <div class="stat-pill" style="cursor:default"><span class="stat-num" id="sPlus" style="color:var(--gold)">0</span><span class="stat-lbl">Family</span></div>
   </div>
   <div class="toolbar">
     <div class="search-wrap">
@@ -335,14 +344,13 @@
           </div>
           <input type="hidden" id="fGroup" value="">
         </div>
-        <div class="gfield-row">
-          <div class="gfield">
-            <label class="glabel" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-              <input type="checkbox" id="fPlus" onchange="togglePlusRow()" style="accent-color:var(--gold);width:15px;height:15px">
-              Bringing a +1?
-            </label>
-            <input id="fPlusName" class="ginput" placeholder="+1 guest name" style="display:none;margin-top:8px" id="fPlusName">
+        <div class="gfield">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <label class="glabel" style="margin-bottom:0">Family Members</label>
+            <button type="button" onclick="addFamilyMember()" style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;border:1.5px dashed var(--gold);background:white;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;font-weight:700;cursor:pointer">+ Add Member</button>
           </div>
+          <div id="familyList" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">e.g. spouse, children — each counts towards your guest total</div>
         </div>
         <div class="gfield">
           <label class="glabel">Notes</label>
@@ -749,7 +757,14 @@ function buildCard(g) {
   const gid = g.id;
 
   let badges = '<span class="badge '+sc[st]+'">'+sl[st]+'</span>';
-  if(g.plus_one) badges += '<span class="badge b-plus">+1'+(g.plus_one_name?' ('+esc(g.plus_one_name)+')':'')+'</span>';
+  const fam = Array.isArray(g.family_members) ? g.family_members : (g.family_members ? tryParseJSON(g.family_members) : []);
+  if(fam && fam.length) {
+    fam.forEach(m => {
+      const fn = [m.first, m.last].filter(Boolean).join(' ');
+      const tag = m.type === 'spouse' ? '💑' : m.type === 'child' ? '👶' : '👤';
+      badges += '<span class="badge b-plus">'+tag+' '+esc(fn||m.type||'Member')+'</span>';
+    });
+  }
   if(g.dietary)  badges += '<span class="badge b-diet">🌿 '+esc(g.dietary)+'</span>';
   if(hasMn)      badges += '<span class="badge b-menu">🍽 '+esc(g.main)+'</span>';
 
@@ -797,10 +812,40 @@ function showTab(t) {
   });
   if(t === 'meal') buildMealFields();
 }
-function togglePlusRow() {
-  const inp = document.getElementById('fPlusName');
-  if(inp) inp.style.display = document.getElementById('fPlus').checked ? 'block' : 'none';
+// ── Family member helpers ─────────────────────────────────────────────────────
+let familyMembers = []; // working array while modal is open
+
+function addFamilyMember(data) {
+  const idx = familyMembers.length;
+  familyMembers.push(data || {first:'', last:'', type:'spouse', dietary:''});
+  renderFamilyList();
 }
+
+function removeFamilyMember(idx) {
+  familyMembers.splice(idx, 1);
+  renderFamilyList();
+}
+
+function renderFamilyList() {
+  const wrap = document.getElementById('familyList');
+  if(!wrap) return;
+  if(!familyMembers.length) { wrap.innerHTML=''; return; }
+  wrap.innerHTML = familyMembers.map((m,i) => `
+    <div class="fmrow" id="fm-${i}">
+      <input placeholder="First name" value="${esc(m.first||'')}"
+        oninput="familyMembers[${i}].first=this.value" style="flex:1.2">
+      <input placeholder="Last name"  value="${esc(m.last||'')}"
+        oninput="familyMembers[${i}].last=this.value" style="flex:1.2">
+      <select onchange="familyMembers[${i}].type=this.value" style="flex:.9">
+        <option value="spouse"  ${m.type==='spouse' ?'selected':''}>💑 Spouse</option>
+        <option value="child"   ${m.type==='child'  ?'selected':''}>👶 Child</option>
+        <option value="other"   ${m.type==='other'  ?'selected':''}>👤 Other</option>
+      </select>
+      <button class="fm-del" onclick="removeFamilyMember(${i})" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+function togglePlusRow() {} // kept for backward compat, no longer used
 
 function pickRsvp(btn) {
   document.querySelectorAll('.rsvp-opt').forEach(b => b.classList.remove('on'));
@@ -834,7 +879,7 @@ function clearForm() {
   document.getElementById('fGroup').value = '';
   document.getElementById('fCode').value  = '44';
   document.getElementById('fPlus').checked = false;
-  const pn = document.getElementById('fPlusName'); if(pn) pn.style.display='none';
+  familyMembers = []; renderFamilyList();
   document.getElementById('fId').value = '';
   // Reset pickers
   document.querySelectorAll('.rsvp-opt').forEach(b => {
@@ -873,9 +918,16 @@ function editGuest(id) {
   document.getElementById('fDiet').value   = g.dietary || '';
   document.getElementById('fNotes').value  = g.notes  || '';
   document.getElementById('fEmail').value  = g.email  || '';
-  document.getElementById('fPlus').checked = !!g.plus_one;
-  const pnEdit=document.getElementById('fPlusName'); if(pnEdit) pnEdit.style.display = g.plus_one ? 'block' : 'none';
-  document.getElementById('fPlusName').value = g.plus_one_name || '';
+  // Load family members
+  familyMembers = Array.isArray(g.family_members)
+    ? JSON.parse(JSON.stringify(g.family_members))
+    : (g.family_members ? tryParseJSON(g.family_members) : []);
+  // Migrate old plus_one to family_members if needed
+  if(!familyMembers.length && g.plus_one && g.plus_one_name) {
+    const parts = (g.plus_one_name||'').split(' ');
+    familyMembers = [{first:parts[0]||'', last:parts.slice(1).join(' ')||'', type:'spouse', dietary:''}];
+  }
+  renderFamilyList();
   document.getElementById('fId').value = id;
   if(g.phone) {
     const clean = g.phone.replace(/^\+/,'');
@@ -916,8 +968,9 @@ async function saveGuest() {
     group_label:   document.getElementById('fGroup').value.trim() || null,
     dietary:       document.getElementById('fDiet').value.trim() || null,
     notes:         document.getElementById('fNotes').value.trim() || null,
-    plus_one:      document.getElementById('fPlus').checked,
-    plus_one_name: document.getElementById('fPlusName').value.trim() || null,
+    family_members: familyMembers.filter(m => m.first || m.last),
+    plus_one:       familyMembers.filter(m => m.first || m.last).length > 0,
+    plus_one_name:  familyMembers.filter(m=>m.first||m.last).map(m=>[m.first,m.last].filter(Boolean).join(' ')).join(', ') || null,
     ...mealData
   };
 
