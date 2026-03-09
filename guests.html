@@ -167,6 +167,9 @@
     .rsvp-opt.on.no{border-color:#c04040;background:#fde8e8;color:#7a1a1a}
     .side-picker{display:flex;gap:6px;flex-wrap:wrap}
     .side-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
+    .bks-opt{padding:6px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--charcoal)}
+    .bks-opt:hover,.bks-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
+    .ba.side-bulk{background:rgba(201,168,76,.12);color:var(--gold)}
     .side-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
     /* family member rows */
     .fmrow{background:white;border-radius:14px;border:1.5px solid var(--border);
@@ -283,9 +286,15 @@
     </div>
     <select class="tbar-sel" id="grpSel" onchange="renderList()">
       <option value="">All Sides</option>
-      <option value="Bride Side">💐 Bride Side</option>
-      <option value="Groom Side">🤵 Groom Side</option>
-      <option value="Both Sides">💑 Both Sides</option>
+      <optgroup label="Family">
+        <option value="Bride Side">💐 Bride's Family</option>
+        <option value="Groom Side">🤵 Groom's Family</option>
+        <option value="Both Sides">💑 Both Sides</option>
+      </optgroup>
+      <optgroup label="Friends">
+        <option value="Bride's Friend">🌸 Bride's Friends</option>
+        <option value="Groom's Friend">🙌 Groom's Friends</option>
+      </optgroup>
       <option value="Other">👥 Other</option>
     </select>
     <select class="tbar-sel" id="sortSel" onchange="renderList()">
@@ -322,11 +331,37 @@
         <div class="ba-icon">❌</div>
         <span class="ba-label">Declined</span>
       </button>
+      <button class="ba side-bulk" onclick="openBkSide()">
+        <div class="ba-icon">👥</div>
+        <span class="ba-label">Set Side</span>
+      </button>
       <button class="ba del" onclick="bkDel()">
         <div class="ba-icon">🗑</div>
         <span class="ba-label">Delete</span>
       </button>
     </div>
+  </div>
+
+  <!-- Bulk side picker popup -->
+  <div id="bkSidePop" style="display:none;position:fixed;bottom:140px;left:50%;
+    transform:translateX(-50%);background:white;border-radius:16px;
+    box-shadow:0 8px 40px rgba(0,0,0,.18);border:1.5px solid var(--border);
+    padding:16px 20px;z-index:9999;min-width:280px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+      color:var(--muted);margin-bottom:12px">Set Side of Family</div>
+    <div style="display:flex;flex-wrap:wrap;gap:7px">
+      <button class="bks-opt" data-v=""               onclick="applyBkSide(this)">— None —</button>
+      <button class="bks-opt" data-v="Bride Side"     onclick="applyBkSide(this)">💐 Bride's Family</button>
+      <button class="bks-opt" data-v="Groom Side"     onclick="applyBkSide(this)">🤵 Groom's Family</button>
+      <button class="bks-opt" data-v="Both Sides"     onclick="applyBkSide(this)">💑 Both Sides</button>
+      <button class="bks-opt" data-v="Bride's Friend" onclick="applyBkSide(this)">🌸 Bride's Friend</button>
+      <button class="bks-opt" data-v="Groom's Friend" onclick="applyBkSide(this)">🙌 Groom's Friend</button>
+      <button class="bks-opt" data-v="Other"          onclick="applyBkSide(this)">👥 Other</button>
+    </div>
+    <button onclick="closeBkSide()" style="margin-top:12px;width:100%;padding:7px;
+      border-radius:8px;border:1px solid var(--border);background:white;
+      font-family:'Jost',sans-serif;font-size:12px;cursor:pointer;color:var(--muted)">Cancel</button>
+  </div>
   </div>
 </main>
 
@@ -388,11 +423,13 @@
         <div class="gfield">
           <label class="glabel">Side of Family</label>
           <div class="side-picker">
-            <button class="side-opt" data-v=""          onclick="pickSide(this)">— None —</button>
-            <button class="side-opt" data-v="Bride Side" onclick="pickSide(this)">💐 Bride</button>
-            <button class="side-opt" data-v="Groom Side" onclick="pickSide(this)">🤵 Groom</button>
-            <button class="side-opt" data-v="Both Sides" onclick="pickSide(this)">💑 Both</button>
-            <button class="side-opt" data-v="Other"      onclick="pickSide(this)">👥 Other</button>
+            <button class="side-opt" data-v=""               onclick="pickSide(this)">— None —</button>
+            <button class="side-opt" data-v="Bride Side"     onclick="pickSide(this)">💐 Bride's Family</button>
+            <button class="side-opt" data-v="Groom Side"     onclick="pickSide(this)">🤵 Groom's Family</button>
+            <button class="side-opt" data-v="Both Sides"     onclick="pickSide(this)">💑 Both</button>
+            <button class="side-opt" data-v="Bride's Friend" onclick="pickSide(this)">🌸 Bride's Friend</button>
+            <button class="side-opt" data-v="Groom's Friend" onclick="pickSide(this)">🙌 Groom's Friend</button>
+            <button class="side-opt" data-v="Other"          onclick="pickSide(this)">👥 Other</button>
           </div>
           <input type="hidden" id="fGroup" value="">
         </div>
@@ -797,7 +834,13 @@ function renderList() {
 
   let html = '';
   for(const [k,gs] of Object.entries(grouped)) {
-    if(k) html += '<div class="grp-head"><span>👥 '+esc(k)+' — '+gs.length+'</span><hr></div>';
+    if(k) {
+      const grpIcon = {
+        'Bride Side':'💐','Groom Side':'🤵','Both Sides':'💑',
+        "Bride's Friend":'🌸',"Groom's Friend":'🙌','Other':'👥'
+      }[k] || '👥';
+      html += '<div class="grp-head"><span>'+grpIcon+' '+esc(k)+' — '+gs.length+'</span><hr></div>';
+    }
     gs.forEach(g => { html += buildCard(g); });
   }
   grid.innerHTML = html;
@@ -1217,6 +1260,37 @@ async function bkDel() {
   clearSel();
   softDelete(toDelete);
 }
+function openBkSide() {
+  const pop = document.getElementById('bkSidePop');
+  pop.style.display = pop.style.display === 'none' ? 'block' : 'none';
+}
+function closeBkSide() {
+  document.getElementById('bkSidePop').style.display = 'none';
+}
+async function applyBkSide(btn) {
+  const val = btn.dataset.v;
+  const label = val || 'None';
+  const n = selIds.size;
+  for(const id of [...selIds]) {
+    await sbPatch('guests?id=eq.'+id, {group_label: val || null});
+    const g = guests.find(x=>x.id===id);
+    if(g) g.group_label = val || null;
+  }
+  closeBkSide();
+  clearSel();
+  renderList(); updateStats();
+  toast(n+' guest'+(n>1?'s':'')+' set to '+(val||'No Side'));
+}
+// Close popup when clicking outside
+document.addEventListener('click', e => {
+  const pop = document.getElementById('bkSidePop');
+  if(pop && pop.style.display !== 'none') {
+    if(!pop.contains(e.target) && !e.target.closest('.ba.side-bulk')) {
+      closeBkSide();
+    }
+  }
+});
+
 function bkWA() {
   const t = [...selIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g&&g.phone);
   if(!t.length) { toast('No phone numbers in selection', true); return; }
