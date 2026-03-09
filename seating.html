@@ -496,6 +496,61 @@
 <!-- Drag ghost -->
 <div id="drag-ghost"></div>
 
+<!-- New Table Setup Modal -->
+<div class="mbg" id="newTableModal" onclick="if(event.target===this)closeNewTableModal()">
+  <div class="mbox" style="max-width:400px">
+    <div class="mhead">
+      <span class="mtitle">New Table</span>
+      <button class="mclose" onclick="closeNewTableModal()">✕</button>
+    </div>
+    <div class="mbody">
+
+      <label class="mlbl">Table Name</label>
+      <input class="minput" id="ntName" placeholder="e.g. Table 1" oninput="ntDrawPreview()">
+
+      <label class="mlbl">Shape</label>
+      <div class="popts" id="ntShapeOpts">
+        <button class="popt on" data-v="round" onclick="ntPickShape(this)">⭕ Round</button>
+        <button class="popt"    data-v="oval"  onclick="ntPickShape(this)">⬭ Oval</button>
+        <button class="popt"    data-v="rect"  onclick="ntPickShape(this)">▭ Rectangle</button>
+        <button class="popt"    data-v="long"  onclick="ntPickShape(this)">═ Long</button>
+      </div>
+
+      <label class="mlbl">Number of Chairs <small id="ntCapHint" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted)"></small></label>
+      <div class="cap-row" style="margin-bottom:6px">
+        <button class="capbtn" onclick="ntAdjCap(-1)">−</button>
+        <input  class="capnum" type="number" id="ntCap" value="8" min="1" max="60" oninput="ntUpdateHint();ntDrawPreview()">
+        <button class="capbtn" onclick="ntAdjCap(1)">+</button>
+      </div>
+
+      <!-- Chair preview ring -->
+      <div id="ntPreview" style="display:flex;align-items:center;justify-content:center;
+        padding:20px 0 10px;min-height:120px">
+        <div id="ntChairPreview" style="position:relative"></div>
+      </div>
+
+      <!-- Head chairs for long table -->
+      <div id="ntHeadRow" style="display:none;background:#faf8f4;border-radius:10px;
+        padding:10px 12px;margin-bottom:14px;border:1px solid #e8e0d0">
+        <label class="mlbl" style="margin-bottom:6px">Head chairs (short ends)</label>
+        <div class="popts" id="ntHeadOpts" style="margin-bottom:0">
+          <button class="popt on" data-v="0" onclick="ntPickHead(this)">None</button>
+          <button class="popt"    data-v="1" onclick="ntPickHead(this)">1 end</button>
+          <button class="popt"    data-v="2" onclick="ntPickHead(this)">Both ends</button>
+        </div>
+      </div>
+
+      <label class="mlbl">Colour</label>
+      <div class="swatches" id="ntColorOpts" style="margin-bottom:16px"></div>
+
+      <div class="mfoot">
+        <button class="btn-secondary" onclick="closeNewTableModal()" style="flex:1">Cancel</button>
+        <button class="btn-primary"   onclick="confirmNewTable()" style="flex:2">Add Table</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Edit Table Modal -->
 <div class="mbg" id="editModal" onclick="if(event.target===this)closeModal()">
   <div class="mbox">
@@ -992,7 +1047,10 @@ function renderTableList(){
         <span style="font-weight:700;font-size:13px;flex:1">${esc(t.name)}</span>
         <span style="font-size:11px;color:${full?'#c04040':'var(--muted)'}">${seated.length}/${cap}</span>
         <button onclick="event.stopPropagation();openModal('${t.id}')"
-          style="border:none;background:none;cursor:pointer;padding:2px 6px;color:var(--muted);font-size:13px">✏️</button>
+          style="border:none;background:none;cursor:pointer;padding:2px 5px;color:var(--muted);font-size:12px" title="Edit">✏️</button>
+        <button onclick="event.stopPropagation();quickDelTable('${t.id}','${esc(t.name)}')"
+          style="border:none;background:none;cursor:pointer;padding:2px 5px;color:#c04040;font-size:12px;opacity:.5;transition:.15s" title="Delete table"
+          onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">🗑</button>
       </div>
       <div class="tcbar"><div class="tcfill" style="width:${pct}%;background:${t.color}"></div></div>
       ${seated.length
@@ -1026,18 +1084,138 @@ function showTab(tab,btn){
 }
 
 // ── Add table ────────────────────────────────────────────────────────────────
-async function addTable(shape){
-  const cnv=$('cnv');
-  const tpx=Math.max(80,(cnv.clientWidth/2-px)/sc+(Math.random()-.5)*150);
-  const tpy=Math.max(80,(cnv.clientHeight/2-py)/sc+(Math.random()-.5)*150);
-  const cap=shape==='long'?12:8;
+// New table state
+let ntShape='round', ntHead=0, ntColor=COLORS[0];
+
+function addTable(shape){
+  // Open the setup modal
+  ntShape=shape||'round';
+  ntHead=0;
+  ntColor=COLORS[0];
   const n=tables.length+1;
   const names={round:'Table',oval:'Oval Table',rect:'Table',long:'Long Table'};
+  $('ntName').value=names[ntShape]+' '+n;
+  $('ntCap').value=ntShape==='long'?12:8;
+  // Set shape pills
+  document.querySelectorAll('#ntShapeOpts .popt').forEach(b=>b.classList.toggle('on',b.dataset.v===ntShape));
+  // Build colour swatches
+  $('ntColorOpts').innerHTML=COLORS.map(col=>
+    `<div class="sw${col===ntColor?' on':''}" style="background:${col}"
+      onclick="ntPickColor('${col}',this)"></div>`
+  ).join('');
+  $('ntHeadRow').style.display=ntShape==='long'?'block':'none';
+  ntUpdateHint();
+  ntDrawPreview();
+  $('newTableModal').classList.add('open');
+}
+
+function closeNewTableModal(){ $('newTableModal').classList.remove('open'); }
+
+function ntPickShape(btn){
+  document.querySelectorAll('#ntShapeOpts .popt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); ntShape=btn.dataset.v;
+  $('ntHeadRow').style.display=ntShape==='long'?'block':'none';
+  $('ntCap').value=ntShape==='long'?12:8;
+  ntUpdateHint(); ntDrawPreview();
+}
+function ntPickHead(btn){
+  document.querySelectorAll('#ntHeadOpts .popt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); ntHead=parseInt(btn.dataset.v);
+  ntDrawPreview();
+}
+function ntPickColor(col,el){
+  ntColor=col;
+  document.querySelectorAll('#ntColorOpts .sw').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+}
+function ntAdjCap(d){
+  const el=$('ntCap');
+  el.value=Math.max(1,Math.min(60,(parseInt(el.value)||8)+d));
+  ntUpdateHint(); ntDrawPreview();
+}
+function ntUpdateHint(){
+  const hints={round:'around the table',oval:'around the table',rect:'total seats',long:'along sides'};
+  $('ntCapHint').textContent='('+hints[ntShape]+')';
+}
+
+function ntDrawPreview(){
+  const cap=parseInt($('ntCap').value)||8;
+  const sh=ntShape;
+  const col=ntColor||COLORS[0];
+  // Dimensions
+  let tw,th;
+  if(sh==='round'){const s=Math.max(70,Math.min(110,50+cap*4));tw=s;th=s;}
+  else if(sh==='oval'){tw=Math.max(90,Math.min(150,70+cap*6));th=Math.round(tw*.58);}
+  else if(sh==='long'){tw=Math.max(130,Math.min(200,80+cap*10));th=50;}
+  else{tw=Math.max(90,Math.min(150,70+cap*5));th=Math.round(tw*.6);}
+  const pad=20;
+  const wrapW=tw+pad*2+20, wrapH=th+pad*2+20;
+  const hw=wrapW/2, hh=wrapH/2;
+  // Build chair positions
+  const chairs=[];
+  if(sh==='round'||sh==='oval'){
+    const rx=tw/2+pad, ry=th/2+pad;
+    for(let i=0;i<cap;i++){
+      const a=(i/cap)*2*Math.PI-Math.PI/2;
+      chairs.push({cx:hw+rx*Math.cos(a),cy:hh+ry*Math.sin(a)});
+    }
+  } else if(sh==='long'){
+    const sideSeats=cap-ntHead;
+    const perSide=Math.ceil(sideSeats/2);
+    const x0=hw-tw/2+16, x1=hw+tw/2-16;
+    const step=perSide>1?(x1-x0)/(perSide-1):0;
+    for(let i=0;i<perSide;i++)chairs.push({cx:x0+i*step,cy:hh-th/2-pad});
+    for(let i=0;i<sideSeats-perSide;i++)chairs.push({cx:x0+i*step,cy:hh+th/2+pad});
+    if(ntHead>=1)chairs.push({cx:hw-tw/2-pad,cy:hh});
+    if(ntHead>=2)chairs.push({cx:hw+tw/2+pad,cy:hh});
+  } else {
+    const top=Math.ceil(cap/4), bot=Math.ceil(cap/4);
+    const sides=cap-top-bot;
+    const lft=Math.ceil(sides/2),rgt=sides-Math.ceil(sides/2);
+    const xs=top>1?(tw-32)/(top-1):0, ys=lft>1?(th-20)/(lft-1):0;
+    for(let i=0;i<top;i++)chairs.push({cx:hw-tw/2+16+i*xs,cy:hh-th/2-pad});
+    for(let i=0;i<bot;i++)chairs.push({cx:hw-tw/2+16+i*xs,cy:hh+th/2+pad});
+    for(let i=0;i<lft;i++)chairs.push({cx:hw-tw/2-pad,cy:hh-th/2+10+i*ys});
+    for(let i=0;i<rgt;i++)chairs.push({cx:hw+tw/2+pad,cy:hh-th/2+10+i*ys});
+  }
+  const borderR=sh==='round'||sh==='oval'?'50%':sh==='long'?'6px':'8px';
+  const chairDots=chairs.map(({cx,cy})=>
+    `<div style="position:absolute;left:${cx-9}px;top:${cy-9}px;
+      width:18px;height:18px;border-radius:50%;
+      border:2px solid ${col};background:white;
+      box-shadow:0 1px 4px rgba(0,0,0,.1)"></div>`
+  ).join('');
+  $('ntChairPreview').style.cssText=`position:relative;width:${wrapW}px;height:${wrapH}px`;
+  $('ntChairPreview').innerHTML=chairDots+
+    `<div style="position:absolute;left:${hw-tw/2}px;top:${hh-th/2}px;
+      width:${tw}px;height:${th}px;border-radius:${borderR};
+      border:2.5px solid ${col};background:white;
+      box-shadow:0 3px 14px rgba(0,0,0,.1);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:var(--ch);padding:0 6px;text-align:center">${esc($('ntName')?.value||'New Table')}</div>
+      <div style="font-size:10px;color:var(--muted);font-family:'Jost',sans-serif">${cap} seats</div>
+    </div>`;
+}
+
+async function confirmNewTable(){
+  const name=$('ntName').value.trim()||'Table '+(tables.length+1);
+  const cap=parseInt($('ntCap').value)||8;
+  const cnv=$('cnv');
+  const tpx=Math.max(100,(cnv.clientWidth/2-px)/sc+(Math.random()-.5)*180);
+  const tpy=Math.max(100,(cnv.clientHeight/2-py)/sc+(Math.random()-.5)*180);
   const r=await DB.post('seating_tables',{
-    user_id:uid,name:names[shape]+' '+n,capacity:cap,shape,
-    position_x:Math.round(tpx),position_y:Math.round(tpy),color:'#C9A84C'
+    user_id:uid,name,capacity:cap,shape:ntShape,
+    position_x:Math.round(tpx),position_y:Math.round(tpy),
+    color:ntColor,head_chairs:ntHead
   },tok);
-  if(r){tables.push(r);render();renderTableList();toast('Table added');}
+  if(r){
+    tables.push(r);
+    closeNewTableModal();
+    render();renderTableList();
+    toast('Table added ✓');
+    // Focus the new table
+    selId=r.id;render();
+  }
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
@@ -1093,14 +1271,17 @@ async function saveModal(){
   closeModal();render();renderTableList();toast('Saved ✓');
 }
 
-async function delTable(){
-  const id=$('mId').value;
-  if(!confirm('Delete table? Guests will be unassigned.'))return;
+async function quickDelTable(id,name){
+  if(!confirm(`Delete "${name}"? Guests will be unassigned.`))return;
+  await doDelTable(id);
+  toast('Table deleted');
+}
+
+async function doDelTable(id){
   for(const g of guests.filter(x=>x.table_id===id)){
     g.table_id=null;
     await DB.patch(`guests?id=eq.${g.id}`,{table_id:null},tok);
   }
-  // Also clear family members seated there
   for(const g of guests){
     const fam=getFam(g);let changed=false;
     fam.forEach(m=>{if(m.table_id===id){delete m.table_id;changed=true;}});
@@ -1108,7 +1289,16 @@ async function delTable(){
   }
   await DB.del(`seating_tables?id=eq.${id}`,tok);
   tables=tables.filter(t=>t.id!==id);
-  closeModal();render();renderSidebar();renderTableList();toast('Deleted');
+  if(selId===id)selId=null;
+  render();renderSidebar();renderTableList();
+}
+
+async function delTable(){
+  const id=$('mId').value;
+  if(!confirm('Delete table? Guests will be unassigned.'))return;
+  await doDelTable(id);
+  closeModal();
+  toast('Deleted');
 }
 
 // ── Auto layout ──────────────────────────────────────────────────────────────
