@@ -488,6 +488,23 @@
 <!-- Drag ghost -->
 <div id="drag-ghost"></div>
 
+<!-- Custom Confirm Modal -->
+<div class="mbg" id="confirmModal">
+  <div class="mbox" style="max-width:340px">
+    <div class="mhead">
+      <span class="mtitle" id="confirmTitle">Confirm</span>
+      <button class="mclose" onclick="confirmResolve(false)">✕</button>
+    </div>
+    <div class="mbody" style="padding:16px 22px 20px">
+      <p id="confirmMsg" style="font-size:14px;color:var(--ch);line-height:1.5;margin-bottom:18px"></p>
+      <div class="mfoot">
+        <button class="btn-secondary" onclick="confirmResolve(false)" style="flex:1">Cancel</button>
+        <button id="confirmOkBtn" class="btn-primary" onclick="confirmResolve(true)" style="flex:1">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- New Table Setup Modal -->
 <div class="mbg" id="newTableModal" onclick="if(event.target===this)closeNewTableModal()">
   <div class="mbox" style="max-width:400px">
@@ -1004,7 +1021,7 @@ function renderSidebar(){
           display:flex;align-items:center;justify-content:center;
           font-size:12px;font-weight:700;flex-shrink:0;color:var(--gold)">${ini}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(firstName(mg.name))}</div>
+          <div data-fn style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(firstName(mg.name))}</div>
           <div style="font-size:10px;color:var(--muted)">${esc(mg.name)}</div>
         </div>
         ${sideTag}
@@ -1035,7 +1052,7 @@ function renderSidebar(){
                 ${fn.charAt(0).toUpperCase()}
               </div>
               <div style="flex:1;min-width:0">
-                <div style="font-weight:${isMain?700:500};font-size:12px;
+                <div data-fn style="font-weight:${isMain?700:500};font-size:12px;
                   white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                   ${esc(fn)}
                 </div>
@@ -1049,6 +1066,93 @@ function renderSidebar(){
     }
   });
   el.innerHTML=html;
+}
+
+
+// ── Custom confirm (replaces browser confirm) ────────────────────────────────
+let _confirmResolve=null;
+function confirmResolve(val){
+  $('confirmModal').classList.remove('open');
+  if(_confirmResolve){_confirmResolve(val);_confirmResolve=null;}
+}
+function customConfirm(msg,okLabel='Delete'){
+  return new Promise(res=>{
+    _confirmResolve=res;
+    $('confirmMsg').textContent=msg;
+    $('confirmOkBtn').textContent=okLabel;
+    $('confirmModal').classList.add('open');
+  });
+}
+
+// ── Guest drag via mouse (not HTML5 drag API) ────────────────────────────────
+let gDragGhost=null;
+
+function startGuestDrag(e,chip){
+  if(e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  const gid=chip.dataset.gid;
+  const fi=parseInt(chip.dataset.fi);
+
+  const ghost=$('drag-ghost');
+  const fn=chip.querySelector('[data-fn]')?.textContent
+    || chip.querySelector('div div')?.textContent
+    || 'Guest';
+  ghost.textContent=fn;
+  ghost.style.display='block';
+  moveGhost(e);
+
+  chip.classList.add('dragging');
+
+  const mm=ev=>{
+    moveGhost(ev);
+    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-target'));
+    const el=document.elementFromPoint(ev.clientX,ev.clientY);
+    const tnode=el?.closest('.tnode');
+    if(tnode) tnode.classList.add('drop-target');
+  };
+  const mu=async ev=>{
+    document.removeEventListener('mousemove',mm);
+    document.removeEventListener('mouseup',mu);
+    ghost.style.display='none';
+    chip.classList.remove('dragging');
+    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-target'));
+
+    const el=document.elementFromPoint(ev.clientX,ev.clientY);
+    const tnode=el?.closest('.tnode');
+    if(!tnode)return;
+    const tid=tnode.id.replace('tn-','');
+    await seatPerson(gid,fi,tid);
+  };
+  document.addEventListener('mousemove',mm);
+  document.addEventListener('mouseup',mu);
+}
+
+function moveGhost(e){
+  const g=$('drag-ghost');
+  g.style.left=(e.clientX+14)+'px';
+  g.style.top=(e.clientY-20)+'px';
+}
+
+async function seatPerson(gid,fi,tid){
+  const tbl=tables.find(x=>x.id===tid);
+  const g=guests.find(x=>x.id===gid);
+  if(!tbl||!g)return;
+
+  const current=countAt(tid);
+  if(current>=tbl.capacity){toast('Table is full!',true);return;}
+
+  if(fi===-1){
+    g.table_id=tid;
+    await DB.patch(`guests?id=eq.${gid}`,{table_id:tid},tok);
+  } else {
+    const fam=getFam(g);
+    if(!fam[fi])return;
+    fam[fi].table_id=tid;
+    g.family_members=fam;
+    await DB.patch(`guests?id=eq.${gid}`,{family_members:fam},tok);
+  }
+  render();renderSidebar();renderTableList();
+  toast('Seated ✓');
 }
 
 
@@ -1296,7 +1400,8 @@ async function saveModal(){
 }
 
 async function quickDelTable(id,name){
-  if(!confirm(`Delete "${name}"? Guests will be unassigned.`))return;
+  const ok=await customConfirm(`Delete "${name}"? Guests will be unassigned.`);
+  if(!ok)return;
   await doDelTable(id);
   toast('Table deleted');
 }
@@ -1319,7 +1424,8 @@ async function doDelTable(id){
 
 async function delTable(){
   const id=$('mId').value;
-  if(!confirm('Delete table? Guests will be unassigned.'))return;
+  const ok=await customConfirm('Delete this table? Guests will be unassigned.');
+  if(!ok)return;
   await doDelTable(id);
   closeModal();
   toast('Deleted');
@@ -1438,7 +1544,8 @@ async function applyArrangement(id){
   }
 
   // Delete existing tables and recreate
-  if(!confirm(`This will replace all ${tables.length} existing tables with the ${ARRANGEMENTS.find(a=>a.id===id).name} arrangement. Continue?`))return;
+  const ok2=await customConfirm(`Replace all ${tables.length} existing tables with the ${ARRANGEMENTS.find(a=>a.id===id).name} arrangement?`,'Apply');
+  if(!ok2)return;
   $('arrModal').classList.remove('open');
   setSave('Applying…');
 
