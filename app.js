@@ -1928,6 +1928,7 @@ async function saveWelcomeSetup() {
 function openSettingsModal() {
   const m = document.getElementById('settingsModal');
   if (!m) return;
+  loadGalleryPhotos();
   // Pre-fill with current values
   const n1 = document.getElementById('settingsName1');
   const n2 = document.getElementById('settingsName2');
@@ -1990,6 +1991,158 @@ async function saveNotesFromSettings() {
 init();  updateWeddingPageUrl();
   const pmEl=document.getElementById('settingsPageMessage');if(pmEl)pmEl.value=profile?.page_message||'';
 
+
+
+// ── Gallery Photos ─────────────────────────────────────────────────────────────
+let galleryPhotos = [];
+
+async function loadGalleryPhotos() {
+  galleryPhotos = [];
+  try {
+    const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
+    const uid = localStorage.getItem('wl_uid');
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=gallery_photos`, {
+      headers: DB._h(tok)
+    });
+    const d = await r.json();
+    if(d && d[0] && d[0].gallery_photos) {
+      galleryPhotos = Array.isArray(d[0].gallery_photos)
+        ? d[0].gallery_photos : JSON.parse(d[0].gallery_photos || '[]');
+    }
+  } catch(e) { console.error('loadGallery', e); }
+  renderGalleryPreview();
+}
+
+function renderGalleryPreview() {
+  const wrap = document.getElementById('galleryPreview');
+  if(!wrap) return;
+  if(!galleryPhotos.length) {
+    wrap.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:12px;font-size:12px;color:var(--muted);font-style:italic">No photos yet — upload up to 6</div>';
+    return;
+  }
+  wrap.innerHTML = galleryPhotos.map((p,i) => `
+    <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+      <img src="${p.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy">
+      <button onclick="deleteGalleryPhoto(${i})"
+        style="position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;
+        border:none;background:rgba(0,0,0,.55);color:white;font-size:11px;cursor:pointer;
+        display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`).join('') +
+    (galleryPhotos.length < 6 ? `
+    <label style="aspect-ratio:1;border-radius:10px;border:2px dashed var(--border);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      background:var(--warm);color:var(--muted);font-size:22px;transition:.2s"
+      onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+      +<input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" multiple
+        style="display:none" onchange="uploadGalleryPhotos(this)">
+    </label>` : '');
+}
+
+async function uploadGalleryPhotos(input) {
+  const files = Array.from(input.files);
+  if(!files.length) return;
+  const canAdd = 6 - galleryPhotos.length;
+  const toUpload = files.slice(0, canAdd);
+
+  const prog = document.getElementById('photoUploadProgress');
+  const bar  = document.getElementById('photoProgressBar');
+  const txt  = document.getElementById('photoProgressText');
+  if(prog) prog.style.display = 'block';
+
+  const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
+  const uid = localStorage.getItem('wl_uid');
+  let done = 0;
+
+  for(const file of toUpload) {
+    try {
+      if(txt) txt.textContent = `Uploading ${file.name}…`;
+      // Compress if over 2MB
+      const blob = file.size > 2*1024*1024 ? await compressImage(file, 0.8) : file;
+      const ext  = file.name.split('.').pop().toLowerCase();
+      const path = `${uid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const r = await fetch(`${SUPABASE_URL}/storage/v1/object/wedding-photos/${path}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${tok}`,
+          'Content-Type': file.type,
+          'x-upsert': 'true'
+        },
+        body: blob
+      });
+
+      if(r.ok) {
+        const url = `${SUPABASE_URL}/storage/v1/object/public/wedding-photos/${path}`;
+        galleryPhotos.push({ url, path });
+        done++;
+        if(bar) bar.style.width = (done / toUpload.length * 100) + '%';
+      } else {
+        const err = await r.text();
+        console.error('Upload failed:', r.status, err);
+        showToast('Upload failed: ' + r.status);
+      }
+    } catch(e) {
+      console.error('Upload error:', e);
+      showToast('Upload error: ' + e.message);
+    }
+  }
+
+  if(done > 0) {
+    await saveGalleryPhotos();
+    showToast(`📸 ${done} photo(s) uploaded!`);
+  }
+
+  if(prog) { prog.style.display = 'none'; if(bar) bar.style.width = '0%'; }
+  input.value = '';
+  renderGalleryPreview();
+}
+
+async function compressImage(file, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 1600;
+      let w = img.width, h = img.height;
+      if(w > max) { h = h * max / w; w = max; }
+      if(h > max) { w = w * max / h; h = max; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => { URL.revokeObjectURL(url); resolve(blob); }, 'image/jpeg', quality);
+    };
+    img.src = url;
+  });
+}
+
+async function deleteGalleryPhoto(idx) {
+  const p = galleryPhotos[idx];
+  if(!p) return;
+  try {
+    const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
+    await fetch(`${SUPABASE_URL}/storage/v1/object/wedding-photos/${p.path}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${tok}` }
+    });
+  } catch(e) { console.error('delete photo', e); }
+  galleryPhotos.splice(idx, 1);
+  await saveGalleryPhotos();
+  renderGalleryPreview();
+  showToast('Photo removed');
+}
+
+async function saveGalleryPhotos() {
+  try {
+    const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
+    const uid = localStorage.getItem('wl_uid');
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}`, {
+      method: 'PATCH',
+      headers: { ...DB._h(tok), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ gallery_photos: galleryPhotos })
+    });
+    if(!r.ok) { const t=await r.text(); console.error('saveGallery failed',r.status,t); }
+  } catch(e) { console.error('saveGallery', e); }
+}
 
 // ── MOBILE NAV ────────────────────────────────────────────────────────────────
 function openMobileNav() {
