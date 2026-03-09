@@ -2,8 +2,75 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WeddingLedger — Wedding Budget Planner</title>
+<script>
+// ── Short RSVP link redirect — runs before anything else renders ──────────────
+(async function() {
+  const code = new URLSearchParams(location.search).get('c');
+  if(!code) return; // normal page load — do nothing
+
+  // Show a nice loading screen immediately
+  document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Opening your invitation…</title>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;background:#1a1208;font-family:Georgia,serif;
+        color:rgba(255,255,255,.8);text-align:center;padding:24px}
+      .ring{font-size:52px;margin-bottom:22px;animation:p 1.8s ease-in-out infinite}
+      @keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+      h2{font-size:22px;font-weight:400;color:#C9A84C;margin-bottom:8px;letter-spacing:.05em}
+      p{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:.12em;text-transform:uppercase}
+      .dots{display:flex;gap:7px;justify-content:center;margin-top:22px}
+      .dot{width:6px;height:6px;border-radius:50%;background:#C9A84C;
+        animation:d 1.2s ease-in-out infinite}
+      .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+      @keyframes d{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+      .err{color:#f5a0a0;font-size:14px;margin-top:20px;display:none}
+    </style>
+  </head><body>
+    <div class="ring">💍</div>
+    <h2 id="msg">Opening your invitation…</h2>
+    <p>Just a moment</p>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="err" id="err">This invitation link wasn't found.<br>Please ask the couple for a new link.</div>
+  </body></html>`);
+  document.close();
+
+  const SB   = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+  const BASE = 'https://pamupro.github.io/wedding-budget';
+  const H    = { apikey: ANON, Authorization: 'Bearer '+ANON };
+
+  try {
+    const r1   = await fetch(SB+'/rest/v1/guests?link_code=eq.'+encodeURIComponent(code)+'&select=id,user_id', { headers: H });
+    const rows = await r1.json();
+    if(!rows?.length) { showErr(); return; }
+
+    const { id, user_id } = rows[0];
+    const r2   = await fetch(SB+'/rest/v1/profiles?user_id=eq.'+user_id+'&select=page_slug', { headers: H });
+    const prof = await r2.json();
+    const slug = prof?.[0]?.page_slug;
+    if(!slug) { showErr(); return; }
+
+    window.location.replace(BASE+'/wedding.html?slug='+encodeURIComponent(slug)+'&gid='+id);
+  } catch(e) { showErr(); }
+
+  function showErr() {
+    const m = document.getElementById('msg');
+    const e = document.getElementById('err');
+    if(m) m.textContent = 'Link not found';
+    if(e) e.style.display = 'block';
+    const p = document.querySelector('p');
+    const d = document.querySelector('.dots');
+    if(p) p.style.display='none';
+    if(d) d.style.display='none';
+  }
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -236,7 +303,4 @@ footer a{color:var(--gold-light);text-decoration:none;}
 <footer>
   <div class="footer-logo">Wedding<span>Ledger</span></div>
   <p>Made with 💍 for couples everywhere</p>
-  <p style="margin-top:14px"><a href="login.html">Launch App</a> · <a href="mailto:hello@weddingledger.app">Contact</a></p>
-</footer>
-</body>
-</html>
+  <p style="margin-top:14px"><a href="login.html">Launch App</a> · <a href="/cdn-cgi/l/email-protection#b7dfd2dbdbd8f7c0d2d3d3ded9d0dbd2d3d0d2c599d6c7
