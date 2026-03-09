@@ -23,6 +23,8 @@
     .tbar-sel{padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;font-family:'Jost',sans-serif;font-size:12px;background:white;outline:none;cursor:pointer}
     .grid{padding:20px 24px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
     .gcard{background:white;border-radius:14px;border:1.5px solid var(--border);padding:16px;transition:.2s;position:relative}
+    .gcard.no-contact{background:#fffbf0;border-color:#e8c84a;border-style:dashed}
+    .gcard.no-contact .gname::after{content:' ';display:inline-block}
     .gcard:hover{border-color:rgba(201,168,76,.5);box-shadow:0 4px 16px rgba(0,0,0,.07)}
     .gcard.sel{border-color:var(--gold);background:#fdf9f0}
     .gcard-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
@@ -847,7 +849,8 @@ function buildCard(g) {
   actions += '<button class="gbtn share-btn" id="sb-'+gid+'" onclick="copyRsvpLink(\''+gid+'\')" title="Copy RSVP link">🔗 Link</button>';
   actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">🗑</button>';
 
-  return '<div class="gcard'+selCls+'" id="gc-'+gid+'">' +
+  const noContact = !hasPh && !hasEm;
+  return '<div class="gcard'+selCls+(noContact?' no-contact':'')+'" id="gc-'+gid+'">' +
     '<input type="checkbox" class="gcheck"'+checked+' onchange="toggleSel(\''+gid+'\',this)">' +
     '<div class="gcard-top">' +
       '<div class="avatar">'+ini+'</div>' +
@@ -855,7 +858,7 @@ function buildCard(g) {
         '<div class="gname">'+esc(g.name)+
     (missingName(g.name) ? ' <span style="font-size:10px;background:#fff3cd;color:#7a5000;border-radius:99px;padding:2px 7px;font-weight:600;vertical-align:middle">⚠ Incomplete</span>' : '')+
     '</div>' +
-        '<div class="gmeta">'+(hasEm ? esc(g.email) : hasPh ? '📱 '+esc(g.phone) : '<i style="opacity:.5">No contact saved</i>')+'</div>' +
+        '<div class="gmeta">'+(hasEm ? esc(g.email) : hasPh ? '📱 '+esc(g.phone) : '<span style="font-size:11px;color:#b07800;font-weight:500">⚠ No contact saved</span>')+'</div>' +
       '</div>' +
     '</div>' +
     '<div style="display:flex;flex-wrap:wrap;margin-bottom:4px">'+badges+'</div>' +
