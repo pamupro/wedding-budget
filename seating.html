@@ -493,7 +493,7 @@ let uid   = localStorage.getItem('wl_uid');
 let tok   = localStorage.getItem('wl_token');
 let guests=[], tables=[];
 let scale=1, panX=0, panY=0;
-let selId=null, dragGid=null;
+let selId=null, dragGid=null, dragFamIdx=-1;
 let mShape='round', mRot=0, mHead=0, mColor=COLORS[0];
 let saveT=null;
 
@@ -561,11 +561,15 @@ function render(){
 
   tables.forEach(t=>{
     const assigned=guests.filter(g=>g.table_id===t.id);
+    // Also count family members seated here
+    let famSeated=[];
+    guests.forEach(g=>{getFam(g).forEach(m=>{if(m.table_id===t.id){const fn=((m.first||'')+' '+(m.last||'')).trim();famSeated.push({name:fn||'Family member'});}});});
+    const allSeated=[...assigned,...famSeated];
     const {w,h}=tSize(t);
     const rot=parseInt(t.rotation)||0;
     const col=t.color||COLORS[0];
     const sh=t.shape||'round';
-    const full=assigned.length>=t.capacity;
+    const full=allSeated.length>=t.capacity;
     const isSel=selId===t.id;
 
     const node=document.createElement('div');
@@ -578,15 +582,15 @@ function render(){
       ?`<button class="rot-btn" title="Rotate 90°" onclick="event.stopPropagation();qRot('${t.id}')">↻</button>`:'';
 
     // Guest chips
-    const chips=assigned.slice(0,9).map(g=>
+    const chips=allSeated.slice(0,9).map(g=>
       `<span class="tg" style="background:${col}18;border:1px solid ${col}44;color:${col}">${esc(g.name.split(' ')[0])}</span>`
-    ).join('')+(assigned.length>9?`<span class="tg" style="color:var(--muted)">+${assigned.length-9}</span>`:'');
+    ).join('')+(allSeated.length>9?`<span class="tg" style="color:var(--muted)">+${allSeated.length-9}</span>`:'');
 
     node.innerHTML=`
       ${rotHandle}
       <div class="tshape ${sh}" style="width:${w}px;height:${h}px;border-color:${col};transform:rotate(${rot}deg)">
         <div class="t-name">${esc(t.name)}</div>
-        <div class="t-count" style="color:${full?'#c04040':'var(--muted)'}">${assigned.length}/${t.capacity}</div>
+        <div class="t-count" style="color:${full?'#c04040':'var(--muted)'}">${allSeated.length}/${t.capacity}</div>
       </div>
       ${assigned.length?`<div class="t-guests">${chips}</div>`:''}`;
 
@@ -665,6 +669,96 @@ function resetView(){scale=1;panX=0;panY=0;applyTransform();}
 // ── Drop guests ──────────────────────────────────────────────────────────────
 function setupDrop(){
   document.addEventListener('dragstart',e=>{
+    const chip=e.target.closest('.gchip');
+    if(!chip||!chip.dataset.id)return;
+    dragGid=chip.dataset.id;
+    dragFamIdx=parseInt(chip.dataset.famidx??'-1');
+    chip.classList.add('drag');
+    // Visual: highlight all chips in same family group
+    document.querySelectorAll(`.fam-box[data-gid="${dragGid}"] .gchip`).forEach(c=>c.style.opacity='.5');
+  });
+  document.addEventListener('dragend',e=>{
+    document.querySelectorAll('.gchip').forEach(c=>{c.classList.remove('drag');c.style.opacity='';});
+    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-hi'));
+    dragGid=null; dragFamIdx=-1;
+  });
+  document.addEventListener('dragover',e=>{
+    const n=e.target.closest('.tnode');
+    if(n){e.preventDefault();n.classList.add('drop-hi');}
+  });
+  document.addEventListener('dragleave',e=>{
+    const n=e.target.closest('.tnode');
+    if(n&&!n.contains(e.relatedTarget))n.classList.remove('drop-hi');
+  });
+  document.addEventListener('drop',async e=>{
+    const n=e.target.closest('.tnode');
+    if(!n||!dragGid)return;
+    e.preventDefault();n.classList.remove('drop-hi');
+    const tid=n.id.replace('tn-','');
+    const tbl=tables.find(t=>t.id===tid);
+    const g=guests.find(x=>x.id===dragGid);
+    if(!g||!tbl)return;
+
+    // Count current occupants (main guests + their fam members at this table)
+    const currentCount=countSeatedAt(tid);
+    const spotsNeeded=1;
+    if(currentCount+spotsNeeded>tbl.capacity){toast('Table is full!',true);return;}
+
+    if(dragFamIdx===-1){
+      // Seating the MAIN GUEST
+      g.table_id=tid;
+      await DB.patch(`guests?id=eq.${dragGid}`,{table_id:tid},tok);
+    } else {
+      // Seating an individual FAMILY MEMBER — update their table_id in family_members JSON
+      const fam=getFam(g);
+      if(fam[dragFamIdx]) fam[dragFamIdx].table_id=tid;
+      g.family_members=fam;
+      await DB.patch(`guests?id=eq.${dragGid}`,{family_members:JSON.stringify(fam)},tok);
+    }
+    dragGid=null; dragFamIdx=-1;
+    render(); renderSidebar(); renderTableList();
+    toast('Seated ✓');
+  });
+}
+
+function countSeatedAt(tid){
+  let n=0;
+  guests.forEach(g=>{
+    if(g.table_id===tid)n++;
+    getFam(g).forEach(m=>{if(m.table_id===tid)n++;});
+  });
+  return n;
+}
+
+
+// ── Pan & zoom ───────────────────────────────────────────────────────────────
+function setupPan(){
+  const cnv=$id('cnv');
+  let panning=false,sx,sy,spx,spy;
+  cnv.addEventListener('mousedown',e=>{
+    // Pan on middle button OR alt+left drag OR direct canvas (no table) left drag
+    const onCanvas=e.target===cnv||e.target===$id('tableLayer');
+    if(e.button===1||(e.altKey&&e.button===0)||(e.button===0&&onCanvas)){
+      panning=true;sx=e.clientX;sy=e.clientY;spx=panX;spy=panY;
+      cnv.style.cursor='grabbing';e.preventDefault();
+    }
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!panning)return;
+    panX=spx+(e.clientX-sx);panY=spy+(e.clientY-sy);applyTransform();
+  });
+  document.addEventListener('mouseup',()=>{panning=false;$id('cnv').style.cursor='default';});
+  cnv.addEventListener('wheel',e=>{e.preventDefault();doZoom(e.deltaY<0?.12:-.12);},{passive:false});
+}
+
+function doZoom(d){
+  scale=Math.max(.3,Math.min(2.5,scale+d));applyTransform();
+}
+function resetView(){scale=1;panX=0;panY=0;applyTransform();}
+
+// ── Drop guests ──────────────────────────────────────────────────────────────
+function setupDrop(){
+  document.addEventListener('dragstart',e=>{
     if(e.target.classList.contains('gchip')){
       dragGid=e.target.dataset.id;
       e.target.classList.add('drag');
@@ -712,95 +806,137 @@ function getFam(g){
 
 function renderSidebar(){
   const q=($id('sbSearch')?.value||'').toLowerCase();
-  const unassigned=guests.filter(g=>!g.table_id&&g.name.toLowerCase().includes(q));
   const el=$id('guestList');
+
+  // Build a flat list of ALL people (main guests + family members)
+  // Each person: {id, name, type, tableId, mainGuestId, famIdx}
+  const allPeople=[];
+  guests.forEach(g=>{
+    const fam=getFam(g);
+    allPeople.push({
+      id:g.id, name:g.name, type:'guest', tableId:g.table_id||null,
+      mainGuestId:g.id, famIdx:-1, dietary:g.dietary, groupLabel:g.group_label
+    });
+    fam.forEach((m,i)=>{
+      const fn=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
+      allPeople.push({
+        id:g.id+'_fam_'+i, name:fn, type:m.type||'family',
+        tableId:m.table_id||g.table_id||null,  // family member seated = inherit or own
+        mainGuestId:g.id, famIdx:i
+      });
+    });
+  });
+
+  const unassigned=allPeople.filter(p=>!p.tableId&&p.name.toLowerCase().includes(q));
+
   if(!unassigned.length){
+    const totalUnassigned=allPeople.filter(p=>!p.tableId).length;
     el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;font-family:'Jost',sans-serif">
-      ${guests.filter(g=>!g.table_id).length===0?'🎉 All guests seated!':'No matching guests'}</div>`;
+      ${totalUnassigned===0?'🎉 All guests seated!':'No matching guests'}</div>`;
     return;
   }
-  const withFam=unassigned.filter(g=>getFam(g).length>0);
-  const solo   =unassigned.filter(g=>getFam(g).length===0);
-  let html='';
 
-  // All unassigned family guests (main guest not seated)
-  withFam.forEach(g=>{
-    const fam=getFam(g);
-    const ini=(g.name||'?').charAt(0).toUpperCase();
-    html+=`<div class="fam-box">
+  // Group unassigned by main guest
+  const grouped={};
+  unassigned.forEach(p=>{
+    if(!grouped[p.mainGuestId])grouped[p.mainGuestId]=[];
+    grouped[p.mainGuestId].push(p);
+  });
+
+  let html='';
+  Object.entries(grouped).forEach(([gid,people])=>{
+    const mainGuest=guests.find(x=>x.id===gid);
+    if(!mainGuest)return;
+    const ini=mainGuest.name.charAt(0).toUpperCase();
+    const totalInGroup=[mainGuest,...getFam(mainGuest)].length;
+    const seatedCount=totalInGroup-people.length;
+
+    html+=`<div class="fam-box" data-gid="${gid}">
       <div class="fam-head">
         <div class="fam-av">${ini}</div>
-        <span class="fam-name">${esc(g.name)}</span>
-        <span class="fam-ct">${fam.length+1} people</span>
+        <span class="fam-name">${esc(mainGuest.name)}</span>
+        <span class="fam-ct">${people.length} unassigned${seatedCount>0?` · ${seatedCount} seated`:''}</span>
       </div>
       <div class="fam-body">
-        <div class="gchip" draggable="true" data-id="${g.id}">
-          <div style="flex:1">
-            <div style="font-weight:600;font-size:12px">${esc(g.name)}</div>
-            <div style="font-size:10px;color:var(--muted)">Main guest · drag to seat all</div>
-          </div>
-        </div>
-        ${fam.map(m=>{
-          const fn=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
-          const rsvpIco=m.rsvp==='yes'?'✅':m.rsvp==='no'?'❌':m.rsvp==='maybe'?'🤔':'⏳';
-          return`<div class="gchip gchip-sub" draggable="true" data-id="${g.id}" data-fam="1"
-            title="Drag to seat whole family group">
-            <div style="flex:1">
-              <div style="font-weight:500;font-size:12px">${esc(fn)}</div>
-              <div style="font-size:10px;color:var(--muted)">${rsvpIco} ${esc(m.type||'family')}</div>
+        ${people.map(p=>{
+          const isMain=p.famIdx===-1;
+          const chipClass=isMain?'gchip':'gchip gchip-sub';
+          const sub=isMain
+            ?`<div style="font-size:10px;color:var(--muted)">Main guest</div>`
+            :`<div style="font-size:10px;color:var(--muted)">${esc(p.type)}</div>`;
+          return`<div class="${chipClass}" draggable="true"
+            data-id="${gid}"
+            data-famidx="${p.famIdx}"
+            style="cursor:grab">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:${isMain?700:500};font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
+              ${sub}
             </div>
+            <span style="font-size:10px;color:var(--muted);background:#f5f0e8;border-radius:4px;padding:2px 6px;flex-shrink:0">drag</span>
           </div>`;
         }).join('')}
       </div>
     </div>`;
   });
 
-  if(solo.length){
-    html+=`<div class="solo-label">Individual Guests</div>`;
-    solo.forEach(g=>{
-      const ini=(g.name||'?').charAt(0).toUpperCase();
-      html+=`<div class="gchip" draggable="true" data-id="${g.id}" style="margin-bottom:4px">
-        <span style="width:28px;height:28px;border-radius:50%;background:var(--warm);
-          display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">
-          ${ini}</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(g.name)}</div>
-          ${g.group_label?`<div style="font-size:10px;color:var(--muted)">${esc(g.group_label)}</div>`:''}
-        </div>
-      </div>`;
-    });
-  }
-  el.innerHTML=html;
+  el.innerHTML=html||`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No matching guests</div>`;
 }
+
 
 // ── Sidebar — tables ─────────────────────────────────────────────────────────
 function renderTableList(){
   const el=$id('tableList');
   if(!tables.length){
-    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;font-family:'Jost',sans-serif">No tables yet — add one below</div>`;
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;font-family:'Jost',sans-serif">No tables yet</div>`;
     return;
   }
   el.innerHTML=tables.map(t=>{
-    const asgn=guests.filter(g=>g.table_id===t.id);
-    const pct=t.capacity?Math.round(asgn.length/t.capacity*100):0;
+    // Collect everyone seated at this table
+    const seated=[];
+    guests.forEach(g=>{
+      if(g.table_id===t.id) seated.push({name:g.name,type:'guest',gid:g.id,famIdx:-1});
+      getFam(g).forEach((m,i)=>{
+        if(m.table_id===t.id){
+          const fn=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
+          seated.push({name:fn,type:m.type||'family',gid:g.id,famIdx:i});
+        }
+      });
+    });
+    const total=seated.length;
+    const cap=t.capacity||8;
+    const pct=Math.round(total/cap*100);
+    const full=total>=cap;
+
     return`<div class="tc${selId===t.id?' on':''}" onclick="focusTable('${t.id}')">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:10px;height:10px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
         <div style="font-weight:700;font-size:13px;flex:1;font-family:'Jost',sans-serif">${esc(t.name)}</div>
-        <div style="font-size:11px;color:${asgn.length>=t.capacity?'#c04040':'var(--muted)'};font-family:'Jost',sans-serif">
-          ${asgn.length}/${t.capacity}
-        </div>
+        <div style="font-size:11px;color:${full?'#c04040':'var(--muted)'};font-family:'Jost',sans-serif">${total}/${cap}</div>
         <button onclick="event.stopPropagation();openModal('${t.id}')"
-          style="border:none;background:none;cursor:pointer;padding:3px 6px;
-          border-radius:6px;color:var(--muted);font-size:13px">✏️</button>
+          style="border:none;background:none;cursor:pointer;padding:3px 6px;border-radius:6px;color:var(--muted);font-size:13px">✏️</button>
       </div>
-      <div class="tc-bar"><div class="tc-fill" style="width:${pct}%;background:${t.color}"></div></div>
-      ${asgn.length
-        ?`<div>${asgn.map(g=>`<span class="tg-pill" onclick="event.stopPropagation();unassign('${g.id}')" title="Remove">${esc(g.name.split(' ')[0])} ✕</span>`).join('')}</div>`
-        :`<div style="font-size:11px;color:var(--muted);font-style:italic;font-family:'Jost',sans-serif">Empty — drag guests here</div>`}
+      <div class="tc-bar"><div class="tc-fill" style="width:${Math.min(100,pct)}%;background:${t.color}"></div></div>
+      ${seated.length
+        ?`<div style="display:flex;flex-direction:column;gap:3px">
+            ${seated.map(p=>{
+              const isMain=p.type==='guest';
+              return`<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;
+                background:${isMain?'white':'#faf8f4'};border-radius:6px;
+                border:1px solid ${isMain?'var(--border)':'#e8e0d0'}">
+                <span style="font-size:11px;flex:1;font-family:'Jost',sans-serif;
+                  font-weight:${isMain?600:400}">${esc(p.name)}</span>
+                <span style="font-size:9px;color:var(--muted);font-family:'Jost',sans-serif">${isMain?'guest':p.type}</span>
+                <button onclick="event.stopPropagation();unseat('${p.gid}',${p.famIdx})"
+                  style="border:none;background:none;cursor:pointer;color:#c04040;font-size:11px;
+                  padding:0 2px;line-height:1" title="Remove">✕</button>
+              </div>`;
+            }).join('')}
+          </div>`
+        :`<div style="font-size:11px;color:var(--muted);font-style:italic;font-family:'Jost',sans-serif;padding:2px">Empty — drag guests here</div>`}
     </div>`;
   }).join('');
 }
+
 
 function focusTable(id){
   selId=id; render(); renderTableList();
@@ -817,6 +953,21 @@ async function unassign(gid){
   await DB.patch(`guests?id=eq.${gid}`,{table_id:null},tok);
   const g=guests.find(x=>x.id===gid);if(g)g.table_id=null;
   render();renderSidebar();renderTableList();
+}
+
+async function unseat(gid,famIdx){
+  const g=guests.find(x=>x.id===gid);if(!g)return;
+  if(famIdx===-1){
+    g.table_id=null;
+    await DB.patch(`guests?id=eq.${gid}`,{table_id:null},tok);
+  } else {
+    const fam=getFam(g);
+    if(fam[famIdx])delete fam[famIdx].table_id;
+    g.family_members=fam;
+    await DB.patch(`guests?id=eq.${gid}`,{family_members:JSON.stringify(fam)},tok);
+  }
+  render();renderSidebar();renderTableList();
+  toast('Removed from table');
 }
 
 function showTab(tab,btn){
