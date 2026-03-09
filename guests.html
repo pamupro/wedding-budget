@@ -195,7 +195,33 @@
       .gnav-lbl{font-size:11px;text-transform:none;letter-spacing:0}
     }
     @media(max-width:680px){.toolbar{padding:10px 14px}.grid{padding:12px;grid-template-columns:1fr}.stats-strip{top:56px}}
-  </style>
+  
+  /* ── Undo toast ── */
+  .undo-toast{
+    position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#2a2010;border:1px solid rgba(201,168,76,.4);
+    color:white;padding:12px 16px 12px 20px;border-radius:99px;
+    font-size:13px;font-weight:500;z-index:1000;
+    display:flex;align-items:center;gap:14px;
+    box-shadow:0 8px 32px rgba(0,0,0,.35);
+    opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;
+    white-space:nowrap;
+  }
+  .undo-toast.show{
+    opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;
+  }
+  .undo-toast button{
+    background:var(--gold,#C9A84C);color:white;border:none;
+    border-radius:99px;padding:5px 14px;font-size:12px;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:.15s;flex-shrink:0;
+  }
+  .undo-toast button:hover{background:#b8943c;transform:scale(1.05)}
+  /* countdown ring around undo button */
+  .undo-progress{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    width:32px;height:32px;pointer-events:none;
+  }
+</style>
 </head>
 <body>
 
@@ -519,6 +545,13 @@
   </div>
 </div>
 
+<div class="undo-toast" id="undoToast" style="display:none">
+  <span id="undoMsg"></span>
+  <div style="flex:1;height:2px;background:rgba(255,255,255,.15);border-radius:1px;overflow:hidden;min-width:40px">
+    <div id="undoCountdown" style="height:100%;background:var(--gold,#C9A84C);width:100%;transition:width 1s linear;border-radius:1px"></div>
+  </div>
+  <button id="undoBtn" onclick="triggerUndo()">↩ Undo</button>
+</div>
 <div class="toast" id="toast"></div>
 
 <script src="db.js"></script>
@@ -1086,12 +1119,10 @@ async function cycleRsvp(id) {
 }
 
 async function delGuest(id) {
-  if(!confirm('Remove this guest?')) return;
-  await sbDel('guests?id=eq.'+id);
-  guests = guests.filter(g=>g.id!==id);
-  selIds.delete(id);
-  renderList(); updateStats(); updateBulkBar();
-  toast('Guest removed');
+  const g = guests.find(x=>x.id===id);
+  if(!g) return;
+  // Soft-hide immediately — actual delete after 5s
+  softDelete([g]);
 }
 
 // ── SELECTION ─────────────────────────────────────────────────────────────────
@@ -1128,12 +1159,10 @@ async function bkRsvp(status) {
   clearSel(); renderList(); updateStats(); toast(n+' guests updated');
 }
 async function bkDel() {
-  if(!confirm('Delete '+selIds.size+' guests?')) return;
-  for(const id of [...selIds]) {
-    await sbDel('guests?id=eq.'+id);
-    guests = guests.filter(g=>g.id!==id);
-  }
-  clearSel(); renderList(); updateStats(); toast('Guests deleted');
+  if(!selIds.size) return;
+  const toDelete = [...selIds].map(id=>guests.find(g=>g.id===id)).filter(Boolean);
+  clearSel();
+  softDelete(toDelete);
 }
 function bkWA() {
   const t = [...selIds].map(id=>guests.find(g=>g.id===id)).filter(g=>g&&g.phone);
@@ -1399,6 +1428,94 @@ function missingName(name) {
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+// ── Undo Delete System ────────────────────────────────────────────────────────
+let _undoPending = null; // { guests:[], timer, countdown }
+
+function softDelete(deletedGuests) {
+  // Cancel any previous pending delete first (commit it)
+  if(_undoPending) commitDelete(true);
+
+  // Hide guests from UI immediately
+  deletedGuests.forEach(g => {
+    guests = guests.filter(x=>x.id!==g.id);
+    selIds.delete(g.id);
+  });
+  renderList(); updateStats(); updateBulkBar();
+
+  // Show undo toast
+  const n    = deletedGuests.length;
+  const name = n===1 ? (deletedGuests[0].name||'Guest') : n+' guests';
+  showUndoToast(name+' removed');
+
+  // Start 5-second countdown then commit
+  let timeLeft = 5;
+  const timer = setInterval(() => {
+    timeLeft--;
+    const bar = document.getElementById('undoCountdown');
+    if(bar) bar.style.width = (timeLeft/5*100)+'%';
+    if(timeLeft <= 0) {
+      clearInterval(timer);
+      commitDelete(false);
+    }
+  }, 1000);
+
+  _undoPending = { guests: deletedGuests, timer };
+}
+
+function triggerUndo() {
+  if(!_undoPending) return;
+  clearInterval(_undoPending.timer);
+  const restored = _undoPending.guests;
+  _undoPending = null;
+  hideUndoToast();
+
+  // Put guests back
+  guests = [...guests, ...restored];
+  renderList(); updateStats();
+  toast('↩ Restored '+restored.length+' guest'+(restored.length>1?'s':''));
+}
+
+async function commitDelete(silent) {
+  if(!_undoPending) return;
+  clearInterval(_undoPending.timer);
+  const toDelete = _undoPending.guests;
+  _undoPending = null;
+  hideUndoToast();
+  // Actually delete from DB
+  for(const g of toDelete) {
+    try { await sbDel('guests?id=eq.'+g.id); } catch(e) {}
+  }
+  if(!silent) toast('Deleted permanently');
+}
+
+function showUndoToast(msg) {
+  const el  = document.getElementById('undoToast');
+  const txt = document.getElementById('undoMsg');
+  if(!el || !txt) return;
+  txt.textContent = msg;
+  el.style.display = 'flex';
+  requestAnimationFrame(() => el.classList.add('show'));
+}
+
+function hideUndoToast() {
+  const el = document.getElementById('undoToast');
+  if(!el) return;
+  el.classList.remove('show');
+  setTimeout(() => { el.style.display='none'; }, 320);
+}
+
+// Commit any pending delete when user navigates away
+window.addEventListener('beforeunload', () => {
+  if(_undoPending) {
+    const ids = _undoPending.guests.map(g=>g.id);
+    // Use sendBeacon for reliable fire-and-forget
+    ids.forEach(id => {
+      const url = SUPABASE_URL+'/rest/v1/guests?id=eq.'+id;
+      navigator.sendBeacon && navigator.sendBeacon(url);
+    });
+  }
+});
+
 function toast(msg, err) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast'+(err?' error':'')+' show';
