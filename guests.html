@@ -99,13 +99,13 @@
     .bulk-close:hover{background:var(--cream);color:var(--charcoal)}
     .bulk-actions{
       display:grid;
-      grid-template-columns:repeat(5,1fr);
+      grid-template-columns:repeat(6,1fr);
       gap:0;
       padding-bottom:env(safe-area-inset-bottom,0px);
     }
     .ba{
       display:flex;flex-direction:column;align-items:center;
-      gap:5px;padding:12px 6px 14px;
+      gap:4px;padding:10px 4px 12px;
       border:none;background:none;cursor:pointer;
       font-family:'Jost',sans-serif;transition:.15s;
       position:relative;
@@ -113,12 +113,12 @@
     .ba:hover{background:#f9f5ee}
     .ba:active{background:#f0e8d0}
     .ba-icon{
-      width:42px;height:42px;border-radius:14px;
+      width:36px;height:36px;border-radius:12px;
       display:flex;align-items:center;justify-content:center;
-      font-size:18px;transition:.15s;
+      font-size:16px;transition:.15s;
     }
     .ba-label{
-      font-size:10px;font-weight:600;letter-spacing:.03em;
+      font-size:9px;font-weight:600;letter-spacing:.03em;
       text-transform:uppercase;color:var(--muted);
       white-space:nowrap;
     }
@@ -126,7 +126,8 @@
     .ba.em   .ba-icon{background:#e8f0ff;color:#1a40aa}
     .ba.yes  .ba-icon{background:#e8f5e8;color:#1a5a1a}
     .ba.no   .ba-icon{background:#fde8e8;color:#7a1a1a}
-    .ba.del  .ba-icon{background:#fdf0f0;color:#aa2020}
+    .ba.del       .ba-icon{background:#fdf0f0;color:#aa2020}
+    .ba.side-bulk .ba-icon{background:#f0eeff;color:#5a40cc}
     .ba:hover .ba-icon{transform:scale(1.08)}
     .msg-prev-box{background:var(--cream);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;border:1px solid var(--border);white-space:pre-wrap;margin-bottom:12px;min-height:80px}
     .vchip{background:white;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:monospace;display:inline-block;margin:2px}
