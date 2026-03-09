@@ -489,7 +489,7 @@
 <div id="drag-ghost"></div>
 
 <!-- Custom Confirm Modal -->
-<div class="mbg" id="confirmModal">
+<div class="mbg" id="confirmModal" onclick="if(event.target===this)confirmResolve(false)">
   <div class="mbox" style="max-width:340px">
     <div class="mhead">
       <span class="mtitle" id="confirmTitle">Confirm</span>
@@ -847,8 +847,8 @@ function render(){
     ).join('')+(all.length>8?`<span class="tg" style="color:var(--muted)">+${all.length-8}</span>`:'');
 
     // Build chair ring
-    const CPAD=24;
-    const wrapW=w+CPAD*2+16, wrapH=h+CPAD*2+16;
+    const CPAD=28;
+    const wrapW=w+CPAD*2+32, wrapH=h+CPAD*2+32;
     const hw2=wrapW/2, hh2=wrapH/2;
     const chairPositions=[];
     if(shCls==='round'||shCls==='oval'){
@@ -876,18 +876,24 @@ function render(){
       const person=all[i];
       const fn=person?firstName(person.name):'';
       const filled=!!person;
+      // Show first name if filled, wider pill; empty = small circle
+      const cW=filled?Math.max(34,fn.length*7+12):22;
+      const cH=22;
       return`<div style="position:absolute;
-        left:${pos.cx-11}px;top:${pos.cy-11}px;
-        width:22px;height:22px;border-radius:50%;
+        left:${pos.cx-cW/2}px;top:${pos.cy-cH/2}px;
+        width:${cW}px;height:${cH}px;
+        border-radius:${filled?'99px':'50%'};
         border:2px solid ${col};
         background:${filled?col:'white'};
-        color:${filled?'white':col+'88'};
+        color:${filled?'white':'transparent'};
         display:flex;align-items:center;justify-content:center;
-        font-size:8px;font-weight:700;font-family:'Jost',sans-serif;
-        box-shadow:0 1px 5px rgba(0,0,0,.12);
-        opacity:${filled?1:.6};
-        z-index:3;pointer-events:none;white-space:nowrap;overflow:hidden;"
-        title="${filled?esc(person.name):'Empty'}">${esc(fn.charAt(0))}</div>`;
+        font-size:9px;font-weight:700;font-family:'Jost',sans-serif;
+        box-shadow:0 1px 6px rgba(0,0,0,.14);
+        opacity:${filled?1:.55};
+        z-index:3;pointer-events:none;
+        white-space:nowrap;overflow:hidden;
+        padding:0 3px;letter-spacing:.01em;"
+        title="${filled?esc(person.name):'Empty'}">${filled?esc(fn):''}</div>`;
     }).join('');
 
     node.innerHTML=`
@@ -1289,7 +1295,7 @@ function ntDrawPreview(){
   let tw,th;
   if(sh==='round'){const s=Math.max(80,Math.min(110,60+cap*4));tw=s;th=s;}
   else{tw=Math.max(100,Math.min(180,80+cap*8));th=Math.round(tw*.58);}
-  const PAD=22;
+  const PAD=28;
   const ww=tw+PAD*2+16, wh=th+PAD*2+16;
   const hw=ww/2, hh=wh/2;
   // Chair positions
@@ -1305,11 +1311,14 @@ function ntDrawPreview(){
     for(let i=0;i<rem;i++) chairs.push({cx:x0+i*step,cy:hh+th/2+PAD});
   }
   const br=sh==='round'?'50%':'10px';
-  const dots=chairs.map(({cx,cy})=>
-    `<div style="position:absolute;left:${cx-11}px;top:${cy-11}px;
-      width:22px;height:22px;border-radius:50%;
+  const dots=chairs.map(({cx,cy},i)=>
+    `<div style="position:absolute;left:${cx-14}px;top:${cy-14}px;
+      width:28px;height:28px;border-radius:50%;
       border:2px solid ${col};background:white;
-      box-shadow:0 1px 4px rgba(0,0,0,.1)"></div>`
+      box-shadow:0 1px 6px rgba(0,0,0,.12);
+      display:flex;align-items:center;justify-content:center;
+      font-size:9px;color:${col};font-weight:600;font-family:'Jost',sans-serif">
+      ${i+1}</div>`
   ).join('');
   $('ntChairPreview').style.cssText=`position:relative;width:${ww}px;height:${wh}px;margin:0 auto`;
   $('ntChairPreview').innerHTML=dots+
@@ -1416,7 +1425,7 @@ async function doDelTable(id){
     fam.forEach(m=>{if(m.table_id===id){delete m.table_id;changed=true;}});
     if(changed){g.family_members=fam;await DB.patch(`guests?id=eq.${g.id}`,{family_members:fam},tok);}
   }
-  await DB.del(`seating_tables?id=eq.${id}`,tok);
+  await DB.del('seating_tables', id, tok);
   tables=tables.filter(t=>t.id!==id);
   if(selId===id)selId=null;
   render();renderSidebar();renderTableList();
@@ -1552,7 +1561,7 @@ async function applyArrangement(id){
   // Delete all existing
   for(const t of tables){
     for(const g of guests.filter(x=>x.table_id===t.id)){g.table_id=null;await DB.patch(`guests?id=eq.${g.id}`,{table_id:null},tok);}
-    await DB.del(`seating_tables?id=eq.${t.id}`,tok);
+    await DB.del('seating_tables', t.id, tok);
   }
   tables=[];
 
