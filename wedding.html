@@ -851,10 +851,10 @@ function renderRsvpFamily() {
         </div>
         <div class="rfmrow-field">
           <div class="rfmrow-lbl">Last Name <span class="req">*</span></div>
-          <input class="rfmrow-inp${!m.last?' err':''}" placeholder="e.g. Smith"
+          <input class="rfmrow-inp${(!m.last||!m.last.trim())?' err':''}" placeholder="e.g. Smith"
             value="${(m.last||'').replace(/"/g,'&quot;')}"
-            oninput="rsvpFamily[${i}].last=this.value">
-          ${!m.last?'<div class="rfmrow-errmsg">Required</div>':''}
+            oninput="rsvpFamily[${i}].last=this.value.trim()">
+          ${(!m.last||!m.last.trim())?'<div class="rfmrow-errmsg">Required</div>':''}
         </div>
       </div>
       <!-- Per-member RSVP -->
@@ -978,20 +978,31 @@ async function submitRsvp() {
   if(!first) { markErr('rFirst'); showErr('Please enter your first name.'); return; }
   if(!last)  { markErr('rLast');  showErr('Please enter your last name.'); return; }
 
-  // Family members — first AND last name both required
+  // Family members — sync DOM inputs → rsvpFamily first (in case oninput missed anything)
   if(rsvpChoice === 'yes') {
+    const rows = document.querySelectorAll('#rsvpFamilyList .rfmrow');
+    rows.forEach((row, i) => {
+      const inputs = row.querySelectorAll('.rfmrow-inp');
+      if(inputs[0]) rsvpFamily[i].first = inputs[0].value.trim();
+      if(inputs[1]) rsvpFamily[i].last  = inputs[1].value.trim();
+    });
+
+    // Now validate
     for(let i = 0; i < rsvpFamily.length; i++) {
       const m = rsvpFamily[i];
-      if(!m.first || !m.first.trim()) {
-        showErr('Please enter the first name for family member ' + (i+1) + '.');
+      const num = i + 1;
+      if(!m.first) {
+        showErr('Please enter the first name for family member ' + num + '.');
         renderRsvpFamily();
-        setTimeout(()=>document.getElementById('rsvpFamilyList')?.scrollIntoView({behavior:'smooth',block:'center'}),50);
+        setTimeout(()=>document.getElementById('rsvpFamilyList')
+          ?.scrollIntoView({behavior:'smooth',block:'center'}), 50);
         return;
       }
-      if(!m.last || !m.last.trim()) {
-        showErr('Please enter the last name for family member ' + (i+1) + '.');
+      if(!m.last) {
+        showErr('Family member ' + num + ' — last name is required.');
         renderRsvpFamily();
-        setTimeout(()=>document.getElementById('rsvpFamilyList')?.scrollIntoView({behavior:'smooth',block:'center'}),50);
+        setTimeout(()=>document.getElementById('rsvpFamilyList')
+          ?.scrollIntoView({behavior:'smooth',block:'center'}), 50);
         return;
       }
     }
