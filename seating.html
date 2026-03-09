@@ -2,299 +2,494 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Seating — WeddingLedger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    *{box-sizing:border-box}
-    body{margin:0;overflow:hidden;background:#f5f0e8;font-family:'Jost',sans-serif}
-    :root{--gold:#C9A84C;--gold2:#9a7535;--border:#e8e0d0;--muted:#8a7a60;--ch:#2a2010;--warm:#f5ede0;--sidebar:300px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{overflow:hidden;font-family:'Jost',sans-serif;background:#f5f0e8}
+    :root{
+      --gold:#C9A84C;--gold2:#9a7535;--border:#e8ddd0;
+      --muted:#8a7a60;--ch:#2a2010;--warm:#f5ede0;
+      --sb:310px;--nav:56px;
+    }
 
-    /* ── Topbar ── */
-    .bar{position:fixed;top:0;left:0;right:0;height:54px;background:white;
-      border-bottom:1.5px solid var(--border);display:flex;align-items:center;
-      padding:0 18px;gap:12px;z-index:200}
-    .logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;
-      font-style:italic;color:var(--ch);text-decoration:none}
-    .logo em{color:var(--gold);font-style:italic}
-    .bar-divider{width:1px;height:20px;background:var(--border)}
-    .bar-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-    .bar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-    .save-lbl{font-size:11px;color:var(--muted)}
-    .pill{padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);background:white;
-      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
-      color:var(--ch);text-decoration:none;transition:.15s;white-space:nowrap;
-      display:inline-flex;align-items:center;gap:5px}
-    .pill:hover{border-color:var(--gold);color:var(--gold)}
+    /* ══════════════════════════════════════════
+       NAV
+    ══════════════════════════════════════════ */
+    .nav{
+      position:fixed;top:0;left:0;right:0;height:var(--nav);
+      background:white;border-bottom:1.5px solid var(--border);
+      display:flex;align-items:center;padding:0 20px;gap:14px;
+      z-index:300;
+    }
+    .nav-logo{
+      font-family:'Cormorant Garamond',serif;font-size:21px;
+      font-weight:600;font-style:italic;color:var(--ch);text-decoration:none;
+    }
+    .nav-logo em{color:var(--gold);font-style:italic}
+    .nav-sep{width:1px;height:22px;background:var(--border)}
+    .nav-page{font-size:11px;font-weight:700;letter-spacing:.14em;
+      text-transform:uppercase;color:var(--muted)}
+    .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .nav-save{font-size:11px;color:var(--muted);margin-right:4px}
+    .npill{
+      padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);
+      background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
+      cursor:pointer;color:var(--ch);text-decoration:none;transition:.15s;
+    }
+    .npill:hover{border-color:var(--gold);color:var(--gold)}
 
-    /* ── Layout ── */
-    .layout{display:flex;height:calc(100vh - 54px);margin-top:54px}
+    /* ══════════════════════════════════════════
+       ROOT LAYOUT  (fixed, fills viewport)
+    ══════════════════════════════════════════ */
+    .root{
+      position:fixed;
+      top:var(--nav);left:0;right:0;bottom:0;
+      display:flex;
+    }
 
-    /* ── Canvas ── */
-    .cnv{flex:1;position:relative;overflow:hidden;
+    /* ══════════════════════════════════════════
+       LEFT PANEL  (tools + add bar, fixed width)
+    ══════════════════════════════════════════ */
+    .left-panel{
+      width:220px;flex-shrink:0;
+      background:white;border-right:1.5px solid var(--border);
+      display:flex;flex-direction:column;overflow-y:auto;
+      padding:16px 12px;gap:8px;z-index:10;
+    }
+    .lp-section{margin-bottom:4px}
+    .lp-label{
+      font-size:9px;font-weight:700;letter-spacing:.14em;
+      text-transform:uppercase;color:var(--muted);
+      padding:0 4px;margin-bottom:6px;display:block;
+    }
+    .lp-btn{
+      width:100%;padding:9px 14px;border-radius:10px;
+      border:1.5px solid var(--border);background:white;
+      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
+      cursor:pointer;color:var(--ch);transition:.15s;text-align:left;
+      display:flex;align-items:center;gap:9px;
+    }
+    .lp-btn:hover{border-color:var(--gold);color:var(--gold);background:#fdf9f0}
+    .lp-btn svg{flex-shrink:0;opacity:.7}
+    .lp-btn.accent{background:var(--gold);color:white;border-color:var(--gold)}
+    .lp-btn.accent:hover{background:#b8943c;border-color:#b8943c}
+    .lp-divider{height:1px;background:var(--border);margin:4px 0}
+
+    /* ══════════════════════════════════════════
+       CANVAS
+    ══════════════════════════════════════════ */
+    .cnv{
+      flex:1;
+      position:relative;
+      overflow:hidden;
       background:#f5f0e8;
-      background-image:radial-gradient(circle,rgba(201,168,76,.16) 1px,transparent 1px);
-      background-size:28px 28px}
-    #layer{position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0}
+      background-image:radial-gradient(circle,rgba(201,168,76,.18) 1px,transparent 1px);
+      background-size:28px 28px;
+    }
+    #layer{
+      position:absolute;top:0;left:0;
+      width:100%;height:100%;
+      transform-origin:0 0;
+    }
 
-    /* toolbar */
-    .toolbar{position:absolute;top:14px;left:14px;display:flex;gap:6px;z-index:10}
-    .tbtn{padding:7px 14px;border-radius:99px;background:white;border:1.5px solid var(--border);
-      font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer;
-      color:var(--ch);box-shadow:0 2px 8px rgba(0,0,0,.07);transition:.15s}
-    .tbtn:hover{border-color:var(--gold);color:var(--gold)}
-
-    /* add-table bar */
-    .addbar{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
-      background:white;border:1.5px solid var(--border);border-radius:99px;
-      padding:5px 8px;display:flex;align-items:center;gap:4px;
-      box-shadow:0 4px 24px rgba(0,0,0,.13);z-index:10}
-    .addbtn{padding:7px 13px;border-radius:99px;border:none;background:transparent;
-      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
-      color:var(--ch);transition:.15s;display:flex;align-items:center;gap:6px}
-    .addbtn:hover{background:#f5f0e8;color:var(--gold)}
-    .adddiv{width:1px;height:24px;background:var(--border)}
-
-    /* zoom */
-    .zoom{position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:10}
-    .zbtn{width:36px;height:36px;border-radius:10px;background:white;
+    /* zoom controls */
+    .zoom-wrap{
+      position:absolute;bottom:20px;right:20px;
+      display:flex;flex-direction:column;gap:6px;z-index:10;
+    }
+    .zbtn{
+      width:36px;height:36px;border-radius:10px;background:white;
       border:1.5px solid var(--border);font-size:18px;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      box-shadow:0 2px 8px rgba(0,0,0,.08);transition:.15s}
+      box-shadow:0 2px 8px rgba(0,0,0,.08);transition:.15s;
+    }
     .zbtn:hover{border-color:var(--gold);color:var(--gold)}
 
-    /* ── Table nodes ── */
-    .tnode{position:absolute;transform:translate(-50%,-50%);
+    /* zoom label */
+    .zoom-lbl{
+      text-align:center;font-size:10px;color:var(--muted);
+      font-family:'Jost',sans-serif;
+    }
+
+    /* empty hint */
+    .empty-hint{
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      text-align:center;pointer-events:none;opacity:.35;
+    }
+    .empty-hint p{font-size:13px;color:var(--muted);margin-top:10px}
+
+    /* ══════════════════════════════════════════
+       TABLE NODES
+    ══════════════════════════════════════════ */
+    .tnode{
+      position:absolute;transform:translate(-50%,-50%);
       display:flex;flex-direction:column;align-items:center;
-      cursor:grab;user-select:none}
+      cursor:grab;user-select:none;
+    }
     .tnode:active{cursor:grabbing}
-    .tshape{display:flex;flex-direction:column;align-items:center;justify-content:center;
-      border:2.5px solid;background:white;position:relative;
-      box-shadow:0 3px 16px rgba(0,0,0,.1);transition:box-shadow .2s,transform .15s}
-    .tshape:hover{transform:scale(1.02)}
-    .tnode.sel .tshape{box-shadow:0 0 0 3px var(--gold),0 6px 24px rgba(0,0,0,.18)!important}
+    .tshape{
+      display:flex;flex-direction:column;align-items:center;
+      justify-content:center;border:2.5px solid;background:white;
+      box-shadow:0 4px 18px rgba(0,0,0,.1);transition:box-shadow .2s;
+    }
+    .tshape:hover{box-shadow:0 6px 24px rgba(0,0,0,.15)}
+    .tnode.sel .tshape{box-shadow:0 0 0 3px var(--gold),0 6px 24px rgba(0,0,0,.15)!important}
     .tshape.round{border-radius:50%}
     .tshape.oval{border-radius:50%}
-    .tshape.rect{border-radius:10px}
+    .tshape.rect,.tshape.rectangular{border-radius:10px}
     .tshape.long{border-radius:8px}
-    .tshape.rectangular{border-radius:10px}
-    .tname{font-size:12px;font-weight:700;color:var(--ch);pointer-events:none;text-align:center;padding:0 8px;line-height:1.3;font-family:'Cormorant Garamond',serif;font-size:14px}
-    .tcount{font-size:10px;margin-top:3px;pointer-events:none;font-weight:600;font-family:'Jost',sans-serif}
-    .tguests{margin-top:5px;display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:220px;pointer-events:none}
-    .tg{font-size:9px;border-radius:99px;padding:2px 7px;white-space:nowrap;font-weight:500}
-    .rot-h{position:absolute;top:-26px;left:50%;transform:translateX(-50%);
-      width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;
-      font-size:13px;cursor:pointer;z-index:5;display:flex;align-items:center;
-      justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);border:none;
-      transition:.15s;pointer-events:auto}
-    .rot-h:hover{transform:translateX(-50%) scale(1.2)}
+    .t-name{
+      font-family:'Cormorant Garamond',serif;
+      font-size:14px;font-weight:600;color:var(--ch);
+      pointer-events:none;text-align:center;
+      padding:0 8px;line-height:1.2;
+    }
+    .t-ct{
+      font-size:10px;font-weight:600;margin-top:3px;
+      pointer-events:none;font-family:'Jost',sans-serif;
+    }
+    .t-chips{
+      margin-top:5px;display:flex;flex-wrap:wrap;
+      justify-content:center;gap:2px;max-width:240px;
+      pointer-events:none;
+    }
+    .tch{
+      font-size:9px;border-radius:99px;padding:2px 7px;
+      white-space:nowrap;font-weight:500;font-family:'Jost',sans-serif;
+    }
+    .rot-handle{
+      position:absolute;top:-28px;left:50%;transform:translateX(-50%);
+      width:26px;height:26px;border-radius:50%;
+      background:var(--gold);color:white;font-size:14px;
+      cursor:pointer;z-index:5;display:flex;align-items:center;
+      justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);
+      border:none;transition:.15s;pointer-events:auto;
+    }
+    .rot-handle:hover{transform:translateX(-50%) scale(1.2) rotate(-30deg)}
     .drop-target .tshape{
       outline:3px dashed var(--gold);outline-offset:4px;
-      background:rgba(201,168,76,.06)!important}
+      background:rgba(201,168,76,.05)!important;
+    }
 
-    /* ── Sidebar ── */
-    .sidebar{width:var(--sidebar);min-width:var(--sidebar);background:white;
-      border-left:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-    .sbtabs{display:flex;border-bottom:1.5px solid var(--border)}
-    .sbtab{flex:1;padding:12px 6px;font-size:12px;font-weight:600;text-align:center;
-      cursor:pointer;border:none;background:none;font-family:'Jost',sans-serif;
-      color:var(--muted);border-bottom:2.5px solid transparent;transition:.15s}
-    .sbtab.on{color:var(--gold);border-bottom-color:var(--gold)}
-    .sbpanel{flex:1;overflow-y:auto;padding:12px}
-    .sbsearch{width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;
-      font-family:'Jost',sans-serif;font-size:12px;outline:none;margin-bottom:10px;transition:.15s}
-    .sbsearch:focus{border-color:var(--gold)}
+    /* ══════════════════════════════════════════
+       RIGHT SIDEBAR
+    ══════════════════════════════════════════ */
+    .sidebar{
+      width:var(--sb);flex-shrink:0;
+      background:white;border-left:1.5px solid var(--border);
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .sb-tabs{display:flex;border-bottom:1.5px solid var(--border)}
+    .sb-tab{
+      flex:1;padding:13px 6px;font-size:12px;font-weight:600;
+      text-align:center;cursor:pointer;border:none;background:none;
+      font-family:'Jost',sans-serif;color:var(--muted);
+      border-bottom:2.5px solid transparent;transition:.15s;
+    }
+    .sb-tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+    .sb-panel{flex:1;overflow-y:auto;padding:14px}
+    .sb-search{
+      width:100%;padding:9px 14px;border:1.5px solid var(--border);
+      border-radius:99px;font-family:'Jost',sans-serif;font-size:12px;
+      outline:none;margin-bottom:12px;transition:.15s;
+    }
+    .sb-search:focus{border-color:var(--gold)}
 
-    /* guest groups */
-    .ggroup{background:#faf8f4;border:1.5px solid #e8e0d0;border-radius:12px;margin-bottom:8px;overflow:hidden}
-    .ggroup-head{padding:8px 12px;background:#f5f0e8;border-bottom:1px solid #e8e0d0;
-      display:flex;align-items:center;gap:8px}
-    .gav{width:26px;height:26px;border-radius:50%;background:var(--gold);color:white;
-      font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .ggroup-name{font-size:12px;font-weight:700;color:var(--ch);flex:1}
-    .ggroup-ct{font-size:10px;color:var(--muted);white-space:nowrap}
-    .ggroup-body{padding:6px 8px;display:flex;flex-direction:column;gap:3px}
-
-    /* draggable chip */
-    .pchip{background:white;border:1px solid var(--border);border-radius:8px;
+    /* Guest groups */
+    .ggrp{
+      background:#faf8f4;border:1.5px solid #e8e0d0;
+      border-radius:12px;margin-bottom:8px;overflow:hidden;
+    }
+    .ggrp-head{
+      padding:9px 12px;background:#f5f0e8;
+      border-bottom:1px solid #e8e0d0;
+      display:flex;align-items:center;gap:9px;
+    }
+    .gav{
+      width:28px;height:28px;border-radius:50%;
+      background:var(--gold);color:white;
+      font-size:11px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .ggrp-nm{font-size:12px;font-weight:700;color:var(--ch);flex:1}
+    .ggrp-ct{font-size:10px;color:var(--muted);white-space:nowrap}
+    .ggrp-body{padding:6px 8px;display:flex;flex-direction:column;gap:3px}
+    .pchip{
+      background:white;border:1px solid var(--border);border-radius:8px;
       padding:7px 10px;display:flex;align-items:center;gap:8px;
-      cursor:grab;transition:.15s;user-select:none}
-    .pchip:hover{border-color:var(--gold);background:#fdf9f0;transform:translateX(2px)}
-    .pchip.sub{padding-left:16px;background:#f9f7f3}
-    .pchip.dragging{opacity:.35;transform:rotate(1.5deg) scale(.97)}
-    .drag-lbl{font-size:9px;background:#f0ece4;border-radius:4px;padding:2px 6px;
-      color:var(--muted);flex-shrink:0;pointer-events:none}
+      cursor:grab;transition:.15s;user-select:none;
+    }
+    .pchip:hover{border-color:var(--gold);background:#fdf9f0;transform:translateX(3px)}
+    .pchip.sub{padding-left:18px;background:#f9f7f3}
+    .pchip.dragging{opacity:.3;transform:scale(.96)}
+    .drag-badge{
+      font-size:9px;background:#f0ece4;border-radius:4px;
+      padding:2px 6px;color:var(--muted);flex-shrink:0;pointer-events:none;
+    }
 
-    /* table list */
-    .tcard{background:white;border:1.5px solid var(--border);border-radius:12px;
-      padding:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
+    /* Table cards */
+    .tcard{
+      background:white;border:1.5px solid var(--border);
+      border-radius:12px;padding:12px;margin-bottom:8px;
+      cursor:pointer;transition:.15s;
+    }
     .tcard:hover,.tcard.on{border-color:var(--gold);background:#fdf9f0}
-    .tcbar{height:3px;background:#f0ece4;border-radius:2px;margin:6px 0 8px;overflow:hidden}
-    .tcfill{height:100%;border-radius:2px;transition:.4s}
-    .seated-row{display:flex;align-items:center;gap:6px;padding:4px 8px;
-      border-radius:6px;margin-bottom:2px;transition:.15s}
-    .seated-row:hover{background:#fff8f0}
-    .seated-x{border:none;background:none;cursor:pointer;color:#c04040;
-      font-size:12px;padding:0 2px;line-height:1;opacity:.5;transition:.15s;flex-shrink:0}
-    .seated-x:hover{opacity:1}
+    .tc-bar{height:3px;background:#f0ece4;border-radius:2px;margin:6px 0 8px;overflow:hidden}
+    .tc-fill{height:100%;border-radius:2px;transition:.4s}
+    .s-row{
+      display:flex;align-items:center;gap:7px;
+      padding:4px 8px;border-radius:7px;margin-bottom:2px;transition:.15s;
+    }
+    .s-row:hover{background:#fff8f0}
+    .s-x{
+      border:none;background:none;cursor:pointer;
+      color:#c04040;font-size:12px;padding:0 2px;
+      line-height:1;opacity:.45;transition:.15s;flex-shrink:0;
+    }
+    .s-x:hover{opacity:1}
 
-    /* modal */
-    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;
-      display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-    .modal-bg.open{display:flex}
-    .modal{background:white;border-radius:20px;width:100%;max-width:440px;
-      box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
-    .modal-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);
-      display:flex;align-items:center;gap:12px}
-    .modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;flex:1}
-    .modal-close{width:30px;height:30px;border-radius:50%;border:none;background:#f5f0e8;
-      cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s}
-    .modal-close:hover{background:#e8e0d0}
-    .modal-body{padding:18px 22px 22px;overflow-y:auto}
-    .mlbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:block}
-    .minput{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;
-      font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:.15s;margin-bottom:14px}
+    /* ══════════════════════════════════════════
+       MODALS
+    ══════════════════════════════════════════ */
+    .mbg{
+      position:fixed;inset:0;background:rgba(0,0,0,.45);
+      z-index:600;display:none;align-items:center;
+      justify-content:center;padding:20px;backdrop-filter:blur(4px);
+    }
+    .mbg.open{display:flex}
+    .mbox{
+      background:white;border-radius:20px;width:100%;max-width:440px;
+      box-shadow:0 24px 80px rgba(0,0,0,.25);
+      max-height:90vh;display:flex;flex-direction:column;overflow:hidden;
+    }
+    .mhead{
+      padding:18px 22px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:10px;flex-shrink:0;
+    }
+    .mtitle{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;flex:1}
+    .mclose{
+      width:30px;height:30px;border-radius:50%;border:none;
+      background:#f5f0e8;cursor:pointer;font-size:15px;
+      display:flex;align-items:center;justify-content:center;transition:.15s;
+    }
+    .mclose:hover{background:#e8e0d0}
+    .mbody{padding:18px 22px 22px;overflow-y:auto}
+    .mlbl{
+      font-size:10px;font-weight:700;letter-spacing:.12em;
+      text-transform:uppercase;color:var(--muted);
+      margin-bottom:7px;display:block;
+    }
+    .minput{
+      width:100%;padding:10px 14px;border:1.5px solid var(--border);
+      border-radius:10px;font-family:'Jost',sans-serif;font-size:14px;
+      outline:none;transition:.15s;margin-bottom:14px;
+    }
     .minput:focus{border-color:var(--gold)}
     .popts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-    .popt{padding:7px 14px;border-radius:99px;border:1.5px solid var(--border);background:white;
-      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
-      transition:.15s;color:var(--muted)}
+    .popt{
+      padding:7px 14px;border-radius:99px;border:1.5px solid var(--border);
+      background:white;font-family:'Jost',sans-serif;font-size:12px;
+      font-weight:600;cursor:pointer;transition:.15s;color:var(--muted);
+    }
     .popt.on{border-color:var(--gold);background:#fdf9f0;color:var(--ch)}
     .cap-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-    .capbtn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);
-      background:white;font-size:20px;cursor:pointer;transition:.15s;
-      display:flex;align-items:center;justify-content:center}
+    .capbtn{
+      width:34px;height:34px;border-radius:50%;
+      border:1.5px solid var(--border);background:white;
+      font-size:20px;cursor:pointer;transition:.15s;
+      display:flex;align-items:center;justify-content:center;
+    }
     .capbtn:hover{border-color:var(--gold);color:var(--gold)}
-    .capnum{width:62px;text-align:center;padding:8px;border:1.5px solid var(--border);
-      border-radius:10px;font-size:16px;font-weight:700;font-family:'Jost',sans-serif;outline:none}
+    .capnum{
+      width:62px;text-align:center;padding:8px;
+      border:1.5px solid var(--border);border-radius:10px;
+      font-size:16px;font-weight:700;font-family:'Jost',sans-serif;outline:none;
+    }
     .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-    .sw{width:24px;height:24px;border-radius:50%;cursor:pointer;
-      border:2.5px solid white;box-shadow:0 0 0 1.5px #ccc;transition:.15s}
+    .sw{
+      width:24px;height:24px;border-radius:50%;cursor:pointer;
+      border:2.5px solid white;box-shadow:0 0 0 1.5px #ccc;transition:.15s;
+    }
     .sw.on{box-shadow:0 0 0 2.5px var(--gold)}
     .mfoot{display:flex;gap:8px;padding-top:4px}
 
     /* arrangement cards */
-    .arr-card{background:#faf8f4;border:2px solid var(--border);border-radius:12px;
-      padding:14px;cursor:pointer;transition:.15s;text-align:center}
+    .arr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .arr-card{
+      background:#faf8f4;border:2px solid var(--border);border-radius:12px;
+      padding:14px 10px;cursor:pointer;transition:.15s;text-align:center;
+    }
     .arr-card:hover{border-color:var(--gold);background:#fdf9f0;transform:translateY(-2px)}
-    .arr-card svg{margin-bottom:8px;opacity:.7}
-    .arr-card-name{font-size:12px;font-weight:700;color:var(--ch)}
-    .arr-card-desc{font-size:10px;color:var(--muted);margin-top:3px}
+    .arr-nm{font-size:12px;font-weight:700;color:var(--ch);margin-top:8px}
+    .arr-ds{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}
 
-    /* toast */
-    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(14px);
-      background:#2a2010;color:white;padding:11px 22px;border-radius:99px;
-      font-size:13px;font-weight:500;opacity:0;transition:.3s;
-      pointer-events:none;z-index:999;white-space:nowrap}
+    /* Toast */
+    .toast{
+      position:fixed;bottom:28px;left:50%;
+      transform:translateX(-50%) translateY(14px);
+      background:#2a2010;color:white;padding:11px 22px;
+      border-radius:99px;font-size:13px;font-weight:500;
+      opacity:0;transition:.3s;pointer-events:none;z-index:999;
+      white-space:nowrap;font-family:'Jost',sans-serif;
+    }
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .toast.err{background:#c04040}
 
-    /* empty */
-    .empty{position:absolute;top:50%;left:calc(50% - var(--sidebar)/2 - 20px);
-      transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.4}
-    .empty p{font-size:13px;color:var(--muted);margin-top:10px}
+    /* Ghost drag element */
+    #drag-ghost{
+      position:fixed;pointer-events:none;z-index:9999;
+      background:white;border:2px solid var(--gold);border-radius:10px;
+      padding:8px 14px;font-family:'Jost',sans-serif;font-size:13px;
+      font-weight:600;color:var(--ch);
+      box-shadow:0 10px 40px rgba(0,0,0,.2);opacity:.95;
+      white-space:nowrap;display:none;
+    }
 
-    @media(max-width:700px){
-      :root{--sidebar:100%}
-      .sidebar{height:220px;border-left:none;border-top:1.5px solid var(--border);order:2}
-      .layout{flex-direction:column}
-      .cnv{order:1}
-      body{overflow:auto}
+    @media(max-width:900px){
+      .left-panel{display:none}
+      .sidebar{width:260px}
+    }
+    @media(max-width:640px){
+      :root{--sb:100%}
+      .sidebar{position:fixed;bottom:0;left:0;right:0;height:220px;
+        border-left:none;border-top:1.5px solid var(--border);z-index:50}
+      .root{padding-bottom:220px}
+      .cnv{flex:1}
     }
   </style>
 </head>
 <body>
 
-<nav class="bar">
-  <a href="dashboard.html" class="logo">Wedding<em>Ledger</em></a>
-  <div class="bar-divider"></div>
-  <span class="bar-title">Seating Chart</span>
-  <div class="bar-right">
-    <span class="save-lbl" id="saveLbl">All saved ✓</span>
-    <a href="guests.html"    class="pill">Guests</a>
-    <a href="dashboard.html" class="pill">← Dashboard</a>
+<!-- Nav -->
+<nav class="nav">
+  <a href="dashboard.html" class="nav-logo">Wedding<em>Ledger</em></a>
+  <div class="nav-sep"></div>
+  <span class="nav-page">Seating Chart</span>
+  <div class="nav-right">
+    <span class="nav-save" id="saveLbl">All saved ✓</span>
+    <a href="guests.html"    class="npill">Guests</a>
+    <a href="dashboard.html" class="npill">← Dashboard</a>
   </div>
 </nav>
 
-<div class="layout">
+<!-- Root -->
+<div class="root">
 
-  <!-- Canvas -->
-  <div class="cnv" id="cnv">
-    <div class="toolbar">
-      <button class="tbtn" onclick="resetView()">⟳ Reset</button>
-      <button class="tbtn" onclick="autoLayout()">✨ Auto Layout</button>
-      <button class="tbtn" onclick="window.print()">🖨 Print</button>
+  <!-- ── Left Panel ── -->
+  <div class="left-panel">
+    <div class="lp-section">
+      <span class="lp-label">Actions</span>
+      <button class="lp-btn" onclick="resetView()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7a5 5 0 1 0 1-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M1 2v3h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Reset View
+      </button>
+      <button class="lp-btn" onclick="autoLayout()" style="margin-top:4px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>
+        Auto Layout
+      </button>
+      <button class="lp-btn" onclick="window.print()" style="margin-top:4px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="9" width="8" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="5" r="1" fill="currentColor"/></svg>
+        Print
+      </button>
     </div>
 
+    <div class="lp-divider"></div>
+
+    <div class="lp-section">
+      <span class="lp-label">Add Table</span>
+      <button class="lp-btn" onclick="addTable('round')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/></svg>
+        Round
+      </button>
+      <button class="lp-btn" onclick="addTable('oval')" style="margin-top:4px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="7" rx="6" ry="3.8" stroke="currentColor" stroke-width="1.5"/></svg>
+        Oval
+      </button>
+      <button class="lp-btn" onclick="addTable('rect')" style="margin-top:4px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3.5" width="12" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/></svg>
+        Rectangle
+      </button>
+      <button class="lp-btn" onclick="addTable('long')" style="margin-top:4px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0" y="4.5" width="14" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        Long Table
+      </button>
+    </div>
+
+    <div class="lp-divider"></div>
+
+    <div class="lp-section">
+      <span class="lp-label">Arrangements</span>
+      <button class="lp-btn accent" onclick="showArrangements()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1h5v5H1zM8 1h5v5H8zM1 8h5v5H1zM8 8h5v5H8z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        Browse Templates
+      </button>
+    </div>
+
+    <div class="lp-divider"></div>
+
+    <div class="lp-section">
+      <span class="lp-label">Zoom</span>
+      <div style="display:flex;gap:6px">
+        <button class="lp-btn" style="flex:1;justify-content:center;padding:8px" onclick="doZoom(.15)">+</button>
+        <button class="lp-btn" style="flex:1;justify-content:center;padding:8px" onclick="doZoom(-.15)">−</button>
+        <button class="lp-btn" style="flex:1;justify-content:center;padding:8px;font-size:10px" onclick="resetView()">1:1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Canvas ── -->
+  <div class="cnv" id="cnv">
     <div id="layer"></div>
 
-    <div class="empty" id="emptyHint">
-      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-        <rect x="4" y="16" width="48" height="24" rx="6" stroke="#8a7a60" stroke-width="2"/>
-        <circle cx="14" cy="28" r="2.5" fill="#8a7a60"/>
-        <circle cx="28" cy="28" r="2.5" fill="#8a7a60"/>
-        <circle cx="42" cy="28" r="2.5" fill="#8a7a60"/>
+    <div class="empty-hint" id="emptyHint">
+      <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+        <rect x="5" y="18" width="50" height="24" rx="6" stroke="#8a7a60" stroke-width="2"/>
+        <circle cx="15" cy="30" r="2.5" fill="#8a7a60"/>
+        <circle cx="30" cy="30" r="2.5" fill="#8a7a60"/>
+        <circle cx="45" cy="30" r="2.5" fill="#8a7a60"/>
       </svg>
       <p>Add a table to get started</p>
     </div>
 
-    <!-- Add table bar -->
-    <div class="addbar">
-      <span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 6px 0 4px">+ Add Table</span>
-      <div class="adddiv"></div>
-      <button class="addbtn" onclick="addTable('round')" title="Round table">
-        <svg width="15" height="15" viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Round
-      </button>
-      <div class="adddiv"></div>
-      <button class="addbtn" onclick="addTable('oval')" title="Oval table">
-        <svg width="15" height="15" viewBox="0 0 15 15"><ellipse cx="7.5" cy="7.5" rx="6.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Oval
-      </button>
-      <div class="adddiv"></div>
-      <button class="addbtn" onclick="addTable('rect')" title="Rectangular table">
-        <svg width="15" height="15" viewBox="0 0 15 15"><rect x="1" y="4" width="13" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Rectangle
-      </button>
-      <div class="adddiv"></div>
-      <button class="addbtn" onclick="addTable('long')" title="Long banquet table">
-        <svg width="15" height="15" viewBox="0 0 15 15"><rect x="0" y="5" width="15" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Long
-      </button>
-      <div class="adddiv"></div>
-      <button class="addbtn" onclick="showArrangements()" title="Arrangement templates" style="color:var(--gold)">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="1" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>Arrangements
-      </button>
-    </div>
-
-    <div class="zoom">
+    <div class="zoom-wrap">
       <button class="zbtn" onclick="doZoom(.15)">+</button>
+      <div class="zoom-lbl" id="zoomLbl">100%</div>
       <button class="zbtn" onclick="doZoom(-.15)" style="font-size:22px;font-weight:200">−</button>
     </div>
   </div>
 
-  <!-- Sidebar -->
+  <!-- ── Right Sidebar ── -->
   <div class="sidebar">
-    <div class="sbtabs">
-      <button class="sbtab on" onclick="showTab('guests',this)" id="tabG">Unassigned</button>
-      <button class="sbtab"    onclick="showTab('tables',this)" id="tabT">Tables</button>
+    <div class="sb-tabs">
+      <button class="sb-tab on" onclick="showTab('guests',this)">Unassigned</button>
+      <button class="sb-tab"    onclick="showTab('tables',this)">Tables</button>
     </div>
-    <div class="sbpanel" id="panG">
-      <input class="sbsearch" id="search" placeholder="Filter guests…" oninput="renderSidebar()">
+    <div class="sb-panel" id="panG">
+      <input class="sb-search" id="search" placeholder="Filter guests…" oninput="renderSidebar()">
       <div id="glist"></div>
     </div>
-    <div class="sbpanel" id="panT" style="display:none">
+    <div class="sb-panel" id="panT" style="display:none">
       <div id="tlist"></div>
     </div>
   </div>
 </div>
 
-<!-- Edit Modal -->
-<div class="modal-bg" id="editModal" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <div class="modal-head">
-      <span class="modal-title">Edit Table</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+<!-- Drag ghost -->
+<div id="drag-ghost"></div>
+
+<!-- Edit Table Modal -->
+<div class="mbg" id="editModal" onclick="if(event.target===this)closeModal()">
+  <div class="mbox">
+    <div class="mhead">
+      <span class="mtitle">Edit Table</span>
+      <button class="mclose" onclick="closeModal()">✕</button>
     </div>
-    <div class="modal-body">
+    <div class="mbody">
       <label class="mlbl">Table Name</label>
       <input class="minput" id="mName">
 
@@ -306,16 +501,15 @@
         <button class="popt"    data-v="long"  onclick="pShape(this)">═ Long</button>
       </div>
 
-      <label class="mlbl">Seats <small id="capHint" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:10px"></small></label>
+      <label class="mlbl">Seats <small id="capHint" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:10px;color:var(--muted)"></small></label>
       <div class="cap-row">
         <button class="capbtn" onclick="adjCap(-1)">−</button>
         <input  class="capnum" type="number" id="mCap" min="1" max="60">
         <button class="capbtn" onclick="adjCap(1)">+</button>
       </div>
 
-      <!-- Head chairs — long table only -->
       <div id="headRow" style="display:none;background:#faf8f4;border-radius:10px;padding:10px 12px;margin-bottom:14px;border:1px solid #e8e0d0">
-        <label class="mlbl" style="margin-bottom:6px">Head chairs (ends of table)</label>
+        <label class="mlbl" style="margin-bottom:6px">Head chairs (short ends)</label>
         <div class="popts" id="headOpts" style="margin-bottom:0">
           <button class="popt on" data-v="0" onclick="pHead(this)">None</button>
           <button class="popt"    data-v="1" onclick="pHead(this)">1 end</button>
@@ -323,7 +517,6 @@
         </div>
       </div>
 
-      <!-- Rotation — rect/long only -->
       <div id="rotRow" style="display:none;margin-bottom:14px">
         <label class="mlbl">Rotation</label>
         <div class="popts" id="rotOpts">
@@ -347,23 +540,25 @@
   </div>
 </div>
 
-<!-- Arrangement Modal -->
-<div class="modal-bg" id="arrModal" onclick="if(event.target===this)$('arrModal').classList.remove('open')">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-head">
-      <span class="modal-title">Arrangement Templates</span>
-      <button class="modal-close" onclick="$('arrModal').classList.remove('open')">✕</button>
+<!-- Arrangements Modal -->
+<div class="mbg" id="arrModal" onclick="if(event.target===this)$('arrModal').classList.remove('open')">
+  <div class="mbox" style="max-width:560px">
+    <div class="mhead">
+      <span class="mtitle">Arrangement Templates</span>
+      <button class="mclose" onclick="$('arrModal').classList.remove('open')">✕</button>
     </div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Choose a layout template to instantly arrange your tables. <strong>This will replace your current layout.</strong></p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="arrGrid"></div>
-      <div style="margin-top:16px;padding:12px;background:#faf8f4;border-radius:10px;border:1px solid var(--border)">
+    <div class="mbody">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+        Pick a template to instantly set up your room layout. <strong>Replaces existing tables.</strong>
+      </p>
+      <div class="arr-grid" id="arrGrid"></div>
+      <div style="margin-top:16px;padding:12px 14px;background:#faf8f4;border-radius:10px;border:1px solid var(--border)">
         <label class="mlbl" style="margin-bottom:8px">Number of guest tables</label>
-        <div style="display:flex;align-items:center;gap:10px">
+        <div class="cap-row" style="margin-bottom:0">
           <button class="capbtn" onclick="adjArrN(-1)">−</button>
           <input class="capnum" type="number" id="arrN" value="6" min="2" max="20">
           <button class="capbtn" onclick="adjArrN(1)">+</button>
-          <span style="font-size:12px;color:var(--muted)">(+ 1 top table)</span>
+          <span style="font-size:12px;color:var(--muted);margin-left:4px">+ 1 top table</span>
         </div>
       </div>
     </div>
@@ -373,6 +568,7 @@
 <div class="toast" id="toast"></div>
 <script src="db.js"></script>
 <script>
+
 const COLORS=['#C9A84C','#9a7535','#2a7a2a','#2a4a7a','#7a2a5a','#c04040','#607080','#8a6020'];
 let uid=localStorage.getItem('wl_uid');
 let tok=localStorage.getItem('wl_token');
@@ -558,8 +754,8 @@ function setupCanvasEvents(){
   cnv.addEventListener('wheel',e=>{e.preventDefault();doZoom(e.deltaY<0?.12:-.12);},{passive:false});
 }
 
-function doZoom(d){sc=Math.max(.3,Math.min(2.5,sc+d));applyTx();}
-function resetView(){sc=1;px=0;py=0;applyTx();}
+function doZoom(d){sc=Math.max(.3,Math.min(2.5,sc+d));applyTx();const l=$('zoomLbl');if(l)l.textContent=Math.round(sc*100)+'%';}
+function resetView(){sc=1;px=0;py=0;applyTx();const l=$('zoomLbl');if(l)l.textContent='100%';}
 
 function qRot(id){
   const t=tables.find(x=>x.id===id);if(!t)return;
