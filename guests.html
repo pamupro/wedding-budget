@@ -805,12 +805,21 @@ function buildCard(g) {
 }
 
 function updateStats() {
-  const cnt = s => guests.filter(g => (g.rsvp_status||'pending') === s).length;
+  // Count main guests + their family members per status
+  // Family members share the main guest's rsvp_status
+  function cntWithFamily(status) {
+    return guests
+      .filter(g => (g.rsvp_status||'pending') === status)
+      .reduce((sum, g) => sum + 1 + familyCount(g), 0);
+  }
+  const pendingGuests = guests.filter(g => !g.rsvp_status || g.rsvp_status === 'pending');
+  const pendingTotal  = pendingGuests.reduce((sum, g) => sum + 1 + familyCount(g), 0);
+
   document.getElementById('sAll').textContent   = totalGuestCount();
-  document.getElementById('sYes').textContent   = cnt('yes');
-  document.getElementById('sNo').textContent    = cnt('no');
-  document.getElementById('sPend').textContent  = cnt('pending') + guests.filter(g=>!g.rsvp_status).length;
-  document.getElementById('sMaybe').textContent = cnt('maybe');
+  document.getElementById('sYes').textContent   = cntWithFamily('yes');
+  document.getElementById('sNo').textContent    = cntWithFamily('no');
+  document.getElementById('sPend').textContent  = pendingTotal;
+  document.getElementById('sMaybe').textContent = cntWithFamily('maybe');
   document.getElementById('sPlus').textContent  = guests.reduce((s,g)=>s+familyCount(g),0);
 }
 
@@ -844,9 +853,13 @@ function renderFamilyList() {
   if(!familyMembers.length) { wrap.innerHTML=''; return; }
   wrap.innerHTML = familyMembers.map((m,i) => `
     <div class="fmrow" id="fm-${i}">
-      <input placeholder="First name" value="${esc(m.first||'')}"
-        oninput="familyMembers[${i}].first=this.value" style="flex:1.2">
-      <input placeholder="Last name"  value="${esc(m.last||'')}"
+      <div style="flex:1.2;display:flex;flex-direction:column;gap:2px">
+        <input placeholder="First name *" value="${esc(m.first||'')}"
+          oninput="familyMembers[${i}].first=this.value"
+          style="border-color:${!m.first?'#f0a060':''}">
+        ${!m.first ? '<span style="font-size:9px;color:#c04040;padding-left:2px">Required</span>' : ''}
+      </div>
+      <input placeholder="Last name" value="${esc(m.last||'')}"
         oninput="familyMembers[${i}].last=this.value" style="flex:1.2">
       <select onchange="familyMembers[${i}].type=this.value" style="flex:.9">
         <option value="spouse"  ${m.type==='spouse' ?'selected':''}>💑 Spouse</option>
@@ -963,6 +976,14 @@ async function saveGuest() {
   const fFirst = document.getElementById('fFirst').value.trim();
   const fLast  = document.getElementById('fLast').value.trim();
   if(!fFirst) { toast('First name is required', true); document.getElementById('fFirst').focus(); return; }
+  // Validate family members — first name required for each
+  for(let i=0; i<familyMembers.length; i++) {
+    if(!familyMembers[i].first || !familyMembers[i].first.trim()) {
+      toast('Family member #'+(i+1)+': first name is required', true);
+      renderFamilyList(); // re-render to show red border
+      return;
+    }
+  }
   const name = [fFirst, fLast].filter(Boolean).join(' ');
   const btn = document.getElementById('saveBtn');
   btn.textContent = 'Saving…'; btn.disabled = true;
