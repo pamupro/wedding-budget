@@ -40,8 +40,8 @@ window.addEventListener('load', function(){
     </div>
     <div id="proBadge" class="desktop-only"></div>
     <a href="guests.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">👥 Guests</a>
-    <a href="seating.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">🪑 Seating</a>
-    <a href="timeline.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">📅 Timeline</a>
+    <a href="seating.html" class="topbar-btn desktop-only" style="display:none">🪑 Seating</a>
+    <a href="timeline.html" class="topbar-btn desktop-only" style="display:none">📅 Timeline</a>
     <button class="topbar-btn desktop-only" onclick="openSettingsModal()" style="color:var(--muted)">⚙️ Settings</button>
     <button onclick="openPartnerModal()" id="partnerBtn" title="Invite Partner" style="background:none;border:1.5px solid var(--gold);border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;white-space:nowrap">💌 <span class="desktop-only" style="display:inline">Partner</span></button>
     <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
@@ -62,8 +62,8 @@ window.addEventListener('load', function(){
     <div id="mobileProBadge" style="margin-bottom:8px"></div>
     <button class="mobile-nav-item" onclick="openShareModal();closeMobileNav()">🔗 Share Budget</button>
     <button class="mobile-nav-item" onclick="location.href='guests.html'">👥 Guest List</button>
-    <button class="mobile-nav-item" onclick="location.href='seating.html'">🪑 Seating Chart</button>
-    <button class="mobile-nav-item" onclick="location.href='timeline.html'">📅 Day-of Timeline</button>
+    <button class="mobile-nav-item" onclick="location.href='seating.html'" style="display:none">🪑 Seating Chart</button>
+    <button class="mobile-nav-item" onclick="location.href='timeline.html'" style="display:none">📅 Day-of Timeline</button>
     <button class="mobile-nav-item" onclick="openSettingsModal();closeMobileNav()">⚙️ Settings</button>
     <button class="mobile-nav-item" onclick="openPartnerModal();closeMobileNav()" style="color:var(--gold);font-weight:600">💌 Invite Partner</button>
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
