@@ -98,20 +98,39 @@ const DB = {
     return r.json();
   },
 
-  async patch(table, id, data, token) {
-    const t = await this.getValidToken(token);
+  async patch(tableOrPath, idOrData, dataOrToken, token) {
+    // Supports two call styles:
+    // patch('table', id, data, token)  — new style
+    // patch('table?id=eq.X', data, token) — old style (query string)
+    let path, data, tok;
+    if(token !== undefined){
+      // new style: (table, id, data, token)
+      path = `${tableOrPath}?id=eq.${idOrData}`;
+      data = dataOrToken; tok = token;
+    } else {
+      // old style: (querypath, data, token)
+      path = tableOrPath; data = idOrData; tok = dataOrToken;
+    }
+    const t = await this.getValidToken(tok);
     if (!t) return [];
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       method: 'PATCH', headers: this._h(t), body: JSON.stringify(data)
     });
     if (!r.ok) { const e = await r.json(); throw new Error(e.message || JSON.stringify(e)); }
     return r.json();
   },
 
-  async del(table, id, token) {
-    const t = await this.getValidToken(token);
+  async del(tableOrPath, idOrToken, token) {
+    // Supports: del('table', id, token) or del('table?id=eq.X', token)
+    let path, tok;
+    if(token !== undefined){
+      path = `${tableOrPath}?id=eq.${idOrToken}`; tok = token;
+    } else {
+      path = tableOrPath; tok = idOrToken;
+    }
+    const t = await this.getValidToken(tok);
     if (!t) return false;
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       method: 'DELETE', headers: this._h(t)
     });
     if (!r.ok) { const e = await r.json(); throw new Error(e.message || JSON.stringify(e)); }
