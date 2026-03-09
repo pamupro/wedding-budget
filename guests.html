@@ -764,12 +764,15 @@ function renderList() {
 function tryParseJSON(v) {
   try { return JSON.parse(v); } catch(e) { return []; }
 }
-function familyCount(g) {
+function familyCount(g, rsvpFilter) {
   const fam = Array.isArray(g.family_members) ? g.family_members
     : (g.family_members ? tryParseJSON(g.family_members) : []);
-  return fam ? fam.length : 0;
+  if(!fam || !fam.length) return 0;
+  if(rsvpFilter) return fam.filter(m => (m.rsvp||'yes') === rsvpFilter).length;
+  return fam.length;
 }
 function totalGuestCount() {
+  // Total = all main guests + all family members regardless of their rsvp
   return guests.reduce((sum, g) => sum + 1 + familyCount(g), 0);
 }
 
@@ -790,8 +793,13 @@ function buildCard(g) {
   if(fam && fam.length) {
     fam.forEach(m => {
       const fn = [m.first, m.last].filter(Boolean).join(' ');
-      const tag = m.type === 'spouse' ? '💑' : m.type === 'child' ? '👶' : '👤';
-      badges += '<span class="badge b-plus">'+tag+' '+esc(fn||m.type||'Member')+'</span>';
+      const tag  = m.type==='spouse'?'💑':m.type==='child'?'👶':'👤';
+      const rsvpIcon = m.rsvp==='yes'?'✅':m.rsvp==='no'?'❌':m.rsvp==='maybe'?'🤔':'⏳';
+      const rsvpStyle = m.rsvp==='yes'?'background:#e8f5e8;color:#1a5a1a'
+        :m.rsvp==='no'?'background:#fde8e8;color:#7a1a1a'
+        :m.rsvp==='maybe'?'background:#fdf9e8;color:#7a5000'
+        :'background:#f0f0f0;color:#555';
+      badges += '<span class="badge" style="'+rsvpStyle+'">'+tag+' '+esc(fn||m.type||'Member')+' '+rsvpIcon+'</span>';
     });
   }
   if(g.dietary)  badges += '<span class="badge b-diet">🌿 '+esc(g.dietary)+'</span>';
@@ -822,12 +830,18 @@ function buildCard(g) {
 }
 
 function updateStats() {
-  // Count main guests + their family members per status
-  // Family members share the main guest's rsvp_status
+  // Main guest count by status + family members with matching individual rsvp
   function cntWithFamily(status) {
-    return guests
-      .filter(g => (g.rsvp_status||'pending') === status)
-      .reduce((sum, g) => sum + 1 + familyCount(g), 0);
+    let total = 0;
+    guests.forEach(g => {
+      if((g.rsvp_status||'pending') === status) {
+        total += 1; // main guest
+        total += familyCount(g, status === 'yes' ? 'yes'
+          : status === 'no' ? 'no'
+          : status === 'maybe' ? 'maybe' : null);
+      }
+    });
+    return total;
   }
   const pendingGuests = guests.filter(g => !g.rsvp_status || g.rsvp_status === 'pending');
   const pendingTotal  = pendingGuests.reduce((sum, g) => sum + 1 + familyCount(g), 0);
