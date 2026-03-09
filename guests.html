@@ -160,14 +160,31 @@
     .side-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
     .side-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
     /* family member rows */
-    .fmrow{display:flex;align-items:center;gap:8px;background:var(--cream);border-radius:10px;padding:8px 10px;border:1.5px solid var(--border)}
-    .fmrow input,.fmrow select{flex:1;min-width:0;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;background:white;outline:none;color:var(--charcoal)}
-    .fmrow input:focus,.fmrow select:focus{border-color:var(--gold)}
-    .fmrow .fm-del{width:28px;height:28px;border-radius:6px;border:none;background:#fff0f0;color:#c04040;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-    .fm-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700}
-    .fm-spouse{background:#e8f0ff;color:#1a3090}
-    .fm-child{background:#fff3cd;color:#7a5000}
-    .fm-other{background:#f0f0f0;color:#555}
+    .fmrow{background:white;border-radius:14px;border:1.5px solid var(--border);
+      padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);
+      animation:fmSlideIn .2s ease}
+    @keyframes fmSlideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    .fmrow-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .fmrow-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e4d4a0);
+      display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--charcoal)}
+    .fmrow-type-sel{padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);
+      font-family:'Jost',sans-serif;font-size:11px;font-weight:600;background:var(--cream);
+      color:var(--charcoal);outline:none;cursor:pointer}
+    .fmrow-type-sel:focus{border-color:var(--gold)}
+    .fm-del{width:28px;height:28px;border-radius:8px;border:none;background:#fff0f0;
+      color:#c04040;cursor:pointer;font-size:13px;display:flex;align-items:center;
+      justify-content:center;flex-shrink:0;transition:.15s}
+    .fm-del:hover{background:#f0c0c0}
+    .fmrow-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .fmrow-field{display:flex;flex-direction:column;gap:4px}
+    .fmrow-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    .fmrow-label .req{color:var(--gold)}
+    .fmrow-input{padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;
+      font-family:'Jost',sans-serif;font-size:12px;background:var(--cream);
+      color:var(--charcoal);outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
+    .fmrow-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.1);background:white}
+    .fmrow-input.err{border-color:#f0a060}
+    .fmrow-errmsg{font-size:9px;color:#c04040;margin-top:1px}
     @media(max-width:560px){
       .gmodal{flex-direction:column;border-radius:20px 20px 0 0;max-height:92vh;width:100%;position:fixed;bottom:0}
       .gmodal-aside{width:100%;flex-direction:row;padding:14px 16px;gap:6px;justify-content:flex-start}
@@ -347,7 +364,7 @@
         <div class="gfield">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <label class="glabel" style="margin-bottom:0">Family Members</label>
-            <button type="button" onclick="addFamilyMember()" style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:8px;border:1.5px dashed var(--gold);background:white;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;font-weight:700;cursor:pointer">+ Add Member</button>
+            <button type="button" onclick="addFamilyMember()" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:99px;border:1.5px solid var(--gold);background:white;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:.15s" onmouseover="this.style.background='var(--gold)';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='var(--gold)'">＋ Add Family Member</button>
           </div>
           <div id="familyList" style="display:flex;flex-direction:column;gap:8px"></div>
           <div style="font-size:11px;color:var(--muted);margin-top:6px">e.g. spouse, children — each counts towards your guest total</div>
@@ -850,23 +867,34 @@ function removeFamilyMember(idx) {
 function renderFamilyList() {
   const wrap = document.getElementById('familyList');
   if(!wrap) return;
-  if(!familyMembers.length) { wrap.innerHTML=''; return; }
+  if(!familyMembers.length) { wrap.innerHTML='<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted);font-style:italic">No family members added yet</div>'; return; }
+  const typeEmoji = {spouse:'💑',child:'👶',other:'👤'};
   wrap.innerHTML = familyMembers.map((m,i) => `
     <div class="fmrow" id="fm-${i}">
-      <div style="flex:1.2;display:flex;flex-direction:column;gap:2px">
-        <input placeholder="First name *" value="${esc(m.first||'')}"
-          oninput="familyMembers[${i}].first=this.value"
-          style="border-color:${!m.first?'#f0a060':''}">
-        ${!m.first ? '<span style="font-size:9px;color:#c04040;padding-left:2px">Required</span>' : ''}
+      <div class="fmrow-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="fmrow-num">${i+1}</div>
+          <select class="fmrow-type-sel" onchange="familyMembers[${i}].type=this.value">
+            <option value="spouse" ${m.type==='spouse'?'selected':''}>💑 Spouse / Partner</option>
+            <option value="child"  ${m.type==='child' ?'selected':''}>👶 Child</option>
+            <option value="other"  ${m.type==='other' ?'selected':''}>👤 Other</option>
+          </select>
+        </div>
+        <button class="fm-del" onclick="removeFamilyMember(${i})" title="Remove member">✕</button>
       </div>
-      <input placeholder="Last name" value="${esc(m.last||'')}"
-        oninput="familyMembers[${i}].last=this.value" style="flex:1.2">
-      <select onchange="familyMembers[${i}].type=this.value" style="flex:.9">
-        <option value="spouse"  ${m.type==='spouse' ?'selected':''}>💑 Spouse</option>
-        <option value="child"   ${m.type==='child'  ?'selected':''}>👶 Child</option>
-        <option value="other"   ${m.type==='other'  ?'selected':''}>👤 Other</option>
-      </select>
-      <button class="fm-del" onclick="removeFamilyMember(${i})" title="Remove">✕</button>
+      <div class="fmrow-fields">
+        <div class="fmrow-field">
+          <div class="fmrow-label">First Name <span class="req">*</span></div>
+          <input class="fmrow-input${!m.first?' err':''}" placeholder="e.g. Jane"
+            value="${esc(m.first||'')}" oninput="familyMembers[${i}].first=this.value">
+          ${!m.first?'<div class="fmrow-errmsg">Required</div>':''}
+        </div>
+        <div class="fmrow-field">
+          <div class="fmrow-label">Last Name</div>
+          <input class="fmrow-input" placeholder="e.g. Smith"
+            value="${esc(m.last||'')}" oninput="familyMembers[${i}].last=this.value">
+        </div>
+      </div>
     </div>`).join('');
 }
 
