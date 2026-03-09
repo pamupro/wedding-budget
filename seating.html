@@ -3,476 +3,328 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-  <title>Seating Chart — WeddingLedger</title>
+  <title>Seating — WeddingLedger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    :root{--sidebar-w:300px}
-    body{overflow:hidden;margin:0}
+    *{box-sizing:border-box}
+    body{margin:0;overflow:hidden;background:#f5f0e8;font-family:'Jost',sans-serif}
+    :root{--gold:#C9A84C;--gold2:#9a7535;--border:#e8e0d0;--muted:#8a7a60;--ch:#2a2010;--warm:#f5ede0;--sidebar:300px}
 
-    /* ── Nav ── */
-    .sc-nav{
-      position:fixed;top:0;left:0;right:0;height:56px;z-index:300;
-      background:white;border-bottom:1.5px solid var(--border);
-      display:flex;align-items:center;justify-content:space-between;
-      padding:0 20px;gap:12px;
-    }
-    .sc-logo{
-      font-family:'Cormorant Garamond',serif;font-size:20px;
-      color:var(--charcoal);text-decoration:none;font-style:italic;font-weight:600;
-    }
-    .sc-logo em{color:var(--gold);font-style:italic}
-    .sc-title{
-      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
-      letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
-      border-left:1px solid var(--border);padding-left:14px;margin-left:4px;
-    }
-    .sc-nav-right{display:flex;align-items:center;gap:6px}
-    .sc-save{font-size:11px;color:var(--muted);font-family:'Jost',sans-serif;margin-right:6px}
-    .nav-pill{
-      padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);
-      background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
-      cursor:pointer;color:var(--charcoal);text-decoration:none;transition:.15s;
-      display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
-    }
-    .nav-pill:hover{border-color:var(--gold);color:var(--gold)}
-    .nav-pill.gold{background:var(--gold);border-color:var(--gold);color:white}
-    .nav-pill.gold:hover{background:#b8943c}
+    /* ── Topbar ── */
+    .bar{position:fixed;top:0;left:0;right:0;height:54px;background:white;
+      border-bottom:1.5px solid var(--border);display:flex;align-items:center;
+      padding:0 18px;gap:12px;z-index:200}
+    .logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;
+      font-style:italic;color:var(--ch);text-decoration:none}
+    .logo em{color:var(--gold);font-style:italic}
+    .bar-divider{width:1px;height:20px;background:var(--border)}
+    .bar-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+    .bar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .save-lbl{font-size:11px;color:var(--muted)}
+    .pill{padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);background:white;
+      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+      color:var(--ch);text-decoration:none;transition:.15s;white-space:nowrap;
+      display:inline-flex;align-items:center;gap:5px}
+    .pill:hover{border-color:var(--gold);color:var(--gold)}
 
     /* ── Layout ── */
-    .sc-layout{display:flex;height:calc(100vh - 56px);margin-top:56px}
+    .layout{display:flex;height:calc(100vh - 54px);margin-top:54px}
 
     /* ── Canvas ── */
-    .sc-canvas{
-      flex:1;position:relative;overflow:hidden;
+    .cnv{flex:1;position:relative;overflow:hidden;
       background:#f5f0e8;
-      background-image:radial-gradient(circle,rgba(201,168,76,.18) 1px,transparent 1px);
-      background-size:28px 28px;
-      cursor:default;
-    }
-    #tableLayer{
-      position:absolute;top:0;left:0;
-      width:100%;height:100%;
-      transform-origin:0 0;
-    }
+      background-image:radial-gradient(circle,rgba(201,168,76,.16) 1px,transparent 1px);
+      background-size:28px 28px}
+    #layer{position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0}
 
-    /* ── Add table bar ── */
-    .add-bar{
-      position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
-      display:flex;gap:8px;z-index:10;
-      background:white;border:1.5px solid var(--border);
-      border-radius:99px;padding:6px 8px;
-      box-shadow:0 4px 20px rgba(0,0,0,.12);
-    }
-    .add-btn{
-      padding:7px 16px;border-radius:99px;border:none;
-      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
-      cursor:pointer;transition:.15s;
-      display:flex;align-items:center;gap:6px;white-space:nowrap;
-      background:transparent;color:var(--charcoal);
-    }
-    .add-btn:hover{background:#f5f0e8;color:var(--gold)}
-    .add-btn svg{flex-shrink:0}
-    .add-bar-divider{width:1px;background:var(--border);margin:4px 0}
+    /* toolbar */
+    .toolbar{position:absolute;top:14px;left:14px;display:flex;gap:6px;z-index:10}
+    .tbtn{padding:7px 14px;border-radius:99px;background:white;border:1.5px solid var(--border);
+      font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer;
+      color:var(--ch);box-shadow:0 2px 8px rgba(0,0,0,.07);transition:.15s}
+    .tbtn:hover{border-color:var(--gold);color:var(--gold)}
 
-    /* ── Toolbar ── */
-    .sc-toolbar{
-      position:absolute;top:14px;left:14px;
-      display:flex;gap:6px;z-index:10;
-    }
-    .tool-btn{
-      padding:7px 14px;border-radius:99px;
-      background:white;border:1.5px solid var(--border);
-      font-family:'Jost',sans-serif;font-size:11px;font-weight:600;
-      cursor:pointer;transition:.15s;color:var(--charcoal);
-      box-shadow:0 2px 8px rgba(0,0,0,.07);white-space:nowrap;
-    }
-    .tool-btn:hover{border-color:var(--gold);color:var(--gold)}
+    /* add-table bar */
+    .addbar{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+      background:white;border:1.5px solid var(--border);border-radius:99px;
+      padding:5px 8px;display:flex;align-items:center;gap:4px;
+      box-shadow:0 4px 24px rgba(0,0,0,.13);z-index:10}
+    .addbtn{padding:7px 14px;border-radius:99px;border:none;background:transparent;
+      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+      color:var(--ch);transition:.15s;display:flex;align-items:center;gap:6px}
+    .addbtn:hover{background:#f5f0e8;color:var(--gold)}
+    .adddiv{width:1px;height:24px;background:var(--border)}
 
-    /* ── Zoom ── */
-    .zoom-wrap{
-      position:absolute;bottom:20px;right:20px;
-      display:flex;flex-direction:column;gap:6px;z-index:10;
-    }
-    .zoom-btn{
-      width:36px;height:36px;border-radius:10px;
-      background:white;border:1.5px solid var(--border);
-      font-size:18px;cursor:pointer;
+    /* zoom */
+    .zoom{position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:6px;z-index:10}
+    .zbtn{width:36px;height:36px;border-radius:10px;background:white;
+      border:1.5px solid var(--border);font-size:18px;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
-      box-shadow:0 2px 8px rgba(0,0,0,.08);transition:.15s;
-      font-family:'Jost',sans-serif;font-weight:300;
-    }
-    .zoom-btn:hover{border-color:var(--gold);color:var(--gold)}
+      box-shadow:0 2px 8px rgba(0,0,0,.08);transition:.15s}
+    .zbtn:hover{border-color:var(--gold);color:var(--gold)}
 
     /* ── Table nodes ── */
-    .tnode{
-      position:absolute;cursor:grab;user-select:none;
+    .tnode{position:absolute;transform:translate(-50%,-50%);
       display:flex;flex-direction:column;align-items:center;
-      transform:translate(-50%,-50%);
-    }
+      cursor:grab;user-select:none}
     .tnode:active{cursor:grabbing}
-    .tnode.sel .tshape{
-      box-shadow:0 0 0 3px var(--gold),0 6px 24px rgba(0,0,0,.18)!important;
-    }
-    .tshape{
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      border:2.5px solid;background:white;
-      box-shadow:0 3px 14px rgba(0,0,0,.1);
-      transition:box-shadow .2s;position:relative;
-    }
+    .tshape{display:flex;flex-direction:column;align-items:center;justify-content:center;
+      border:2.5px solid;background:white;position:relative;
+      box-shadow:0 3px 16px rgba(0,0,0,.1);transition:box-shadow .2s,transform .15s}
+    .tshape:hover{transform:scale(1.02)}
+    .tnode.sel .tshape{box-shadow:0 0 0 3px var(--gold),0 6px 24px rgba(0,0,0,.18)!important}
     .tshape.round{border-radius:50%}
     .tshape.oval{border-radius:50%}
     .tshape.rect{border-radius:10px}
     .tshape.long{border-radius:8px}
-    .t-name{
-      font-family:'Jost',sans-serif;font-size:11px;font-weight:700;
-      color:#2a2010;pointer-events:none;text-align:center;
-      padding:0 6px;line-height:1.2;
-    }
-    .t-count{
-      font-size:9px;font-family:'Jost',sans-serif;
-      margin-top:2px;pointer-events:none;
-    }
-    .t-guests{
-      margin-top:5px;display:flex;flex-wrap:wrap;
-      justify-content:center;gap:2px;max-width:220px;
-      pointer-events:none;
-    }
-    .tg{
-      font-size:9px;border-radius:99px;padding:1px 6px;
-      white-space:nowrap;font-family:'Jost',sans-serif;
-    }
-    /* Rotate handle */
-    .rot-btn{
-      position:absolute;top:-26px;left:50%;transform:translateX(-50%);
-      width:24px;height:24px;border-radius:50%;
-      background:var(--gold);color:white;
-      font-size:13px;cursor:pointer;z-index:5;
-      display:flex;align-items:center;justify-content:center;
-      box-shadow:0 2px 8px rgba(0,0,0,.2);border:none;
-      transition:.15s;pointer-events:auto;
-    }
-    .rot-btn:hover{transform:translateX(-50%) scale(1.15)}
-    .drop-hi .tshape{
-      outline:3px dashed var(--gold);outline-offset:3px;
-      background:#fdf9f0!important;
-    }
+    .tshape.rectangular{border-radius:10px}
+    .tname{font-size:11px;font-weight:700;color:var(--ch);pointer-events:none;text-align:center;padding:0 6px;line-height:1.2}
+    .tcount{font-size:9px;margin-top:2px;pointer-events:none}
+    .tguests{margin-top:5px;display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:220px;pointer-events:none}
+    .tg{font-size:9px;border-radius:99px;padding:1px 6px;white-space:nowrap}
+    .rot-h{position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+      width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;
+      font-size:13px;cursor:pointer;z-index:5;display:flex;align-items:center;
+      justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);border:none;
+      transition:.15s;pointer-events:auto}
+    .rot-h:hover{transform:translateX(-50%) scale(1.2)}
+    .drop-target .tshape{
+      outline:3px dashed var(--gold);outline-offset:4px;
+      background:rgba(201,168,76,.06)!important}
 
     /* ── Sidebar ── */
-    .sc-sidebar{
-      width:var(--sidebar-w);min-width:var(--sidebar-w);
-      background:white;border-left:1.5px solid var(--border);
-      display:flex;flex-direction:column;overflow:hidden;
-    }
-    .sb-tabs{display:flex;border-bottom:1.5px solid var(--border)}
-    .sb-tab{
-      flex:1;padding:12px 6px;font-size:12px;font-weight:600;
-      text-align:center;cursor:pointer;border:none;background:none;
-      font-family:'Jost',sans-serif;color:var(--muted);
-      border-bottom:2.5px solid transparent;transition:.15s;
-    }
-    .sb-tab.on{color:var(--gold);border-bottom-color:var(--gold)}
-    .sb-body{flex:1;overflow-y:auto;padding:14px}
-    .sb-search{
-      width:100%;box-sizing:border-box;padding:9px 14px;
-      border:1.5px solid var(--border);border-radius:99px;
-      font-family:'Jost',sans-serif;font-size:12px;outline:none;
-      margin-bottom:12px;transition:.15s;
-    }
-    .sb-search:focus{border-color:var(--gold)}
+    .sidebar{width:var(--sidebar);min-width:var(--sidebar);background:white;
+      border-left:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+    .sbtabs{display:flex;border-bottom:1.5px solid var(--border)}
+    .sbtab{flex:1;padding:12px 6px;font-size:12px;font-weight:600;text-align:center;
+      cursor:pointer;border:none;background:none;font-family:'Jost',sans-serif;
+      color:var(--muted);border-bottom:2.5px solid transparent;transition:.15s}
+    .sbtab.on{color:var(--gold);border-bottom-color:var(--gold)}
+    .sbpanel{flex:1;overflow-y:auto;padding:12px}
+    .sbsearch{width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;
+      font-family:'Jost',sans-serif;font-size:12px;outline:none;margin-bottom:10px;transition:.15s}
+    .sbsearch:focus{border-color:var(--gold)}
 
-    /* Family box */
-    .fam-box{
-      background:#faf8f4;border:1.5px solid #e8e0d0;
-      border-radius:12px;margin-bottom:8px;overflow:hidden;
-    }
-    .fam-head{
-      padding:8px 12px;display:flex;align-items:center;gap:8px;
-      background:#f5f0e8;border-bottom:1px solid #e8e0d0;
-    }
-    .fam-av{
-      width:26px;height:26px;border-radius:50%;
-      background:var(--gold);color:white;
-      font-size:11px;font-weight:700;
-      display:flex;align-items:center;justify-content:center;
-      font-family:'Jost',sans-serif;flex-shrink:0;
-    }
-    .fam-name{font-size:12px;font-weight:700;color:var(--charcoal);flex:1}
-    .fam-ct{font-size:10px;color:var(--muted)}
-    .fam-body{padding:6px 8px;display:flex;flex-direction:column;gap:4px}
+    /* guest groups */
+    .ggroup{background:#faf8f4;border:1.5px solid #e8e0d0;border-radius:12px;margin-bottom:8px;overflow:hidden}
+    .ggroup-head{padding:8px 12px;background:#f5f0e8;border-bottom:1px solid #e8e0d0;
+      display:flex;align-items:center;gap:8px}
+    .gav{width:26px;height:26px;border-radius:50%;background:var(--gold);color:white;
+      font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .ggroup-name{font-size:12px;font-weight:700;color:var(--ch);flex:1}
+    .ggroup-ct{font-size:10px;color:var(--muted);white-space:nowrap}
+    .ggroup-body{padding:6px 8px;display:flex;flex-direction:column;gap:3px}
 
-    /* Guest chip */
-    .gchip{
-      background:white;border:1px solid var(--border);border-radius:8px;
-      padding:7px 10px;font-size:12px;cursor:grab;
-      display:flex;align-items:center;gap:8px;
-      transition:.15s;user-select:none;
-    }
-    .gchip:hover{border-color:var(--gold);background:#fdf9f0}
-    .gchip.done{opacity:.35;cursor:default;pointer-events:none;text-decoration:line-through}
-    .gchip.drag{opacity:.4;transform:rotate(2deg)}
-    .gchip-sub{padding-left:16px;background:#f9f7f3}
-    .solo-label{
-      font-size:10px;font-weight:700;letter-spacing:.1em;
-      text-transform:uppercase;color:var(--muted);
-      margin:10px 0 6px 2px;
-    }
+    /* draggable chip */
+    .pchip{background:white;border:1px solid var(--border);border-radius:8px;
+      padding:7px 10px;display:flex;align-items:center;gap:8px;
+      cursor:grab;transition:.15s;user-select:none}
+    .pchip:hover{border-color:var(--gold);background:#fdf9f0;transform:translateX(2px)}
+    .pchip.sub{padding-left:16px;background:#f9f7f3}
+    .pchip.dragging{opacity:.35;transform:rotate(1.5deg) scale(.97)}
+    .drag-lbl{font-size:9px;background:#f0ece4;border-radius:4px;padding:2px 6px;
+      color:var(--muted);flex-shrink:0;pointer-events:none}
 
-    /* Table cards */
-    .tc{
-      background:white;border:1.5px solid var(--border);
-      border-radius:12px;padding:12px;margin-bottom:8px;
-      cursor:pointer;transition:.15s;
-    }
-    .tc:hover,.tc.on{border-color:var(--gold);background:#fdf9f0}
-    .tc-bar{height:3px;border-radius:2px;background:#f0ece4;margin:6px 0 8px;overflow:hidden}
-    .tc-fill{height:100%;border-radius:2px;transition:.3s}
-    .tg-pill{
-      font-size:11px;background:#f5f0e8;border-radius:6px;
-      padding:2px 8px;cursor:pointer;transition:.15s;
-      display:inline-block;margin:2px;
-    }
-    .tg-pill:hover{background:#f0e0c0;text-decoration:line-through}
+    /* table list */
+    .tcard{background:white;border:1.5px solid var(--border);border-radius:12px;
+      padding:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
+    .tcard:hover,.tcard.on{border-color:var(--gold);background:#fdf9f0}
+    .tcbar{height:3px;background:#f0ece4;border-radius:2px;margin:6px 0 8px;overflow:hidden}
+    .tcfill{height:100%;border-radius:2px;transition:.4s}
+    .seated-row{display:flex;align-items:center;gap:6px;padding:4px 8px;
+      border-radius:6px;margin-bottom:2px;transition:.15s}
+    .seated-row:hover{background:#fff8f0}
+    .seated-x{border:none;background:none;cursor:pointer;color:#c04040;
+      font-size:12px;padding:0 2px;line-height:1;opacity:.5;transition:.15s;flex-shrink:0}
+    .seated-x:hover{opacity:1}
 
-    /* ── Modal ── */
-    .sc-modal-bg{
-      position:fixed;inset:0;background:rgba(0,0,0,.45);
-      z-index:600;display:none;align-items:center;justify-content:center;
-      padding:20px;backdrop-filter:blur(4px);
-    }
-    .sc-modal-bg.open{display:flex}
-    .sc-modal{
-      background:white;border-radius:20px;width:100%;max-width:420px;
-      box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:hidden;
-    }
-    .sc-modal-head{
-      padding:20px 24px 16px;border-bottom:1px solid var(--border);
-      display:flex;align-items:center;justify-content:space-between;
-    }
-    .sc-modal-title{
-      font-family:'Cormorant Garamond',serif;font-size:20px;
-      font-weight:600;color:var(--charcoal);
-    }
-    .sc-modal-close{
-      width:32px;height:32px;border-radius:50%;border:none;
-      background:#f5f0e8;cursor:pointer;font-size:16px;
-      display:flex;align-items:center;justify-content:center;transition:.15s;
-    }
-    .sc-modal-close:hover{background:#e8e0d0}
-    .sc-modal-body{padding:20px 24px 24px;max-height:70vh;overflow-y:auto}
-
-    .m-label{
-      font-size:10px;font-weight:700;letter-spacing:.12em;
-      text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;
-    }
-    .m-input{
-      width:100%;box-sizing:border-box;
-      padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;
-      font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:.15s;
-    }
-    .m-input:focus{border-color:var(--gold)}
-    .pill-group{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-    .pill-opt{
-      padding:7px 14px;border-radius:99px;border:1.5px solid var(--border);
-      background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;
-      cursor:pointer;transition:.15s;color:var(--muted);
-    }
-    .pill-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
+    /* modal */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;
+      display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+    .modal-bg.open{display:flex}
+    .modal{background:white;border-radius:20px;width:100%;max-width:440px;
+      box-shadow:0 24px 80px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
+    .modal-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:12px}
+    .modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;flex:1}
+    .modal-close{width:30px;height:30px;border-radius:50%;border:none;background:#f5f0e8;
+      cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s}
+    .modal-close:hover{background:#e8e0d0}
+    .modal-body{padding:18px 22px 22px;overflow-y:auto}
+    .mlbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:block}
+    .minput{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;
+      font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:.15s;margin-bottom:14px}
+    .minput:focus{border-color:var(--gold)}
+    .popts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+    .popt{padding:7px 14px;border-radius:99px;border:1.5px solid var(--border);background:white;
+      font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+      transition:.15s;color:var(--muted)}
+    .popt.on{border-color:var(--gold);background:#fdf9f0;color:var(--ch)}
     .cap-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-    .cap-btn{
-      width:34px;height:34px;border-radius:50%;
-      border:1.5px solid var(--border);background:white;
-      font-size:20px;cursor:pointer;transition:.15s;
-      display:flex;align-items:center;justify-content:center;
-      font-family:'Jost',sans-serif;font-weight:300;
-    }
-    .cap-btn:hover{border-color:var(--gold);color:var(--gold)}
-    .cap-num{
-      width:60px;text-align:center;padding:8px;
-      border:1.5px solid var(--border);border-radius:10px;
-      font-size:16px;font-weight:700;font-family:'Jost',sans-serif;
-      outline:none;
-    }
-    .color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-    .cswatch{
-      width:24px;height:24px;border-radius:50%;cursor:pointer;
-      border:2.5px solid white;box-shadow:0 0 0 1.5px #ccc;transition:.15s;
-    }
-    .cswatch.on{box-shadow:0 0 0 2.5px var(--gold)}
-    .m-foot{display:flex;gap:8px;margin-top:4px}
+    .capbtn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);
+      background:white;font-size:20px;cursor:pointer;transition:.15s;
+      display:flex;align-items:center;justify-content:center}
+    .capbtn:hover{border-color:var(--gold);color:var(--gold)}
+    .capnum{width:62px;text-align:center;padding:8px;border:1.5px solid var(--border);
+      border-radius:10px;font-size:16px;font-weight:700;font-family:'Jost',sans-serif;outline:none}
+    .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .sw{width:24px;height:24px;border-radius:50%;cursor:pointer;
+      border:2.5px solid white;box-shadow:0 0 0 1.5px #ccc;transition:.15s}
+    .sw.on{box-shadow:0 0 0 2.5px var(--gold)}
+    .mfoot{display:flex;gap:8px;padding-top:4px}
 
-    /* Toast */
-    .toast{
-      position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);
+    /* toast */
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(14px);
       background:#2a2010;color:white;padding:11px 22px;border-radius:99px;
-      font-size:13px;font-weight:500;opacity:0;transition:all .3s;
-      pointer-events:none;z-index:999;white-space:nowrap;
-      font-family:'Jost',sans-serif;
-    }
+      font-size:13px;font-weight:500;opacity:0;transition:.3s;
+      pointer-events:none;z-index:999;white-space:nowrap}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
     .toast.err{background:#c04040}
 
-    /* Empty state */
-    .empty-canvas{
-      position:absolute;top:50%;left:calc(50% - var(--sidebar-w)/2);
-      transform:translate(-50%,-50%);text-align:center;pointer-events:none;
-    }
-    .empty-canvas svg{opacity:.15;margin-bottom:12px}
-    .empty-canvas p{font-family:'Jost',sans-serif;font-size:13px;color:var(--muted)}
+    /* empty */
+    .empty{position:absolute;top:50%;left:calc(50% - var(--sidebar)/2 - 20px);
+      transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:.4}
+    .empty p{font-size:13px;color:var(--muted);margin-top:10px}
 
     @media(max-width:700px){
-      :root{--sidebar-w:100%}
-      .sc-sidebar{width:100%;min-width:0;height:200px;border-left:none;border-top:1.5px solid var(--border);order:2}
-      .sc-layout{flex-direction:column}
-      .sc-canvas{order:1}
+      :root{--sidebar:100%}
+      .sidebar{height:220px;border-left:none;border-top:1.5px solid var(--border);order:2}
+      .layout{flex-direction:column}
+      .cnv{order:1}
       body{overflow:auto}
-      .add-bar{flex-wrap:wrap;border-radius:16px}
     }
   </style>
 </head>
 <body>
 
-<!-- Nav -->
-<nav class="sc-nav">
-  <div style="display:flex;align-items:center;gap:0">
-    <a href="dashboard.html" class="sc-logo">Wedding<em>Ledger</em></a>
-    <span class="sc-title">Seating</span>
-  </div>
-  <div class="sc-nav-right">
-    <span class="sc-save" id="saveStatus">All saved ✓</span>
-    <a href="guests.html"    class="nav-pill">Guests</a>
-    <a href="dashboard.html" class="nav-pill">← Dashboard</a>
+<nav class="bar">
+  <a href="dashboard.html" class="logo">Wedding<em>Ledger</em></a>
+  <div class="bar-divider"></div>
+  <span class="bar-title">Seating Chart</span>
+  <div class="bar-right">
+    <span class="save-lbl" id="saveLbl">All saved ✓</span>
+    <a href="guests.html"    class="pill">Guests</a>
+    <a href="dashboard.html" class="pill">← Dashboard</a>
   </div>
 </nav>
 
-<div class="sc-layout">
+<div class="layout">
 
   <!-- Canvas -->
-  <div class="sc-canvas" id="cnv">
-
-    <!-- Toolbar -->
-    <div class="sc-toolbar">
-      <button class="tool-btn" onclick="resetView()">Reset</button>
-      <button class="tool-btn" onclick="doAutoLayout()">✨ Auto Layout</button>
-      <button class="tool-btn" onclick="window.print()">Print</button>
+  <div class="cnv" id="cnv">
+    <div class="toolbar">
+      <button class="tbtn" onclick="resetView()">⟳ Reset</button>
+      <button class="tbtn" onclick="autoLayout()">✨ Auto Layout</button>
+      <button class="tbtn" onclick="window.print()">🖨 Print</button>
     </div>
 
-    <!-- Table layer -->
-    <div id="tableLayer"></div>
+    <div id="layer"></div>
 
-    <!-- Empty hint -->
-    <div class="empty-canvas" id="emptyHint" style="display:none">
-      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-        <rect x="8" y="20" width="48" height="24" rx="6" stroke="#8a7a60" stroke-width="2"/>
-        <circle cx="16" cy="32" r="3" fill="#8a7a60"/>
-        <circle cx="32" cy="32" r="3" fill="#8a7a60"/>
-        <circle cx="48" cy="32" r="3" fill="#8a7a60"/>
+    <div class="empty" id="emptyHint">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <rect x="4" y="16" width="48" height="24" rx="6" stroke="#8a7a60" stroke-width="2"/>
+        <circle cx="14" cy="28" r="2.5" fill="#8a7a60"/>
+        <circle cx="28" cy="28" r="2.5" fill="#8a7a60"/>
+        <circle cx="42" cy="28" r="2.5" fill="#8a7a60"/>
       </svg>
-      <p>Add a table below to get started</p>
+      <p>Add a table to get started</p>
     </div>
 
     <!-- Add table bar -->
-    <div class="add-bar">
-      <button class="add-btn" onclick="addTable('round')">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
-        </svg> Round
+    <div class="addbar">
+      <button class="addbtn" onclick="addTable('round')">
+        <svg width="15" height="15" viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Round
       </button>
-      <div class="add-bar-divider"></div>
-      <button class="add-btn" onclick="addTable('oval')">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <ellipse cx="8" cy="8" rx="7" ry="4.5" stroke="currentColor" stroke-width="1.5"/>
-        </svg> Oval
+      <div class="adddiv"></div>
+      <button class="addbtn" onclick="addTable('oval')">
+        <svg width="15" height="15" viewBox="0 0 15 15"><ellipse cx="7.5" cy="7.5" rx="6.5" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Oval
       </button>
-      <div class="add-bar-divider"></div>
-      <button class="add-btn" onclick="addTable('rect')">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="1.5" y="4.5" width="13" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
-        </svg> Rectangle
+      <div class="adddiv"></div>
+      <button class="addbtn" onclick="addTable('rect')">
+        <svg width="15" height="15" viewBox="0 0 15 15"><rect x="1" y="4" width="13" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Rectangle
       </button>
-      <div class="add-bar-divider"></div>
-      <button class="add-btn" onclick="addTable('long')">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <rect x="0.5" y="5.5" width="15" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
-        </svg> Long Table
+      <div class="adddiv"></div>
+      <button class="addbtn" onclick="addTable('long')">
+        <svg width="15" height="15" viewBox="0 0 15 15"><rect x="0" y="5" width="15" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Long
       </button>
     </div>
 
-    <!-- Zoom -->
-    <div class="zoom-wrap">
-      <button class="zoom-btn" onclick="doZoom(.15)">+</button>
-      <button class="zoom-btn" onclick="doZoom(-.15)" style="font-size:22px;font-weight:200">−</button>
+    <div class="zoom">
+      <button class="zbtn" onclick="doZoom(.15)">+</button>
+      <button class="zbtn" onclick="doZoom(-.15)" style="font-size:22px;font-weight:200">−</button>
     </div>
   </div>
 
   <!-- Sidebar -->
-  <div class="sc-sidebar">
-    <div class="sb-tabs">
-      <button class="sb-tab on" onclick="showTab('guests',this)">Unassigned</button>
-      <button class="sb-tab"    onclick="showTab('tables',this)">Tables</button>
+  <div class="sidebar">
+    <div class="sbtabs">
+      <button class="sbtab on" onclick="showTab('guests',this)" id="tabG">Unassigned</button>
+      <button class="sbtab"    onclick="showTab('tables',this)" id="tabT">Tables</button>
     </div>
-    <div class="sb-body" id="panGuests">
-      <input class="sb-search" id="sbSearch" placeholder="Filter guests…" oninput="renderSidebar()">
-      <div id="guestList"></div>
+    <div class="sbpanel" id="panG">
+      <input class="sbsearch" id="search" placeholder="Filter guests…" oninput="renderSidebar()">
+      <div id="glist"></div>
     </div>
-    <div class="sb-body" id="panTables" style="display:none">
-      <div id="tableList"></div>
+    <div class="sbpanel" id="panT" style="display:none">
+      <div id="tlist"></div>
     </div>
   </div>
 </div>
 
 <!-- Edit Modal -->
-<div class="sc-modal-bg" id="editModal" onclick="if(event.target===this)closeModal()">
-  <div class="sc-modal">
-    <div class="sc-modal-head">
-      <span class="sc-modal-title">Edit Table</span>
-      <button class="sc-modal-close" onclick="closeModal()">✕</button>
+<div class="modal-bg" id="editModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Edit Table</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div class="sc-modal-body">
-      <label class="m-label">Name</label>
-      <input class="m-input" id="mName" style="margin-bottom:14px">
+    <div class="modal-body">
+      <label class="mlbl">Table Name</label>
+      <input class="minput" id="mName">
 
-      <label class="m-label">Shape</label>
-      <div class="pill-group" id="shapePills">
-        <button class="pill-opt on" data-v="round" onclick="pickShape(this)">⭕ Round</button>
-        <button class="pill-opt"    data-v="oval"  onclick="pickShape(this)">⬭ Oval</button>
-        <button class="pill-opt"    data-v="rect"  onclick="pickShape(this)">▭ Rectangle</button>
-        <button class="pill-opt"    data-v="long"  onclick="pickShape(this)">═ Long</button>
+      <label class="mlbl">Shape</label>
+      <div class="popts" id="shapeOpts">
+        <button class="popt on" data-v="round" onclick="pShape(this)">⭕ Round</button>
+        <button class="popt"    data-v="oval"  onclick="pShape(this)">⬭ Oval</button>
+        <button class="popt"    data-v="rect"  onclick="pShape(this)">▭ Rectangle</button>
+        <button class="popt"    data-v="long"  onclick="pShape(this)">═ Long</button>
       </div>
 
-      <label class="m-label">Seats <span id="capHint" style="font-weight:400;font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted)"></span></label>
+      <label class="mlbl">Seats <small id="capHint" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:10px"></small></label>
       <div class="cap-row">
-        <button class="cap-btn" onclick="adjCap(-1)">−</button>
-        <input  class="cap-num" type="number" id="mCap" min="1" max="60">
-        <button class="cap-btn" onclick="adjCap(1)">+</button>
-        <span style="font-size:12px;color:var(--muted);font-family:'Jost',sans-serif" id="capLabel"></span>
+        <button class="capbtn" onclick="adjCap(-1)">−</button>
+        <input  class="capnum" type="number" id="mCap" min="1" max="60">
+        <button class="capbtn" onclick="adjCap(1)">+</button>
       </div>
 
-      <div id="headRow" style="display:none;margin-bottom:14px;padding:10px 12px;background:#faf8f4;border-radius:10px;border:1px solid #e8e0d0">
-        <label class="m-label" style="margin-bottom:6px">Head chairs (short ends)</label>
-        <div class="pill-group" id="headPills" style="margin-bottom:0">
-          <button class="pill-opt on" data-v="0" onclick="pickHead(this)">None</button>
-          <button class="pill-opt"    data-v="1" onclick="pickHead(this)">1 end</button>
-          <button class="pill-opt"    data-v="2" onclick="pickHead(this)">Both ends</button>
+      <!-- Head chairs — long table only -->
+      <div id="headRow" style="display:none;background:#faf8f4;border-radius:10px;padding:10px 12px;margin-bottom:14px;border:1px solid #e8e0d0">
+        <label class="mlbl" style="margin-bottom:6px">Head chairs (ends of table)</label>
+        <div class="popts" id="headOpts" style="margin-bottom:0">
+          <button class="popt on" data-v="0" onclick="pHead(this)">None</button>
+          <button class="popt"    data-v="1" onclick="pHead(this)">1 end</button>
+          <button class="popt"    data-v="2" onclick="pHead(this)">Both ends</button>
         </div>
       </div>
 
+      <!-- Rotation — rect/long only -->
       <div id="rotRow" style="display:none;margin-bottom:14px">
-        <label class="m-label">Rotation</label>
-        <div class="pill-group" id="rotPills">
-          <button class="pill-opt on" data-v="0"   onclick="pickRot(this)">0°</button>
-          <button class="pill-opt"    data-v="45"  onclick="pickRot(this)">45°</button>
-          <button class="pill-opt"    data-v="90"  onclick="pickRot(this)">90°</button>
-          <button class="pill-opt"    data-v="135" onclick="pickRot(this)">135°</button>
+        <label class="mlbl">Rotation</label>
+        <div class="popts" id="rotOpts">
+          <button class="popt on" data-v="0"   onclick="pRot(this)">0°</button>
+          <button class="popt"    data-v="45"  onclick="pRot(this)">45°</button>
+          <button class="popt"    data-v="90"  onclick="pRot(this)">90°</button>
+          <button class="popt"    data-v="135" onclick="pRot(this)">135°</button>
         </div>
       </div>
 
-      <label class="m-label">Colour</label>
-      <div class="color-row" id="colorRow"></div>
+      <label class="mlbl">Colour</label>
+      <div class="swatches" id="colorOpts"></div>
 
       <input type="hidden" id="mId">
-      <div class="m-foot">
+      <div class="mfoot">
         <button class="btn-secondary" onclick="delTable()" style="color:#c04040;border-color:#fcc">Delete</button>
         <button class="btn-secondary" onclick="closeModal()" style="flex:1">Cancel</button>
         <button class="btn-primary"   onclick="saveModal()" style="flex:2">Save</button>
@@ -484,244 +336,68 @@
 <div class="toast" id="toast"></div>
 <script src="db.js"></script>
 <script>
-// ── Constants ───────────────────────────────────────────────────────────────
-const SB      = 'https://bqggtyguhedlyfffjkkw.supabase.co';
-const COLORS  = ['#C9A84C','#9a7535','#2a7a2a','#2a4a7a','#7a2a5a','#c04040','#607080','#8a6020'];
-
-// ── State ───────────────────────────────────────────────────────────────────
-let uid   = localStorage.getItem('wl_uid');
-let tok   = localStorage.getItem('wl_token');
-let guests=[], tables=[];
-let scale=1, panX=0, panY=0;
-let selId=null, dragGid=null, dragFamIdx=-1;
-let mShape='round', mRot=0, mHead=0, mColor=COLORS[0];
+const COLORS=['#C9A84C','#9a7535','#2a7a2a','#2a4a7a','#7a2a5a','#c04040','#607080','#8a6020'];
+let uid=localStorage.getItem('wl_uid');
+let tok=localStorage.getItem('wl_token');
+let guests=[],tables=[];
+let sc=1,px=0,py=0,selId=null;
+// drag state — using mouse events NOT HTML drag API for reliability
+let drag={active:false,type:null,gid:null,famIdx:-1,tid:null,sx:0,sy:0,ox:0,oy:0};
 let saveT=null;
+let mShape='round',mRot=0,mHead=0,mColor=COLORS[0];
 
-if(!uid||!tok) location.href='login.html';
+if(!uid||!tok){location.href='login.html';}
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,err){const t=$('toast');t.textContent=msg;t.className='toast'+(err?' err':'')+' show';setTimeout(()=>t.className='toast',3000);}
+function setSave(s){$('saveLbl').textContent=s;}
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function $id(id){return document.getElementById(id)}
-function toast(msg,err){
-  const t=$id('toast');t.textContent=msg;
-  t.className='toast'+(err?' err':'')+' show';
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
-function setSave(s){$id('saveStatus').textContent=s}
-
-// ── Init ────────────────────────────────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────────────────
 async function init(){
   try{
-    [guests,tables] = await Promise.all([
+    const [g,t]=await Promise.all([
       DB.query(`guests?user_id=eq.${uid}&order=name.asc`,tok),
       DB.query(`seating_tables?user_id=eq.${uid}&order=created_at.asc`,tok)
     ]);
-    guests = Array.isArray(guests)?guests:[];
-    tables = Array.isArray(tables)?tables:[];
-  }catch(e){console.error(e);guests=[];tables=[];}
-
+    guests=Array.isArray(g)?g:[];
+    tables=Array.isArray(t)?t:[];
+  }catch(e){console.error('init',e);guests=[];tables=[];}
   if(!tables.length) await makeDefaults();
   render(); renderSidebar(); renderTableList();
-  setupDrop(); setupPan();
+  setupCanvasEvents();
 }
 
 async function makeDefaults(){
   const defs=[
-    {name:'Top Table',shape:'long', px:320,py:130},
-    {name:'Table 1', shape:'round',px:200,py:340},
-    {name:'Table 2', shape:'round',px:460,py:340},
-    {name:'Table 3', shape:'round',px:720,py:340},
+    {name:'Top Table',shape:'long', px:320,py:130,cap:12},
+    {name:'Table 1', shape:'round',px:200,py:360,cap:8},
+    {name:'Table 2', shape:'round',px:470,py:360,cap:8},
   ];
   for(const d of defs){
-    const row={user_id:uid,name:d.name,capacity:d.shape==='long'?12:8,
-      shape:d.shape,position_x:d.px,position_y:d.py,color:'#C9A84C'};
-    const r=await DB.post('seating_tables',row,tok);
+    const r=await DB.post('seating_tables',{user_id:uid,name:d.name,capacity:d.cap,
+      shape:d.shape,position_x:d.px,position_y:d.py,color:'#C9A84C'},tok);
     if(r)tables.push(r);
   }
 }
 
-// ── Table geometry ──────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function getFam(g){
+  if(!g.family_members)return[];
+  try{const f=typeof g.family_members==='string'?JSON.parse(g.family_members):g.family_members;
+    return Array.isArray(f)?f:[];}catch(e){return[];}
+}
+
 function tSize(t){
   const cap=parseInt(t.capacity)||8;
-  const sh=t.shape||'round';
-  if(sh==='round'){const s=Math.max(86,Math.min(148,68+cap*5));return{w:s,h:s};}
-  if(sh==='oval'){const w=Math.max(110,Math.min(200,80+cap*8));return{w,h:Math.round(w*.62)};}
-  if(sh==='long'){const w=Math.max(150,Math.min(310,90+cap*15));return{w,h:64};}
-  const w=Math.max(105,Math.min(190,78+cap*6));return{w,h:Math.round(w*.62)};
+  const sh=(t.shape||'round').toLowerCase();
+  if(sh==='round'){const s=Math.max(88,Math.min(150,70+cap*5));return{w:s,h:s};}
+  if(sh==='oval'){const w=Math.max(120,Math.min(200,90+cap*8));return{w,h:Math.round(w*.58)};}
+  if(sh==='long'||sh==='long table'){const w=Math.max(160,Math.min(320,100+cap*15));return{w,h:68};}
+  // rect / rectangular
+  const w=Math.max(110,Math.min(200,82+cap*6));return{w,h:Math.round(w*.62)};
 }
 
-// ── Render canvas ────────────────────────────────────────────────────────────
-function applyTransform(){
-  $id('tableLayer').style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
-}
-
-function render(){
-  const layer=$id('tableLayer');
-  layer.innerHTML='';
-  $id('emptyHint').style.display=tables.length?'none':'block';
-
-  tables.forEach(t=>{
-    const assigned=guests.filter(g=>g.table_id===t.id);
-    // Also count family members seated here
-    let famSeated=[];
-    guests.forEach(g=>{getFam(g).forEach(m=>{if(m.table_id===t.id){const fn=((m.first||'')+' '+(m.last||'')).trim();famSeated.push({name:fn||'Family member'});}});});
-    const allSeated=[...assigned,...famSeated];
-    const {w,h}=tSize(t);
-    const rot=parseInt(t.rotation)||0;
-    const col=t.color||COLORS[0];
-    const sh=t.shape||'round';
-    const full=allSeated.length>=t.capacity;
-    const isSel=selId===t.id;
-
-    const node=document.createElement('div');
-    node.className='tnode'+(isSel?' sel':'');
-    node.id='tn-'+t.id;
-    node.style.cssText=`left:${t.position_x}px;top:${t.position_y}px`;
-
-    // Rotate handle
-    const rotHandle=(isSel&&sh!=='round'&&sh!=='oval')
-      ?`<button class="rot-btn" title="Rotate 90°" onclick="event.stopPropagation();qRot('${t.id}')">↻</button>`:'';
-
-    // Guest chips
-    const chips=allSeated.slice(0,9).map(g=>
-      `<span class="tg" style="background:${col}18;border:1px solid ${col}44;color:${col}">${esc(g.name.split(' ')[0])}</span>`
-    ).join('')+(allSeated.length>9?`<span class="tg" style="color:var(--muted)">+${allSeated.length-9}</span>`:'');
-
-    node.innerHTML=`
-      ${rotHandle}
-      <div class="tshape ${sh}" style="width:${w}px;height:${h}px;border-color:${col};transform:rotate(${rot}deg)">
-        <div class="t-name">${esc(t.name)}</div>
-        <div class="t-count" style="color:${full?'#c04040':'var(--muted)'}">${allSeated.length}/${t.capacity}</div>
-      </div>
-      ${assigned.length?`<div class="t-guests">${chips}</div>`:''}`;
-
-    makeDrag(node,t);
-    node.addEventListener('dblclick',e=>{e.stopPropagation();openModal(t.id)});
-    node.addEventListener('click',e=>{
-      e.stopPropagation();
-      selId=t.id; render(); renderTableList();
-    });
-    layer.appendChild(node);
-  });
-
-  applyTransform();
-  // Deselect on blank canvas click
-  $id('cnv').onclick=e=>{
-    if(e.target===$id('cnv')||e.target===$id('tableLayer')){
-      selId=null; render();
-    }
-  };
-}
-
-// ── Drag tables ──────────────────────────────────────────────────────────────
-function makeDrag(el,t){
-  let sx,sy,ox,oy,moved=false;
-  el.onmousedown=e=>{
-    if(e.button!==0)return;
-    if(e.target.classList.contains('rot-btn'))return;
-    e.preventDefault();e.stopPropagation();
-    sx=e.clientX;sy=e.clientY;ox=t.position_x;oy=t.position_y;moved=false;
-    const mm=ev=>{
-      const dx=(ev.clientX-sx)/scale,dy=(ev.clientY-sy)/scale;
-      if(Math.abs(dx)+Math.abs(dy)>3)moved=true;
-      t.position_x=Math.max(50,ox+dx);t.position_y=Math.max(50,oy+dy);
-      el.style.left=t.position_x+'px';el.style.top=t.position_y+'px';
-    };
-    const mu=()=>{
-      document.removeEventListener('mousemove',mm);
-      document.removeEventListener('mouseup',mu);
-      if(moved)schedSave(t,{position_x:t.position_x,position_y:t.position_y});
-    };
-    document.addEventListener('mousemove',mm);document.addEventListener('mouseup',mu);
-  };
-}
-
-function qRot(id){
-  const t=tables.find(x=>x.id===id);if(!t)return;
-  t.rotation=((parseInt(t.rotation)||0)+90)%360;
-  render();schedSave(t,{rotation:t.rotation});
-}
-
-// ── Pan & zoom ───────────────────────────────────────────────────────────────
-function setupPan(){
-  const cnv=$id('cnv');
-  let panning=false,sx,sy,spx,spy;
-  cnv.addEventListener('mousedown',e=>{
-    // Pan on middle button OR alt+left drag OR direct canvas (no table) left drag
-    const onCanvas=e.target===cnv||e.target===$id('tableLayer');
-    if(e.button===1||(e.altKey&&e.button===0)||(e.button===0&&onCanvas)){
-      panning=true;sx=e.clientX;sy=e.clientY;spx=panX;spy=panY;
-      cnv.style.cursor='grabbing';e.preventDefault();
-    }
-  });
-  document.addEventListener('mousemove',e=>{
-    if(!panning)return;
-    panX=spx+(e.clientX-sx);panY=spy+(e.clientY-sy);applyTransform();
-  });
-  document.addEventListener('mouseup',()=>{panning=false;$id('cnv').style.cursor='default';});
-  cnv.addEventListener('wheel',e=>{e.preventDefault();doZoom(e.deltaY<0?.12:-.12);},{passive:false});
-}
-
-function doZoom(d){
-  scale=Math.max(.3,Math.min(2.5,scale+d));applyTransform();
-}
-function resetView(){scale=1;panX=0;panY=0;applyTransform();}
-
-// ── Drop guests ──────────────────────────────────────────────────────────────
-function setupDrop(){
-  document.addEventListener('dragstart',e=>{
-    const chip=e.target.closest('.gchip');
-    if(!chip||!chip.dataset.id)return;
-    dragGid=chip.dataset.id;
-    dragFamIdx=parseInt(chip.dataset.famidx??'-1');
-    chip.classList.add('drag');
-    // Visual: highlight all chips in same family group
-    document.querySelectorAll(`.fam-box[data-gid="${dragGid}"] .gchip`).forEach(c=>c.style.opacity='.5');
-  });
-  document.addEventListener('dragend',e=>{
-    document.querySelectorAll('.gchip').forEach(c=>{c.classList.remove('drag');c.style.opacity='';});
-    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-hi'));
-    dragGid=null; dragFamIdx=-1;
-  });
-  document.addEventListener('dragover',e=>{
-    const n=e.target.closest('.tnode');
-    if(n){e.preventDefault();n.classList.add('drop-hi');}
-  });
-  document.addEventListener('dragleave',e=>{
-    const n=e.target.closest('.tnode');
-    if(n&&!n.contains(e.relatedTarget))n.classList.remove('drop-hi');
-  });
-  document.addEventListener('drop',async e=>{
-    const n=e.target.closest('.tnode');
-    if(!n||!dragGid)return;
-    e.preventDefault();n.classList.remove('drop-hi');
-    const tid=n.id.replace('tn-','');
-    const tbl=tables.find(t=>t.id===tid);
-    const g=guests.find(x=>x.id===dragGid);
-    if(!g||!tbl)return;
-
-    // Count current occupants (main guests + their fam members at this table)
-    const currentCount=countSeatedAt(tid);
-    const spotsNeeded=1;
-    if(currentCount+spotsNeeded>tbl.capacity){toast('Table is full!',true);return;}
-
-    if(dragFamIdx===-1){
-      // Seating the MAIN GUEST
-      g.table_id=tid;
-      await DB.patch(`guests?id=eq.${dragGid}`,{table_id:tid},tok);
-    } else {
-      // Seating an individual FAMILY MEMBER — update their table_id in family_members JSON
-      const fam=getFam(g);
-      if(fam[dragFamIdx]) fam[dragFamIdx].table_id=tid;
-      g.family_members=fam;
-      await DB.patch(`guests?id=eq.${dragGid}`,{family_members:JSON.stringify(fam)},tok);
-    }
-    dragGid=null; dragFamIdx=-1;
-    render(); renderSidebar(); renderTableList();
-    toast('Seated ✓');
-  });
-}
-
-function countSeatedAt(tid){
+function countAt(tid){
   let n=0;
   guests.forEach(g=>{
     if(g.table_id===tid)n++;
@@ -730,348 +406,415 @@ function countSeatedAt(tid){
   return n;
 }
 
+function seatedAt(tid){
+  const rows=[];
+  guests.forEach(g=>{
+    if(g.table_id===tid)rows.push({name:g.name,type:'guest',gid:g.id,fi:-1});
+    getFam(g).forEach((m,i)=>{
+      if(m.table_id===tid){
+        const n=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
+        rows.push({name:n,type:m.type||'family',gid:g.id,fi:i});
+      }
+    });
+  });
+  return rows;
+}
 
-// ── Pan & zoom ───────────────────────────────────────────────────────────────
-function setupPan(){
-  const cnv=$id('cnv');
-  let panning=false,sx,sy,spx,spy;
-  cnv.addEventListener('mousedown',e=>{
-    // Pan on middle button OR alt+left drag OR direct canvas (no table) left drag
-    const onCanvas=e.target===cnv||e.target===$id('tableLayer');
-    if(e.button===1||(e.altKey&&e.button===0)||(e.button===0&&onCanvas)){
-      panning=true;sx=e.clientX;sy=e.clientY;spx=panX;spy=panY;
-      cnv.style.cursor='grabbing';e.preventDefault();
+// ── Render canvas ─────────────────────────────────────────────────────────────
+function applyTx(){$('layer').style.transform=`translate(${px}px,${py}px) scale(${sc})`;}
+
+function render(){
+  const layer=$('layer');
+  layer.innerHTML='';
+  $('emptyHint').style.display=tables.length?'none':'block';
+
+  tables.forEach(t=>{
+    const sh=(t.shape||'round').toLowerCase().replace(' ','');
+    const shCls=['round','oval','rect','rectangular','long'].includes(sh)?sh:'round';
+    const {w,h}=tSize(t);
+    const rot=parseInt(t.rotation)||0;
+    const col=t.color||COLORS[0];
+    const cnt=countAt(t.id);
+    const cap=parseInt(t.capacity)||8;
+    const full=cnt>=cap;
+    const isSel=selId===t.id;
+    const all=seatedAt(t.id);
+
+    const node=document.createElement('div');
+    node.className='tnode'+(isSel?' sel':'');
+    node.id='tn-'+t.id;
+    node.style.left=t.position_x+'px';
+    node.style.top =t.position_y+'px';
+
+    const canRot=shCls!=='round'&&shCls!=='oval';
+    const rotH=isSel&&canRot
+      ?`<button class="rot-h" onmousedown="event.stopPropagation()" onclick="qRot('${t.id}')" title="Rotate 90°">↻</button>`:'';
+
+    const chips=all.slice(0,8).map(p=>
+      `<span class="tg" style="background:${col}18;border:1px solid ${col}44;color:${col}">${esc(p.name.split(' ')[0])}</span>`
+    ).join('')+(all.length>8?`<span class="tg" style="color:var(--muted)">+${all.length-8}</span>`:'');
+
+    node.innerHTML=`
+      ${rotH}
+      <div class="tshape ${shCls}" style="width:${w}px;height:${h}px;border-color:${col};transform:rotate(${rot}deg)"
+        ondblclick="openModal('${t.id}')">
+        <div class="tname">${esc(t.name)}</div>
+        <div class="tcount" style="color:${full?'#c04040':'var(--muted)'};">${cnt}/${cap}</div>
+      </div>
+      ${all.length?`<div class="tguests">${chips}</div>`:''}`;
+
+    // TABLE DRAG: mousedown on shape drags the whole table
+    const shape=node.querySelector('.tshape');
+    shape.addEventListener('mousedown',e=>{
+      if(e.button!==0)return;
+      e.preventDefault();e.stopPropagation();
+      drag={active:true,type:'table',tid:t.id,sx:e.clientX,sy:e.clientY,
+        ox:t.position_x,oy:t.position_y};
+      selId=t.id; render(); renderTableList();
+    });
+
+    layer.appendChild(node);
+  });
+  applyTx();
+}
+
+// ── Canvas mouse events ──────────────────────────────────────────────────────
+function setupCanvasEvents(){
+  const cnv=$('cnv');
+  // Global mousemove & mouseup handle both table drag and canvas pan
+  document.addEventListener('mousemove',e=>{
+    if(!drag.active)return;
+    if(drag.type==='table'){
+      const t=tables.find(x=>x.id===drag.tid);if(!t)return;
+      t.position_x=Math.max(50,drag.ox+(e.clientX-drag.sx)/sc);
+      t.position_y=Math.max(50,drag.oy+(e.clientY-drag.sy)/sc);
+      const node=$('tn-'+drag.tid);
+      if(node){node.style.left=t.position_x+'px';node.style.top=t.position_y+'px';}
+    } else if(drag.type==='pan'){
+      px=drag.ox+(e.clientX-drag.sx);
+      py=drag.oy+(e.clientY-drag.sy);
+      applyTx();
     }
   });
-  document.addEventListener('mousemove',e=>{
-    if(!panning)return;
-    panX=spx+(e.clientX-sx);panY=spy+(e.clientY-sy);applyTransform();
+  document.addEventListener('mouseup',e=>{
+    if(!drag.active)return;
+    if(drag.type==='table'){
+      const t=tables.find(x=>x.id===drag.tid);
+      if(t)schedSave(t,{position_x:t.position_x,position_y:t.position_y});
+    }
+    drag.active=false;
   });
-  document.addEventListener('mouseup',()=>{panning=false;$id('cnv').style.cursor='default';});
+  // Pan: left-click on empty canvas
+  cnv.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    if(e.target!==cnv&&e.target!==$('layer'))return;
+    selId=null; render();
+    drag={active:true,type:'pan',sx:e.clientX,sy:e.clientY,ox:px,oy:py};
+    e.preventDefault();
+  });
+  // Zoom via wheel
   cnv.addEventListener('wheel',e=>{e.preventDefault();doZoom(e.deltaY<0?.12:-.12);},{passive:false});
 }
 
-function doZoom(d){
-  scale=Math.max(.3,Math.min(2.5,scale+d));applyTransform();
-}
-function resetView(){scale=1;panX=0;panY=0;applyTransform();}
+function doZoom(d){sc=Math.max(.3,Math.min(2.5,sc+d));applyTx();}
+function resetView(){sc=1;px=0;py=0;applyTx();}
 
-// ── Drop guests ──────────────────────────────────────────────────────────────
-function setupDrop(){
-  document.addEventListener('dragstart',e=>{
-    if(e.target.classList.contains('gchip')){
-      dragGid=e.target.dataset.id;
-      e.target.classList.add('drag');
-      // If dragging a family member chip, highlight the main guest chip too
-      if(e.target.dataset.fam) {
-        document.querySelectorAll(`.gchip[data-id="${dragGid}"]`).forEach(el=>el.classList.add('drag'));
-      }
-    }
-  });
-  document.addEventListener('dragend',e=>{
-    if(e.target.classList.contains('gchip'))e.target.classList.remove('drag');
-    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-hi'));
-    dragGid=null;
-  });
-  document.addEventListener('dragover',e=>{
-    const n=e.target.closest('.tnode');
-    if(n){e.preventDefault();n.classList.add('drop-hi');}
-  });
-  document.addEventListener('dragleave',e=>{
-    const n=e.target.closest('.tnode');
-    if(n&&!n.contains(e.relatedTarget))n.classList.remove('drop-hi');
-  });
-  document.addEventListener('drop',async e=>{
-    const n=e.target.closest('.tnode');
-    if(!n||!dragGid)return;
-    e.preventDefault();n.classList.remove('drop-hi');
-    const tid=n.id.replace('tn-','');
-    const tbl=tables.find(t=>t.id===tid);
-    const cnt=guests.filter(g=>g.table_id===tid).length;
-    if(tbl&&cnt>=tbl.capacity){toast('Table is full!',true);return;}
-    await DB.patch(`guests?id=eq.${dragGid}`,{table_id:tid},tok);
-    const g=guests.find(x=>x.id===dragGid);if(g)g.table_id=tid;
-    dragGid=null;
-    render();renderSidebar();renderTableList();
-    toast('Seated ✓');
-  });
+function qRot(id){
+  const t=tables.find(x=>x.id===id);if(!t)return;
+  t.rotation=((parseInt(t.rotation)||0)+90)%360;
+  render();schedSave(t,{rotation:t.rotation});
 }
 
-// ── Sidebar — guests ─────────────────────────────────────────────────────────
-function getFam(g){
-  if(!g.family_members)return[];
-  try{return Array.isArray(g.family_members)?g.family_members:JSON.parse(g.family_members);}
-  catch(e){return[];}
-}
-
+// ── Sidebar: Unassigned ──────────────────────────────────────────────────────
 function renderSidebar(){
-  const q=($id('sbSearch')?.value||'').toLowerCase();
-  const el=$id('guestList');
+  const q=($('search')?.value||'').toLowerCase();
 
-  // Build a flat list of ALL people (main guests + family members)
-  // Each person: {id, name, type, tableId, mainGuestId, famIdx}
-  const allPeople=[];
+  // Flatten everyone into people with tableId
+  const people=[];
   guests.forEach(g=>{
     const fam=getFam(g);
-    allPeople.push({
-      id:g.id, name:g.name, type:'guest', tableId:g.table_id||null,
-      mainGuestId:g.id, famIdx:-1, dietary:g.dietary, groupLabel:g.group_label
-    });
+    people.push({gid:g.id,fi:-1,name:g.name,type:'guest',tid:g.table_id||null});
     fam.forEach((m,i)=>{
-      const fn=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
-      allPeople.push({
-        id:g.id+'_fam_'+i, name:fn, type:m.type||'family',
-        tableId:m.table_id||g.table_id||null,  // family member seated = inherit or own
-        mainGuestId:g.id, famIdx:i
-      });
+      const n=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
+      // A family member is seated if they have their OWN table_id OR if main guest is seated
+      const famTid=m.table_id||null;
+      people.push({gid:g.id,fi:i,name:n,type:m.type||'family',tid:famTid});
     });
   });
 
-  const unassigned=allPeople.filter(p=>!p.tableId&&p.name.toLowerCase().includes(q));
+  const unassigned=people.filter(p=>!p.tid&&(q?p.name.toLowerCase().includes(q):true));
 
+  const el=$('glist');
   if(!unassigned.length){
-    const totalUnassigned=allPeople.filter(p=>!p.tableId).length;
-    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;font-family:'Jost',sans-serif">
-      ${totalUnassigned===0?'🎉 All guests seated!':'No matching guests'}</div>`;
+    const total=people.filter(p=>!p.tid).length;
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">
+      ${total===0?'🎉 All guests seated!':'No matching guests'}</div>`;
     return;
   }
 
-  // Group unassigned by main guest
-  const grouped={};
-  unassigned.forEach(p=>{
-    if(!grouped[p.mainGuestId])grouped[p.mainGuestId]=[];
-    grouped[p.mainGuestId].push(p);
-  });
+  // Group by main guest
+  const byGid={};
+  unassigned.forEach(p=>{if(!byGid[p.gid])byGid[p.gid]=[];byGid[p.gid].push(p);});
 
   let html='';
-  Object.entries(grouped).forEach(([gid,people])=>{
-    const mainGuest=guests.find(x=>x.id===gid);
-    if(!mainGuest)return;
-    const ini=mainGuest.name.charAt(0).toUpperCase();
-    const totalInGroup=[mainGuest,...getFam(mainGuest)].length;
-    const seatedCount=totalInGroup-people.length;
-
-    html+=`<div class="fam-box" data-gid="${gid}">
-      <div class="fam-head">
-        <div class="fam-av">${ini}</div>
-        <span class="fam-name">${esc(mainGuest.name)}</span>
-        <span class="fam-ct">${people.length} unassigned${seatedCount>0?` · ${seatedCount} seated`:''}</span>
+  Object.entries(byGid).forEach(([gid,ppl])=>{
+    const mg=guests.find(x=>x.id===gid);if(!mg)return;
+    const ini=mg.name.charAt(0).toUpperCase();
+    html+=`<div class="ggroup">
+      <div class="ggroup-head">
+        <div class="gav">${ini}</div>
+        <span class="ggroup-name">${esc(mg.name)}</span>
+        <span class="ggroup-ct">${ppl.length} unassigned</span>
       </div>
-      <div class="fam-body">
-        ${people.map(p=>{
-          const isMain=p.famIdx===-1;
-          const chipClass=isMain?'gchip':'gchip gchip-sub';
-          const sub=isMain
-            ?`<div style="font-size:10px;color:var(--muted)">Main guest</div>`
-            :`<div style="font-size:10px;color:var(--muted)">${esc(p.type)}</div>`;
-          return`<div class="${chipClass}" draggable="true"
-            data-id="${gid}"
-            data-famidx="${p.famIdx}"
-            style="cursor:grab">
+      <div class="ggroup-body">
+        ${ppl.map(p=>{
+          const isMain=p.fi===-1;
+          return`<div class="pchip${isMain?'':' sub'}"
+            data-gid="${p.gid}" data-fi="${p.fi}"
+            onmousedown="startGuestDrag(event,this)">
             <div style="flex:1;min-width:0">
-              <div style="font-weight:${isMain?700:500};font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
-              ${sub}
+              <div style="font-weight:${isMain?700:500};font-size:12px;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.name)}</div>
+              <div style="font-size:10px;color:var(--muted)">${isMain?'guest':p.type}</div>
             </div>
-            <span style="font-size:10px;color:var(--muted);background:#f5f0e8;border-radius:4px;padding:2px 6px;flex-shrink:0">drag</span>
+            <span class="drag-lbl">drag</span>
           </div>`;
         }).join('')}
       </div>
     </div>`;
   });
-
-  el.innerHTML=html||`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No matching guests</div>`;
+  el.innerHTML=html||`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No results</div>`;
 }
 
+// ── Guest drag via mouse (not HTML5 drag API — much more reliable) ────────────
+let gDragEl=null, gDragGhost=null;
 
-// ── Sidebar — tables ─────────────────────────────────────────────────────────
+function startGuestDrag(e,chip){
+  if(e.button!==0)return;
+  e.preventDefault();e.stopPropagation();
+  const gid=chip.dataset.gid;
+  const fi=parseInt(chip.dataset.fi);
+
+  // Create ghost
+  gDragGhost=document.createElement('div');
+  gDragGhost.style.cssText=`position:fixed;pointer-events:none;z-index:9999;
+    background:white;border:1.5px solid var(--gold);border-radius:8px;padding:7px 12px;
+    font-family:'Jost',sans-serif;font-size:12px;font-weight:600;color:var(--ch);
+    box-shadow:0 8px 32px rgba(0,0,0,.2);opacity:.92;white-space:nowrap;`;
+  const txt=chip.querySelector('div div')?.textContent||'Guest';
+  gDragGhost.textContent=txt;
+  document.body.appendChild(gDragGhost);
+  moveGhost(e);
+
+  chip.classList.add('dragging');
+  drag={active:true,type:'guest',gid,fi,chip};
+
+  const mm=ev=>{
+    moveGhost(ev);
+    // Highlight table under cursor
+    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-target'));
+    const layerRect=$('layer').getBoundingClientRect();
+    const lx=(ev.clientX-layerRect.left)/sc/sc; // approximate
+    const under=document.elementFromPoint(ev.clientX,ev.clientY);
+    const tnode=under?.closest('.tnode');
+    if(tnode)tnode.classList.add('drop-target');
+  };
+  const mu=async ev=>{
+    document.removeEventListener('mousemove',mm);
+    document.removeEventListener('mouseup',mu);
+    gDragGhost?.remove();gDragGhost=null;
+    chip.classList.remove('dragging');
+    document.querySelectorAll('.tnode').forEach(n=>n.classList.remove('drop-target'));
+    drag.active=false;
+
+    const under=document.elementFromPoint(ev.clientX,ev.clientY);
+    const tnode=under?.closest('.tnode');
+    if(!tnode){return;} // dropped on canvas — nothing
+    const tid=tnode.id.replace('tn-','');
+    await seatPerson(gid,fi,tid);
+  };
+  document.addEventListener('mousemove',mm);
+  document.addEventListener('mouseup',mu);
+}
+
+function moveGhost(e){
+  if(!gDragGhost)return;
+  gDragGhost.style.left=(e.clientX+14)+'px';
+  gDragGhost.style.top =(e.clientY-16)+'px';
+}
+
+async function seatPerson(gid,fi,tid){
+  const tbl=tables.find(x=>x.id===tid);
+  const g=guests.find(x=>x.id===gid);
+  if(!tbl||!g)return;
+
+  const current=countAt(tid);
+  if(current>=tbl.capacity){toast('Table is full!',true);return;}
+
+  if(fi===-1){
+    // Seat main guest
+    g.table_id=tid;
+    const ok=await DB.patch(`guests?id=eq.${gid}`,{table_id:tid},tok);
+    if(!ok&&ok!==null)console.error('patch failed');
+  } else {
+    // Seat family member individually
+    const fam=getFam(g);
+    if(!fam[fi]){return;}
+    fam[fi].table_id=tid;
+    g.family_members=fam;
+    // Store updated family_members
+    await DB.patch(`guests?id=eq.${gid}`,{family_members:fam},tok);
+  }
+  render(); renderSidebar(); renderTableList();
+  toast('Seated ✓');
+}
+
+async function unseat(gid,fi){
+  const g=guests.find(x=>x.id===gid);if(!g)return;
+  if(fi===-1){
+    g.table_id=null;
+    await DB.patch(`guests?id=eq.${gid}`,{table_id:null},tok);
+  } else {
+    const fam=getFam(g);
+    if(fam[fi]){delete fam[fi].table_id;}
+    g.family_members=fam;
+    await DB.patch(`guests?id=eq.${gid}`,{family_members:fam},tok);
+  }
+  render(); renderSidebar(); renderTableList();
+  toast('Removed');
+}
+
+// ── Sidebar: Tables ──────────────────────────────────────────────────────────
 function renderTableList(){
-  const el=$id('tableList');
+  const el=$('tlist');
   if(!tables.length){
-    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;font-family:'Jost',sans-serif">No tables yet</div>`;
+    el.innerHTML=`<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No tables yet</div>`;
     return;
   }
   el.innerHTML=tables.map(t=>{
-    // Collect everyone seated at this table
-    const seated=[];
-    guests.forEach(g=>{
-      if(g.table_id===t.id) seated.push({name:g.name,type:'guest',gid:g.id,famIdx:-1});
-      getFam(g).forEach((m,i)=>{
-        if(m.table_id===t.id){
-          const fn=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
-          seated.push({name:fn,type:m.type||'family',gid:g.id,famIdx:i});
-        }
-      });
-    });
-    const total=seated.length;
-    const cap=t.capacity||8;
-    const pct=Math.round(total/cap*100);
-    const full=total>=cap;
-
-    return`<div class="tc${selId===t.id?' on':''}" onclick="focusTable('${t.id}')">
+    const seated=seatedAt(t.id);
+    const cap=parseInt(t.capacity)||8;
+    const pct=Math.min(100,Math.round(seated.length/cap*100));
+    const full=seated.length>=cap;
+    return`<div class="tcard${selId===t.id?' on':''}" onclick="focusTable('${t.id}')">
       <div style="display:flex;align-items:center;gap:8px">
         <div style="width:10px;height:10px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
-        <div style="font-weight:700;font-size:13px;flex:1;font-family:'Jost',sans-serif">${esc(t.name)}</div>
-        <div style="font-size:11px;color:${full?'#c04040':'var(--muted)'};font-family:'Jost',sans-serif">${total}/${cap}</div>
+        <span style="font-weight:700;font-size:13px;flex:1">${esc(t.name)}</span>
+        <span style="font-size:11px;color:${full?'#c04040':'var(--muted)'}">${seated.length}/${cap}</span>
         <button onclick="event.stopPropagation();openModal('${t.id}')"
-          style="border:none;background:none;cursor:pointer;padding:3px 6px;border-radius:6px;color:var(--muted);font-size:13px">✏️</button>
+          style="border:none;background:none;cursor:pointer;padding:2px 6px;color:var(--muted);font-size:13px">✏️</button>
       </div>
-      <div class="tc-bar"><div class="tc-fill" style="width:${Math.min(100,pct)}%;background:${t.color}"></div></div>
+      <div class="tcbar"><div class="tcfill" style="width:${pct}%;background:${t.color}"></div></div>
       ${seated.length
-        ?`<div style="display:flex;flex-direction:column;gap:3px">
-            ${seated.map(p=>{
-              const isMain=p.type==='guest';
-              return`<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;
-                background:${isMain?'white':'#faf8f4'};border-radius:6px;
-                border:1px solid ${isMain?'var(--border)':'#e8e0d0'}">
-                <span style="font-size:11px;flex:1;font-family:'Jost',sans-serif;
-                  font-weight:${isMain?600:400}">${esc(p.name)}</span>
-                <span style="font-size:9px;color:var(--muted);font-family:'Jost',sans-serif">${isMain?'guest':p.type}</span>
-                <button onclick="event.stopPropagation();unseat('${p.gid}',${p.famIdx})"
-                  style="border:none;background:none;cursor:pointer;color:#c04040;font-size:11px;
-                  padding:0 2px;line-height:1" title="Remove">✕</button>
-              </div>`;
-            }).join('')}
-          </div>`
-        :`<div style="font-size:11px;color:var(--muted);font-style:italic;font-family:'Jost',sans-serif;padding:2px">Empty — drag guests here</div>`}
+        ?seated.map(p=>`<div class="seated-row">
+            <div style="width:6px;height:6px;border-radius:50%;background:${t.color};flex-shrink:0"></div>
+            <span style="font-size:12px;flex:1;font-weight:${p.type==='guest'?600:400}">${esc(p.name)}</span>
+            <span style="font-size:10px;color:var(--muted)">${p.type}</span>
+            <button class="seated-x" onclick="event.stopPropagation();unseat('${p.gid}',${p.fi})" title="Remove">✕</button>
+          </div>`).join('')
+        :`<div style="font-size:11px;color:var(--muted);font-style:italic;padding:2px 4px">Empty — drag guests here</div>`}
     </div>`;
   }).join('');
 }
-
 
 function focusTable(id){
   selId=id; render(); renderTableList();
   const t=tables.find(x=>x.id===id);
   if(t){
-    const cnv=$id('cnv');
-    panX=cnv.clientWidth/2-t.position_x*scale;
-    panY=cnv.clientHeight/2-t.position_y*scale;
-    applyTransform();
+    const cnv=$('cnv');
+    px=cnv.clientWidth/2-t.position_x*sc;
+    py=cnv.clientHeight/2-t.position_y*sc;
+    applyTx();
   }
-}
-
-async function unassign(gid){
-  await DB.patch(`guests?id=eq.${gid}`,{table_id:null},tok);
-  const g=guests.find(x=>x.id===gid);if(g)g.table_id=null;
-  render();renderSidebar();renderTableList();
-}
-
-async function unseat(gid,famIdx){
-  const g=guests.find(x=>x.id===gid);if(!g)return;
-  if(famIdx===-1){
-    g.table_id=null;
-    await DB.patch(`guests?id=eq.${gid}`,{table_id:null},tok);
-  } else {
-    const fam=getFam(g);
-    if(fam[famIdx])delete fam[famIdx].table_id;
-    g.family_members=fam;
-    await DB.patch(`guests?id=eq.${gid}`,{family_members:JSON.stringify(fam)},tok);
-  }
-  render();renderSidebar();renderTableList();
-  toast('Removed from table');
 }
 
 function showTab(tab,btn){
-  document.querySelectorAll('.sb-tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.sbtab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  $id('panGuests').style.display=tab==='guests'?'block':'none';
-  $id('panTables').style.display=tab==='tables'?'block':'none';
+  $('panG').style.display=tab==='guests'?'block':'none';
+  $('panT').style.display=tab==='tables'?'block':'none';
 }
 
 // ── Add table ────────────────────────────────────────────────────────────────
 async function addTable(shape){
-  const cnv=$id('cnv');
-  const px=Math.max(80,(cnv.clientWidth/2-panX)/scale+(Math.random()-.5)*160);
-  const py=Math.max(80,(cnv.clientHeight/2-panY)/scale+(Math.random()-.5)*160);
+  const cnv=$('cnv');
+  const tpx=Math.max(80,(cnv.clientWidth/2-px)/sc+(Math.random()-.5)*150);
+  const tpy=Math.max(80,(cnv.clientHeight/2-py)/sc+(Math.random()-.5)*150);
   const cap=shape==='long'?12:8;
-  const num=tables.length+1;
+  const n=tables.length+1;
   const names={round:'Table',oval:'Oval Table',rect:'Table',long:'Long Table'};
-  const row={user_id:uid,name:names[shape]+' '+num,capacity:cap,shape,
-    position_x:Math.round(px),position_y:Math.round(py),color:COLORS[0]};
-  const r=await DB.post('seating_tables',row,tok);
+  const r=await DB.post('seating_tables',{
+    user_id:uid,name:names[shape]+' '+n,capacity:cap,shape,
+    position_x:Math.round(tpx),position_y:Math.round(tpy),color:'#C9A84C'
+  },tok);
   if(r){tables.push(r);render();renderTableList();toast('Table added');}
 }
 
-// ── Modal ────────────────────────────────────────────────────────────────────
-function buildColorRow(){
-  $id('colorRow').innerHTML=COLORS.map(c=>
-    `<div class="cswatch${c===mColor?' on':''}" style="background:${c}" data-c="${c}"
-      onclick="pickColor('${c}',this)"></div>`
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function buildSwatches(){
+  $('colorOpts').innerHTML=COLORS.map(c=>
+    `<div class="sw${c===mColor?' on':''}" style="background:${c}"
+      onclick="pColor('${c}',this)"></div>`
   ).join('');
 }
 
 function openModal(id){
   const t=tables.find(x=>x.id===id);if(!t)return;
-  $id('mName').value=t.name;
-  $id('mCap').value=t.capacity;
-  $id('mId').value=id;
-  mShape=t.shape||'round';mRot=parseInt(t.rotation)||0;
-  mHead=parseInt(t.head_chairs)||0;mColor=t.color||COLORS[0];
-  document.querySelectorAll('#shapePills .pill-opt').forEach(b=>b.classList.toggle('on',b.dataset.v===mShape));
-  document.querySelectorAll('#rotPills   .pill-opt').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.v)===mRot));
-  document.querySelectorAll('#headPills  .pill-opt').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.v)===mHead));
-  buildColorRow();updateModalShape();
-  $id('editModal').classList.add('open');
-}
-function closeModal(){$id('editModal').classList.remove('open')}
-
-function updateModalShape(){
-  const isLong=mShape==='long',isRound=(mShape==='round'||mShape==='oval');
-  $id('headRow').style.display=isLong?'block':'none';
-  $id('rotRow').style.display=(isRound||(mShape==='oval'))?'none':'block';
-  // rotRow set above with oval check
-  const hints={round:'seats around table',oval:'seats around table',rect:'seats total',long:'seats along sides (head chairs extra)'};
-  $id('capHint').textContent='('+hints[mShape]+')';
-  const capV=parseInt($id('mCap').value)||8;
-  $id('capLabel').textContent=capV+' seat'+(capV!==1?'s':'');
+  $('mName').value=t.name;$('mCap').value=t.capacity;$('mId').value=id;
+  mShape=(t.shape||'round').toLowerCase().replace(' ','');
+  if(mShape==='rectangular')mShape='rect';
+  mRot=parseInt(t.rotation)||0;
+  mHead=parseInt(t.head_chairs)||0;
+  mColor=t.color||COLORS[0];
+  document.querySelectorAll('#shapeOpts .popt').forEach(b=>b.classList.toggle('on',b.dataset.v===mShape));
+  document.querySelectorAll('#rotOpts   .popt').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.v)===mRot));
+  document.querySelectorAll('#headOpts  .popt').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.v)===mHead));
+  buildSwatches(); updateModalUI();
+  $('editModal').classList.add('open');
 }
 
-function pickShape(btn){
-  document.querySelectorAll('#shapePills .pill-opt').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');mShape=btn.dataset.v;updateModalShape();
+function updateModalUI(){
+  const isLong=mShape==='long';
+  const isCirc=mShape==='round'||mShape==='oval';
+  $('headRow').style.display=isLong?'block':'none';
+  $('rotRow').style.display=isCirc?'none':'block';
+  const hints={round:'around table',oval:'around table',rect:'total seats',long:'along sides'};
+  $('capHint').textContent='('+hints[mShape]+')';
 }
-function pickRot(btn){
-  document.querySelectorAll('#rotPills .pill-opt').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');mRot=parseInt(btn.dataset.v);
-}
-function pickHead(btn){
-  document.querySelectorAll('#headPills .pill-opt').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');mHead=parseInt(btn.dataset.v);
-}
-function pickColor(c,el){
-  mColor=c;
-  document.querySelectorAll('#colorRow .cswatch').forEach(s=>s.classList.remove('on'));
-  el.classList.add('on');
-}
-function adjCap(d){
-  const el=$id('mCap');
-  el.value=Math.max(1,Math.min(60,(parseInt(el.value)||8)+d));
-  $id('capLabel').textContent=el.value+' seat'+(el.value!=='1'?'s':'');
-}
+
+function closeModal(){$('editModal').classList.remove('open');}
+function pShape(btn){document.querySelectorAll('#shapeOpts .popt').forEach(b=>b.classList.remove('on'));btn.classList.add('on');mShape=btn.dataset.v;updateModalUI();}
+function pRot(btn){document.querySelectorAll('#rotOpts   .popt').forEach(b=>b.classList.remove('on'));btn.classList.add('on');mRot=parseInt(btn.dataset.v);}
+function pHead(btn){document.querySelectorAll('#headOpts  .popt').forEach(b=>b.classList.remove('on'));btn.classList.add('on');mHead=parseInt(btn.dataset.v);}
+function pColor(c,el){mColor=c;document.querySelectorAll('#colorOpts .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');}
+function adjCap(d){const el=$('mCap');el.value=Math.max(1,Math.min(60,(parseInt(el.value)||8)+d));}
 
 async function saveModal(){
-  const id=$id('mId').value;
-  const data={
-    name:$id('mName').value.trim(),
-    capacity:parseInt($id('mCap').value),
-    shape:mShape,color:mColor,rotation:mRot,head_chairs:mHead
-  };
-  // Try saving rotation/head_chairs, ignore error if columns don't exist yet
+  const id=$('mId').value;
+  const data={name:$('mName').value.trim(),capacity:parseInt($('mCap').value),
+    shape:mShape,color:mColor,rotation:mRot,head_chairs:mHead};
   try{await DB.patch(`seating_tables?id=eq.${id}`,data,tok);}
   catch(e){
-    const safeData={name:data.name,capacity:data.capacity,shape:data.shape,color:data.color};
-    await DB.patch(`seating_tables?id=eq.${id}`,safeData,tok);
-    Object.assign(data,safeData);
+    // Retry without new columns if they don't exist
+    await DB.patch(`seating_tables?id=eq.${id}`,
+      {name:data.name,capacity:data.capacity,shape:data.shape,color:data.color},tok);
   }
   const t=tables.find(x=>x.id===id);if(t)Object.assign(t,data);
   closeModal();render();renderTableList();toast('Saved ✓');
 }
 
 async function delTable(){
-  const id=$id('mId').value;
-  if(!confirm('Delete this table? Guests will be unassigned.'))return;
+  const id=$('mId').value;
+  if(!confirm('Delete table? Guests will be unassigned.'))return;
   for(const g of guests.filter(x=>x.table_id===id)){
-    await DB.patch(`guests?id=eq.${g.id}`,{table_id:null},tok);
     g.table_id=null;
+    await DB.patch(`guests?id=eq.${g.id}`,{table_id:null},tok);
+  }
+  // Also clear family members seated there
+  for(const g of guests){
+    const fam=getFam(g);let changed=false;
+    fam.forEach(m=>{if(m.table_id===id){delete m.table_id;changed=true;}});
+    if(changed){g.family_members=fam;await DB.patch(`guests?id=eq.${g.id}`,{family_members:fam},tok);}
   }
   await DB.del(`seating_tables?id=eq.${id}`,tok);
   tables=tables.filter(t=>t.id!==id);
@@ -1079,19 +822,17 @@ async function delTable(){
 }
 
 // ── Auto layout ──────────────────────────────────────────────────────────────
-function doAutoLayout(){
-  const cnv=$id('cnv');
-  const W=cnv.clientWidth-120,H=cnv.clientHeight-120;
+function autoLayout(){
+  const cnv=$('cnv');const W=cnv.clientWidth-160,H=cnv.clientHeight-160;
   const cols=Math.ceil(Math.sqrt(tables.length));
   tables.forEach((t,i)=>{
-    t.position_x=120+(i%cols)*Math.max(180,W/cols);
-    t.position_y=120+Math.floor(i/cols)*Math.max(200,H/Math.ceil(tables.length/cols));
+    t.position_x=140+(i%cols)*Math.max(180,W/cols);
+    t.position_y=140+Math.floor(i/cols)*Math.max(200,H/Math.ceil(tables.length/cols));
     schedSave(t,{position_x:t.position_x,position_y:t.position_y});
   });
   render();toast('Layout applied ✨');
 }
 
-// ── Save helper ──────────────────────────────────────────────────────────────
 function schedSave(t,fields){
   setSave('Saving…');clearTimeout(saveT);
   saveT=setTimeout(async()=>{
