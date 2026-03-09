@@ -265,14 +265,14 @@
     .fm-rsvp-btn.on-maybe{border-color:#c9a84c;background:#fdf9f0;color:#7a5000}
     .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-    /* known-field read-only display */
+    /* known-field — exactly matches finput height */
     .known-field{display:flex;align-items:center;gap:10px;
-      padding:12px 16px;border-radius:12px;border:1.5px solid #a0c8a0;
-      background:#f8fdf8;margin-bottom:16px}
-    .known-icon{font-size:18px;flex-shrink:0}
-    .known-val{font-size:14px;font-weight:600;color:#2a4a2a;flex:1}
-    .known-lbl{font-size:10px;color:#6a8a6a;text-transform:uppercase;letter-spacing:.08em}
-    .known-tick{font-size:16px;color:#2a7a2a}
+      padding:13px 16px;border-radius:12px;border:1.5px solid #a0c8a0;
+      background:#f8fdf8;margin-bottom:0;min-height:50px}
+    .known-icon{font-size:16px;flex-shrink:0;opacity:.7}
+    .known-val{font-size:15px;font-weight:600;color:#2a4a2a;flex:1;line-height:1.4}
+    .known-lbl{font-size:10px;color:#6a8a6a;text-transform:uppercase;letter-spacing:.08em;display:none}
+    .known-tick{font-size:14px;color:#2a7a2a;flex-shrink:0}
 
     /* skeleton */
     .skel{background:linear-gradient(90deg,#f0ece4 25%,#faf7f0 50%,#f0ece4 75%);
@@ -428,19 +428,15 @@
 
         <!-- Family members -->
         <div style="margin-top:4px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">
-              Family Members <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span>
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">
+              Family Members
             </div>
-            <button type="button" onclick="addRsvpMember(); this.style.transform='scale(.9)'; setTimeout(()=>this.style.transform='',150)"
-              style="padding:5px 12px;border-radius:8px;border:1.5px dashed var(--gold);
-              background:white;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;
-              font-weight:700;cursor:pointer">+ Add Member</button>
+            <div style="font-size:11px;color:var(--muted)">
+              Confirm attendance for each family member below
+            </div>
           </div>
           <div id="rsvpFamilyList" style="display:flex;flex-direction:column;gap:8px"></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px">
-            Add spouse, children, or other guests attending with you
-          </div>
         </div>
       </div>
 
@@ -620,21 +616,21 @@ function buildNameFields() {
   if(!guestId) {
     // No gid — new guest, ask for both first & last
     wrap.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div class="fgroup" style="margin-bottom:0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;align-items:end">
+        <div>
           <div class="flabel">First Name <span class="ftag ftag-req">Required</span></div>
-          <input class="finput" id="rFirst" placeholder="e.g. Jane" autocomplete="given-name">
+          <input class="finput" id="rFirst" placeholder="e.g. Jane" autocomplete="given-name" style="margin-bottom:0">
         </div>
-        <div class="fgroup" style="margin-bottom:0">
+        <div>
           <div class="flabel">Last Name <span class="ftag ftag-req">Required</span></div>
-          <input class="finput" id="rLast" placeholder="e.g. Smith" autocomplete="family-name">
+          <input class="finput" id="rLast" placeholder="e.g. Smith" autocomplete="family-name" style="margin-bottom:0">
         </div>
       </div>`;
     return;
   }
 
   // Has a guest record — show known name parts as locked, ask for missing parts
-  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">';
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;align-items:end">';
 
   // FIRST NAME
   if(knownFirst) {
@@ -643,7 +639,7 @@ function buildNameFields() {
         <div class="flabel">First Name <span class="ftag ftag-pre">✓ Confirmed</span></div>
         <div class="known-field">
           <span class="known-icon">👤</span>
-          <div><div class="known-val">${esc(knownFirst)}</div><div class="known-lbl">Added by couple</div></div>
+          <div class="known-val">${esc(knownFirst)}</div>
           <span class="known-tick">✓</span>
         </div>
         <input type="hidden" id="rFirst" value="${esc(knownFirst)}">
@@ -652,7 +648,7 @@ function buildNameFields() {
     html += `
       <div>
         <div class="flabel">First Name <span class="ftag ftag-req">Required</span></div>
-        <input class="finput" id="rFirst" placeholder="e.g. Jane" autocomplete="given-name">
+        <input class="finput" id="rFirst" placeholder="e.g. Jane" autocomplete="given-name" style="margin-bottom:0">
       </div>`;
   }
 
@@ -663,7 +659,7 @@ function buildNameFields() {
         <div class="flabel">Last Name <span class="ftag ftag-pre">✓ Confirmed</span></div>
         <div class="known-field">
           <span class="known-icon">👤</span>
-          <div><div class="known-val">${esc(knownLast)}</div><div class="known-lbl">Added by couple</div></div>
+          <div class="known-val">${esc(knownLast)}</div>
           <span class="known-tick">✓</span>
         </div>
         <input type="hidden" id="rLast" value="${esc(knownLast)}">
@@ -672,7 +668,7 @@ function buildNameFields() {
     html += `
       <div>
         <div class="flabel">Last Name <span class="ftag ftag-req">Required</span></div>
-        <input class="finput" id="rLast" placeholder="e.g. Smith" autocomplete="family-name">
+        <input class="finput" id="rLast" placeholder="e.g. Smith" autocomplete="family-name" style="margin-bottom:0">
       </div>`;
   }
 
