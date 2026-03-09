@@ -410,6 +410,10 @@
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="9" width="8" height="4" rx="1" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="5" r="1" fill="currentColor"/></svg>
         Print
       </button>
+      <button class="lp-btn" onclick="unassignAll()" style="margin-top:4px;color:#c04040;border-color:#fcc">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Unassign All
+      </button>
     </div>
 
     <div class="lp-divider"></div>
@@ -677,14 +681,16 @@ async function init(){
 }
 
 async function makeDefaults(){
+  const cnv=$('cnv');
+  const W=cnv.clientWidth||900, H=cnv.clientHeight||600;
+  const cx=W/2, cy=H/2;
   const defs=[
-    {name:'Top Table',shape:'long', px:320,py:130,cap:12},
-    {name:'Table 1', shape:'round',px:200,py:360,cap:8},
-    {name:'Table 2', shape:'round',px:470,py:360,cap:8},
+    {name:'Table 1',shape:'rect',px:cx-180,py:cy-20,cap:10},
+    {name:'Table 2',shape:'rect',px:cx+180,py:cy-20,cap:10},
   ];
   for(const d of defs){
     const r=await DB.post('seating_tables',{user_id:uid,name:d.name,capacity:d.cap,
-      shape:d.shape,position_x:d.px,position_y:d.py,color:'#C9A84C'},tok);
+      shape:d.shape,position_x:Math.round(d.px),position_y:Math.round(d.py),color:'#C9A84C'},tok);
     if(r)tables.push(r);
   }
 }
@@ -1243,7 +1249,7 @@ function addTable(shape){
   const n=tables.length+1;
   const names={round:'Table',oval:'Oval Table',rect:'Table',long:'Long Table'};
   $('ntName').value=names[ntShape]+' '+n;
-  $('ntCap').value=ntShape==='long'?12:8;
+  $('ntCap').value=ntShape==='rect'?10:8;
   // Set shape pills
   document.querySelectorAll('#ntShapeOpts .popt').forEach(b=>b.classList.toggle('on',b.dataset.v===ntShape));
   // Build colour swatches
@@ -1263,7 +1269,7 @@ function ntPickShape(btn){
   document.querySelectorAll('#ntShapeOpts .popt').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on'); ntShape=btn.dataset.v;
   $('ntHeadRow').style.display=ntShape==='long'?'block':'none';
-  $('ntCap').value=ntShape==='long'?12:8;
+  $('ntCap').value=ntShape==='rect'?10:8;
   ntUpdateHint(); ntDrawPreview();
 }
 function ntPickHead(btn){
@@ -1450,6 +1456,25 @@ function autoLayout(){
     schedSave(t,{position_x:t.position_x,position_y:t.position_y});
   });
   render();toast('Layout applied ✨');
+}
+
+async function unassignAll(){
+  const ok=await customConfirm('Remove all guest assignments? Tables stay, guests become unassigned.','Unassign All');
+  if(!ok)return;
+  setSave('Unassigning…');
+  for(const g of guests){
+    let changed=false;
+    if(g.table_id){g.table_id=null;changed=true;}
+    const fam=getFam(g);
+    fam.forEach(m=>{if(m.table_id){delete m.table_id;changed=true;}});
+    if(changed){
+      g.family_members=fam;
+      await DB.patch(`guests?id=eq.${g.id}`,{table_id:null,family_members:fam},tok);
+    }
+  }
+  setSave('All saved ✓');
+  render();renderSidebar();renderTableList();
+  toast('All guests unassigned');
 }
 
 function schedSave(t,fields){
