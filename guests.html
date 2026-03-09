@@ -1535,16 +1535,165 @@ function dlTemplate() {
 }
 
 function doExport() {
-  const hdr = ['Name','Email','Phone','RSVP','Group','Dietary','Plus One','Notes'];
-  const rows = [hdr.join(',')];
+  // Count helpers
+  function getFamSafe(g){
+    try{const f=g.family_members;return Array.isArray(f)?f:(f?JSON.parse(f):[]);}catch(e){return[];}
+  }
+  function personCount(g){ return 1 + getFamSafe(g).length; }
+
+  const SIDES = [
+    { key:'Bride Side',    label:"Bride's Family",   emoji:'💐', color:'#e8b4c8' },
+    { key:"Bride's Friend",label:"Bride's Friends",  emoji:'🌸', color:'#f5c6d8' },
+    { key:'Groom Side',    label:"Groom's Family",   emoji:'🤵', color:'#b4c8e8' },
+    { key:"Groom's Friend",label:"Groom's Friends",  emoji:'🎩', color:'#c6d8f5' },
+    { key:'Both Sides',    label:'Both Families',    emoji:'💑', color:'#d4e8d4' },
+    { key:'Other',         label:'Other Guests',     emoji:'👥', color:'#e8e0d0' },
+    { key:'',              label:'Unassigned',       emoji:'❓', color:'#f0ece4' },
+  ];
+
+  // Group guests
+  const byGroup = {};
+  SIDES.forEach(s => byGroup[s.key] = []);
   guests.forEach(g => {
-    const row = [g.name,g.email||'',g.phone||'',g.rsvp_status||'',g.group_label||'',
-      g.dietary||'',g.plus_one?'Yes':'No',g.notes||''];
-    rows.push(row.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(','));
+    const k = g.group_label || '';
+    if(byGroup[k] !== undefined) byGroup[k].push(g);
+    else byGroup[''].push(g);
   });
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));
-  a.download='WeddingLedger_Guests.csv'; a.click(); toast('📤 Exported!');
+
+  // Stats
+  const brideKeys = ['Bride Side', "Bride's Friend"];
+  const groomKeys = ['Groom Side', "Groom's Friend"];
+  const brideTotal = brideKeys.reduce((n,k)=> n + (byGroup[k]||[]).reduce((a,g)=>a+personCount(g),0), 0);
+  const groomTotal = groomKeys.reduce((n,k)=> n + (byGroup[k]||[]).reduce((a,g)=>a+personCount(g),0), 0);
+  const bothTotal  = (byGroup['Both Sides']||[]).reduce((a,g)=>a+personCount(g),0);
+  const grandTotal = guests.reduce((a,g)=>a+personCount(g),0);
+  const confirmedTotal = guests.filter(g=>g.rsvp_status==='confirmed').reduce((a,g)=>a+personCount(g),0);
+
+  // RSVP badge
+  function rsvpBadge(status){
+    const map={confirmed:'#2a7a2a:#e8f5e8:✓ Confirmed',pending:'#8a6020:#fff8e8:⏳ Pending',declined:'#c04040:#ffeaea:✗ Declined'};
+    const v=map[status]||'#8a7a60:#f5f0e8:— Unknown';
+    const [col,bg,txt]=v.split(':');
+    return `<span style="font-size:10px;padding:2px 7px;border-radius:99px;background:${bg};color:${col};font-weight:600;border:1px solid ${col}33">${txt}</span>`;
+  }
+
+  // Build section HTML
+  function buildSection(side, glist){
+    if(!glist.length) return '';
+    const total = glist.reduce((a,g)=>a+personCount(g),0);
+    const confirmed = glist.filter(g=>g.rsvp_status==='confirmed').reduce((a,g)=>a+personCount(g),0);
+    let rows = '';
+    glist.forEach(g => {
+      const fam = getFamSafe(g);
+      const contact = [g.email, g.phone].filter(Boolean).join(' · ') || '<span style="color:#aaa">No contact</span>';
+      const dietary = g.dietary ? `<br><span style="font-size:10px;color:#8a6020">🍽 ${g.dietary}</span>` : '';
+      const notes   = g.notes   ? `<br><span style="font-size:10px;color:#7a7060">📝 ${g.notes}</span>` : '';
+      // Main guest row
+      rows += `<tr>
+        <td style="padding:8px 10px;font-weight:700;font-size:13px;color:#2a2010;vertical-align:top">
+          ${g.name}${dietary}${notes}
+        </td>
+        <td style="padding:8px 10px;font-size:12px;color:#5a4a30;vertical-align:top">${contact}</td>
+        <td style="padding:8px 10px;vertical-align:top">${rsvpBadge(g.rsvp_status)}</td>
+        <td style="padding:8px 10px;font-size:12px;color:#8a7a60;vertical-align:top">${g.group_label||'—'}</td>
+      </tr>`;
+      // Family members
+      fam.forEach(m => {
+        const fname = ((m.first||'') + ' ' + (m.last||'')).trim() || 'Family member';
+        const fRsvp = m.rsvp || g.rsvp_status || 'pending';
+        rows += `<tr style="background:#faf8f4">
+          <td style="padding:5px 10px 5px 28px;font-size:12px;color:#5a4a30;vertical-align:top">
+            <span style="color:#C9A84C;margin-right:4px">↳</span>${fname}
+            <span style="font-size:10px;color:#aaa;margin-left:4px">${m.type||'family'}</span>
+          </td>
+          <td style="padding:5px 10px;font-size:11px;color:#aaa"></td>
+          <td style="padding:5px 10px">${rsvpBadge(fRsvp)}</td>
+          <td></td>
+        </tr>`;
+      });
+    });
+    return `
+      <div style="margin-bottom:32px;break-inside:avoid">
+        <div style="background:${side.color};border-radius:10px 10px 0 0;padding:12px 16px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:22px">${side.emoji}</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:#2a2010">${side.label}</div>
+            <div style="font-size:11px;color:#5a4a30;margin-top:1px">${total} people · ${confirmed} confirmed</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;border:1.5px solid #e8ddd0;border-top:none;border-radius:0 0 10px 10px;overflow:hidden">
+          <thead>
+            <tr style="background:#f5f0e8">
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:35%">Name</th>
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:30%">Contact</th>
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:15%">RSVP</th>
+              <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:20%">Group</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // Assemble full report
+  const sectionsHtml = SIDES.map(s => buildSection(s, byGroup[s.key]||[])).join('');
+  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Guest List — WeddingLedger</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@400;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Jost',sans-serif;background:white;color:#2a2010;padding:32px;max-width:900px;margin:0 auto}
+  @media print{body{padding:16px}@page{margin:1.5cm}}
+  tr:nth-child(even) td{background:#fdf9f5}
+</style>
+</head>
+<body>
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #C9A84C">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;font-style:italic;color:#2a2010;margin-bottom:6px">
+      Wedding<span style="color:#C9A84C">Ledger</span>
+    </div>
+    <div style="font-size:14px;color:#8a7a60">Guest List Export · ${today}</div>
+  </div>
+
+  <!-- Summary cards -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px">
+    <div style="background:#faf8f4;border:1.5px solid #e8ddd0;border-radius:10px;padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#C9A84C">${grandTotal}</div>
+      <div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Total Guests</div>
+    </div>
+    <div style="background:#fdf5f8;border:1.5px solid #e8c8d8;border-radius:10px;padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#c8608a">${brideTotal}</div>
+      <div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Bride's Side</div>
+    </div>
+    <div style="background:#f5f8fd;border:1.5px solid #c8d8e8;border-radius:10px;padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#4a78b0">${groomTotal}</div>
+      <div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Groom's Side</div>
+    </div>
+    <div style="background:#f5fdf5;border:1.5px solid #c8e8c8;border-radius:10px;padding:14px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#2a7a2a">${confirmedTotal}</div>
+      <div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Confirmed</div>
+    </div>
+  </div>
+
+  <!-- Sections by side -->
+  ${sectionsHtml}
+
+  <div style="text-align:center;margin-top:24px;font-size:11px;color:#aaa;padding-top:16px;border-top:1px solid #e8ddd0">
+    Generated by WeddingLedger · ${today}
+  </div>
+</body>
+</html>`;
+
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>win.print(), 600);
 }
 
 // ── UTILS ──────────────────────────────────────────────────────────────────────
