@@ -744,6 +744,18 @@ function renderList() {
   grid.innerHTML = html;
 }
 
+function tryParseJSON(v) {
+  try { return JSON.parse(v); } catch(e) { return []; }
+}
+function familyCount(g) {
+  const fam = Array.isArray(g.family_members) ? g.family_members
+    : (g.family_members ? tryParseJSON(g.family_members) : []);
+  return fam ? fam.length : 0;
+}
+function totalGuestCount() {
+  return guests.reduce((sum, g) => sum + 1 + familyCount(g), 0);
+}
+
 function buildCard(g) {
   const sc = {yes:'b-yes', no:'b-no', maybe:'b-maybe', pending:'b-pend'};
   const sl = {yes:'✅ Attending', no:'❌ Declined', maybe:'🤔 Maybe', pending:'⏳ Pending'};
@@ -794,12 +806,12 @@ function buildCard(g) {
 
 function updateStats() {
   const cnt = s => guests.filter(g => (g.rsvp_status||'pending') === s).length;
-  document.getElementById('sAll').textContent  = guests.length;
-  document.getElementById('sYes').textContent  = cnt('yes');
-  document.getElementById('sNo').textContent   = cnt('no');
-  document.getElementById('sPend').textContent = cnt('pending') + guests.filter(g=>!g.rsvp_status).length;
-  document.getElementById('sMaybe').textContent= cnt('maybe');
-  document.getElementById('sPlus').textContent = guests.filter(g=>g.plus_one).length;
+  document.getElementById('sAll').textContent   = totalGuestCount();
+  document.getElementById('sYes').textContent   = cnt('yes');
+  document.getElementById('sNo').textContent    = cnt('no');
+  document.getElementById('sPend').textContent  = cnt('pending') + guests.filter(g=>!g.rsvp_status).length;
+  document.getElementById('sMaybe').textContent = cnt('maybe');
+  document.getElementById('sPlus').textContent  = guests.reduce((s,g)=>s+familyCount(g),0);
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
@@ -872,7 +884,7 @@ function updateModalAvatar() {
 
 // ── ADD / EDIT ────────────────────────────────────────────────────────────────
 function clearForm() {
-  ['fFirst','fLast','fDiet','fNotes','fPlusName','fEmail','fPhone'].forEach(id => {
+  ['fFirst','fLast','fDiet','fNotes','fEmail','fPhone'].forEach(id => {
     const e = document.getElementById(id); if(e) e.value = '';
   });
   document.getElementById('fRsvp').value  = 'pending';
@@ -892,11 +904,16 @@ function clearForm() {
   const lbl=document.getElementById('modalAvatarName'); if(lbl) lbl.textContent='New Guest';
 }
 function openAdd() {
-  document.getElementById('editTitle').textContent = 'Add Guest';
-  clearForm();
-  showTab('info');
-  updateModalAvatar();
-  document.getElementById('editModal').style.display = 'flex';
+  try {
+    document.getElementById('editTitle').textContent = 'Add Guest';
+    clearForm();
+    showTab('info');
+    updateModalAvatar();
+    document.getElementById('editModal').style.display = 'flex';
+  } catch(e) {
+    console.error('openAdd error:', e);
+    alert('Error opening modal: ' + e.message);
+  }
 }
 function editGuest(id) {
   const g = guests.find(x => x.id === id);
