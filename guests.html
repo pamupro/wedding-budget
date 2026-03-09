@@ -322,7 +322,7 @@
 </main>
 
 <!-- ADD/EDIT MODAL — redesigned -->
-<div class="modal-overlay" id="editModal" style="display:none" onclick="if(event.target===this)closeEdit()">
+<div class="modal-overlay" id="editModal" style="display:none" onclick="if(event.target===this)closeEditSafe()">
   <div class="gmodal">
     <!-- Left accent strip with avatar -->
     <div class="gmodal-aside">
@@ -804,7 +804,7 @@ function getFam(g) {
 function familyCount(g, rsvpFilter) {
   const fam = getFam(g);
   if(!fam || !fam.length) return 0;
-  if(rsvpFilter) return fam.filter(m => (m.rsvp||'yes') === rsvpFilter).length;
+  if(rsvpFilter) return fam.filter(m => (m.rsvp||'pending') === rsvpFilter).length;
   return fam.length;
 }
 function totalGuestCount() {
@@ -829,7 +829,7 @@ function buildCard(g) {
     fam.forEach(m => {
       const fn = [m.first, m.last].filter(Boolean).join(' ');
       const tag  = m.type==='spouse'?'💑':m.type==='child'?'👶':'👤';
-      const rsvpIcon = m.rsvp==='yes'?'✅':m.rsvp==='no'?'❌':m.rsvp==='maybe'?'🤔':'⏳';
+      const rsvpIcon = m.rsvp==='yes'?'✅':m.rsvp==='no'?'❌':m.rsvp==='maybe'?'🤔':'⏳'; // pending/unset = hourglass
       const rsvpStyle = m.rsvp==='yes'?'background:#e8f5e8;color:#1a5a1a'
         :m.rsvp==='no'?'background:#fde8e8;color:#7a1a1a'
         :m.rsvp==='maybe'?'background:#fdf9e8;color:#7a5000'
@@ -874,7 +874,7 @@ function updateStats() {
       // Each family member counted by their OWN rsvp, independent of main guest
       const fam = getFam(g);
       fam.forEach(m => {
-        if((m.rsvp||'yes') === status) total++;
+        if((m.rsvp||'pending') === status) total++;
       });
     });
     return total;
@@ -991,6 +991,49 @@ function clearForm() {
   const av=document.getElementById('modalAvatar'); if(av) av.textContent='?';
   const lbl=document.getElementById('modalAvatarName'); if(lbl) lbl.textContent='New Guest';
 }
+function closeEditSafe() {
+  const isAdding = document.getElementById('editTitle')?.textContent === 'Add Guest';
+  const hasData  = (document.getElementById('fFirst')?.value||'').trim() ||
+                   (document.getElementById('fLast')?.value||'').trim();
+  if(isAdding && hasData) {
+    // Show inline warning instead of closing
+    showAddWarning();
+    return;
+  }
+  closeEdit();
+}
+
+function showAddWarning() {
+  let warn = document.getElementById('addCloseWarn');
+  if(!warn) {
+    warn = document.createElement('div');
+    warn.id = 'addCloseWarn';
+    warn.style.cssText = [
+      'position:fixed','bottom:90px','left:50%','transform:translateX(-50%)',
+      'background:#3d2e1a','color:white','border:1px solid rgba(201,168,76,.5)',
+      'border-radius:12px','padding:14px 20px','font-size:13px',
+      'z-index:10001','text-align:center','box-shadow:0 8px 32px rgba(0,0,0,.4)',
+      'animation:fadeUp .2s ease','max-width:300px','line-height:1.5'
+    ].join(';');
+    warn.innerHTML = `
+      <div style="margin-bottom:10px">⚠️ You have unsaved guest info.<br>Are you sure you want to close?</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button onclick="document.getElementById('addCloseWarn').remove()" 
+          style="padding:6px 16px;border-radius:8px;border:1px solid rgba(201,168,76,.5);
+          background:transparent;color:#C9A84C;cursor:pointer;font-size:12px;font-family:inherit">
+          Keep editing
+        </button>
+        <button onclick="document.getElementById('addCloseWarn').remove();closeEdit()"
+          style="padding:6px 16px;border-radius:8px;border:none;
+          background:#c04040;color:white;cursor:pointer;font-size:12px;font-family:inherit">
+          Discard
+        </button>
+      </div>`;
+    document.body.appendChild(warn);
+    setTimeout(() => warn?.remove(), 8000);
+  }
+}
+
 function openAdd() {
   try {
     document.getElementById('editTitle').textContent = 'Add Guest';
