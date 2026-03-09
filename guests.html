@@ -1151,7 +1151,7 @@ const WA_TPL   = 'Hi {name}! \uD83C\uDF8A\n\nYou are warmly invited to our weddi
 const EM_SUBJ  = '{couple} Wedding Invitation \uD83D\uDC8D';
 const EM_BODY  = 'Hi {name},\n\nWe would love for you to join us to celebrate our wedding!\n\n\uD83D\uDCC5 {date}\n\nPlease RSVP here:\n{rsvp_url}\n\nWith so much love,\n{couple}';
 
-function copyRsvpLink(gid) {
+async function copyRsvpLink(gid) {
   const g = guests.find(x => x.id === gid);
   if(!g) return;
   const url = rsvpUrl(g);
@@ -1171,11 +1171,33 @@ function copyRsvpLink(gid) {
 }
 
 function rsvpUrl(g) {
-  // Use guest ID so the RSVP page patches the exact record — no duplicates
-  const sl   = prof.page_slug;
+  if(g && g.link_code)
+    return 'https://pamupro.github.io/wedding-budget/r/?c='+g.link_code;
+  // fallback to long URL
+  const sl = prof?.page_slug;
   if(!sl) return 'https://pamupro.github.io/wedding-budget/';
   const base = 'https://pamupro.github.io/wedding-budget/wedding.html?slug='+sl;
   return g && g.id ? base+'&gid='+g.id : base;
+}
+
+// Generate a short code for a guest if they don't have one
+function makeCode(g) {
+  // e.g. "chamo-pamu" slug + guest first name + 4 random chars
+  const slug  = (prof?.page_slug || 'wl').split('-').map(w=>w[0]).join(''); // e.g. "cp"
+  const first = (g.name || '').split(' ')[0].toLowerCase().replace(/[^a-z]/g,'').slice(0,4);
+  const rand  = Math.random().toString(36).slice(2,6);
+  return (slug+'-'+first+rand).slice(0,20);
+}
+
+async function ensureShortLink(g) {
+  if(g.link_code) return g.link_code;
+  const code = makeCode(g);
+  const tok  = getTok();
+  try {
+    await sbPatch('guests?id=eq.'+g.id, { link_code: code }, tok);
+    g.link_code = code;
+  } catch(e) { console.error('ensureShortLink', e); }
+  return g.link_code || null;
 }
 function fillTpl(tpl, g) {
   const couple = [prof.name1, prof.name2].filter(Boolean).join(' & ') || 'The Couple';
