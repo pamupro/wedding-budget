@@ -122,6 +122,7 @@
       transition:box-shadow .2s;position:relative;
     }
     .tshape.round{border-radius:50%}
+    .tshape.oval{border-radius:50%}
     .tshape.rect{border-radius:10px}
     .tshape.long{border-radius:8px}
     .t-name{
@@ -379,6 +380,12 @@
         </svg> Round
       </button>
       <div class="add-bar-divider"></div>
+      <button class="add-btn" onclick="addTable('oval')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <ellipse cx="8" cy="8" rx="7" ry="4.5" stroke="currentColor" stroke-width="1.5"/>
+        </svg> Oval
+      </button>
+      <div class="add-bar-divider"></div>
       <button class="add-btn" onclick="addTable('rect')">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <rect x="1.5" y="4.5" width="13" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
@@ -429,6 +436,7 @@
       <label class="m-label">Shape</label>
       <div class="pill-group" id="shapePills">
         <button class="pill-opt on" data-v="round" onclick="pickShape(this)">⭕ Round</button>
+        <button class="pill-opt"    data-v="oval"  onclick="pickShape(this)">⬭ Oval</button>
         <button class="pill-opt"    data-v="rect"  onclick="pickShape(this)">▭ Rectangle</button>
         <button class="pill-opt"    data-v="long"  onclick="pickShape(this)">═ Long</button>
       </div>
@@ -536,6 +544,7 @@ function tSize(t){
   const cap=parseInt(t.capacity)||8;
   const sh=t.shape||'round';
   if(sh==='round'){const s=Math.max(86,Math.min(148,68+cap*5));return{w:s,h:s};}
+  if(sh==='oval'){const w=Math.max(110,Math.min(200,80+cap*8));return{w,h:Math.round(w*.62)};}
   if(sh==='long'){const w=Math.max(150,Math.min(310,90+cap*15));return{w,h:64};}
   const w=Math.max(105,Math.min(190,78+cap*6));return{w,h:Math.round(w*.62)};
 }
@@ -565,7 +574,7 @@ function render(){
     node.style.cssText=`left:${t.position_x}px;top:${t.position_y}px`;
 
     // Rotate handle
-    const rotHandle=(isSel&&sh!=='round')
+    const rotHandle=(isSel&&sh!=='round'&&sh!=='oval')
       ?`<button class="rot-btn" title="Rotate 90°" onclick="event.stopPropagation();qRot('${t.id}')">↻</button>`:'';
 
     // Guest chips
@@ -657,7 +666,12 @@ function resetView(){scale=1;panX=0;panY=0;applyTransform();}
 function setupDrop(){
   document.addEventListener('dragstart',e=>{
     if(e.target.classList.contains('gchip')){
-      dragGid=e.target.dataset.id;e.target.classList.add('drag');
+      dragGid=e.target.dataset.id;
+      e.target.classList.add('drag');
+      // If dragging a family member chip, highlight the main guest chip too
+      if(e.target.dataset.fam) {
+        document.querySelectorAll(`.gchip[data-id="${dragGid}"]`).forEach(el=>el.classList.add('drag'));
+      }
     }
   });
   document.addEventListener('dragend',e=>{
@@ -709,6 +723,7 @@ function renderSidebar(){
   const solo   =unassigned.filter(g=>getFam(g).length===0);
   let html='';
 
+  // All unassigned family guests (main guest not seated)
   withFam.forEach(g=>{
     const fam=getFam(g);
     const ini=(g.name||'?').charAt(0).toUpperCase();
@@ -722,15 +737,17 @@ function renderSidebar(){
         <div class="gchip" draggable="true" data-id="${g.id}">
           <div style="flex:1">
             <div style="font-weight:600;font-size:12px">${esc(g.name)}</div>
-            <div style="font-size:10px;color:var(--muted)">Main guest</div>
+            <div style="font-size:10px;color:var(--muted)">Main guest · drag to seat all</div>
           </div>
         </div>
         ${fam.map(m=>{
           const fn=((m.first||'')+' '+(m.last||'')).trim()||'Family member';
-          return`<div class="gchip gchip-sub">
+          const rsvpIco=m.rsvp==='yes'?'✅':m.rsvp==='no'?'❌':m.rsvp==='maybe'?'🤔':'⏳';
+          return`<div class="gchip gchip-sub" draggable="true" data-id="${g.id}" data-fam="1"
+            title="Drag to seat whole family group">
             <div style="flex:1">
               <div style="font-weight:500;font-size:12px">${esc(fn)}</div>
-              <div style="font-size:10px;color:var(--muted)">${esc(m.type||'family')}</div>
+              <div style="font-size:10px;color:var(--muted)">${rsvpIco} ${esc(m.type||'family')}</div>
             </div>
           </div>`;
         }).join('')}
@@ -816,7 +833,7 @@ async function addTable(shape){
   const py=Math.max(80,(cnv.clientHeight/2-panY)/scale+(Math.random()-.5)*160);
   const cap=shape==='long'?12:8;
   const num=tables.length+1;
-  const names={round:'Table',rect:'Table',long:'Long Table'};
+  const names={round:'Table',oval:'Oval Table',rect:'Table',long:'Long Table'};
   const row={user_id:uid,name:names[shape]+' '+num,capacity:cap,shape,
     position_x:Math.round(px),position_y:Math.round(py),color:COLORS[0]};
   const r=await DB.post('seating_tables',row,tok);
@@ -847,10 +864,11 @@ function openModal(id){
 function closeModal(){$id('editModal').classList.remove('open')}
 
 function updateModalShape(){
-  const isLong=mShape==='long',isRound=mShape==='round';
+  const isLong=mShape==='long',isRound=(mShape==='round'||mShape==='oval');
   $id('headRow').style.display=isLong?'block':'none';
-  $id('rotRow').style.display =isRound?'none':'block';
-  const hints={round:'seats around table',rect:'seats total',long:'seats along sides'};
+  $id('rotRow').style.display=(isRound||(mShape==='oval'))?'none':'block';
+  // rotRow set above with oval check
+  const hints={round:'seats around table',oval:'seats around table',rect:'seats total',long:'seats along sides (head chairs extra)'};
   $id('capHint').textContent='('+hints[mShape]+')';
   const capV=parseInt($id('mCap').value)||8;
   $id('capLabel').textContent=capV+' seat'+(capV!==1?'s':'');
