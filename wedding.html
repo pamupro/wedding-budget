@@ -99,6 +99,14 @@
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7a60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
       background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
     .fhint{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.4}
+    .rfmrow{display:flex;align-items:center;gap:8px;background:#faf7f0;border-radius:10px;
+      padding:9px 10px;border:1.5px solid #e8e0d0}
+    .rfmrow input,.rfmrow select{flex:1;min-width:0;padding:10px 12px;border:1.5px solid #e8e0d0;
+      border-radius:10px;font-family:'Jost',sans-serif;font-size:16px;background:white;outline:none;color:var(--dark)}
+    .rfmrow input:focus,.rfmrow select:focus{border-color:var(--gold)}
+    .rfm-del{width:34px;height:34px;border-radius:8px;border:none;background:#fff0f0;
+      color:#c04040;cursor:pointer;font-size:16px;display:flex;align-items:center;
+      justify-content:center;flex-shrink:0}
     .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
     /* known-field read-only display */
@@ -242,15 +250,21 @@
           <div id="menuChoices"></div>
         </div>
 
-        <!-- +1 -->
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;
-          font-weight:500;padding:4px 0;margin-bottom:4px">
-          <input type="checkbox" id="rPlus" onchange="togglePlus()"
-            style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;flex-shrink:0">
-          Bringing a +1 guest?
-        </label>
-        <div id="plusNameRow" style="display:none;margin-top:8px;margin-bottom:8px">
-          <input class="finput" id="rPlusName" placeholder="+1 guest full name">
+        <!-- Family members -->
+        <div style="margin-top:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">
+              Family Members <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span>
+            </div>
+            <button type="button" onclick="addRsvpMember()"
+              style="padding:5px 12px;border-radius:8px;border:1.5px dashed var(--gold);
+              background:white;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;
+              font-weight:700;cursor:pointer">+ Add Member</button>
+          </div>
+          <div id="rsvpFamilyList" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">
+            Add spouse, children, or other guests attending with you
+          </div>
         </div>
       </div>
 
@@ -362,10 +376,21 @@ async function loadGuest(gid) {
   // Pre-fill optional fields
   if(g.dietary)       document.getElementById('rDietary').value    = g.dietary;
   if(g.notes)         document.getElementById('rMsg').value        = g.notes;
-  if(g.plus_one) {
-    document.getElementById('rPlus').checked = true;
-    document.getElementById('plusNameRow').style.display = 'block';
-    if(g.plus_one_name) document.getElementById('rPlusName').value = g.plus_one_name;
+  // Pre-fill family members
+  if(g.family_members) {
+    try {
+      const fam = Array.isArray(g.family_members) ? g.family_members : JSON.parse(g.family_members);
+      fam.forEach(m => addRsvpMember(m));
+    } catch(e) {
+      // Migrate old plus_one
+      if(g.plus_one && g.plus_one_name) {
+        const parts = (g.plus_one_name||'').split(' ');
+        addRsvpMember({first:parts[0]||'', last:parts.slice(1).join(' ')||'', type:'spouse'});
+      }
+    }
+  } else if(g.plus_one && g.plus_one_name) {
+    const parts = (g.plus_one_name||'').split(' ');
+    addRsvpMember({first:parts[0]||'', last:parts.slice(1).join(' ')||'', type:'spouse'});
   }
   if(g.rsvp_status && g.rsvp_status !== 'pending') {
     pickAtt(g.rsvp_status === 'yes' ? 'yes' : 'no');
@@ -525,9 +550,33 @@ function pickAtt(s) {
   document.getElementById('attendingFields').style.display = s==='yes' ? 'block' : 'none';
 }
 
-function togglePlus() {
-  document.getElementById('plusNameRow').style.display =
-    document.getElementById('rPlus').checked ? 'block' : 'none';
+// ── Family members on RSVP form ──────────────────────────────────────────────
+let rsvpFamily = [];
+
+function addRsvpMember(data) {
+  rsvpFamily.push(data || {first:'', last:'', type:'spouse'});
+  renderRsvpFamily();
+}
+function removeRsvpMember(i) {
+  rsvpFamily.splice(i,1);
+  renderRsvpFamily();
+}
+function renderRsvpFamily() {
+  const wrap = document.getElementById('rsvpFamilyList');
+  if(!wrap) return;
+  wrap.innerHTML = rsvpFamily.map((m,i)=>`
+    <div class="rfmrow">
+      <input placeholder="First name" value="${(m.first||'').replace(/"/g,'&quot;')}"
+        oninput="rsvpFamily[${i}].first=this.value" style="flex:1.2">
+      <input placeholder="Last name"  value="${(m.last||'').replace(/"/g,'&quot;')}"
+        oninput="rsvpFamily[${i}].last=this.value" style="flex:1.2">
+      <select onchange="rsvpFamily[${i}].type=this.value" style="flex:.9">
+        <option value="spouse" ${m.type==='spouse'?'selected':''}>💑 Spouse</option>
+        <option value="child"  ${m.type==='child' ?'selected':''}>👶 Child</option>
+        <option value="other"  ${m.type==='other' ?'selected':''}>👤 Other</option>
+      </select>
+      <button class="rfm-del" onclick="removeRsvpMember(${i})">✕</button>
+    </div>`).join('');
 }
 
 function buildMenuChoices() {
@@ -640,8 +689,9 @@ async function submitRsvp() {
     phone,
     rsvp_status:   rsvpChoice,
     dietary:       rsvpChoice==='yes' ? (document.getElementById('rDietary')?.value.trim()||null) : null,
-    plus_one:      rsvpChoice==='yes' && document.getElementById('rPlus').checked,
-    plus_one_name: rsvpChoice==='yes' ? (document.getElementById('rPlusName')?.value.trim()||null) : null,
+    family_members: rsvpChoice==='yes' ? rsvpFamily.filter(m=>m.first||m.last) : [],
+    plus_one:       rsvpChoice==='yes' && rsvpFamily.filter(m=>m.first||m.last).length > 0,
+    plus_one_name:  rsvpChoice==='yes' ? rsvpFamily.filter(m=>m.first||m.last).map(m=>[m.first,m.last].filter(Boolean).join(' ')).join(', ')||null : null,
     notes:         document.getElementById('rMsg').value.trim() || null,
     responded_at:  new Date().toISOString(),
     ...mealData
