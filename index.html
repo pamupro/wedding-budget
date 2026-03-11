@@ -424,35 +424,965 @@ footer p{font-size:12px;color:var(--muted)}
 </section>
 
 <!-- ── HOW IT WORKS ── -->
-<section class="how" id="how">
-  <div class="how-inner">
-    <div class="section-tag">Simple as it should be</div>
-    <h2 class="section-title" style="color:var(--cream)">Up and running in<br><em style="color:var(--gold2)">under two minutes</em></h2>
-    <p class="section-sub">No tutorials. No onboarding calls. Just your wedding, beautifully organised.</p>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-title">Create your account</div>
-        <div class="step-desc">Sign up free — just your email and your wedding date. No credit card, no commitment.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-title">Add your vendors</div>
-        <div class="step-desc">Photographer, caterer, venue, florist — add each one with their quote and track every payment as you go.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">Build your guest list</div>
-        <div class="step-desc">Add guests with family members, sides, dietary needs. Send RSVP links and watch responses come in.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-title">Walk down the aisle</div>
-        <div class="step-desc">On the day, everything's accounted for. No last-minute surprises, no unpaid invoices, just your perfect day.</div>
-      </div>
+<!-- ── ANIMATED HOW IT WORKS ── -->
+<style>
+/* ─── Demo section wrapper ─── */
+.demo-section{padding:100px 24px;background:var(--ink);overflow:hidden}
+.demo-inner{max-width:1100px;margin:0 auto}
+.demo-section .section-tag{color:var(--gold2);text-align:center}
+.demo-section .section-title{color:var(--cream);text-align:center;margin-bottom:12px}
+.demo-section .section-title em{color:var(--gold2);font-style:italic}
+.demo-section .section-sub{color:rgba(253,249,244,.45);text-align:center;
+  max-width:500px;margin:0 auto 72px;font-weight:300;font-size:15px;line-height:1.7}
+
+/* ─── Tab pills ─── */
+.demo-tabs{display:flex;justify-content:center;gap:8px;margin-bottom:56px;flex-wrap:wrap}
+.demo-tab{padding:10px 22px;border-radius:99px;border:1.5px solid rgba(255,255,255,.12);
+  background:transparent;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;
+  color:rgba(255,255,255,.4);cursor:pointer;transition:.25s;white-space:nowrap}
+.demo-tab:hover{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7)}
+.demo-tab.active{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+
+/* ─── Demo panel ─── */
+.demo-panels{position:relative}
+.demo-panel{display:none;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.demo-panel.active{display:grid;animation:panelIn .45s ease both}
+@keyframes panelIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:820px){.demo-panel.active{grid-template-columns:1fr}}
+
+.demo-copy .demo-step-tag{font-size:10px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold2);margin-bottom:14px}
+.demo-copy h3{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,3vw,42px);
+  font-weight:400;color:var(--cream);margin-bottom:16px;line-height:1.15}
+.demo-copy h3 em{font-style:italic;color:var(--gold2)}
+.demo-copy p{font-size:14px;color:rgba(253,249,244,.5);line-height:1.8;margin-bottom:24px;font-weight:300}
+.demo-bullets{list-style:none;display:flex;flex-direction:column;gap:10px}
+.demo-bullets li{font-size:13px;color:rgba(253,249,244,.6);display:flex;align-items:flex-start;gap:10px;line-height:1.5}
+.demo-bullets li::before{content:'✦';color:var(--gold2);flex-shrink:0;margin-top:1px;font-size:10px}
+
+/* ─── Screen mockup ─── */
+.demo-screen{background:#111009;border-radius:16px;border:1.5px solid rgba(255,255,255,.08);
+  overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.ds-bar{background:#0a0906;padding:10px 14px;display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid rgba(255,255,255,.06)}
+.ds-dots{display:flex;gap:5px}
+.ds-dot{width:9px;height:9px;border-radius:50%}
+.ds-url{flex:1;background:rgba(255,255,255,.05);border-radius:5px;
+  padding:4px 10px;font-size:10px;color:rgba(255,255,255,.2);font-family:monospace}
+.ds-body{padding:16px}
+
+/* ══════════════════════════════════════════
+   PANEL 1 — BUDGET TRACKER
+══════════════════════════════════════════ */
+.budget-demo{}
+.bd-total{background:rgba(184,146,46,.1);border:1px solid rgba(184,146,46,.25);
+  border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.bd-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bd-label{font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.bd-amount{font-size:22px;font-weight:700;color:#d4a843;font-family:'Jost',sans-serif}
+.bd-track{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.bd-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#b8922e,#d4a843);
+  width:0%;transition:width 1.4s cubic-bezier(.4,0,.2,1)}
+.bd-fill.go{width:74%}
+.bd-subrow{display:flex;justify-content:space-between;margin-top:6px}
+.bd-sub{font-size:10px;color:rgba(255,255,255,.25)}
+
+.bd-vendors{display:flex;flex-direction:column;gap:7px}
+.bd-vendor{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:10px;
+  opacity:0;transform:translateX(-10px);transition:all .4s ease}
+.bd-vendor.show{opacity:1;transform:translateX(0)}
+.bd-vic{font-size:16px}
+.bd-vname{font-size:11px;font-weight:700;color:rgba(255,255,255,.8);flex:1}
+.bd-vcat{font-size:9px;color:rgba(255,255,255,.3)}
+.bd-vpill{font-size:9px;padding:3px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.bd-vpill.paid{background:rgba(74,180,74,.15);color:#6ee06e;border:1px solid rgba(74,180,74,.25)}
+.bd-vpill.part{background:rgba(230,180,60,.15);color:#e6c43c;border:1px solid rgba(230,180,60,.25)}
+.bd-vpill.due{background:rgba(220,80,80,.15);color:#f08080;border:1px solid rgba(220,80,80,.25)}
+.bd-vamt{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);min-width:44px;text-align:right}
+
+/* ══════════════════════════════════════════
+   PANEL 2 — GUEST LIST
+══════════════════════════════════════════ */
+.guest-demo{}
+.gd-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.gd-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:10px;text-align:center}
+.gd-stat-n{font-size:20px;font-weight:700;color:#d4a843;font-family:'Jost',sans-serif}
+.gd-stat-l{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.gd-rows{display:flex;flex-direction:column;gap:6px}
+.gd-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:10px;
+  opacity:0;transition:all .4s ease;transform:translateY(6px)}
+.gd-row.show{opacity:1;transform:translateY(0)}
+.gd-av{width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.gd-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.8);flex:1}
+.gd-side{font-size:9px;color:rgba(255,255,255,.3);margin-top:1px}
+.gd-rsvp{font-size:9px;padding:3px 8px;border-radius:99px;font-weight:700}
+.gd-rsvp.yes{background:rgba(74,180,74,.15);color:#6ee06e;border:1px solid rgba(74,180,74,.25)}
+.gd-rsvp.pend{background:rgba(230,180,60,.15);color:#e6c43c;border:1px solid rgba(230,180,60,.25)}
+.gd-rsvp.no{background:rgba(220,80,80,.15);color:#f08080;border:1px solid rgba(220,80,80,.25)}
+.gd-count{font-size:10px;color:rgba(255,255,255,.25)}
+
+/* ══════════════════════════════════════════
+   PANEL 3 — SEATING
+══════════════════════════════════════════ */
+.seat-demo{padding:4px}
+.seat-canvas{position:relative;height:200px;background:rgba(255,255,255,.02);
+  border-radius:10px;margin-bottom:12px;overflow:hidden}
+.seat-table{position:absolute;border-radius:50%;border:2px solid rgba(184,146,46,.5);
+  background:rgba(184,146,46,.06);display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:rgba(255,255,255,.4);font-weight:700;transition:.6s ease;
+  flex-direction:column;gap:2px}
+.seat-table.rect{border-radius:10px}
+.seat-chair{position:absolute;width:20px;height:20px;border-radius:50%;
+  border:1.5px solid rgba(184,146,46,.4);background:rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:center;
+  font-size:7px;font-weight:700;color:transparent;
+  transition:all .5s ease}
+.seat-chair.filled{background:#b8922e;color:white;border-color:#b8922e;
+  font-size:7px;padding:0 2px;border-radius:99px;width:auto;min-width:20px;padding:0 4px}
+.seat-guest-chip{position:absolute;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);border-radius:7px;
+  padding:5px 8px;font-size:9px;color:rgba(255,255,255,.6);font-weight:600;
+  cursor:grab;transition:.3s;white-space:nowrap}
+.seat-guest-chip.dragging{opacity:.3;transform:scale(.95)}
+.seat-ghost{position:fixed;background:white;border:2px solid #b8922e;border-radius:8px;
+  padding:5px 10px;font-size:11px;font-weight:700;color:#1a1610;
+  pointer-events:none;z-index:9999;display:none;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+/* ══════════════════════════════════════════
+   PANEL 4 — RSVP
+══════════════════════════════════════════ */
+.rsvp-demo{}
+.rsvp-phone{width:180px;margin:0 auto;background:#1a1a2e;border-radius:20px;
+  border:2px solid rgba(255,255,255,.1);overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.rsvp-ph-bar{background:#111;padding:8px 14px;font-size:9px;color:rgba(255,255,255,.2);
+  text-align:center}
+.rsvp-ph-body{padding:12px;background:white}
+.rsvp-ph-logo{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;
+  text-align:center;color:#1a1610;margin-bottom:8px;font-weight:600}
+.rsvp-ph-logo span{color:#b8922e}
+.rsvp-ph-invite{background:#fdf9f4;border-radius:8px;padding:10px;margin-bottom:10px;
+  text-align:center;border:1px solid #e8ddd0}
+.rsvp-ph-couple{font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;color:#1a1610}
+.rsvp-ph-date{font-size:9px;color:#8a7a60;margin-top:2px}
+.rsvp-ph-q{font-size:10px;font-weight:700;color:#1a1610;margin-bottom:8px;text-align:center}
+.rsvp-ph-btns{display:flex;gap:6px;margin-bottom:10px}
+.rsvp-ph-btn{flex:1;padding:7px;border-radius:8px;font-size:10px;font-weight:700;
+  text-align:center;cursor:pointer;border:none;transition:.2s}
+.rsvp-ph-btn.yes{background:#1a1610;color:white}
+.rsvp-ph-btn.yes.selected,.rsvp-ph-btn.yes:hover{background:#2a7a2a}
+.rsvp-ph-btn.no{background:#f5f0e8;color:#8a7a60}
+.rsvp-ph-btn.no.selected,.rsvp-ph-btn.no:hover{background:#c04040;color:white}
+.rsvp-ph-confirm{background:#2a7a2a;color:white;border-radius:8px;padding:7px;
+  font-size:10px;font-weight:700;text-align:center;display:none;animation:popIn .3s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.rsvp-notif{background:rgba(74,180,74,.12);border:1px solid rgba(74,180,74,.25);
+  border-radius:9px;padding:10px 12px;margin-top:12px;
+  display:flex;align-items:center;gap:8px;opacity:0;transition:.4s}
+.rsvp-notif.show{opacity:1}
+.rsvp-notif-txt{font-size:11px;color:rgba(255,255,255,.7)}
+.rsvp-notif-txt strong{color:#6ee06e;display:block;font-size:12px}
+.rsvp-notif-icon{font-size:18px}
+.rsvp-counter{display:flex;gap:10px;margin-top:10px}
+.rsvp-count-card{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:8px;padding:8px;text-align:center}
+.rsvp-count-n{font-size:18px;font-weight:700;color:#d4a843;font-family:'Jost',sans-serif;
+  transition:.6s}
+.rsvp-count-l{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em;margin-top:1px}
+</style>
+
+<!-- ── ANIMATED DEMO SECTION ── -->
+<style>
+/* ─────────────────────────────────────
+   DEMO WRAPPER
+───────────────────────────────────── */
+.demo-section{padding:110px 24px;background:#141210;overflow:hidden;position:relative}
+.demo-section::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 50%, rgba(184,146,46,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 30%, rgba(160,80,96,.05) 0%, transparent 55%);
+}
+.demo-inner{max-width:1120px;margin:0 auto;position:relative}
+
+.demo-section .stag{
+  font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:#b8922e;text-align:center;margin-bottom:14px;display:block
+}
+.demo-section .stitle{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5.5vw,62px);
+  font-weight:400;line-height:1.05;text-align:center;color:#fdf9f4;margin-bottom:14px
+}
+.demo-section .stitle em{font-style:italic;color:#d4a843}
+.demo-section .ssub{
+  text-align:center;color:rgba(253,249,244,.38);font-size:15px;
+  max-width:480px;margin:0 auto 60px;line-height:1.75;font-weight:300
+}
+
+/* ─────────────────────────────────────
+   TAB BAR
+───────────────────────────────────── */
+.dtabs{
+  display:flex;justify-content:center;gap:6px;margin-bottom:56px;flex-wrap:wrap
+}
+.dtab{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 20px;border-radius:99px;
+  border:1.5px solid rgba(255,255,255,.1);
+  background:transparent;font-family:'Jost',sans-serif;
+  font-size:13px;font-weight:600;color:rgba(255,255,255,.38);
+  cursor:pointer;transition:.22s;white-space:nowrap
+}
+.dtab:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.65)}
+.dtab.on{background:#b8922e;border-color:#b8922e;color:#141210}
+.dtab .dtab-icon{font-size:15px;line-height:1}
+
+/* ─────────────────────────────────────
+   PANEL LAYOUT
+───────────────────────────────────── */
+.dpanels{min-height:460px}
+.dpanel{display:none;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.dpanel.on{display:grid;animation:dslide .4s cubic-bezier(.4,0,.2,1) both}
+@keyframes dslide{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:820px){
+  .dpanel.on{grid-template-columns:1fr;gap:36px}
+  .dpanel-copy{order:2}.dpanel-screen{order:1}
+}
+
+/* Copy column */
+.dpanel-copy .eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(184,146,46,.7);margin-bottom:14px
+}
+.dpanel-copy h3{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(26px,3vw,40px);
+  font-weight:400;color:#fdf9f4;line-height:1.15;margin-bottom:16px
+}
+.dpanel-copy h3 em{font-style:italic;color:#d4a843}
+.dpanel-copy .dpanel-desc{
+  font-size:14px;color:rgba(253,249,244,.45);line-height:1.8;
+  margin-bottom:24px;font-weight:300
+}
+.dpanel-bullets{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:28px}
+.dpanel-bullets li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13px;color:rgba(253,249,244,.55);line-height:1.55
+}
+.dpanel-bullets li::before{content:'✦';color:#b8922e;flex-shrink:0;font-size:9px;margin-top:3px}
+.try-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 26px;border-radius:99px;background:#b8922e;
+  color:#141210;font-size:13px;font-weight:700;
+  text-decoration:none;border:none;cursor:pointer;
+  font-family:'Jost',sans-serif;transition:.2s
+}
+.try-btn:hover{background:#d4a843;transform:translateY(-1px)}
+
+/* Screen mockup shell */
+.dmock{
+  background:#0f0e0b;border-radius:14px;
+  border:1.5px solid rgba(255,255,255,.08);
+  overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.55)
+}
+.dmock-bar{
+  background:#0a0906;padding:10px 14px;
+  display:flex;align-items:center;gap:9px;
+  border-bottom:1px solid rgba(255,255,255,.05)
+}
+.dmock-dots{display:flex;gap:5px}
+.dmock-dot{width:9px;height:9px;border-radius:50%}
+.dmock-url{
+  flex:1;background:rgba(255,255,255,.05);border-radius:5px;
+  padding:4px 10px;font-size:10px;color:rgba(255,255,255,.18);font-family:monospace
+}
+.dmock-body{padding:16px}
+
+/* ═══════════════════════════════════════
+   PANEL 1 — BUDGET
+═══════════════════════════════════════ */
+.bd-hero{
+  background:linear-gradient(135deg,rgba(184,146,46,.12),rgba(184,146,46,.04));
+  border:1px solid rgba(184,146,46,.2);border-radius:11px;
+  padding:15px 16px;margin-bottom:13px
+}
+.bd-hero-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.bd-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);font-weight:700}
+.bd-big{font-size:24px;font-weight:700;color:#d4a843;font-family:'Jost',sans-serif;letter-spacing:-.02em}
+.bd-track{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bd-fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#9a7530,#d4a843);transition:width 1.6s cubic-bezier(.4,0,.2,1)}
+.bd-meta{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.25)}
+.bd-cards{display:flex;flex-direction:column;gap:7px}
+.bd-card{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:10px;
+  opacity:0;transform:translateX(-12px);transition:opacity .4s ease, transform .4s ease
+}
+.bd-card.vis{opacity:1;transform:none}
+.bd-card-ico{font-size:17px;flex-shrink:0}
+.bd-card-info{flex:1;min-width:0}
+.bd-card-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.78)}
+.bd-card-cat{font-size:9px;color:rgba(255,255,255,.28);margin-top:1px}
+.bd-pill{font-size:9px;padding:3px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.pill-paid{background:rgba(60,180,80,.14);color:#70d880;border:1px solid rgba(60,180,80,.22)}
+.pill-dep{background:rgba(220,180,50,.14);color:#e0c840;border:1px solid rgba(220,180,50,.22)}
+.pill-due{background:rgba(220,70,70,.14);color:#f07070;border:1px solid rgba(220,70,70,.22)}
+.bd-card-amt{font-size:12px;font-weight:700;color:rgba(255,255,255,.55);flex-shrink:0}
+
+/* ═══════════════════════════════════════
+   PANEL 2 — GUESTS
+═══════════════════════════════════════ */
+.gd-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:13px}
+.gd-stat{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:10px 8px;text-align:center
+}
+.gd-stat-n{font-size:22px;font-weight:700;font-family:'Jost',sans-serif;color:#d4a843;line-height:1}
+.gd-stat-l{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.27);margin-top:3px}
+.gd-list{display:flex;flex-direction:column;gap:6px}
+.gd-row{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px;
+  opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease
+}
+.gd-row.vis{opacity:1;transform:none}
+.gd-av{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700
+}
+.gd-info{flex:1;min-width:0}
+.gd-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.78)}
+.gd-side{font-size:9px;color:rgba(255,255,255,.28);margin-top:1px}
+.gd-badge{font-size:9px;padding:3px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.badge-yes{background:rgba(60,180,80,.14);color:#70d880;border:1px solid rgba(60,180,80,.22)}
+.badge-pend{background:rgba(220,180,50,.14);color:#e0c840;border:1px solid rgba(220,180,50,.22)}
+.badge-no{background:rgba(220,70,70,.14);color:#f07070;border:1px solid rgba(220,70,70,.22)}
+
+/* ═══════════════════════════════════════
+   PANEL 3 — SEATING
+═══════════════════════════════════════ */
+.seat-canvas{
+  position:relative;height:210px;background:rgba(255,255,255,.018);
+  border-radius:10px;margin-bottom:10px;overflow:hidden
+}
+.st{
+  position:absolute;border:1.5px solid rgba(184,146,46,.45);
+  background:rgba(184,146,46,.055);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:.5s cubic-bezier(.4,0,.2,1)
+}
+.st-label{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);pointer-events:none}
+.st-count{font-size:8px;color:rgba(184,146,46,.7);pointer-events:none}
+.sc{
+  position:absolute;
+  width:20px;height:20px;border-radius:50%;
+  border:1.5px solid rgba(184,146,46,.38);
+  background:rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:center;
+  font-size:7px;font-weight:700;color:transparent;
+  transition:all .45s cubic-bezier(.4,0,.2,1);
+  pointer-events:none
+}
+.sc.filled{background:#b8922e;border-color:#b8922e;color:white;
+  border-radius:99px;white-space:nowrap;padding:0 4px}
+.seat-chips{display:flex;flex-wrap:wrap;gap:5px;min-height:28px}
+.chip{
+  padding:4px 10px;border-radius:99px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
+  transition:.3s;white-space:nowrap
+}
+.chip.seated{opacity:.3;text-decoration:line-through}
+.chip.animating{
+  background:#b8922e;color:#141210;
+  transform:scale(1.1);border-color:#b8922e
+}
+
+/* ═══════════════════════════════════════
+   PANEL 4 — RSVP
+═══════════════════════════════════════ */
+.rsvp-wrap{display:flex;gap:16px;align-items:flex-start}
+.phone-shell{
+  width:170px;flex-shrink:0;background:#1c1a28;border-radius:22px;
+  border:2px solid rgba(255,255,255,.1);overflow:hidden;
+  box-shadow:0 16px 50px rgba(0,0,0,.5)
+}
+.phone-notch{background:#0f0e18;padding:8px 14px;font-size:9px;color:rgba(255,255,255,.18);text-align:center}
+.phone-body{background:white;padding:12px}
+.phone-brand{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;font-weight:600;text-align:center;color:#1a1610;margin-bottom:8px}
+.phone-brand span{color:#b8922e}
+.phone-card{background:#fdf9f4;border-radius:8px;padding:9px;text-align:center;margin-bottom:9px;border:1px solid #e8ddd0}
+.phone-couple{font-family:'Cormorant Garamond',serif;font-size:12px;font-weight:600;color:#1a1610}
+.phone-date{font-size:8px;color:#8a7a60;margin-top:2px}
+.phone-q{font-size:9px;font-weight:700;color:#1a1610;margin-bottom:7px;text-align:center}
+.phone-btns{display:flex;gap:5px;margin-bottom:8px}
+.phone-btn{flex:1;padding:7px 4px;border-radius:7px;font-size:10px;font-weight:700;
+  text-align:center;cursor:pointer;border:none;font-family:'Jost',sans-serif;transition:.2s}
+.phone-btn-y{background:#1a1610;color:white}
+.phone-btn-y.sel{background:#2a7a2a}
+.phone-btn-n{background:#f5f0e8;color:#8a7a60}
+.phone-btn-n.sel{background:#c04040;color:white}
+.phone-confirm{
+  background:#2a7a2a;color:white;border-radius:7px;
+  padding:7px;font-size:10px;font-weight:700;text-align:center;
+  display:none;animation:popIn .3s ease
+}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+
+.rsvp-right{flex:1}
+.rsvp-notif{
+  background:rgba(60,180,80,.1);border:1px solid rgba(60,180,80,.22);
+  border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:9px;
+  margin-bottom:10px;opacity:0;transform:translateY(-6px);transition:.4s ease
+}
+.rsvp-notif.vis{opacity:1;transform:none}
+.rsvp-notif-ico{font-size:20px}
+.rsvp-notif-txt strong{font-size:12px;color:#6ee06e;display:block}
+.rsvp-notif-txt span{font-size:11px;color:rgba(255,255,255,.4)}
+.rsvp-counts{display:flex;flex-direction:column;gap:7px}
+.rsvp-count{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between
+}
+.rsvp-count-label{font-size:11px;color:rgba(255,255,255,.45);font-weight:600}
+.rsvp-count-n{font-size:18px;font-weight:700;font-family:'Jost',sans-serif;transition:.5s}
+.rsvp-bar-wrap{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px;width:100%}
+.rsvp-bar{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+</style>
+
+<section class="demo-section" id="how">
+  <div class="demo-inner">
+    <span class="stag">See it in action</span>
+    <h2 class="stitle">Everything working<br><em>beautifully together</em></h2>
+    <p class="ssub">Tap any feature to see a live demo — no sign-up needed.</p>
+
+    <!-- Tab bar -->
+    <div class="dtabs">
+      <button class="dtab on" onclick="dSwitch('budget',this)">
+        <span class="dtab-icon">💷</span>Budget Tracker
+      </button>
+      <button class="dtab" onclick="dSwitch('guests',this)">
+        <span class="dtab-icon">👥</span>Guest List
+      </button>
+      <button class="dtab" onclick="dSwitch('seating',this)">
+        <span class="dtab-icon">🪑</span>Seating Chart
+      </button>
+      <button class="dtab" onclick="dSwitch('rsvp',this)">
+        <span class="dtab-icon">📲</span>RSVP Links
+      </button>
     </div>
-  </div>
+
+    <div class="dpanels">
+
+      <!-- ══ PANEL: BUDGET ══ -->
+      <div class="dpanel on" id="dp-budget">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 1 of 4</div>
+          <h3>Track every pound,<br><em>effortlessly</em></h3>
+          <p class="dpanel-desc">Add your vendors, log deposits and payments as you go. See your total budget vs actual spend update in real time — no spreadsheets, no guesswork.</p>
+          <ul class="dpanel-bullets">
+            <li>Live budget bar shows exactly what's spent and what's left</li>
+            <li>Track deposits, balances and final invoices separately</li>
+            <li>Due date alerts so you never miss a payment</li>
+            <li>Works for any budget, from £5k to £100k</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app · Budget</div>
+            </div>
+            <div class="dmock-body">
+              <div class="bd-hero">
+                <div class="bd-hero-row">
+                  <span class="bd-lbl">Total Budget</span>
+                  <span class="bd-big" id="bdN">£0</span>
+                </div>
+                <div class="bd-track"><div class="bd-fill" id="bdBar"></div></div>
+                <div class="bd-meta">
+                  <span id="bdSpent">£0 spent</span>
+                  <span id="bdLeft">£25,000 remaining</span>
+                </div>
+              </div>
+              <div class="bd-cards">
+                <div class="bd-card" id="bc0">
+                  <span class="bd-card-ico">🏰</span>
+                  <div class="bd-card-info"><div class="bd-card-name">Elmwood Manor</div><div class="bd-card-cat">Venue</div></div>
+                  <span class="bd-pill pill-paid">✓ Paid</span>
+                  <span class="bd-card-amt">£8,500</span>
+                </div>
+                <div class="bd-card" id="bc1">
+                  <span class="bd-card-ico">📸</span>
+                  <div class="bd-card-info"><div class="bd-card-name">Hartley Photography</div><div class="bd-card-cat">Photographer</div></div>
+                  <span class="bd-pill pill-dep">⏳ Deposit paid</span>
+                  <span class="bd-card-amt">£2,800</span>
+                </div>
+                <div class="bd-card" id="bc2">
+                  <span class="bd-card-ico">🌸</span>
+                  <div class="bd-card-info"><div class="bd-card-name">The Bloom Barn</div><div class="bd-card-cat">Florist</div></div>
+                  <span class="bd-pill pill-paid">✓ Paid</span>
+                  <span class="bd-card-amt">£1,200</span>
+                </div>
+                <div class="bd-card" id="bc3">
+                  <span class="bd-card-ico">🎵</span>
+                  <div class="bd-card-info"><div class="bd-card-name">The Brass &amp; Strings</div><div class="bd-card-cat">Band</div></div>
+                  <span class="bd-pill pill-due">⚠ Due 15 Jun</span>
+                  <span class="bd-card-amt">£3,400</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: GUESTS ══ -->
+      <div class="dpanel" id="dp-guests">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 2 of 4</div>
+          <h3>Your guest list,<br><em>finally organised</em></h3>
+          <p class="dpanel-desc">Add families as groups, assign bride's or groom's side, track dietary needs and RSVPs. Export a beautifully formatted report at any time.</p>
+          <ul class="dpanel-bullets">
+            <li>Group guests with their partner and children</li>
+            <li>Separate bride's side and groom's side totals</li>
+            <li>Track dietary requirements per person</li>
+            <li>One-click export sorted by family side</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app · Guests</div>
+            </div>
+            <div class="dmock-body">
+              <div class="gd-stats">
+                <div class="gd-stat"><div class="gd-stat-n" id="gTotal">0</div><div class="gd-stat-l">Total</div></div>
+                <div class="gd-stat"><div class="gd-stat-n" id="gConf" style="color:#70d880">0</div><div class="gd-stat-l">Confirmed</div></div>
+                <div class="gd-stat"><div class="gd-stat-n" id="gPend" style="color:#e0c840">0</div><div class="gd-stat-l">Pending</div></div>
+              </div>
+              <div class="gd-list">
+                <div class="gd-row" id="gr0">
+                  <div class="gd-av" style="background:rgba(200,147,58,.2);color:#d4a843">SH</div>
+                  <div class="gd-info"><div class="gd-name">Sophie &amp; Oliver Hartley</div><div class="gd-side">Bride's Family · 2 people</div></div>
+                  <span class="gd-badge badge-yes">✓ Coming</span>
+                </div>
+                <div class="gd-row" id="gr1">
+                  <div class="gd-av" style="background:rgba(100,160,220,.2);color:#7ab0e0">JW</div>
+                  <div class="gd-info"><div class="gd-name">James &amp; Helen Worthington</div><div class="gd-side">Groom's Family · 2 people</div></div>
+                  <span class="gd-badge badge-yes">✓ Coming</span>
+                </div>
+                <div class="gd-row" id="gr2">
+                  <div class="gd-av" style="background:rgba(180,100,130,.2);color:#d08090">ET</div>
+                  <div class="gd-info"><div class="gd-name">Emily &amp; Tom Blackwood</div><div class="gd-side">Bride's Friends · 2 people</div></div>
+                  <span class="gd-badge badge-pend">⏳ Pending</span>
+                </div>
+                <div class="gd-row" id="gr3">
+                  <div class="gd-av" style="background:rgba(100,180,100,.2);color:#70c070">M</div>
+                  <div class="gd-info"><div class="gd-name">Margaret Whitfield</div><div class="gd-side">Bride's Family · 1 person</div></div>
+                  <span class="gd-badge badge-yes">✓ Coming</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: SEATING ══ -->
+      <div class="dpanel" id="dp-seating">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 3 of 4</div>
+          <h3>Seat everyone<br><em>without the headache</em></h3>
+          <p class="dpanel-desc">Design your room with round and rectangular tables. Drag guests straight onto chairs — watch their name appear as each seat fills. Done in minutes, not hours.</p>
+          <ul class="dpanel-bullets">
+            <li>Drag and drop guests directly onto tables</li>
+            <li>See chairs fill with guest first names in real time</li>
+            <li>Supports round tables, top tables and long rectangles</li>
+            <li>Export a clean layout for your venue coordinator</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app · Seating</div>
+            </div>
+            <div class="dmock-body" style="padding:12px">
+              <div class="seat-canvas" id="sCvs"></div>
+              <div class="seat-chips" id="sChips"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: RSVP ══ -->
+      <div class="dpanel" id="dp-rsvp">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 4 of 4</div>
+          <h3>RSVPs without<br><em>the back-and-forth</em></h3>
+          <p class="dpanel-desc">Send every guest a personalised link by WhatsApp or email. They confirm in one tap — no app, no login. Your guest list updates the moment they respond.</p>
+          <ul class="dpanel-bullets">
+            <li>Works in any browser — no app download needed</li>
+            <li>Personalised link per guest or family group</li>
+            <li>Share instantly via WhatsApp, email or text</li>
+            <li>Dashboard updates live the moment they respond</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app/rsvp/s0ph1e</div>
+            </div>
+            <div class="dmock-body">
+              <div class="rsvp-wrap">
+                <div class="phone-shell">
+                  <div class="phone-notch">9:41 · Sophie's iPhone</div>
+                  <div class="phone-body">
+                    <div class="phone-brand">Wedding<span>Ledger</span></div>
+                    <div class="phone-card">
+                      <div class="phone-couple">Charlotte &amp; James</div>
+                      <div class="phone-date">📅 14 Sept · Elmwood Manor</div>
+                    </div>
+                    <div class="phone-q">Will you be joining us? 💍</div>
+                    <div class="phone-btns">
+                      <div class="phone-btn phone-btn-y" id="rYes" onclick="rsvpTap('yes')">✓ Attending</div>
+                      <div class="phone-btn phone-btn-n" id="rNo" onclick="rsvpTap('no')">✗ Can't make it</div>
+                    </div>
+                    <div class="phone-confirm" id="rConf">🎉 You're confirmed!</div>
+                  </div>
+                </div>
+                <div class="rsvp-right">
+                  <div class="rsvp-notif" id="rNotif">
+                    <div class="rsvp-notif-ico">🔔</div>
+                    <div class="rsvp-notif-txt">
+                      <strong>Sophie confirmed!</strong>
+                      <span>Guest list updated</span>
+                    </div>
+                  </div>
+                  <div class="rsvp-counts">
+                    <div class="rsvp-count">
+                      <div>
+                        <div class="rsvp-count-label">Confirmed</div>
+                        <div class="rsvp-bar-wrap"><div class="rsvp-bar" id="rBarConf" style="background:#3ab450;width:72%"></div></div>
+                      </div>
+                      <div class="rsvp-count-n" id="rNConf" style="color:#70d880">86</div>
+                    </div>
+                    <div class="rsvp-count">
+                      <div>
+                        <div class="rsvp-count-label">Pending</div>
+                        <div class="rsvp-bar-wrap"><div class="rsvp-bar" id="rBarPend" style="background:#c8a830;width:22%"></div></div>
+                      </div>
+                      <div class="rsvp-count-n" id="rNPend" style="color:#e0c840">26</div>
+                    </div>
+                    <div class="rsvp-count">
+                      <div>
+                        <div class="rsvp-count-label">Declined</div>
+                        <div class="rsvp-bar-wrap"><div class="rsvp-bar" style="background:#c04040;width:6%"></div></div>
+                      </div>
+                      <div class="rsvp-count-n" style="color:#f07070">7</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dpanels -->
+  </div><!-- /demo-inner -->
 </section>
+
+<script>
+(function(){
+// ════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════
+window.dSwitch=function(id,btn){
+  document.querySelectorAll('.dtab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.dpanel').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  const panel=document.getElementById('dp-'+id);
+  panel.classList.add('on');
+  clearSeatingTimer();
+  if(id==='budget') runBudget();
+  else if(id==='guests') runGuests();
+  else if(id==='seating') runSeating();
+  else if(id==='rsvp') setupRsvp();
+};
+
+// ════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════
+function countTo(el,target,dur,prefix='',suffix=''){
+  let s=performance.now();
+  const start=parseInt(el.textContent.replace(/\D/g,''))||0;
+  (function tick(now){
+    const p=Math.min((now-s)/dur,1);
+    const e=1-Math.pow(1-p,3);
+    el.textContent=prefix+Math.round(start+e*(target-start)).toLocaleString('en-GB')+suffix;
+    if(p<1) requestAnimationFrame(tick);
+  })(s);
+}
+
+// ════════════════════════════════════════════
+// PANEL 1 — BUDGET
+// ════════════════════════════════════════════
+function runBudget(){
+  // Reset
+  document.getElementById('bdBar').style.width='0%';
+  document.getElementById('bdN').textContent='£0';
+  document.getElementById('bdSpent').textContent='£0 spent';
+  document.getElementById('bdLeft').textContent='£25,000 remaining';
+  for(let i=0;i<4;i++){
+    const c=document.getElementById('bc'+i);
+    c.classList.remove('vis');
+    c.style.transitionDelay='0s';
+  }
+  setTimeout(()=>{
+    // Bar fill
+    document.getElementById('bdBar').style.width='74%';
+    // Count up spent
+    let s=performance.now(),dur=1500,total=25000,spent=18400;
+    (function tick(now){
+      const p=Math.min((now-s)/dur,1),e=1-Math.pow(1-p,3),v=Math.round(e*spent);
+      document.getElementById('bdN').textContent='£'+v.toLocaleString('en-GB');
+      document.getElementById('bdSpent').textContent='£'+v.toLocaleString('en-GB')+' spent';
+      document.getElementById('bdLeft').textContent='£'+(total-v).toLocaleString('en-GB')+' remaining';
+      if(p<1) requestAnimationFrame(tick);
+    })(s);
+    // Stagger cards
+    for(let i=0;i<4;i++){
+      const c=document.getElementById('bc'+i);
+      c.style.transitionDelay=(i*0.1)+'s';
+      setTimeout(()=>c.classList.add('vis'),120+i*140);
+    }
+  },200);
+}
+
+// ════════════════════════════════════════════
+// PANEL 2 — GUESTS
+// ════════════════════════════════════════════
+function runGuests(){
+  ['gTotal','gConf','gPend'].forEach(id=>document.getElementById(id).textContent='0');
+  for(let i=0;i<4;i++){
+    const r=document.getElementById('gr'+i);
+    r.classList.remove('vis');
+    r.style.transitionDelay='0s';
+  }
+  setTimeout(()=>{
+    countTo(document.getElementById('gTotal'),142,900);
+    countTo(document.getElementById('gConf'),0,98,800);
+    countTo(document.getElementById('gPend'),0,44,700);
+    for(let i=0;i<4;i++){
+      const r=document.getElementById('gr'+i);
+      r.style.transitionDelay=(i*0.08)+'s';
+      setTimeout(()=>r.classList.add('vis'),150+i*160);
+    }
+  },200);
+}
+
+// ════════════════════════════════════════════
+// PANEL 3 — SEATING
+// ════════════════════════════════════════════
+const TABLES=[
+  {id:'tA',cx:80, cy:82, r:46, shape:'round', label:'Table 1', cap:6, seated:[]},
+  {id:'tB',cx:220,cy:75, r:38, shape:'round', label:'Table 2', cap:5, seated:[]},
+  {id:'tC',cx:155,cy:165,w:140,h:40,shape:'rect',label:'Top Table',cap:6,seated:[]},
+];
+const GNAMES=['Sophie','Oliver','James','Emily','Tom','Margaret'];
+let seatTimer=null;
+
+function clearSeatingTimer(){if(seatTimer){clearTimeout(seatTimer);seatTimer=null;}}
+
+function chairPositions(t){
+  const pts=[];
+  if(t.shape==='round'){
+    const R=t.r+16;
+    for(let i=0;i<t.cap;i++){
+      const a=(i/t.cap)*Math.PI*2-Math.PI/2;
+      pts.push({x:t.cx+R*Math.cos(a),y:t.cy+R*Math.sin(a)});
+    }
+  } else {
+    const hw=t.w/2,hh=t.h/2,n=t.cap,top=Math.ceil(n/2),bot=n-top;
+    for(let i=0;i<top;i++) pts.push({x:t.cx-hw+14+(hw*2-28)/(Math.max(top-1,1))*i, y:t.cy-hh-18});
+    for(let i=0;i<bot;i++) pts.push({x:t.cx-hw+14+(hw*2-28)/(Math.max(bot-1,1))*i, y:t.cy+hh+18});
+  }
+  return pts;
+}
+
+function renderSeat(){
+  const cvs=document.getElementById('sCvs');
+  cvs.innerHTML='';
+  TABLES.forEach(t=>{
+    const isR=t.shape==='round';
+    const w=isR?t.r*2:t.w, h=isR?t.r*2:t.h;
+    const el=document.createElement('div');
+    el.className='st'; el.id='st-'+t.id;
+    Object.assign(el.style,{
+      width:w+'px',height:h+'px',
+      left:(isR?t.cx-t.r:t.cx-t.w/2)+'px',
+      top:(isR?t.cy-t.r:t.cy-t.h/2)+'px',
+      borderRadius:isR?'50%':'10px'
+    });
+    el.innerHTML=`<span class="st-label">${t.label}</span><span class="st-count">${t.seated.length}/${t.cap}</span>`;
+    cvs.appendChild(el);
+    // Chairs
+    chairPositions(t).forEach((pos,i)=>{
+      const name=t.seated[i]||null;
+      const ch=document.createElement('div');
+      ch.className='sc'+(name?' filled':'');
+      if(name){
+        const cw=Math.max(22,name.length*6+10);
+        Object.assign(ch.style,{width:cw+'px',left:(pos.x-cw/2)+'px',top:(pos.y-10)+'px'});
+        ch.textContent=name;
+      } else {
+        Object.assign(ch.style,{left:(pos.x-10)+'px',top:(pos.y-10)+'px'});
+      }
+      cvs.appendChild(ch);
+    });
+  });
+  // Chips
+  const chips=document.getElementById('sChips');
+  chips.innerHTML='';
+  const seated=TABLES.flatMap(t=>t.seated);
+  GNAMES.forEach(n=>{
+    const ch=document.createElement('div');
+    ch.className='chip'+(seated.includes(n)?' seated':'');
+    ch.textContent=n;
+    chips.appendChild(ch);
+  });
+}
+
+function autoSeat(){
+  const plan=[
+    [0,0],[1,0],[2,1],[3,2],[4,2],[5,0]
+  ]; // [guestIdx, tableIdx]
+  let step=0;
+  function next(){
+    if(step>=plan.length){
+      seatTimer=setTimeout(()=>{
+        TABLES.forEach(t=>t.seated=[]);
+        renderSeat();
+        seatTimer=setTimeout(autoSeat,1000);
+      },2800);
+      return;
+    }
+    const [gi,ti]=plan[step++];
+    const name=GNAMES[gi];
+    // Flash chip
+    const chips=document.querySelectorAll('.chip');
+    chips.forEach(c=>{if(c.textContent===name){c.classList.add('animating');setTimeout(()=>c.classList.remove('animating'),350);}});
+    setTimeout(()=>{
+      TABLES[ti].seated.push(name);
+      renderSeat();
+      seatTimer=setTimeout(next,680);
+    },320);
+  }
+  next();
+}
+
+function runSeating(){
+  TABLES.forEach(t=>t.seated=[]);
+  renderSeat();
+  seatTimer=setTimeout(autoSeat,800);
+}
+
+// ════════════════════════════════════════════
+// PANEL 4 — RSVP
+// ════════════════════════════════════════════
+let rDone=false;
+
+window.rsvpTap=function(choice){
+  if(rDone)return; rDone=true;
+  const yBtn=document.getElementById('rYes');
+  const nBtn=document.getElementById('rNo');
+  const conf=document.getElementById('rConf');
+  const notif=document.getElementById('rNotif');
+  if(choice==='yes'){
+    yBtn.classList.add('sel');
+    setTimeout(()=>{
+      conf.style.display='block';
+      setTimeout(()=>{
+        notif.classList.add('vis');
+        countTo(document.getElementById('rNConf'),86,87,500,'');
+        countTo(document.getElementById('rNPend'),26,25,500,'');
+        document.getElementById('rBarConf').style.width='73.5%';
+        document.getElementById('rBarPend').style.width='21%';
+      },500);
+    },350);
+  } else {
+    nBtn.classList.add('sel');
+    conf.textContent="😢 Sorry you can't make it";
+    conf.style.background='#7a2020';
+    conf.style.display='block';
+  }
+};
+
+function setupRsvp(){
+  rDone=false;
+  document.getElementById('rYes').classList.remove('sel');
+  document.getElementById('rNo').classList.remove('sel');
+  document.getElementById('rConf').style.display='none';
+  document.getElementById('rConf').textContent='🎉 You\'re confirmed!';
+  document.getElementById('rConf').style.background='#2a7a2a';
+  document.getElementById('rNotif').classList.remove('vis');
+  document.getElementById('rNConf').textContent='86';
+  document.getElementById('rNPend').textContent='26';
+  document.getElementById('rBarConf').style.width='72%';
+  document.getElementById('rBarPend').style.width='22%';
+}
+
+// ════════════════════════════════════════════
+// INIT + SCROLL TRIGGER
+// ════════════════════════════════════════════
+function init(){
+  runBudget();
+  // Re-run when scrolled into view
+  if('IntersectionObserver' in window){
+    let triggered=false;
+    new IntersectionObserver(entries=>{
+      if(entries[0].isIntersecting && !triggered){
+        triggered=true;
+        const active=document.querySelector('.dtab.on');
+        if(active&&active.textContent.includes('Budget')) runBudget();
+      }
+    },{threshold:.25}).observe(document.getElementById('how'));
+  }
+}
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+else init();
+
+})();
+</script>
+
 
 <!-- ── TESTIMONIALS ── -->
 <section class="testi" id="testimonials">
