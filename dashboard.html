@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>WeddingLedger — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,400;1,9..144,200;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script>
 // Load PayPal SDK dynamically AFTER app.js so functions are defined
 window.addEventListener('load', function(){
@@ -43,7 +43,7 @@ window.addEventListener('load', function(){
     <a href="seating.html" class="topbar-btn desktop-only" style="display:none">🪑 Seating</a>
     <a href="timeline.html" class="topbar-btn desktop-only" style="display:none">📅 Timeline</a>
     <button class="topbar-btn desktop-only" onclick="openSettingsModal()" style="color:var(--muted)">⚙️ Settings</button>
-    <button onclick="openPartnerModal()" id="partnerBtn" title="Invite Partner" style="background:none;border:1.5px solid var(--gold);border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;white-space:nowrap">💌 <span class="desktop-only" style="display:inline">Partner</span></button>
+    <button onclick="openPartnerModal()" id="partnerBtn" title="Invite Partner" style="background:none;border:1.5px solid var(--gold);border-radius:8px;padding:7px 14px;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;white-space:nowrap">💌 <span class="desktop-only" style="display:inline">Partner</span></button>
     <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
     <button class="topbar-btn signout-btn desktop-only" onclick="doLogout()">Sign Out</button>
     <!-- Mobile hamburger -->
@@ -188,19 +188,19 @@ window.addEventListener('load', function(){
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <div style="display:flex;gap:6px">
             <button onclick="setChartType('doughnut')" id="btnDoughnut"
-              style="background:var(--gold);color:white;border:none;border-radius:99px;
-              padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+              style="background:var(--gold);color:white;border:none;border-radius:8px;
+              padding:7px 14px;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
               🍩 Doughnut
             </button>
             <button onclick="setChartType('bar')" id="btnBar"
               style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
-              border-radius:99px;padding:7px 14px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
+              border-radius:8px;padding:7px 14px;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
               📊 Bar
             </button>
           </div>
           <button onclick="exportPDF()"
             style="background:linear-gradient(135deg,#2d5a3d,#3d7a52);color:white;border:none;
-            border-radius:99px;padding:8px 18px;font-family:'Jost',sans-serif;font-size:12px;
+            border-radius:99px;padding:8px 18px;font-family:'Instrument Sans',sans-serif;font-size:12px;
             font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
             box-shadow:0 4px 14px rgba(45,90,61,0.3)">
             📄 Export PDF
@@ -225,14 +225,14 @@ window.addEventListener('load', function(){
         <h3 class="card-title" style="margin:0">💳 Payment Timeline</h3>
         <div style="display:flex;gap:8px">
           <button onclick="setTimelineFilter('all')" id="tlAll"
-            style="background:var(--gold);color:white;border:none;border-radius:99px;padding:6px 14px;
-            font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer">All</button>
+            style="background:var(--gold);color:white;border:none;border-radius:8px;padding:6px 14px;
+            font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">All</button>
           <button onclick="setTimelineFilter('paid')" id="tlPaid"
             style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
-            border-radius:99px;padding:6px 14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Paid</button>
+            border-radius:8px;padding:6px 14px;font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Paid</button>
           <button onclick="setTimelineFilter('upcoming')" id="tlUpcoming"
             style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
-            border-radius:99px;padding:6px 14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Upcoming</button>
+            border-radius:8px;padding:6px 14px;font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Upcoming</button>
         </div>
       </div>
       <div id="paymentTimeline">
@@ -394,7 +394,7 @@ window.addEventListener('load', function(){
         <a id="paypalDirectLink" href="#" target="_blank"
           style="display:flex;align-items:center;justify-content:center;gap:10px;
                  background:#FFC439;border:none;border-radius:99px;padding:14px 24px;
-                 font-family:'Jost',sans-serif;font-size:15px;font-weight:700;
+                 font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:700;
                  color:#003087;text-decoration:none;cursor:pointer;
                  box-shadow:0 4px 18px rgba(255,196,57,0.4);transition:opacity 0.2s;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -415,7 +415,7 @@ window.addEventListener('load', function(){
           Once your payment is confirmed, click below to activate Pro.
         </p>
         <button onclick="manualActivateCheck()" style="background:#2a7a2a;color:white;border:none;
-          border-radius:99px;padding:10px 22px;font-family:'Jost',sans-serif;font-size:13px;
+          border-radius:8px;padding:10px 22px;font-family:'Instrument Sans',sans-serif;font-size:13px;
           font-weight:600;cursor:pointer;">
           ✓ I've Paid — Activate Pro
         </button>
