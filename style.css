@@ -64,7 +64,7 @@ body {
   color:var(--charcoal); text-decoration:none;
   letter-spacing:-.01em; white-space:nowrap; flex-shrink:0;
 }
-.topbar-logo span { color:var(--gold); }
+.topbar-logo span, .topbar-logo em { color:var(--gold); }
 .topbar-center {
   font-family:'Fraunces', serif;
   font-size:14px; color:var(--muted); font-style:italic;
@@ -897,7 +897,7 @@ textarea.modal-input { resize:vertical; min-height:90px; }
   .topbar { padding:0 14px; gap:4px; }
   .topbar-center { display:none; }
   .topbar-right { gap:4px; }
-  .hamburger-btn { display:block; }
+  .hamburger-btn { display:none; } /* replaced by mnav-btn */
   .desktop-only { display:none !important; }
   .currency-select { max-width:80px; font-size:12px; }
   .vendors-grid { grid-template-columns:1fr; }
