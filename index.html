@@ -3,744 +3,1927 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>WeddingLedger — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,400;1,9..144,200;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<title>WeddingLedger — Wedding Budget Planner</title>
 <script>
-// Load PayPal SDK dynamically AFTER app.js so functions are defined
-window.addEventListener('load', function(){
-  var s = document.createElement('script');
-  s.src = 'https://www.paypal.com/sdk/js?client-id=AcMxe9xGOHUIKBPp9c8yOL5XOc-eKbG3ydN4okrzXxnfICJQG3gk1598QcS2ERHQ9MDcQdmKiBo4IWX4&currency=GBP&intent=capture&locale=en_GB';
-  s.onload = function(){ if(typeof initPayPal==='function') initPayPal(); };
-  s.onerror = function(){ if(typeof showPayPalFallback==='function') showPayPalFallback(); };
-  document.head.appendChild(s);
-});
+// ── Short RSVP link redirect — runs before anything else renders ──────────────
+(async function() {
+  const code = new URLSearchParams(location.search).get('c');
+  if(!code) return; // normal page load — do nothing
+
+  // Show a nice loading screen immediately
+  document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Opening your invitation…</title>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{min-height:100vh;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;background:#1a1208;font-family:Georgia,serif;
+        color:rgba(255,255,255,.8);text-align:center;padding:24px}
+      .ring{font-size:52px;margin-bottom:22px;animation:p 1.8s ease-in-out infinite}
+      @keyframes p{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+      h2{font-size:22px;font-weight:400;color:#C9A84C;margin-bottom:8px;letter-spacing:.05em}
+      p{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:.12em;text-transform:uppercase}
+      .dots{display:flex;gap:7px;justify-content:center;margin-top:22px}
+      .dot{width:6px;height:6px;border-radius:50%;background:#C9A84C;
+        animation:d 1.2s ease-in-out infinite}
+      .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+      @keyframes d{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+      .err{color:#f5a0a0;font-size:14px;margin-top:20px;display:none}
+    </style>
+  </head><body>
+    <div class="ring">💍</div>
+    <h2 id="msg">Opening your invitation…</h2>
+    <p>Just a moment</p>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="err" id="err">This invitation link wasn't found.<br>Please ask the couple for a new link.</div>
+  </body></html>`);
+  document.close();
+
+  const SB   = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+  const BASE = 'https://pamupro.github.io/wedding-budget';
+  const H    = { apikey: ANON, Authorization: 'Bearer '+ANON };
+
+  try {
+    const r1   = await fetch(SB+'/rest/v1/guests?link_code=eq.'+encodeURIComponent(code)+'&select=id,user_id', { headers: H });
+    const rows = await r1.json();
+    if(!rows?.length) { showErr(); return; }
+
+    const { id, user_id } = rows[0];
+    const r2   = await fetch(SB+'/rest/v1/profiles?user_id=eq.'+user_id+'&select=page_slug', { headers: H });
+    const prof = await r2.json();
+    const slug = prof?.[0]?.page_slug;
+    if(!slug) { showErr(); return; }
+
+    window.location.replace(BASE+'/wedding.html?slug='+encodeURIComponent(slug)+'&gid='+id);
+  } catch(e) { showErr(); }
+
+  function showErr() {
+    const m = document.getElementById('msg');
+    const e = document.getElementById('err');
+    if(m) m.textContent = 'Link not found';
+    if(e) e.style.display = 'block';
+    const p = document.querySelector('p');
+    const d = document.querySelector('.dots');
+    if(p) p.style.display='none';
+    if(d) d.style.display='none';
+  }
+})();
 </script>
-<link rel="stylesheet" href="style.css">
-  <!-- Chart.js for budget chart -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <!-- jsPDF for PDF export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,500;1,9..144,200;1,9..144,300;1,9..144,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
-/* ── Dashboard mobile nav overrides ─────────────────────────── */
-
-/* Topbar logo — italic like landing */
-.topbar-logo { font-family:'Fraunces',serif; font-size:20px; font-style:italic; font-weight:400; color:var(--charcoal); text-decoration:none; }
-.topbar-logo em { color:var(--gold); font-style:italic; }
-
-/* Burger button (shared with landing style) */
-.mnav-btn {
-  width:36px; height:36px; border-radius:8px;
-  background:var(--card-bg); border:1.5px solid var(--border);
-  display:none; align-items:center; justify-content:center;
-  cursor:pointer; flex-direction:column; gap:4px;
-  flex-shrink:0;
+/* ══════════════════════════════════════
+   TOKENS
+══════════════════════════════════════ */
+:root{
+  --bg:       #faf7f2;
+  --bg2:      #f4efe6;
+  --surface:  #ffffff;
+  --surface2: #fdf9f4;
+  --ink:      #1a1612;
+  --ink2:     #2e2820;
+  --muted:    #7a6e5e;
+  --muted2:   #b0a090;
+  --gold:     #a07828;
+  --gold2:    #c49a3a;
+  --gold-bg:  #fdf3dc;
+  --gold-bd:  rgba(160,120,40,.22);
+  --border:   rgba(26,22,18,.1);
+  --border2:  rgba(26,22,18,.06);
+  --shadow:   0 2px 24px rgba(26,22,18,.08);
+  --shadow2:  0 8px 48px rgba(26,22,18,.12);
+  --r:        12px;
 }
-.mnav-btn span { display:block; width:16px; height:1.5px; background:var(--charcoal); border-radius:2px; transition:.25s; }
-.mnav-btn.open span:nth-child(1) { transform:translateY(5.5px) rotate(45deg); }
-.mnav-btn.open span:nth-child(2) { opacity:0; }
-.mnav-btn.open span:nth-child(3) { transform:translateY(-5.5px) rotate(-45deg); }
 
-/* Full-screen drawer */
-.dash-drawer {
-  display:none; position:fixed; inset:0; z-index:400;
+/* ══════════════════════════════════════
+   RESET
+══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}
+
+/* Subtle grid texture */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(26,22,18,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(26,22,18,.018) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+
+img{display:block;max-width:100%}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* ══════════════════════════════════════
+   NAV — DESKTOP
+══════════════════════════════════════ */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:62px;padding:0 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(250,247,242,.88);
+  backdrop-filter:blur(20px) saturate(1.6);
+  border-bottom:1px solid var(--border2);
+  transition:.3s;
+}
+.nav.scrolled{border-color:var(--border);box-shadow:var(--shadow)}
+.nav-logo{
+  font-family:'Fraunces',serif;font-size:20px;font-style:italic;
+  font-weight:300;color:var(--ink);text-decoration:none;letter-spacing:-.01em;
+}
+.nav-logo em{color:var(--gold);font-style:italic}
+.nav-mid{display:flex;align-items:center;gap:30px}
+.nav-mid a{font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;letter-spacing:.01em;transition:.2s}
+.nav-mid a:hover{color:var(--ink)}
+.nav-end{display:flex;align-items:center;gap:10px}
+.nav-in{font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;padding:8px 14px;transition:.2s}
+.nav-in:hover{color:var(--ink)}
+.nav-cta{
+  padding:9px 22px;border-radius:8px;
+  background:var(--ink);color:var(--bg);
+  font-size:13px;font-weight:600;text-decoration:none;
+  letter-spacing:.01em;transition:.2s;
+}
+.nav-cta:hover{background:var(--gold);transform:translateY(-1px);box-shadow:0 4px 16px rgba(160,120,40,.3)}
+
+/* ══════════════════════════════════════
+   MOBILE NAV
+══════════════════════════════════════ */
+.mnav{
+  display:none;position:fixed;top:0;left:0;right:0;z-index:200;
+  height:56px;padding:0 20px;
+  align-items:center;justify-content:space-between;
+  background:rgba(250,247,242,.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);
+}
+.mnav-logo{
+  font-family:'Fraunces',serif;font-size:19px;font-style:italic;
+  font-weight:300;color:var(--ink);text-decoration:none;
+}
+.mnav-logo em{color:var(--gold)}
+.mnav-btn{
+  width:36px;height:36px;border-radius:8px;background:var(--surface);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-direction:column;gap:4px;
+}
+.mnav-btn span{display:block;width:16px;height:1.5px;background:var(--ink);border-radius:2px;transition:.25s}
+.mnav-btn.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+.mnav-btn.open span:nth-child(2){opacity:0}
+.mnav-btn.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+
+.mdrawer{
+  display:none;position:fixed;inset:0;z-index:190;
   flex-direction:column;
-  background:var(--cream); padding:0 28px 40px;
-  overflow-y:auto;
+  background:var(--bg);padding:72px 24px 120px;
 }
-.dash-drawer.open { display:flex; }
-
-.dash-drawer-top {
-  display:flex; align-items:center; justify-content:space-between;
-  height:56px; flex-shrink:0; border-bottom:1px solid var(--border);
-  margin:0 -28px; padding:0 28px; margin-bottom:32px;
-}
-.dash-drawer-logo {
-  font-family:'Fraunces',serif; font-size:20px; font-style:italic;
-  font-weight:400; color:var(--charcoal); text-decoration:none;
-}
-.dash-drawer-logo em { color:var(--gold); }
-
-/* In the drawer, show the burger in open state */
-.dash-drawer .mnav-btn { display:flex; }
-
-.dash-drawer-couple {
-  font-family:'Fraunces',serif; font-size:13px; font-style:italic;
-  color:var(--muted); margin-bottom:24px;
-}
-
-.dash-drawer-item {
-  display:block; width:100%; text-align:left; background:none; border:none;
-  font-family:'Fraunces',serif; font-size:28px; font-weight:200; font-style:italic;
-  color:var(--charcoal); padding:14px 0; cursor:pointer;
-  border-bottom:1px solid var(--border);
-  opacity:0; transform:translateY(8px);
+.mdrawer.open{display:flex}
+.mdrawer a{
+  font-family:'Fraunces',serif;font-size:32px;font-weight:200;font-style:italic;
+  color:var(--ink);text-decoration:none;padding:14px 0;
+  border-bottom:1px solid var(--border2);
+  opacity:0;transform:translateY(8px);
   animation:mSlide .3s ease both;
-  transition:color .18s;
 }
-.dash-drawer-item:hover { color:var(--gold); }
-.dash-drawer-item:nth-child(3) { animation-delay:.05s; }
-.dash-drawer-item:nth-child(4) { animation-delay:.1s; }
-.dash-drawer-item:nth-child(5) { animation-delay:.15s; }
-.dash-drawer-item:nth-child(6) { animation-delay:.2s; }
-.dash-drawer-item:nth-child(7) { animation-delay:.25s; }
-.dash-drawer-item:nth-child(8) { animation-delay:.3s; }
-
-.dash-drawer-cta {
-  display:block; width:100%; text-align:center;
-  padding:15px; border-radius:10px;
-  background:var(--charcoal); color:var(--cream);
-  font-family:'Instrument Sans',sans-serif; font-size:14px; font-weight:600;
-  border:none; cursor:pointer; transition:.18s; margin-top:16px;
-  opacity:1; transform:none; animation:none;
+.mdrawer a:nth-child(1){animation-delay:.05s}
+.mdrawer a:nth-child(2){animation-delay:.1s}
+.mdrawer a:nth-child(3){animation-delay:.15s}
+.mdrawer a:nth-child(4){animation-delay:.2s}
+.mdrawer a:nth-child(5){animation-delay:.25s}
+@keyframes mSlide{to{opacity:1;transform:none}}
+.mdrawer-cta{
+  margin-top:auto;display:block;text-align:center;
+  padding:16px;border-radius:10px;background:var(--ink);
+  color:var(--bg)!important;font-family:'Instrument Sans',sans-serif!important;
+  font-size:15px!important;font-weight:600;font-style:normal!important;
+  border-bottom:none!important;opacity:1!important;transform:none!important;
+  animation:none!important;
 }
-.dash-drawer-cta:hover { background:var(--gold); }
 
-@keyframes mSlide { to { opacity:1; transform:none; } }
+/* Mobile sticky CTA bar at bottom */
+.mob-cta-bar{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:190;
+  padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+  background:rgba(250,247,242,.95);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+}
+.mob-cta-bar a{
+  display:block;text-align:center;padding:15px;
+  border-radius:10px;background:var(--ink);
+  color:var(--bg);font-size:15px;font-weight:600;
+  text-decoration:none;transition:.2s;
+}
+.mob-cta-bar a:active{transform:scale(.98)}
 
-@media(max-width:680px) {
-  .mnav-btn { display:flex; }
-  .hamburger-btn { display:none; }
-  .topbar { padding:0 16px; }
-  .topbar-center { display:none; }
-  .desktop-only { display:none !important; }
-  body { padding-top:56px; }
-  .topbar { height:56px; }
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero{
+  min-height:100vh;padding:100px 48px 80px;
+  display:flex;align-items:center;position:relative;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 70% at 70% 0%,rgba(196,154,58,.07) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 50% at 0% 100%,rgba(160,120,40,.05) 0%,transparent 50%);
+}
+/* Floating orbs */
+.hero-orb{
+  position:absolute;border-radius:50%;pointer-events:none;
+  animation:orb 8s ease-in-out infinite;
+}
+.hero-orb1{
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(196,154,58,.08),transparent 70%);
+  top:-100px;right:10%;animation-delay:0s;
+}
+.hero-orb2{
+  width:280px;height:280px;
+  background:radial-gradient(circle,rgba(160,120,40,.06),transparent 70%);
+  bottom:80px;left:5%;animation-delay:-3s;
+}
+@keyframes orb{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(20px,-20px) scale(1.04)}
+  66%{transform:translate(-10px,15px) scale(.97)}
+}
+
+.hero-inner{
+  max-width:1200px;margin:0 auto;width:100%;
+  display:grid;grid-template-columns:1fr .52fr;
+  gap:80px;align-items:center;position:relative;z-index:1;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:24px;
+  opacity:0;animation:fadeUp .6s .1s ease both;
+}
+.hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold);flex-shrink:0}
+.hero-title{
+  font-family:'Fraunces',serif;
+  font-size:clamp(48px,6.5vw,84px);
+  line-height:1.02;font-weight:200;color:var(--ink);
+  letter-spacing:-.03em;margin-bottom:24px;
+  opacity:0;animation:fadeUp .7s .18s ease both;
+}
+.hero-title em{font-style:italic;color:var(--gold);font-weight:300;display:block}
+.hero-title .h-sub{
+  font-size:clamp(26px,3.5vw,44px);
+  color:var(--muted);font-weight:200;font-family:'Fraunces',serif;
+  letter-spacing:-.02em;font-style:normal;
+}
+.hero-desc{
+  font-size:16px;color:var(--muted);line-height:1.8;
+  max-width:460px;margin-bottom:40px;font-weight:400;
+  opacity:0;animation:fadeUp .7s .26s ease both;
+}
+.hero-acts{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  opacity:0;animation:fadeUp .7s .34s ease both;
+}
+.btn-dark{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 30px;border-radius:8px;
+  background:var(--ink);color:var(--bg);
+  font-size:14px;font-weight:600;text-decoration:none;
+  transition:.22s;letter-spacing:.01em;
+}
+.btn-dark:hover{background:var(--gold);transform:translateY(-2px);box-shadow:0 10px 32px rgba(160,120,40,.25)}
+.btn-outline{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 26px;border-radius:8px;
+  border:1.5px solid var(--border);color:var(--muted);
+  font-size:14px;font-weight:500;text-decoration:none;transition:.22s;
+}
+.btn-outline:hover{border-color:var(--ink);color:var(--ink)}
+.hero-note{
+  font-size:12px;color:var(--muted2);margin-top:18px;
+  display:flex;align-items:center;gap:12px;
+  opacity:0;animation:fadeUp .7s .42s ease both;
+  flex-wrap:wrap;
+}
+.hero-note span{display:flex;align-items:center;gap:5px}
+.hero-note span::before{content:'✓';font-size:10px;color:var(--gold);font-weight:700}
+
+/* Hero card stack */
+.hero-cards{
+  position:relative;height:400px;
+  opacity:0;animation:fadeRight .9s .5s ease both;
+}
+.hcard{
+  position:absolute;background:var(--surface);
+  border:1px solid var(--border2);border-radius:16px;
+  padding:20px;box-shadow:var(--shadow2);
+  transition:.35s cubic-bezier(.4,0,.2,1);
+}
+.hcard:hover{transform:translateY(-5px) rotate(0deg)!important;box-shadow:0 20px 60px rgba(26,22,18,.16)!important}
+.hc-main{width:100%;top:0;left:0;right:0;transform:rotate(-1.2deg)}
+.hc-float{
+  width:82%;bottom:0;right:-16px;top:auto;
+  background:var(--bg2);transform:rotate(.8deg);
+  border-color:var(--border);
+}
+/* Card internals */
+.hc-eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted2);font-weight:600;margin-bottom:8px}
+.hc-heading{font-family:'Fraunces',serif;font-size:14px;font-style:italic;font-weight:300;color:var(--ink);margin-bottom:14px}
+.hc-big{font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:var(--gold);letter-spacing:-.02em}
+.hc-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.hc-pct{font-size:11px;color:var(--muted2)}
+.hc-track{height:3px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.hc-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  animation:fillGrow 1.8s 1.2s cubic-bezier(.4,0,.2,1) both}
+@keyframes fillGrow{from{width:0}to{width:74%}}
+.hc-items{display:flex;flex-direction:column;gap:6px}
+.hc-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;border-radius:8px;
+  background:var(--bg);border:1px solid var(--border2);
+}
+.hc-ico{font-size:14px}
+.hc-name{font-size:11px;font-weight:600;color:var(--ink2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-pill{font-size:9px;padding:2px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.p-ok{background:rgba(40,140,60,.1);color:#1a6e30;border:1px solid rgba(40,140,60,.2)}
+.p-dep{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-bd)}
+/* Float card */
+.hc-notif{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:10px;
+  background:rgba(40,140,60,.07);border:1px solid rgba(40,140,60,.18);
+  margin-bottom:12px;
+}
+.hc-nav{font-size:18px}
+.hc-nt strong{font-size:12px;color:#1a6e30;display:block}
+.hc-nt span{font-size:10px;color:var(--muted)}
+.hc-gcounts{display:flex;gap:0;border-top:1px solid var(--border2);padding-top:12px}
+.hc-gc{flex:1;text-align:center}
+.hc-gc+.hc-gc{border-left:1px solid var(--border2)}
+.hc-gn{font-family:'Fraunces',serif;font-size:22px;font-weight:200;color:var(--gold)}
+.hc-gl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-top:2px}
+
+/* ══════════════════════════════════════
+   MARQUEE
+══════════════════════════════════════ */
+.marquee{
+  padding:14px 0;background:var(--ink);overflow:hidden;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.marquee-track{
+  display:flex;white-space:nowrap;
+  animation:scroll 30s linear infinite;
+}
+.marquee-track span{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:0 28px;font-size:11px;font-weight:500;
+  color:rgba(250,247,242,.35);letter-spacing:.1em;text-transform:uppercase;
+}
+.marquee-track span::before{content:'✦';color:var(--gold2);font-size:8px;opacity:.8}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ══════════════════════════════════════
+   STATS
+══════════════════════════════════════ */
+.stats{
+  padding:72px 48px;max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border2);border:1px solid var(--border2);
+  border-radius:var(--r);overflow:hidden;
+}
+.stat{
+  background:var(--surface);padding:36px 28px;text-align:center;
+  opacity:0;transform:translateY(16px);transition:.5s ease;
+}
+.stat.vis{opacity:1;transform:none}
+.stat-n{
+  font-family:'Fraunces',serif;font-size:48px;font-weight:200;
+  color:var(--gold);letter-spacing:-.03em;line-height:1;
+}
+.stat-l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em;font-weight:600;margin-top:6px}
+
+/* ══════════════════════════════════════
+   FEATURES — BENTO
+══════════════════════════════════════ */
+.bento{padding:80px 48px;max-width:1200px;margin:0 auto}
+.section-pre{
+  font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:14px;display:block;
+}
+.section-h{
+  font-family:'Fraunces',serif;font-size:clamp(30px,4.5vw,54px);
+  font-weight:200;color:var(--ink);line-height:1.08;letter-spacing:-.025em;
+}
+.section-h em{font-style:italic;color:var(--gold);font-weight:300}
+.section-p{font-size:15px;color:var(--muted);line-height:1.75;max-width:440px;margin-top:12px}
+.bhead{margin-bottom:52px}
+
+.bgrid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  grid-auto-rows:auto;gap:12px;
+}
+.bcard{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:var(--r);padding:28px;
+  position:relative;overflow:hidden;cursor:default;
+  opacity:0;transform:translateY(20px);
+  transition:opacity .5s ease,transform .5s ease,border-color .2s,box-shadow .2s;
+}
+.bcard.vis{opacity:1;transform:none}
+.bcard:hover{border-color:var(--border);box-shadow:var(--shadow)}
+/* Hover shimmer */
+.bcard::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,0%),rgba(160,120,40,.05),transparent 55%);
+  opacity:0;transition:.3s;pointer-events:none;
+}
+.bcard:hover::before{opacity:1}
+.bcard.s2{grid-column:span 2}
+.bcard.s3{grid-column:span 3}
+
+.bc-ico{font-size:24px;margin-bottom:14px;display:block}
+.bc-h{font-family:'Fraunces',serif;font-size:19px;font-weight:300;color:var(--ink);margin-bottom:8px;letter-spacing:-.01em}
+.bc-p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* Budget bar demo inside card */
+.bc-bars{margin-top:18px;display:flex;flex-direction:column;gap:9px}
+.bc-bar-row{display:flex;align-items:center;gap:10px}
+.bc-bar-lbl{font-size:11px;color:var(--muted2);width:80px;flex-shrink:0;font-weight:500}
+.bc-bar-track{flex:1;height:4px;background:var(--bg2);border-radius:2px;overflow:hidden}
+.bc-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  transition:width 1.1s cubic-bezier(.4,0,.2,1)}
+
+/* ══════════════════════════════════════
+   HOW IT WORKS — NUMBERED STEPS
+══════════════════════════════════════ */
+.how{
+  padding:80px 48px;background:var(--ink);overflow:hidden;position:relative;
+}
+.how::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 80% at 0% 50%,rgba(196,154,58,.07),transparent 55%),
+    radial-gradient(ellipse 40% 60% at 100% 20%,rgba(160,120,40,.05),transparent 50%);
+  pointer-events:none;
+}
+.how-inner{max-width:1200px;margin:0 auto;position:relative}
+.how .section-pre{color:var(--gold2)}
+.how .section-h{color:rgba(250,247,242,.95)}
+.how .section-h em{color:var(--gold2)}
+.how-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  margin-top:56px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);border-radius:var(--r);overflow:hidden;
+}
+.how-step{
+  padding:36px 28px;background:var(--ink);
+  position:relative;
+  opacity:0;transform:translateY(16px);transition:.5s ease;
+}
+.how-step.vis{opacity:1;transform:none}
+.how-step::after{
+  content:'';position:absolute;top:36px;right:0;
+  width:1px;height:32px;background:rgba(255,255,255,.08);
+}
+.how-step:last-child::after{display:none}
+.how-num{
+  font-family:'Fraunces',serif;font-size:44px;font-weight:200;
+  color:rgba(196,154,58,.2);line-height:1;letter-spacing:-.04em;margin-bottom:14px;
+}
+.how-t{font-family:'Fraunces',serif;font-size:18px;font-weight:300;color:rgba(250,247,242,.9);margin-bottom:8px;font-style:italic}
+.how-d{font-size:13px;color:rgba(250,247,242,.38);line-height:1.7}
+
+/* ══════════════════════════════════════
+   DEMO SECTION — inherits from existing
+══════════════════════════════════════ */
+
+/* ══════════════════════════════════════
+   TESTIMONIALS
+══════════════════════════════════════ */
+.testi{padding:80px 48px;max-width:1200px;margin:0 auto}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:48px}
+.tc{
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);
+  padding:28px;display:flex;flex-direction:column;gap:16px;
+  opacity:0;transform:translateY(16px);transition:.5s ease;
+}
+.tc.vis{opacity:1;transform:none}
+.tc-stars{color:var(--gold);letter-spacing:2px;font-size:13px}
+.tc-q{
+  font-family:'Fraunces',serif;font-size:17px;font-weight:200;
+  color:var(--ink2);line-height:1.65;font-style:italic;flex:1;
+}
+.tc-foot{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--border2)}
+.tc-av{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--gold-bg);border:1px solid var(--gold-bd);
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
+}
+.tc-name{font-size:13px;font-weight:600;color:var(--ink)}
+.tc-loc{font-size:11px;color:var(--muted2)}
+
+/* ══════════════════════════════════════
+   PRICING
+══════════════════════════════════════ */
+.pricing{padding:80px 48px;max-width:900px;margin:0 auto}
+.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:48px}
+.pcard{
+  border:1px solid var(--border2);border-radius:16px;padding:36px;
+  background:var(--surface);
+  opacity:0;transform:translateY(16px);transition:.5s ease;
+}
+.pcard.vis{opacity:1;transform:none}
+.pcard.pro{
+  background:var(--ink);color:var(--bg);
+  border-color:var(--ink);
+  box-shadow:0 16px 64px rgba(26,22,18,.18);
+}
+.p-badge{
+  display:inline-block;padding:4px 12px;border-radius:99px;
+  background:var(--gold-bg);border:1px solid var(--gold-bd);
+  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:14px;
+}
+.pcard.pro .p-badge{background:rgba(196,154,58,.15);border-color:rgba(196,154,58,.3);color:var(--gold2)}
+.p-name{font-family:'Fraunces',serif;font-size:24px;font-weight:200;color:var(--ink);margin-bottom:2px}
+.pcard.pro .p-name{color:var(--bg)}
+.p-amount{
+  font-family:'Fraunces',serif;font-size:54px;font-weight:200;
+  color:var(--gold);letter-spacing:-.04em;line-height:1;margin:14px 0 4px;
+}
+.pcard.pro .p-amount{color:var(--gold2)}
+.p-per{font-size:12px;color:var(--muted2);margin-bottom:22px}
+.p-sep{height:1px;background:var(--border2);margin:18px 0}
+.pcard.pro .p-sep{background:rgba(255,255,255,.08)}
+.p-feats{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.p-feats li{font-size:13px;color:var(--muted);display:flex;align-items:flex-start;gap:9px;line-height:1.5}
+.pcard.pro .p-feats li{color:rgba(250,247,242,.55)}
+.p-feats li::before{content:'✓';color:var(--gold);flex-shrink:0;font-weight:700;font-size:11px;margin-top:1px}
+.pbtn{
+  display:block;text-align:center;padding:14px;border-radius:8px;
+  font-size:13px;font-weight:600;text-decoration:none;transition:.2s;letter-spacing:.01em;
+}
+.pbtn-dk{background:var(--ink);color:var(--bg)}
+.pbtn-dk:hover{background:var(--gold)}
+.pbtn-lt{border:1.5px solid var(--border);color:var(--muted)}
+.pbtn-lt:hover{border-color:var(--ink);color:var(--ink)}
+.pnote{text-align:center;font-size:12px;color:var(--muted2);margin-top:18px}
+
+/* ══════════════════════════════════════
+   FINAL CTA
+══════════════════════════════════════ */
+.cta-fin{
+  padding:110px 48px;text-align:center;background:var(--bg2);
+  position:relative;overflow:hidden;
+  border-top:1px solid var(--border2);
+}
+.cta-fin::before{
+  content:'';position:absolute;
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(196,154,58,.07),transparent 65%);
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+}
+.cta-fin-inner{position:relative;z-index:1}
+.cta-fin h2{
+  font-family:'Fraunces',serif;font-size:clamp(38px,6vw,72px);
+  font-weight:200;letter-spacing:-.03em;line-height:1.05;
+  color:var(--ink);margin-bottom:16px;
+}
+.cta-fin h2 em{font-style:italic;color:var(--gold);font-weight:300}
+.cta-fin p{font-size:16px;color:var(--muted);margin-bottom:40px;line-height:1.7}
+.cta-fin-note{font-size:12px;color:var(--muted2);margin-top:16px;letter-spacing:.04em}
+
+/* ══════════════════════════════════════
+   FOOTER
+══════════════════════════════════════ */
+footer{
+  padding:28px 48px;border-top:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+  background:var(--surface);
+}
+.foot-logo{
+  font-family:'Fraunces',serif;font-size:17px;font-style:italic;
+  font-weight:300;color:var(--ink);text-decoration:none;
+}
+.foot-logo em{color:var(--gold)}
+.flinks{display:flex;gap:20px}
+.flinks a{font-size:12px;color:var(--muted2);text-decoration:none;transition:.2s}
+.flinks a:hover{color:var(--ink)}
+footer p{font-size:12px;color:var(--muted2)}
+
+/* ══════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeRight{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+
+/* ══════════════════════════════════════
+   DEMO SECTION OVERRIDES (light theme)
+══════════════════════════════════════ */
+.demo-section{
+  background:var(--bg)!important;
+  border-top:1px solid var(--border2)!important;
+  border-bottom:1px solid var(--border2)!important;
+}
+.demo-section .stitle{color:var(--ink)!important}
+.demo-section .ssub{color:var(--muted)!important}
+.dtab{
+  border-color:var(--border)!important;
+  color:var(--muted)!important;background:var(--surface)!important;
+}
+.dtab:hover{border-color:var(--ink)!important;color:var(--ink)!important;background:var(--surface)!important}
+.dtab.on{background:var(--ink)!important;border-color:var(--ink)!important;color:var(--bg)!important}
+.dmock{background:var(--bg2)!important;border-color:var(--border)!important}
+.dmock-bar{background:var(--surface)!important;border-color:var(--border2)!important}
+.dmock-url{background:var(--bg2)!important;color:var(--muted2)!important}
+.dmock-body{background:var(--bg2)!important}
+.dpanel-copy h3{color:var(--ink)!important}
+.dpanel-copy .dpanel-desc{color:var(--muted)!important}
+.dpanel-copy .eyebrow{color:var(--gold)!important}
+.dpanel-bullets li{color:var(--muted)!important}
+.dpanel-bullets li::before{color:var(--gold)!important}
+.try-btn{background:var(--ink)!important;color:var(--bg)!important}
+.try-btn:hover{background:var(--gold)!important}
+/* Demo mock internals — light */
+.bd-hero{background:var(--gold-bg)!important;border-color:var(--gold-bd)!important}
+.bd-big{color:var(--gold)!important}
+.bd-lbl{color:var(--muted2)!important}
+.bd-track{background:var(--border2)!important}
+.bd-meta{color:var(--muted2)!important}
+.bd-card{background:var(--surface)!important;border-color:var(--border2)!important}
+.bd-card-name{color:var(--ink)!important}
+.bd-card-cat{color:var(--muted2)!important}
+.bd-card-amt{color:var(--muted)!important}
+.gd-stat{background:var(--surface)!important;border-color:var(--border2)!important}
+.gd-stat-n{color:var(--gold)!important}
+.gd-stat-l{color:var(--muted2)!important}
+.gd-row{background:var(--surface)!important;border-color:var(--border2)!important}
+.gd-name{color:var(--ink)!important}
+.gd-side{color:var(--muted2)!important}
+.seat-canvas{background:var(--surface)!important}
+.st{border-color:rgba(160,120,40,.4)!important;background:rgba(160,120,40,.04)!important}
+.st-label{color:var(--muted)!important}
+.st-count{color:var(--gold)!important}
+.sc{border-color:rgba(160,120,40,.35)!important;background:var(--bg2)!important}
+.sc.filled{background:var(--gold)!important;color:white!important;border-color:var(--gold)!important}
+.chip{background:var(--surface)!important;border-color:var(--border)!important;color:var(--muted)!important}
+.chip.seated{opacity:.35!important}
+.chip.animating{background:var(--gold)!important;color:white!important;border-color:var(--gold)!important}
+.phone-shell{background:var(--ink)!important}
+.rsvp-notif{background:rgba(40,140,60,.06)!important;border-color:rgba(40,140,60,.2)!important}
+.rsvp-notif-txt strong{color:#1a6e30!important}
+.rsvp-notif-txt span{color:var(--muted)!important}
+.rsvp-count{background:var(--surface)!important;border-color:var(--border2)!important}
+.rsvp-count-label{color:var(--muted)!important}
+.rsvp-count-n{color:var(--gold)!important}
+.rsvp-bar-wrap{background:var(--bg2)!important}
+
+/* ══════════════════════════════════════
+   RESPONSIVE — TABLET (≤900px)
+══════════════════════════════════════ */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:48px}
+  .hero-cards{
+    display:flex;flex-direction:column;gap:14px;
+    height:auto;position:static;
+    animation:fadeUp .8s .4s ease both;
+    padding:0 0 4px;
+  }
+  .hcard{position:static !important;transform:none !important;width:100% !important;}
+  .hc-float{background:var(--surface);border:1px solid var(--border2);}
+  .hero{padding:90px 32px 60px;min-height:auto}
+  .bgrid{grid-template-columns:repeat(2,1fr)}
+  .bcard.s2,.bcard.s3{grid-column:span 2}
+  .how-grid{grid-template-columns:repeat(2,1fr)}
+  .tgrid{grid-template-columns:repeat(2,1fr)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .dpanel.on{grid-template-columns:1fr;gap:32px}
+  .dpanel-copy{order:2}.dpanel-screen{order:1}
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE — MOBILE (≤640px)
+══════════════════════════════════════ */
+@media(max-width:640px){
+  /* Show mobile nav, hide desktop nav */
+  .nav{display:none}
+  .mnav{display:flex}
+  .mob-cta-bar{display:block}
+
+  /* Hero */
+  .hero{padding:80px 20px 56px;min-height:100svh;align-items:flex-end}
+  .hero-cards{padding:0;}
+  .hcard{border-radius:12px;}
+  .hero-title{font-size:clamp(42px,11vw,60px);margin-bottom:20px}
+  .hero-title .h-sub{font-size:clamp(22px,6.5vw,32px)}
+  .hero-desc{font-size:15px;margin-bottom:32px}
+  .hero-acts .btn-outline{display:none}/* hide secondary CTA — bottom bar handles it */
+  .hero-acts .btn-dark{width:100%;justify-content:center;padding:16px}
+  .hero-note{font-size:11px;gap:8px}
+  .hero-cards{display:flex;flex-direction:column;gap:12px;height:auto;position:static;}
+  .hcard{position:static !important;transform:none !important;width:100% !important;border-radius:12px;}
+  .hc-float{top:auto;right:auto;bottom:auto;}
+  .hero-eyebrow{margin-bottom:20px}
+
+  /* Stats */
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+    margin:0 20px;border-radius:var(--r);padding:0;
+  }
+  .stat{padding:24px 16px}
+  .stat-n{font-size:36px}
+  .stat-l{font-size:10px}
+
+  /* Bento */
+  .bento{padding:56px 20px}
+  .bgrid{grid-template-columns:1fr;gap:10px}
+  .bcard.s2,.bcard.s3{grid-column:span 1}
+  .bcard{padding:22px}
+
+  /* How */
+  .how{padding:56px 20px}
+  .how-grid{grid-template-columns:1fr;gap:2px}
+  .how-step{padding:24px 20px}
+  .how-step::after{top:auto;bottom:0;right:0;left:0;width:auto;height:1px}
+  .how-num{font-size:36px;margin-bottom:10px}
+
+  /* Demo section */
+  .demo-section{padding:56px 20px}
+  .dtabs{gap:5px;margin-bottom:32px}
+  .dtab{padding:8px 14px;font-size:12px}
+  .dtab .dtab-icon{display:none}/* just text on mobile */
+  .dpanel.on{grid-template-columns:1fr;gap:28px}
+  .dpanel-copy h3{font-size:clamp(24px,7vw,34px)}
+
+  /* Testimonials */
+  .testi{padding:56px 20px}
+  .tgrid{grid-template-columns:1fr;gap:10px}
+
+  /* Pricing */
+  .pricing{padding:56px 20px}
+  .pgrid{grid-template-columns:1fr;gap:12px}
+  .pcard.pro{order:-1}/* Pro first on mobile */
+
+  /* CTA */
+  .cta-fin{padding:72px 20px 100px}/* extra bottom for mob bar */
+  .cta-fin h2{font-size:clamp(34px,9vw,52px)}
+
+  /* Footer */
+  footer{padding:24px 20px;flex-direction:column;text-align:center}
+  .flinks{justify-content:center}
+
+  /* Marquee */
+  .marquee-track span{padding:0 18px;font-size:10px}
+
+  /* Section headings */
+  .section-h{font-size:clamp(28px,8vw,42px)}
+  .bhead,.testi,.pricing{margin-bottom:0}
+
+  /* Bento card bars */
+  .bc-bar-lbl{width:60px;font-size:10px}
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE — SMALL (≤400px)
+══════════════════════════════════════ */
+@media(max-width:400px){
+  .hero-title{font-size:38px}
+  .stat-n{font-size:30px}
+  .how-num{font-size:30px}
 }
 </style>
-</head>
-<body>
 
-<!-- ── TOP BAR ────────────────────────────────────────────────────────────── -->
-<nav class="topbar">
-  <a href="index.html" class="topbar-logo">Wedding<em>Ledger</em></a>
-  <div class="topbar-center" id="coupleNames"></div>
-  <div class="topbar-right">
-    <div style="display:flex;align-items:center;gap:6px">
-      <select id="currencySelect" class="currency-select"></select>
-      <span id="liveRateBadge" style="font-size:10px;color:var(--muted);white-space:nowrap;display:none"></span>
-    </div>
-    <div class="notif-wrap" id="notifBell" onclick="toggleNotifPanel()">
-      <button class="notif-btn" title="Upcoming payments">🔔</button>
-      <div class="notif-dot" id="notifDot" style="display:none"></div>
-      <div class="notif-panel" id="notifPanel" style="display:none"></div>
-    </div>
-    <div id="proBadge" class="desktop-only"></div>
-    <a href="guests.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">👥 Guests</a>
-    <a href="seating.html" class="topbar-btn desktop-only" style="display:none">🪑 Seating</a>
-    <a href="timeline.html" class="topbar-btn desktop-only" style="display:none">📅 Timeline</a>
-    <button class="topbar-btn desktop-only" onclick="openSettingsModal()" style="color:var(--muted)">⚙️ Settings</button>
-    <button onclick="openPartnerModal()" id="partnerBtn" title="Invite Partner" style="background:none;border:1.5px solid var(--gold);border-radius:8px;padding:7px 14px;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;white-space:nowrap">💌 <span class="desktop-only" style="display:inline">Partner</span></button>
-    <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
-    <button class="topbar-btn signout-btn desktop-only" onclick="doLogout()">Sign Out</button>
-    <!-- Mobile hamburger -->
-    <div class="mnav-btn" id="dashBurger" onclick="toggleDashDrawer()" aria-label="Menu"><span></span><span></span><span></span></div>
+<!-- ═══ DESKTOP NAV ═══ -->
+<nav class="nav" id="mainNav">
+  <a href="index.html" class="nav-logo">Wedding<em>Ledger</em></a>
+  <div class="nav-mid">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <div class="nav-end">
+    <a href="login.html" class="nav-in">Sign in</a>
+    <a href="login.html" class="nav-cta">Start free →</a>
   </div>
 </nav>
 
-<!-- ── MOBILE NAV DRAWER ── -->
-<div class="dash-drawer" id="dashDrawer">
-  <div class="dash-drawer-top">
-    <a href="index.html" class="dash-drawer-logo">Wedding<em>Ledger</em></a>
-    <div class="mnav-btn open" onclick="toggleDashDrawer()"><span></span><span></span><span></span></div>
+<!-- ═══ MOBILE NAV ═══ -->
+<nav class="mnav" id="mobileNav">
+  <a href="index.html" class="mnav-logo">Wedding<em>Ledger</em></a>
+  <div class="mnav-btn" id="mnavBtn" onclick="toggleDrawer()">
+    <span></span><span></span><span></span>
   </div>
-  <div class="dash-drawer-couple" id="mobileNavNames"></div>
-  <div id="mobileProBadge" style="margin-bottom:8px"></div>
-  <button class="dash-drawer-item" onclick="toggleDashDrawer();openShareModal()">🔗 Share Budget</button>
-  <button class="dash-drawer-item" onclick="location.href='guests.html'">👥 Guest List</button>
-  <button class="dash-drawer-item" onclick="location.href='seating.html'" style="display:none">🪑 Seating Chart</button>
-  <button class="dash-drawer-item" onclick="location.href='timeline.html'" style="display:none">📅 Timeline</button>
-  <button class="dash-drawer-item" onclick="toggleDashDrawer();openSettingsModal()">⚙️ Settings</button>
-  <button class="dash-drawer-item" onclick="toggleDashDrawer();openPartnerModal()" style="color:var(--gold);font-weight:700">💌 Invite Partner</button>
-  <div style="flex:1"></div>
-  <button class="dash-drawer-cta" onclick="doLogout()">Sign Out</button>
+</nav>
+
+<!-- Mobile drawer -->
+<div class="mdrawer" id="mDrawer">
+  <a href="#features" onclick="toggleDrawer()">Features</a>
+  <a href="#how" onclick="toggleDrawer()">How it works</a>
+  <a href="#pricing" onclick="toggleDrawer()">Pricing</a>
+  <a href="login.html">Sign in</a>
+  <a href="login.html" class="mdrawer-cta">✨ Start planning free</a>
 </div>
 
-<!-- ── COUPLE HERO ────────────────────────────────────────────────────────── -->
-<div id="coupleHero"></div>
-
-<!-- ── COUNTDOWN ─────────────────────────────────────────────────────────── -->
-<section class="countdown-section">
-  <div class="countdown-label">Days Until Your Wedding</div>
-  <div class="countdown-timer">
-    <div class="countdown-unit"><div class="countdown-num" id="cd-days">—</div><div class="countdown-unit-label">Days</div></div>
-    <div class="countdown-sep">:</div>
-    <div class="countdown-unit"><div class="countdown-num" id="cd-hours">—</div><div class="countdown-unit-label">Hours</div></div>
-    <div class="countdown-sep">:</div>
-    <div class="countdown-unit"><div class="countdown-num" id="cd-mins">—</div><div class="countdown-unit-label">Mins</div></div>
-    <div class="countdown-sep">:</div>
-    <div class="countdown-unit"><div class="countdown-num" id="cd-secs">—</div><div class="countdown-unit-label">Secs</div></div>
-  </div>
-</section>
-
-<!-- ── UPCOMING PAYMENTS ALERT ───────────────────────────────────────────── -->
-<div class="upcoming-section" id="upcomingSection" style="display:none">
-  <div class="section-inner">
-    <div class="upcoming-header">⚠️ Upcoming Payments Due</div>
-    <div class="upcoming-list" id="upcomingList"></div>
-  </div>
+<!-- Mobile bottom CTA bar -->
+<div class="mob-cta-bar">
+  <a href="login.html">✨ Start planning for free</a>
 </div>
 
-<!-- ── STATS ─────────────────────────────────────────────────────────────── -->
-<section class="stats-section">
-  <div class="section-inner">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Total Budget</div>
-        <div class="stat-value" id="stat-total">—</div>
-        <div class="stat-gbp" id="stat-total-gbp" style="display:none"></div>
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-orb hero-orb1"></div>
+  <div class="hero-orb hero-orb2"></div>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="hero-eyebrow">🇬🇧 Built for UK couples</div>
+      <h1 class="hero-title">
+        Your wedding,
+        <em>beautifully planned.</em>
+        <span class="h-sub">Every penny. Every guest.</span>
+      </h1>
+      <p class="hero-desc">Track vendors, manage your guest list, handle RSVPs and plan your seating — all in one elegant tool designed around British weddings.</p>
+      <div class="hero-acts">
+        <a href="login.html" class="btn-dark">✨ Start for free</a>
+        <a href="#how" class="btn-outline">See how it works →</a>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Paid</div>
-        <div class="stat-value paid-color" id="stat-paid">—</div>
-        <div class="stat-gbp" id="stat-paid-gbp" style="display:none"></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Remaining</div>
-        <div class="stat-value remain-color" id="stat-remaining">—</div>
-        <div class="stat-gbp" id="stat-remaining-gbp" style="display:none"></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Active Vendors</div>
-        <div class="stat-value" id="stat-count">0</div>
-      </div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-top">
-        <span class="progress-label">Budget Used</span>
-        <span class="progress-pct" id="progress-pct">0%</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-    </div>
-    <div class="vendor-limit-bar" id="vendorLimitBar" style="display:none"></div>
-  </div>
-</section>
-
-<!-- ── VENDORS ───────────────────────────────────────────────────────────── -->
-<section class="vendors-section">
-  <div class="section-inner">
-    <div class="section-header">
-      <h2 class="section-title">💒 Vendors</h2>
-      <button class="btn-add-vendor" onclick="document.getElementById('addVendorForm').classList.toggle('open')">+ Add Vendor</button>
-    </div>
-    <div class="add-vendor-form" id="addVendorForm">
-      <div class="icon-selector" id="iconSelector"></div>
-      <div class="add-vendor-fields">
-        <input id="newVendorCategory" placeholder="Category (e.g. Florist)" class="field-input">
-        <input id="newVendorName" placeholder="Vendor name *" class="field-input">
-        <input id="newVendorTotal" type="number" placeholder="Total cost" class="field-input">
-        <input id="newVendorNotes" placeholder="Notes (optional)" class="field-input">
-      </div>
-      <button class="btn-primary" onclick="addVendor()">Add Vendor →</button>
-    </div>
-    <div class="vendors-grid" id="vendorsGrid"></div>
-  </div>
-</section>
-
-<!-- ── SUMMARY + SETTINGS ────────────────────────────────────────────────── -->
-<section class="bottom-section">
-  <div class="section-inner bottom-grid">
-    <div class="summary-card">
-      <h3 class="card-title">📊 Financial Summary</h3>
-      <div class="summary-rows">
-        <div class="summary-row"><span>Total Budget</span><strong id="sum-total">—</strong></div>
-        <div class="summary-row"><span>Total Paid</span><strong id="sum-paid" class="paid-color">—</strong></div>
-        <div class="summary-row"><span>Remaining</span><strong id="sum-remaining" class="remain-color">—</strong></div>
-        <div class="summary-row"><span>Spend Limit</span><strong id="sum-limit">Not set</strong></div>
-        <div class="summary-row highlight"><span>Available</span><strong id="sum-available">—</strong></div>
-      </div>
-    </div>
-    <div class="summary-card">
-      <h3 class="card-title">⚙️ Settings</h3>
-      <label class="field-label">Spend Limit</label>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input id="spendLimit" type="number" placeholder="Enter limit" class="field-input" style="flex:1;margin:0">
-        <button class="btn-primary" style="padding:10px 18px" onclick="saveLimit()">Save</button>
-      </div>
-      <label class="field-label">Wedding Notes</label>
-      <textarea id="weddingNotes" rows="4" class="field-input" placeholder="Notes about your wedding..." style="resize:vertical"></textarea>
-      <button class="btn-primary" style="margin-top:8px" onclick="saveNotes()">Save Notes</button>
-    </div>
-  </div>
-</section>
-
-<!-- ── BUDGET CHART ──────────────────────────────────────────────────────── -->
-<section class="bottom-section" style="padding-top:0">
-  <div class="section-inner">
-    <div class="summary-card" style="padding:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-        <h3 class="card-title" style="margin:0">📊 Budget Breakdown</h3>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <div style="display:flex;gap:6px">
-            <button onclick="setChartType('doughnut')" id="btnDoughnut"
-              style="background:var(--gold);color:white;border:none;border-radius:8px;
-              padding:7px 14px;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
-              🍩 Doughnut
-            </button>
-            <button onclick="setChartType('bar')" id="btnBar"
-              style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
-              border-radius:8px;padding:7px 14px;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer">
-              📊 Bar
-            </button>
-          </div>
-          <button onclick="exportPDF()"
-            style="background:linear-gradient(135deg,#2d5a3d,#3d7a52);color:white;border:none;
-            border-radius:99px;padding:8px 18px;font-family:'Instrument Sans',sans-serif;font-size:12px;
-            font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
-            box-shadow:0 4px 14px rgba(45,90,61,0.3)">
-            📄 Export PDF
-          </button>
-        </div>
-      </div>
-      <div style="position:relative;max-width:480px;margin:0 auto" id="chartWrapper">
-        <canvas id="budgetChart" height="300"></canvas>
-        <div id="chartEmpty" style="display:none;text-align:center;padding:40px;color:var(--muted);font-size:14px">
-          Add vendors to see your budget breakdown
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── PAYMENT TIMELINE ──────────────────────────────────────────────────── -->
-<section class="bottom-section" style="padding-top:0">
-  <div class="section-inner">
-    <div class="summary-card" style="padding:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-        <h3 class="card-title" style="margin:0">💳 Payment Timeline</h3>
-        <div style="display:flex;gap:8px">
-          <button onclick="setTimelineFilter('all')" id="tlAll"
-            style="background:var(--gold);color:white;border:none;border-radius:8px;padding:6px 14px;
-            font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">All</button>
-          <button onclick="setTimelineFilter('paid')" id="tlPaid"
-            style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
-            border-radius:8px;padding:6px 14px;font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Paid</button>
-          <button onclick="setTimelineFilter('upcoming')" id="tlUpcoming"
-            style="background:var(--warm);color:var(--charcoal);border:1.5px solid var(--border);
-            border-radius:8px;padding:6px 14px;font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer">Upcoming</button>
-        </div>
-      </div>
-      <div id="paymentTimeline">
-        <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">
-          No payments recorded yet
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── CHECKLIST ─────────────────────────────────────────────────────────── -->
-<section class="checklist-section">
-  <div class="section-inner">
-    <h2 class="section-title" style="margin-bottom:16px">✅ Wedding Checklist</h2>
-    <div class="checklist-grid" id="checklistGrid"></div>
-    <div class="add-task-row">
-      <input id="newTaskInput" class="field-input" placeholder="Add a new task..." onkeydown="if(event.key==='Enter')addTask()">
-      <button class="btn-primary" onclick="addTask()">Add</button>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════ MODALS ═══════════════════════════════════════════════════════ -->
-
-<!-- Payment Modal -->
-<div class="modal-overlay" id="paymentModal" style="display:none">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">💳 Add Payment</h3>
-      <button class="modal-close" onclick="closePaymentModal()">✕</button>
-    </div>
-    <div class="modal-vendor-name" id="modalVendorName"></div>
-    <div class="modal-body">
-      <label class="field-label">Amount <span id="pmtCurrencyLabel" style="color:var(--gold);font-size:13px"></span></label>
-      <input id="pmtAmount" type="number" class="field-input" placeholder="0.00">
-      <label class="field-label">Payment Date</label>
-      <input id="pmtDate" type="date" class="field-input">
-      <label class="field-label">Method</label>
-      <select id="pmtMethod" class="field-input">
-        <option>Cash</option><option>Bank Transfer</option><option>Card</option>
-        <option>Cheque</option><option>Online</option><option>Other</option>
-      </select>
-      <label class="field-label">Note (optional)</label>
-      <input id="pmtNote" class="field-input" placeholder="e.g. Deposit payment">
-      <button class="btn-primary full-width" style="margin-top:16px" onclick="submitPayment()">Record Payment →</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit Vendor Modal -->
-<div class="modal-overlay" id="editModal" style="display:none">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">✏️ Edit Vendor</h3>
-      <button class="modal-close" onclick="closeEditModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <label class="field-label">Vendor Name</label>
-      <input id="editVendorName" class="field-input" placeholder="e.g. Silva Studios">
-      <label class="field-label">Category</label>
-      <input id="editVendorCategory" class="field-input" placeholder="e.g. Photographer">
-      <label class="field-label">Total Cost</label>
-      <input id="editVendorTotal" type="number" class="field-input" placeholder="0">
-      <label class="field-label">Notes</label>
-      <textarea id="editVendorNotes" class="field-input" rows="2" placeholder="Any notes..."></textarea>
-
-      <!-- Due Date Section -->
-      <div class="due-date-section">
-        <div class="due-date-title">📅 Due Payment (Optional)</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Set when this vendor's next payment is due. This will show as a badge on the card and appear in your notification bell.</p>
-        <div class="due-date-grid">
-          <div>
-            <label class="field-label">Due Date</label>
-            <input id="editDueDate" type="date" class="field-input">
-          </div>
-          <div>
-            <label class="field-label">Due Amount (blank = remaining balance)</label>
-            <input id="editDueAmount" type="number" class="field-input" placeholder="Optional">
-          </div>
-        </div>
-        <label class="field-label">Due Note</label>
-        <input id="editDueNote" class="field-input" placeholder="e.g. Final balance before event day">
-      </div>
-
-      <button class="btn-primary full-width" onclick="submitEdit()">Save Changes →</button>
-    </div>
-  </div>
-</div>
-
-<!-- Share Modal -->
-<div class="modal-overlay" id="shareModal" style="display:none">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 class="modal-title">🔗 Share with Planner</h3>
-      <button class="modal-close" onclick="closeShareModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="share-toggle-row">
-        <div>
-          <div style="font-weight:500;color:var(--charcoal)">Enable share link</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px">Your planner gets a read-only view</div>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="shareToggle" onchange="toggleShare()">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="share-permissions">
-        <div class="share-permissions-title">What can your planner see?</div>
-        <label class="perm-row"><input type="checkbox" id="shareVendors"> <span>Vendor list & payment history</span></label>
-        <label class="perm-row"><input type="checkbox" id="shareDueDates"> <span>Due dates & amounts</span></label>
-        <label class="perm-row"><input type="checkbox" id="shareBudget"> <span>Budget overview & spend limit</span></label>
-        <label class="perm-row"><input type="checkbox" id="shareChecklist"> <span>Wedding checklist</span></label>
-        <label class="perm-row"><input type="checkbox" id="shareNotes"> <span>Wedding notes</span></label>
-        <button class="btn-secondary full-width" style="margin-top:10px" onclick="saveSharePermissions()">Save Permissions</button>
-      </div>
-      <div id="shareUrlSection" style="display:none">
-        <div class="share-url-box">
-          <div class="share-url-text" id="shareUrlText"></div>
-          <button class="share-copy-btn" onclick="copyShareUrl()">📋 Copy</button>
-        </div>
-        <p style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">Anyone with this link can view your budget (read-only)</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Upgrade Modal -->
-<div class="modal-overlay" id="upgradeModal" style="display:none">
-  <div class="modal upgrade-modal">
-    <div class="modal-header">
-      <h3 class="modal-title">✨ Upgrade to Pro</h3>
-      <button class="modal-close" onclick="closeUpgradeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="upgrade-hero">
-        <div class="upgrade-icon">💍</div>
-        <div class="upgrade-title">Unlock your full wedding budget</div>
-        <div class="upgrade-sub">One-time payment · No subscriptions · Yours forever</div>
-      </div>
-      <div class="upgrade-features">
-        <div class="upgrade-feature">✓ Unlimited vendors</div>
-        <div class="upgrade-feature">✓ Due date alerts</div>
-        <div class="upgrade-feature">✓ Share with planner</div>
-        <div class="upgrade-feature">✓ All currencies</div>
-        <div class="upgrade-feature">✓ All devices</div>
-        <div class="upgrade-feature">✓ All future updates</div>
-      </div>
-      <div class="upgrade-price">
-        <span class="upgrade-amount">$12</span>
-        <span class="upgrade-period">one-time · per couple</span>
-      </div>
-      <!-- PayPal renders here when SDK loaded -->
-      <div id="paypalButtonContainer" style="margin-top:14px"></div>
-
-      <!-- Fallback shown when PayPal SDK hasn't loaded yet -->
-      <div id="paypalFallback" style="margin-top:14px;display:none">
-        <a id="paypalDirectLink" href="#" target="_blank"
-          style="display:flex;align-items:center;justify-content:center;gap:10px;
-                 background:#FFC439;border:none;border-radius:99px;padding:14px 24px;
-                 font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:700;
-                 color:#003087;text-decoration:none;cursor:pointer;
-                 box-shadow:0 4px 18px rgba(255,196,57,0.4);transition:opacity 0.2s;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z" fill="#009CDE"/>
-          </svg>
-          Pay $12 with PayPal
-        </a>
-        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">
-          You'll be redirected to PayPal to complete payment
-        </p>
-      </div>
-
-      <!-- Manual activation notice (shown after clicking fallback PayPal link) -->
-      <div id="manualActivationNotice" style="display:none;margin-top:14px;
-        background:#f0faf0;border:1px solid #a0d0a0;border-radius:12px;padding:14px 16px;text-align:center">
-        <div style="font-size:15px;margin-bottom:6px">✅ Paid via PayPal?</div>
-        <p style="font-size:12px;color:#306030;margin-bottom:10px">
-          Once your payment is confirmed, click below to activate Pro.
-        </p>
-        <button onclick="manualActivateCheck()" style="background:#2a7a2a;color:white;border:none;
-          border-radius:8px;padding:10px 22px;font-family:'Instrument Sans',sans-serif;font-size:13px;
-          font-weight:600;cursor:pointer;">
-          ✓ I've Paid — Activate Pro
-        </button>
-        <p style="font-size:10px;color:#888;margin-top:8px">
-          If activation fails, email <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d2a2b3bfa7a2a4a692b5bfb3bbbefcb1bdbf">[email&#160;protected]</a> with your PayPal receipt
-        </p>
-      </div>
-
-      <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px">
-        🔒 Secure payment via PayPal · Instant activation · No subscription
+      <p class="hero-note">
+        <span>No credit card</span>
+        <span>Free forever</span>
+        <span>2 minutes to start</span>
       </p>
     </div>
-  </div>
-</div>
-
-<!-- ── WELCOME SETUP MODAL (auto-opens for new users) ── -->
-<div class="modal-overlay" id="welcomeModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal" style="max-width:460px">
-    <div class="modal-header" style="border-bottom:none;padding-bottom:0">
-      <h3 class="modal-title" style="font-size:26px">💍 Welcome to WeddingLedger!</h3>
-    </div>
-    <div class="modal-body" style="padding-top:8px">
-      <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Let's set up your wedding budget. You can change these anytime.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div>
-          <label class="modal-label">Your Name</label>
-          <input type="text" id="setupName1" class="modal-input" placeholder="e.g. Chamo">
+    <div class="hero-cards">
+      <div class="hcard hc-main">
+        <div class="hc-eyebrow">Budget Overview</div>
+        <div class="hc-heading">Charlotte &amp; James — September 2025</div>
+        <div class="hc-row">
+          <span class="hc-big">£18,400</span>
+          <span class="hc-pct">74% of £25,000</span>
         </div>
-        <div>
-          <label class="modal-label">Partner's Name</label>
-          <input type="text" id="setupName2" class="modal-input" placeholder="e.g. Pamu">
+        <div class="hc-track"><div class="hc-fill" style="width:74%"></div></div>
+        <div class="hc-items">
+          <div class="hc-item"><span class="hc-ico">🏰</span><span class="hc-name">Elmwood Manor</span><span class="hc-pill p-ok">✓ Paid</span></div>
+          <div class="hc-item"><span class="hc-ico">📸</span><span class="hc-name">Hartley Photography</span><span class="hc-pill p-dep">Deposit</span></div>
+          <div class="hc-item"><span class="hc-ico">🌸</span><span class="hc-name">The Bloom Barn</span><span class="hc-pill p-ok">✓ Paid</span></div>
         </div>
       </div>
-      <div style="margin-bottom:12px">
-        <label class="modal-label">Wedding Date (optional)</label>
-        <input type="date" id="setupDate" class="modal-input">
-      </div>
-      <div style="margin-bottom:20px">
-        <label class="modal-label">Budget Limit (optional)</label>
-        <input type="number" id="setupBudget" class="modal-input" placeholder="e.g. 500000">
-      </div>
-      <button class="btn-primary" onclick="saveWelcomeSetup()" style="width:100%">Save & Start Planning 🎉</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── SETTINGS MODAL ── -->
-<div class="modal-overlay" id="settingsModal" style="display:none">
-  <div class="modal" style="max-width:460px">
-    <div class="modal-header">
-      <h3 class="modal-title">⚙️ Settings</h3>
-      <button class="modal-close" onclick="closeSettingsModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="settings-section-title">👫 Couple Names</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div>
-          <label class="modal-label">Your Name</label>
-          <input type="text" id="settingsName1" class="modal-input" placeholder="Your name">
+      <div class="hcard hc-float">
+        <div class="hc-notif">
+          <span class="hc-nav">🔔</span>
+          <div class="hc-nt"><strong>Sophie confirmed! ✓</strong><span>Guest list just updated</span></div>
         </div>
-        <div>
-          <label class="modal-label">Partner's Name</label>
-          <input type="text" id="settingsName2" class="modal-input" placeholder="Partner's name">
+        <div class="hc-gcounts">
+          <div class="hc-gc"><div class="hc-gn">86</div><div class="hc-gl">Confirmed</div></div>
+          <div class="hc-gc"><div class="hc-gn" style="color:var(--gold2)">26</div><div class="hc-gl">Pending</div></div>
+          <div class="hc-gc"><div class="hc-gn" style="color:var(--muted2)">7</div><div class="hc-gl">Declined</div></div>
         </div>
-      </div>
-      <div style="margin-bottom:20px">
-        <label class="modal-label">Wedding Date</label>
-        <input type="date" id="settingsDate" class="modal-input">
-      </div>
-      <button class="btn-primary" onclick="saveProfileSettings()" style="width:100%;margin-bottom:20px">Save Profile</button>
-
-      <div class="settings-section-title">💰 Budget</div>
-      <div style="margin-bottom:20px">
-        <label class="modal-label">Spend Limit</label>
-        <div style="display:flex;gap:8px">
-          <input type="number" id="settingsSpendLimit" class="modal-input" placeholder="Enter budget limit">
-          <button class="btn-secondary" onclick="saveSpendLimitFromSettings()">Save</button>
-        </div>
-      </div>
-
-      <div class="settings-section-title">📝 Wedding Notes</div>
-      <div style="margin-bottom:20px">
-        <textarea id="settingsNotes" class="modal-input" rows="4" placeholder="Notes about your wedding..." style="resize:vertical"></textarea>
-        <button class="btn-secondary" onclick="saveNotesFromSettings()" style="margin-top:8px">Save Notes</button>
-      </div>
-
-      <div class="settings-section-title">📸 Wedding Gallery Photos</div>
-      <div style="margin-bottom:20px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">
-          Upload up to <strong>6 photos</strong> — engagement shots, venue, or anything that represents you as a couple. They'll appear in a stunning gallery on your wedding invitation page.
-        </div>
-        <!-- Upload area -->
-        <label id="photoUploadLabel" style="display:flex;flex-direction:column;align-items:center;gap:8px;
-          padding:20px;border:2px dashed var(--border);border-radius:14px;cursor:pointer;
-          background:var(--warm);transition:.2s" 
-          onmouseover="this.style.borderColor='var(--gold)'" 
-          onmouseout="this.style.borderColor='var(--border)'">
-          <span style="font-size:28px">📷</span>
-          <span style="font-size:13px;font-weight:600;color:var(--charcoal)">Click to upload photos</span>
-          <span style="font-size:11px;color:var(--muted)">JPG, PNG or WebP · Max 5MB each</span>
-          <input type="file" id="photoFileInput" accept="image/jpeg,image/jpg,image/png,image/webp"
-            multiple style="display:none" onchange="uploadGalleryPhotos(this)">
-        </label>
-        <!-- Upload progress -->
-        <div id="photoUploadProgress" style="display:none;margin-top:10px">
-          <div style="height:4px;background:#f0ece4;border-radius:2px;overflow:hidden">
-            <div id="photoProgressBar" style="height:100%;background:var(--gold);width:0%;transition:width .3s;border-radius:2px"></div>
-          </div>
-          <div id="photoProgressText" style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">Uploading...</div>
-        </div>
-        <!-- Gallery grid preview -->
-        <div id="galleryPreview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px"></div>
-      </div>
-
-      <div class="settings-section-title" style="color:#2a7a2a;border-color:#a0d0a0">🎁 Referral</div>
-      <div style="background:#f0faf0;border:1px solid #a0d0a0;border-radius:12px;padding:14px;margin-bottom:20px">
-        <div style="font-size:12px;color:#2a5a2a;margin-bottom:8px;font-weight:600">Your referral code:</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <code id="myReferralCode" style="background:white;border:1px solid #a0d0a0;border-radius:8px;
-            padding:8px 14px;font-size:16px;font-weight:700;color:#2a5a2a;letter-spacing:2px;flex:1;text-align:center">—</code>
-          <button onclick="copyReferralCode()" class="btn-secondary" style="border-color:#a0d0a0;color:#2a5a2a;padding:8px 14px">
-            📋 Copy
-          </button>
-        </div>
-        <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.5">
-          Share this code with friends. When they sign up and subscribe, you both get <strong>£2 off your first month</strong>!
-        </div>
-        <button onclick="shareReferral()" class="btn-secondary" style="width:100%;margin-top:10px;border-color:#a0d0a0;color:#2a5a2a">
-          🔗 Share Invite Link
-        </button>
-      </div>
-
-      <div class="settings-section-title" style="color:#c04040;border-color:#f5c0c0">⚠️ Account</div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px">
-        <button class="btn-secondary" onclick="sendPasswordReset()" style="border-color:#e0a0a0;color:#c04040;text-align:left;padding:12px 16px">
-          🔑 Reset Password — send email link
-        </button>
-        <button class="btn-secondary" onclick="confirmResetData()" style="border-color:#e0a0a0;color:#c04040;text-align:left;padding:12px 16px">
-          🗑️ Reset All Data — delete vendors & payments
-        </button>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- ── PARTNER LINKING MODAL ── -->
-<div class="modal-overlay" id="partnerModal" style="display:none" onclick="if(event.target===this)closePartnerModal()">
-  <div class="modal" style="max-width:460px">
-    <div class="modal-header">
-      <h3 class="modal-title">💌 Invite Your Partner</h3>
-      <button class="modal-close" onclick="closePartnerModal()">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- No partner linked yet -->
-      <div id="partnerInviteSection">
-        <p style="color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.6">
-          Invite your partner to join WeddingLedger. They'll see your exact same budget, vendors and payments — fully synced in real time.
-        </p>
-        <div style="background:var(--warm);border-radius:12px;padding:16px;margin-bottom:20px">
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
-            <span style="font-size:20px">✨</span>
-            <div style="font-size:12px;color:var(--charcoal);font-weight:600">Pro tip</div>
-          </div>
-          <div style="font-size:12px;color:var(--muted);line-height:1.6">
-            If you have Pro, your partner gets Pro too — automatically. Plan together, stress less.
-          </div>
-        </div>
-        <label class="modal-label">Partner's Email Address</label>
-        <input type="email" id="partnerEmail" class="modal-input" placeholder="partner@email.com" style="margin-bottom:12px">
-        <button class="btn-primary" onclick="sendPartnerInvite()" style="width:100%">
-          💌 Send Invite Email
-        </button>
-      </div>
-
-      <!-- Invite pending -->
-      <div id="partnerPendingSection" style="display:none">
-        <div style="text-align:center;padding:20px 0">
-          <div style="font-size:48px;margin-bottom:12px">📨</div>
-          <div style="font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:8px">Invite Sent!</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Waiting for</div>
-          <div id="pendingPartnerEmail" style="font-size:14px;font-weight:600;color:var(--gold);margin-bottom:20px"></div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:20px">
-            They'll receive an email with a link to join your budget.
-          </div>
-          <button class="btn-secondary" onclick="resendPartnerInvite()" style="margin-bottom:10px;width:100%">
-            🔄 Resend Invite
-          </button>
-          <button class="btn-secondary" onclick="cancelPartnerInvite()" style="width:100%;border-color:#f5c0c0;color:#c04040">
-            ✕ Cancel Invite
-          </button>
-        </div>
-      </div>
-
-      <!-- Partner linked -->
-      <div id="partnerLinkedSection" style="display:none">
-        <div style="text-align:center;padding:20px 0">
-          <div style="font-size:48px;margin-bottom:12px">💑</div>
-          <div style="font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px">Partner Linked!</div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Planning together with</div>
-          <div id="linkedPartnerEmail" style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px"></div>
-          <div style="display:inline-flex;align-items:center;gap:6px;background:#f0faf0;
-            border:1px solid #a0d0a0;border-radius:99px;padding:6px 14px;margin-bottom:20px">
-            <span style="width:8px;height:8px;background:#2a7a2a;border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span>
-            <span style="font-size:11px;color:#2a5a2a;font-weight:600">Live sync active</span>
-          </div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:20px">
-            All changes are shared instantly between both accounts.
-          </div>
-          <button class="btn-secondary" onclick="confirmUnlinkPartner()" style="width:100%;border-color:#f5c0c0;color:#c04040">
-            🔓 Unlink Partner
-          </button>
-        </div>
-      </div>
-
-    </div>
+<!-- MARQUEE -->
+<div class="marquee">
+  <div class="marquee-track">
+    <span>Budget Tracking</span><span>Guest Management</span><span>RSVP Links</span>
+    <span>Seating Charts</span><span>Vendor Payments</span><span>UK Couples</span>
+    <span>Export Reports</span><span>Dietary Tracking</span><span>Partner Access</span>
+    <span>Budget Tracking</span><span>Guest Management</span><span>RSVP Links</span>
+    <span>Seating Charts</span><span>Vendor Payments</span><span>UK Couples</span>
+    <span>Export Reports</span><span>Dietary Tracking</span><span>Partner Access</span>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="db.js"></script>
-<script src="app.js"></script>
+<!-- STATS -->
+<div class="stats" id="statsRow">
+  <div class="stat"><div class="stat-n" data-to="2400" data-sfx="+">0</div><div class="stat-l">Couples planning</div></div>
+  <div class="stat"><div class="stat-n">£<span data-to="48" data-sfx="M+">0</span></div><div class="stat-l">Budgets tracked</div></div>
+  <div class="stat"><div class="stat-n" data-to="4.9" data-dp="1" data-sfx="★">0</div><div class="stat-l">Average rating</div></div>
+  <div class="stat"><div class="stat-n" data-to="100" data-sfx="% free">0</div><div class="stat-l">To get started</div></div>
+</div>
+
+<!-- BENTO FEATURES -->
+<section class="bento" id="features">
+  <div class="bhead">
+    <span class="section-pre">Everything you need</span>
+    <h2 class="section-h">One tool for your<br><em>whole wedding</em></h2>
+    <p class="section-p">From first vendor enquiry to final payment — WeddingLedger keeps every detail in order.</p>
+  </div>
+  <div class="bgrid">
+    <div class="bcard s2" style="transition-delay:.0s">
+      <span class="bc-ico">💷</span>
+      <div class="bc-h">Budget Tracker</div>
+      <div class="bc-p">Track deposits and payments in real time. A live progress bar shows exactly what's been spent and what's left of your budget.</div>
+      <div class="bc-bars">
+        <div class="bc-bar-row"><span class="bc-bar-lbl">Venue</span><div class="bc-bar-track"><div class="bc-bar-fill" style="width:0" data-w="100%"></div></div></div>
+        <div class="bc-bar-row"><span class="bc-bar-lbl">Photography</span><div class="bc-bar-track"><div class="bc-bar-fill" style="width:0" data-w="50%"></div></div></div>
+        <div class="bc-bar-row"><span class="bc-bar-lbl">Catering</span><div class="bc-bar-track"><div class="bc-bar-fill" style="width:0" data-w="30%"></div></div></div>
+        <div class="bc-bar-row"><span class="bc-bar-lbl">Band</span><div class="bc-bar-track"><div class="bc-bar-fill" style="width:0" data-w="0%"></div></div></div>
+      </div>
+    </div>
+    <div class="bcard" style="transition-delay:.07s">
+      <span class="bc-ico">👥</span>
+      <div class="bc-h">Guest List</div>
+      <div class="bc-p">Groups, families, sides — bride's and groom's. Track dietary needs and RSVP status for every person.</div>
+    </div>
+    <div class="bcard" style="transition-delay:.13s">
+      <span class="bc-ico">📲</span>
+      <div class="bc-h">RSVP Links</div>
+      <div class="bc-p">Personalised links via WhatsApp or email. Guests confirm in one tap, no app needed. Your list updates instantly.</div>
+    </div>
+    <div class="bcard" style="transition-delay:.19s">
+      <span class="bc-ico">🪑</span>
+      <div class="bc-h">Seating Planner</div>
+      <div class="bc-p">Drag guests onto a visual canvas. Watch chairs fill with names in real time and export for your venue.</div>
+    </div>
+    <div class="bcard" style="transition-delay:.25s">
+      <span class="bc-ico">🤝</span>
+      <div class="bc-h">Share &amp; Collaborate</div>
+      <div class="bc-p">Invite your coordinator, partner or family. Full control over who sees what — view-only or edit access.</div>
+    </div>
+    <div class="bcard" style="transition-delay:.31s">
+      <span class="bc-ico">💍</span>
+      <div class="bc-h">Wedding Page</div>
+      <div class="bc-p">A beautiful shareable page with your photos, venue and RSVP — everything guests need in one link.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <span class="section-pre">Simple as it should be</span>
+    <h2 class="section-h">Up and running in<br><em>under two minutes</em></h2>
+    <div class="how-grid">
+      <div class="how-step" style="transition-delay:0s">
+        <div class="how-num">01</div>
+        <div class="how-t">Create your account</div>
+        <div class="how-d">Just your email and wedding date. No credit card, no commitment, no fuss.</div>
+      </div>
+      <div class="how-step" style="transition-delay:.1s">
+        <div class="how-num">02</div>
+        <div class="how-t">Add your vendors</div>
+        <div class="how-d">Venue, photographer, caterer, band — log each with their quote and track every payment as you make it.</div>
+      </div>
+      <div class="how-step" style="transition-delay:.2s">
+        <div class="how-num">03</div>
+        <div class="how-t">Build your guest list</div>
+        <div class="how-d">Add guests with families and sides. Send RSVP links and watch responses come in automatically.</div>
+      </div>
+      <div class="how-step" style="transition-delay:.3s">
+        <div class="how-num">04</div>
+        <div class="how-t">Walk down the aisle</div>
+        <div class="how-d">On the day, everything's accounted for. No surprises, no unpaid invoices. Just your perfect day.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO PLACEHOLDER -->
+<!-- ── ANIMATED DEMO SECTION ── -->
+<style>
+/* ─────────────────────────────────────
+   DEMO WRAPPER
+───────────────────────────────────── */
+.demo-section{padding:88px 24px;overflow:hidden;position:relative}
+/* demo bg handled by page */
+.demo-inner{max-width:1120px;margin:0 auto;position:relative}
+
+.demo-section .stag{
+  font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:#b8922e;text-align:center;margin-bottom:14px;display:block
+}
+.demo-section .stitle{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5.5vw,62px);
+  font-weight:400;line-height:1.05;text-align:center;color:#fdf9f4;margin-bottom:14px
+}
+.demo-section .stitle em{font-style:italic;color:#d4a843}
+.demo-section .ssub{
+  text-align:center;color:rgba(253,249,244,.38);font-size:15px;
+  max-width:480px;margin:0 auto 60px;line-height:1.75;font-weight:300
+}
+
+/* ─────────────────────────────────────
+   TAB BAR
+───────────────────────────────────── */
+.dtabs{
+  display:flex;justify-content:center;gap:6px;margin-bottom:56px;flex-wrap:wrap
+}
+.dtab{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 20px;border-radius:99px;
+  border:1.5px solid rgba(255,255,255,.1);
+  background:transparent;font-family:'Jost',sans-serif;
+  font-size:13px;font-weight:600;color:rgba(255,255,255,.38);
+  cursor:pointer;transition:.22s;white-space:nowrap
+}
+.dtab:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.65)}
+.dtab.on{background:#c9a84c;border-color:#c9a84c;color:#0c0b09}
+.dtab .dtab-icon{font-size:15px;line-height:1}
+
+/* ─────────────────────────────────────
+   PANEL LAYOUT
+───────────────────────────────────── */
+.dpanels{min-height:460px}
+.dpanel{display:none;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.dpanel.on{display:grid;animation:dslide .4s cubic-bezier(.4,0,.2,1) both}
+@keyframes dslide{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:820px){
+  .dpanel.on{grid-template-columns:1fr;gap:36px}
+  .dpanel-copy{order:2}.dpanel-screen{order:1}
+}
+
+/* Copy column */
+.dpanel-copy .eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(184,146,46,.7);margin-bottom:14px
+}
+.dpanel-copy h3{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(26px,3vw,40px);
+  font-weight:400;color:#fdf9f4;line-height:1.15;margin-bottom:16px
+}
+.dpanel-copy h3 em{font-style:italic;color:#d4a843}
+.dpanel-copy .dpanel-desc{
+  font-size:14px;color:rgba(253,249,244,.45);line-height:1.8;
+  margin-bottom:24px;font-weight:300
+}
+.dpanel-bullets{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:28px}
+.dpanel-bullets li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13px;color:rgba(253,249,244,.55);line-height:1.55
+}
+.dpanel-bullets li::before{content:'✦';color:#b8922e;flex-shrink:0;font-size:9px;margin-top:3px}
+.try-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 26px;border-radius:99px;background:#b8922e;
+  color:#141210;font-size:13px;font-weight:700;
+  text-decoration:none;border:none;cursor:pointer;
+  font-family:'Jost',sans-serif;transition:.2s
+}
+.try-btn:hover{background:#d4a843;transform:translateY(-1px)}
+
+/* Screen mockup shell */
+.dmock{
+  background:#0f0e0b;border-radius:14px;
+  border:1.5px solid rgba(255,255,255,.08);
+  overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.55)
+}
+.dmock-bar{
+  background:#0a0906;padding:10px 14px;
+  display:flex;align-items:center;gap:9px;
+  border-bottom:1px solid rgba(255,255,255,.05)
+}
+.dmock-dots{display:flex;gap:5px}
+.dmock-dot{width:9px;height:9px;border-radius:50%}
+.dmock-url{
+  flex:1;background:rgba(255,255,255,.05);border-radius:5px;
+  padding:4px 10px;font-size:10px;color:rgba(255,255,255,.18);font-family:monospace
+}
+.dmock-body{padding:16px}
+
+/* ═══════════════════════════════════════
+   PANEL 1 — BUDGET
+═══════════════════════════════════════ */
+.bd-hero{
+  background:linear-gradient(135deg,rgba(184,146,46,.12),rgba(184,146,46,.04));
+  border:1px solid rgba(184,146,46,.2);border-radius:11px;
+  padding:15px 16px;margin-bottom:13px
+}
+.bd-hero-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.bd-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);font-weight:700}
+.bd-big{font-size:24px;font-weight:700;color:#d4a843;font-family:'Jost',sans-serif;letter-spacing:-.02em}
+.bd-track{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bd-fill{height:100%;width:0;border-radius:3px;background:linear-gradient(90deg,#9a7530,#d4a843);transition:width 1.6s cubic-bezier(.4,0,.2,1)}
+.bd-meta{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.25)}
+.bd-cards{display:flex;flex-direction:column;gap:7px}
+.bd-card{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:10px;
+  opacity:0;transform:translateX(-12px);transition:opacity .4s ease, transform .4s ease
+}
+.bd-card.vis{opacity:1;transform:none}
+.bd-card-ico{font-size:17px;flex-shrink:0}
+.bd-card-info{flex:1;min-width:0}
+.bd-card-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.78)}
+.bd-card-cat{font-size:9px;color:rgba(255,255,255,.28);margin-top:1px}
+.bd-pill{font-size:9px;padding:3px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.pill-paid{background:rgba(60,180,80,.14);color:#70d880;border:1px solid rgba(60,180,80,.22)}
+.pill-dep{background:rgba(220,180,50,.14);color:#e0c840;border:1px solid rgba(220,180,50,.22)}
+.pill-due{background:rgba(220,70,70,.14);color:#f07070;border:1px solid rgba(220,70,70,.22)}
+.bd-card-amt{font-size:12px;font-weight:700;color:rgba(255,255,255,.55);flex-shrink:0}
+
+/* ═══════════════════════════════════════
+   PANEL 2 — GUESTS
+═══════════════════════════════════════ */
+.gd-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:13px}
+.gd-stat{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:10px 8px;text-align:center
+}
+.gd-stat-n{font-size:22px;font-weight:700;font-family:'Jost',sans-serif;color:#d4a843;line-height:1}
+.gd-stat-l{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.27);margin-top:3px}
+.gd-list{display:flex;flex-direction:column;gap:6px}
+.gd-row{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px;
+  opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease
+}
+.gd-row.vis{opacity:1;transform:none}
+.gd-av{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700
+}
+.gd-info{flex:1;min-width:0}
+.gd-name{font-size:11px;font-weight:700;color:rgba(255,255,255,.78)}
+.gd-side{font-size:9px;color:rgba(255,255,255,.28);margin-top:1px}
+.gd-badge{font-size:9px;padding:3px 8px;border-radius:99px;font-weight:700;white-space:nowrap}
+.badge-yes{background:rgba(60,180,80,.14);color:#70d880;border:1px solid rgba(60,180,80,.22)}
+.badge-pend{background:rgba(220,180,50,.14);color:#e0c840;border:1px solid rgba(220,180,50,.22)}
+.badge-no{background:rgba(220,70,70,.14);color:#f07070;border:1px solid rgba(220,70,70,.22)}
+
+/* ═══════════════════════════════════════
+   PANEL 3 — SEATING
+═══════════════════════════════════════ */
+.seat-canvas{
+  position:relative;height:210px;background:rgba(255,255,255,.018);
+  border-radius:10px;margin-bottom:10px;overflow:hidden
+}
+.st{
+  position:absolute;border:1.5px solid rgba(184,146,46,.45);
+  background:rgba(184,146,46,.055);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:.5s cubic-bezier(.4,0,.2,1)
+}
+.st-label{font-size:8px;font-weight:700;color:rgba(255,255,255,.4);pointer-events:none}
+.st-count{font-size:8px;color:rgba(184,146,46,.7);pointer-events:none}
+.sc{
+  position:absolute;
+  width:20px;height:20px;border-radius:50%;
+  border:1.5px solid rgba(184,146,46,.38);
+  background:rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:center;
+  font-size:7px;font-weight:700;color:transparent;
+  transition:all .45s cubic-bezier(.4,0,.2,1);
+  pointer-events:none
+}
+.sc.filled{background:#b8922e;border-color:#b8922e;color:white;
+  border-radius:99px;white-space:nowrap;padding:0 4px}
+.seat-chips{display:flex;flex-wrap:wrap;gap:5px;min-height:28px}
+.chip{
+  padding:4px 10px;border-radius:99px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.6);
+  transition:.3s;white-space:nowrap
+}
+.chip.seated{opacity:.3;text-decoration:line-through}
+.chip.animating{
+  background:#b8922e;color:#141210;
+  transform:scale(1.1);border-color:#b8922e
+}
+
+/* ═══════════════════════════════════════
+   PANEL 4 — RSVP
+═══════════════════════════════════════ */
+.rsvp-wrap{display:flex;gap:16px;align-items:flex-start}
+.phone-shell{
+  width:170px;flex-shrink:0;background:#1c1a28;border-radius:22px;
+  border:2px solid rgba(255,255,255,.1);overflow:hidden;
+  box-shadow:0 16px 50px rgba(0,0,0,.5)
+}
+.phone-notch{background:#0f0e18;padding:8px 14px;font-size:9px;color:rgba(255,255,255,.18);text-align:center}
+.phone-body{background:white;padding:12px}
+.phone-brand{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;font-weight:600;text-align:center;color:#1a1610;margin-bottom:8px}
+.phone-brand span{color:#b8922e}
+.phone-card{background:#fdf9f4;border-radius:8px;padding:9px;text-align:center;margin-bottom:9px;border:1px solid #e8ddd0}
+.phone-couple{font-family:'Cormorant Garamond',serif;font-size:12px;font-weight:600;color:#1a1610}
+.phone-date{font-size:8px;color:#8a7a60;margin-top:2px}
+.phone-q{font-size:9px;font-weight:700;color:#1a1610;margin-bottom:7px;text-align:center}
+.phone-btns{display:flex;gap:5px;margin-bottom:8px}
+.phone-btn{flex:1;padding:7px 4px;border-radius:7px;font-size:10px;font-weight:700;
+  text-align:center;cursor:pointer;border:none;font-family:'Jost',sans-serif;transition:.2s}
+.phone-btn-y{background:#1a1610;color:white}
+.phone-btn-y.sel{background:#2a7a2a}
+.phone-btn-n{background:#f5f0e8;color:#8a7a60}
+.phone-btn-n.sel{background:#c04040;color:white}
+.phone-confirm{
+  background:#2a7a2a;color:white;border-radius:7px;
+  padding:7px;font-size:10px;font-weight:700;text-align:center;
+  display:none;animation:popIn .3s ease
+}
+@keyframes popIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+
+.rsvp-right{flex:1}
+.rsvp-notif{
+  background:rgba(60,180,80,.1);border:1px solid rgba(60,180,80,.22);
+  border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:9px;
+  margin-bottom:10px;opacity:0;transform:translateY(-6px);transition:.4s ease
+}
+.rsvp-notif.vis{opacity:1;transform:none}
+.rsvp-notif-ico{font-size:20px}
+.rsvp-notif-txt strong{font-size:12px;color:#6ee06e;display:block}
+.rsvp-notif-txt span{font-size:11px;color:rgba(255,255,255,.4)}
+.rsvp-counts{display:flex;flex-direction:column;gap:7px}
+.rsvp-count{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between
+}
+.rsvp-count-label{font-size:11px;color:rgba(255,255,255,.45);font-weight:600}
+.rsvp-count-n{font-size:18px;font-weight:700;font-family:'Jost',sans-serif;transition:.5s}
+.rsvp-bar-wrap{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:5px;width:100%}
+.rsvp-bar{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+</style>
+
+<section class="demo-section" id="how">
+  <div class="demo-inner">
+    <span class="stag">See it in action</span>
+    <h2 class="stitle">Everything working<br><em>beautifully together</em></h2>
+    <p class="ssub">Tap any feature to see a live demo — no sign-up needed.</p>
+
+    <!-- Tab bar -->
+    <div class="dtabs">
+      <button class="dtab on" onclick="dSwitch('budget',this)">
+        <span class="dtab-icon">💷</span>Budget Tracker
+      </button>
+      <button class="dtab" onclick="dSwitch('guests',this)">
+        <span class="dtab-icon">👥</span>Guest List
+      </button>
+      <button class="dtab" onclick="dSwitch('seating',this)">
+        <span class="dtab-icon">🪑</span>Seating Chart
+      </button>
+      <button class="dtab" onclick="dSwitch('rsvp',this)">
+        <span class="dtab-icon">📲</span>RSVP Links
+      </button>
+    </div>
+
+    <div class="dpanels">
+
+      <!-- ══ PANEL: BUDGET ══ -->
+      <div class="dpanel on" id="dp-budget">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 1 of 4</div>
+          <h3>Track every pound,<br><em>effortlessly</em></h3>
+          <p class="dpanel-desc">Add your vendors, log deposits and payments as you go. See your total budget vs actual spend update in real time — no spreadsheets, no guesswork.</p>
+          <ul class="dpanel-bullets">
+            <li>Live budget bar shows exactly what's spent and what's left</li>
+            <li>Track deposits, balances and final invoices separately</li>
+            <li>Due date alerts so you never miss a payment</li>
+            <li>Works for any budget, from £5k to £100k</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app · Budget</div>
+            </div>
+            <div class="dmock-body">
+              <div class="bd-hero">
+                <div class="bd-hero-row">
+                  <span class="bd-lbl">Total Budget</span>
+                  <span class="bd-big" id="bdN">£0</span>
+                </div>
+                <div class="bd-track"><div class="bd-fill" id="bdBar"></div></div>
+                <div class="bd-meta">
+                  <span id="bdSpent">£0 spent</span>
+                  <span id="bdLeft">£25,000 remaining</span>
+                </div>
+              </div>
+              <div class="bd-cards">
+                <div class="bd-card" id="bc0">
+                  <span class="bd-card-ico">🏰</span>
+                  <div class="bd-card-info"><div class="bd-card-name">Elmwood Manor</div><div class="bd-card-cat">Venue</div></div>
+                  <span class="bd-pill pill-paid">✓ Paid</span>
+                  <span class="bd-card-amt">£8,500</span>
+                </div>
+                <div class="bd-card" id="bc1">
+                  <span class="bd-card-ico">📸</span>
+                  <div class="bd-card-info"><div class="bd-card-name">Hartley Photography</div><div class="bd-card-cat">Photographer</div></div>
+                  <span class="bd-pill pill-dep">⏳ Deposit paid</span>
+                  <span class="bd-card-amt">£2,800</span>
+                </div>
+                <div class="bd-card" id="bc2">
+                  <span class="bd-card-ico">🌸</span>
+                  <div class="bd-card-info"><div class="bd-card-name">The Bloom Barn</div><div class="bd-card-cat">Florist</div></div>
+                  <span class="bd-pill pill-paid">✓ Paid</span>
+                  <span class="bd-card-amt">£1,200</span>
+                </div>
+                <div class="bd-card" id="bc3">
+                  <span class="bd-card-ico">🎵</span>
+                  <div class="bd-card-info"><div class="bd-card-name">The Brass &amp; Strings</div><div class="bd-card-cat">Band</div></div>
+                  <span class="bd-pill pill-due">⚠ Due 15 Jun</span>
+                  <span class="bd-card-amt">£3,400</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: GUESTS ══ -->
+      <div class="dpanel" id="dp-guests">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 2 of 4</div>
+          <h3>Your guest list,<br><em>finally organised</em></h3>
+          <p class="dpanel-desc">Add families as groups, assign bride's or groom's side, track dietary needs and RSVPs. Export a beautifully formatted report at any time.</p>
+          <ul class="dpanel-bullets">
+            <li>Group guests with their partner and children</li>
+            <li>Separate bride's side and groom's side totals</li>
+            <li>Track dietary requirements per person</li>
+            <li>One-click export sorted by family side</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app · Guests</div>
+            </div>
+            <div class="dmock-body">
+              <div class="gd-stats">
+                <div class="gd-stat"><div class="gd-stat-n" id="gTotal">0</div><div class="gd-stat-l">Total</div></div>
+                <div class="gd-stat"><div class="gd-stat-n" id="gConf" style="color:#70d880">0</div><div class="gd-stat-l">Confirmed</div></div>
+                <div class="gd-stat"><div class="gd-stat-n" id="gPend" style="color:#e0c840">0</div><div class="gd-stat-l">Pending</div></div>
+              </div>
+              <div class="gd-list">
+                <div class="gd-row" id="gr0">
+                  <div class="gd-av" style="background:rgba(200,147,58,.2);color:#d4a843">SH</div>
+                  <div class="gd-info"><div class="gd-name">Sophie &amp; Oliver Hartley</div><div class="gd-side">Bride's Family · 2 people</div></div>
+                  <span class="gd-badge badge-yes">✓ Coming</span>
+                </div>
+                <div class="gd-row" id="gr1">
+                  <div class="gd-av" style="background:rgba(100,160,220,.2);color:#7ab0e0">JW</div>
+                  <div class="gd-info"><div class="gd-name">James &amp; Helen Worthington</div><div class="gd-side">Groom's Family · 2 people</div></div>
+                  <span class="gd-badge badge-yes">✓ Coming</span>
+                </div>
+                <div class="gd-row" id="gr2">
+                  <div class="gd-av" style="background:rgba(180,100,130,.2);color:#d08090">ET</div>
+                  <div class="gd-info"><div class="gd-name">Emily &amp; Tom Blackwood</div><div class="gd-side">Bride's Friends · 2 people</div></div>
+                  <span class="gd-badge badge-pend">⏳ Pending</span>
+                </div>
+                <div class="gd-row" id="gr3">
+                  <div class="gd-av" style="background:rgba(100,180,100,.2);color:#70c070">M</div>
+                  <div class="gd-info"><div class="gd-name">Margaret Whitfield</div><div class="gd-side">Bride's Family · 1 person</div></div>
+                  <span class="gd-badge badge-yes">✓ Coming</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: SEATING ══ -->
+      <div class="dpanel" id="dp-seating">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 3 of 4</div>
+          <h3>Seat everyone<br><em>without the headache</em></h3>
+          <p class="dpanel-desc">Design your room with round and rectangular tables. Drag guests straight onto chairs — watch their name appear as each seat fills. Done in minutes, not hours.</p>
+          <ul class="dpanel-bullets">
+            <li>Drag and drop guests directly onto tables</li>
+            <li>See chairs fill with guest first names in real time</li>
+            <li>Supports round tables, top tables and long rectangles</li>
+            <li>Export a clean layout for your venue coordinator</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app · Seating</div>
+            </div>
+            <div class="dmock-body" style="padding:12px">
+              <div class="seat-canvas" id="sCvs"></div>
+              <div class="seat-chips" id="sChips"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PANEL: RSVP ══ -->
+      <div class="dpanel" id="dp-rsvp">
+        <div class="dpanel-copy">
+          <div class="eyebrow">Feature 4 of 4</div>
+          <h3>RSVPs without<br><em>the back-and-forth</em></h3>
+          <p class="dpanel-desc">Send every guest a personalised link by WhatsApp or email. They confirm in one tap — no app, no login. Your guest list updates the moment they respond.</p>
+          <ul class="dpanel-bullets">
+            <li>Works in any browser — no app download needed</li>
+            <li>Personalised link per guest or family group</li>
+            <li>Share instantly via WhatsApp, email or text</li>
+            <li>Dashboard updates live the moment they respond</li>
+          </ul>
+          <a href="login.html" class="try-btn">Start for free →</a>
+        </div>
+        <div class="dpanel-screen">
+          <div class="dmock">
+            <div class="dmock-bar">
+              <div class="dmock-dots">
+                <div class="dmock-dot" style="background:#ff5f57"></div>
+                <div class="dmock-dot" style="background:#febc2e"></div>
+                <div class="dmock-dot" style="background:#28c840"></div>
+              </div>
+              <div class="dmock-url">weddingledger.app/rsvp/s0ph1e</div>
+            </div>
+            <div class="dmock-body">
+              <div class="rsvp-wrap">
+                <div class="phone-shell">
+                  <div class="phone-notch">9:41 · Sophie's iPhone</div>
+                  <div class="phone-body">
+                    <div class="phone-brand">Wedding<span>Ledger</span></div>
+                    <div class="phone-card">
+                      <div class="phone-couple">Charlotte &amp; James</div>
+                      <div class="phone-date">📅 14 Sept · Elmwood Manor</div>
+                    </div>
+                    <div class="phone-q">Will you be joining us? 💍</div>
+                    <div class="phone-btns">
+                      <div class="phone-btn phone-btn-y" id="rYes" onclick="rsvpTap('yes')">✓ Attending</div>
+                      <div class="phone-btn phone-btn-n" id="rNo" onclick="rsvpTap('no')">✗ Can't make it</div>
+                    </div>
+                    <div class="phone-confirm" id="rConf">🎉 You're confirmed!</div>
+                  </div>
+                </div>
+                <div class="rsvp-right">
+                  <div class="rsvp-notif" id="rNotif">
+                    <div class="rsvp-notif-ico">🔔</div>
+                    <div class="rsvp-notif-txt">
+                      <strong>Sophie confirmed!</strong>
+                      <span>Guest list updated</span>
+                    </div>
+                  </div>
+                  <div class="rsvp-counts">
+                    <div class="rsvp-count">
+                      <div>
+                        <div class="rsvp-count-label">Confirmed</div>
+                        <div class="rsvp-bar-wrap"><div class="rsvp-bar" id="rBarConf" style="background:#3ab450;width:72%"></div></div>
+                      </div>
+                      <div class="rsvp-count-n" id="rNConf" style="color:#70d880">86</div>
+                    </div>
+                    <div class="rsvp-count">
+                      <div>
+                        <div class="rsvp-count-label">Pending</div>
+                        <div class="rsvp-bar-wrap"><div class="rsvp-bar" id="rBarPend" style="background:#c8a830;width:22%"></div></div>
+                      </div>
+                      <div class="rsvp-count-n" id="rNPend" style="color:#e0c840">26</div>
+                    </div>
+                    <div class="rsvp-count">
+                      <div>
+                        <div class="rsvp-count-label">Declined</div>
+                        <div class="rsvp-bar-wrap"><div class="rsvp-bar" style="background:#c04040;width:6%"></div></div>
+                      </div>
+                      <div class="rsvp-count-n" style="color:#f07070">7</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /dpanels -->
+  </div><!-- /demo-inner -->
+</section>
+
 <script>
-// Mobile nav & couple name now in app.js
-function toggleDashDrawer(){
-  var d=document.getElementById('dashDrawer');
-  var b=document.getElementById('dashBurger');
-  var open=d.classList.toggle('open');
-  if(b){ b.classList.toggle('open',open); }
-  document.body.style.overflow=open?'hidden':'';
+(function(){
+// ════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════
+window.dSwitch=function(id,btn){
+  document.querySelectorAll('.dtab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.dpanel').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  const panel=document.getElementById('dp-'+id);
+  panel.classList.add('on');
+  clearSeatingTimer();
+  if(id==='budget') runBudget();
+  else if(id==='guests') runGuests();
+  else if(id==='seating') runSeating();
+  else if(id==='rsvp') setupRsvp();
+};
+
+// ════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════
+function countTo(el,target,dur,prefix='',suffix=''){
+  let s=performance.now();
+  const start=parseInt(el.textContent.replace(/\D/g,''))||0;
+  (function tick(now){
+    const p=Math.min((now-s)/dur,1);
+    const e=1-Math.pow(1-p,3);
+    el.textContent=prefix+Math.round(start+e*(target-start)).toLocaleString('en-GB')+suffix;
+    if(p<1) requestAnimationFrame(tick);
+  })(s);
 }
-// Keep backward compat if app.js calls these
-function openMobileNav(){ toggleDashDrawer(); }
-function closeMobileNav(){
-  var d=document.getElementById('dashDrawer');
-  var b=document.getElementById('dashBurger');
-  d.classList.remove('open');
-  if(b) b.classList.remove('open');
-  document.body.style.overflow='';
+
+// ════════════════════════════════════════════
+// PANEL 1 — BUDGET
+// ════════════════════════════════════════════
+function runBudget(){
+  // Reset
+  document.getElementById('bdBar').style.width='0%';
+  document.getElementById('bdN').textContent='£0';
+  document.getElementById('bdSpent').textContent='£0 spent';
+  document.getElementById('bdLeft').textContent='£25,000 remaining';
+  for(let i=0;i<4;i++){
+    const c=document.getElementById('bc'+i);
+    c.classList.remove('vis');
+    c.style.transitionDelay='0s';
+  }
+  setTimeout(()=>{
+    // Bar fill
+    document.getElementById('bdBar').style.width='74%';
+    // Count up spent
+    let s=performance.now(),dur=1500,total=25000,spent=18400;
+    (function tick(now){
+      const p=Math.min((now-s)/dur,1),e=1-Math.pow(1-p,3),v=Math.round(e*spent);
+      document.getElementById('bdN').textContent='£'+v.toLocaleString('en-GB');
+      document.getElementById('bdSpent').textContent='£'+v.toLocaleString('en-GB')+' spent';
+      document.getElementById('bdLeft').textContent='£'+(total-v).toLocaleString('en-GB')+' remaining';
+      if(p<1) requestAnimationFrame(tick);
+    })(s);
+    // Stagger cards
+    for(let i=0;i<4;i++){
+      const c=document.getElementById('bc'+i);
+      c.style.transitionDelay=(i*0.1)+'s';
+      setTimeout(()=>c.classList.add('vis'),120+i*140);
+    }
+  },200);
 }
+
+// ════════════════════════════════════════════
+// PANEL 2 — GUESTS
+// ════════════════════════════════════════════
+function runGuests(){
+  ['gTotal','gConf','gPend'].forEach(id=>document.getElementById(id).textContent='0');
+  for(let i=0;i<4;i++){
+    const r=document.getElementById('gr'+i);
+    r.classList.remove('vis');
+    r.style.transitionDelay='0s';
+  }
+  setTimeout(()=>{
+    countTo(document.getElementById('gTotal'),142,900);
+    countTo(document.getElementById('gConf'),0,98,800);
+    countTo(document.getElementById('gPend'),0,44,700);
+    for(let i=0;i<4;i++){
+      const r=document.getElementById('gr'+i);
+      r.style.transitionDelay=(i*0.08)+'s';
+      setTimeout(()=>r.classList.add('vis'),150+i*160);
+    }
+  },200);
+}
+
+// ════════════════════════════════════════════
+// PANEL 3 — SEATING
+// ════════════════════════════════════════════
+const TABLES=[
+  {id:'tA',cx:80, cy:82, r:46, shape:'round', label:'Table 1', cap:6, seated:[]},
+  {id:'tB',cx:220,cy:75, r:38, shape:'round', label:'Table 2', cap:5, seated:[]},
+  {id:'tC',cx:155,cy:165,w:140,h:40,shape:'rect',label:'Top Table',cap:6,seated:[]},
+];
+const GNAMES=['Sophie','Oliver','James','Emily','Tom','Margaret'];
+let seatTimer=null;
+
+function clearSeatingTimer(){if(seatTimer){clearTimeout(seatTimer);seatTimer=null;}}
+
+function chairPositions(t){
+  const pts=[];
+  if(t.shape==='round'){
+    const R=t.r+16;
+    for(let i=0;i<t.cap;i++){
+      const a=(i/t.cap)*Math.PI*2-Math.PI/2;
+      pts.push({x:t.cx+R*Math.cos(a),y:t.cy+R*Math.sin(a)});
+    }
+  } else {
+    const hw=t.w/2,hh=t.h/2,n=t.cap,top=Math.ceil(n/2),bot=n-top;
+    for(let i=0;i<top;i++) pts.push({x:t.cx-hw+14+(hw*2-28)/(Math.max(top-1,1))*i, y:t.cy-hh-18});
+    for(let i=0;i<bot;i++) pts.push({x:t.cx-hw+14+(hw*2-28)/(Math.max(bot-1,1))*i, y:t.cy+hh+18});
+  }
+  return pts;
+}
+
+function renderSeat(){
+  const cvs=document.getElementById('sCvs');
+  cvs.innerHTML='';
+  TABLES.forEach(t=>{
+    const isR=t.shape==='round';
+    const w=isR?t.r*2:t.w, h=isR?t.r*2:t.h;
+    const el=document.createElement('div');
+    el.className='st'; el.id='st-'+t.id;
+    Object.assign(el.style,{
+      width:w+'px',height:h+'px',
+      left:(isR?t.cx-t.r:t.cx-t.w/2)+'px',
+      top:(isR?t.cy-t.r:t.cy-t.h/2)+'px',
+      borderRadius:isR?'50%':'10px'
+    });
+    el.innerHTML=`<span class="st-label">${t.label}</span><span class="st-count">${t.seated.length}/${t.cap}</span>`;
+    cvs.appendChild(el);
+    // Chairs
+    chairPositions(t).forEach((pos,i)=>{
+      const name=t.seated[i]||null;
+      const ch=document.createElement('div');
+      ch.className='sc'+(name?' filled':'');
+      if(name){
+        const cw=Math.max(22,name.length*6+10);
+        Object.assign(ch.style,{width:cw+'px',left:(pos.x-cw/2)+'px',top:(pos.y-10)+'px'});
+        ch.textContent=name;
+      } else {
+        Object.assign(ch.style,{left:(pos.x-10)+'px',top:(pos.y-10)+'px'});
+      }
+      cvs.appendChild(ch);
+    });
+  });
+  // Chips
+  const chips=document.getElementById('sChips');
+  chips.innerHTML='';
+  const seated=TABLES.flatMap(t=>t.seated);
+  GNAMES.forEach(n=>{
+    const ch=document.createElement('div');
+    ch.className='chip'+(seated.includes(n)?' seated':'');
+    ch.textContent=n;
+    chips.appendChild(ch);
+  });
+}
+
+function autoSeat(){
+  const plan=[
+    [0,0],[1,0],[2,1],[3,2],[4,2],[5,0]
+  ]; // [guestIdx, tableIdx]
+  let step=0;
+  function next(){
+    if(step>=plan.length){
+      seatTimer=setTimeout(()=>{
+        TABLES.forEach(t=>t.seated=[]);
+        renderSeat();
+        seatTimer=setTimeout(autoSeat,1000);
+      },2800);
+      return;
+    }
+    const [gi,ti]=plan[step++];
+    const name=GNAMES[gi];
+    // Flash chip
+    const chips=document.querySelectorAll('.chip');
+    chips.forEach(c=>{if(c.textContent===name){c.classList.add('animating');setTimeout(()=>c.classList.remove('animating'),350);}});
+    setTimeout(()=>{
+      TABLES[ti].seated.push(name);
+      renderSeat();
+      seatTimer=setTimeout(next,680);
+    },320);
+  }
+  next();
+}
+
+function runSeating(){
+  TABLES.forEach(t=>t.seated=[]);
+  renderSeat();
+  seatTimer=setTimeout(autoSeat,800);
+}
+
+// ════════════════════════════════════════════
+// PANEL 4 — RSVP
+// ════════════════════════════════════════════
+let rDone=false;
+
+window.rsvpTap=function(choice){
+  if(rDone)return; rDone=true;
+  const yBtn=document.getElementById('rYes');
+  const nBtn=document.getElementById('rNo');
+  const conf=document.getElementById('rConf');
+  const notif=document.getElementById('rNotif');
+  if(choice==='yes'){
+    yBtn.classList.add('sel');
+    setTimeout(()=>{
+      conf.style.display='block';
+      setTimeout(()=>{
+        notif.classList.add('vis');
+        countTo(document.getElementById('rNConf'),86,87,500,'');
+        countTo(document.getElementById('rNPend'),26,25,500,'');
+        document.getElementById('rBarConf').style.width='73.5%';
+        document.getElementById('rBarPend').style.width='21%';
+      },500);
+    },350);
+  } else {
+    nBtn.classList.add('sel');
+    conf.textContent="😢 Sorry you can't make it";
+    conf.style.background='#7a2020';
+    conf.style.display='block';
+  }
+};
+
+function setupRsvp(){
+  rDone=false;
+  document.getElementById('rYes').classList.remove('sel');
+  document.getElementById('rNo').classList.remove('sel');
+  document.getElementById('rConf').style.display='none';
+  document.getElementById('rConf').textContent='🎉 You\'re confirmed!';
+  document.getElementById('rConf').style.background='#2a7a2a';
+  document.getElementById('rNotif').classList.remove('vis');
+  document.getElementById('rNConf').textContent='86';
+  document.getElementById('rNPend').textContent='26';
+  document.getElementById('rBarConf').style.width='72%';
+  document.getElementById('rBarPend').style.width='22%';
+}
+
+// ════════════════════════════════════════════
+// INIT + SCROLL TRIGGER
+// ════════════════════════════════════════════
+function init(){
+  runBudget();
+  // Re-run when scrolled into view
+  if('IntersectionObserver' in window){
+    let triggered=false;
+    new IntersectionObserver(entries=>{
+      if(entries[0].isIntersecting && !triggered){
+        triggered=true;
+        const active=document.querySelector('.dtab.on');
+        if(active&&active.textContent.includes('Budget')) runBudget();
+      }
+    },{threshold:.25}).observe(document.getElementById('how'));
+  }
+}
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+else init();
+
+})();
 </script>
-</body>
-</html>
+
+
+
+
+
+
+<!-- TESTIMONIALS -->
+<section class="testi" id="testimonials">
+  <span class="section-pre">Real couples</span>
+  <h2 class="section-h">Trusted across<br><em>the UK</em></h2>
+  <div class="tgrid">
+    <div class="tc" style="transition-delay:0s">
+      <div class="tc-stars">★★★★★</div>
+      <div class="tc-q">"Planned our whole Cotswolds wedding here. The budget tracker saved us from going over — we knew exactly what was left at any point."</div>
+      <div class="tc-foot"><div class="tc-av">🌿</div><div><div class="tc-name">Sophie &amp; Oliver</div><div class="tc-loc">Burford, Oxfordshire</div></div></div>
+    </div>
+    <div class="tc" style="transition-delay:.1s">
+      <div class="tc-stars">★★★★★</div>
+      <div class="tc-q">"Sent RSVP links on WhatsApp and had 80 responses within a week. The guest list just organised itself — genuinely magic."</div>
+      <div class="tc-foot"><div class="tc-av">🎩</div><div><div class="tc-name">Priya &amp; Thomas</div><div class="tc-loc">Shoreditch, London</div></div></div>
+    </div>
+    <div class="tc" style="transition-delay:.2s">
+      <div class="tc-stars">★★★★★</div>
+      <div class="tc-q">"Our coordinator said we were the most organised couple she'd ever worked with. That's entirely down to WeddingLedger."</div>
+      <div class="tc-foot"><div class="tc-av">💐</div><div><div class="tc-name">Emily &amp; James</div><div class="tc-loc">Edinburgh, Scotland</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <span class="section-pre">Pricing</span>
+  <h2 class="section-h">Simple.<br><em>Honest. British.</em></h2>
+  <div class="pgrid">
+    <div class="pcard" style="transition-delay:0s">
+      <div class="p-name">Free</div>
+      <div class="p-amount">£0</div>
+      <div class="p-per">forever · no card needed</div>
+      <div class="p-sep"></div>
+      <ul class="p-feats">
+        <li>Up to 5 vendors</li>
+        <li>Guest list (50 guests)</li>
+        <li>RSVP links</li>
+        <li>Wedding page</li>
+      </ul>
+      <a href="login.html" class="pbtn pbtn-lt">Get started</a>
+    </div>
+    <div class="pcard pro" style="transition-delay:.1s">
+      <div class="p-badge">Most popular</div>
+      <div class="p-name">Couple</div>
+      <div class="p-amount">£9</div>
+      <div class="p-per">one-time · per couple</div>
+      <div class="p-sep"></div>
+      <ul class="p-feats">
+        <li>Unlimited vendors &amp; guests</li>
+        <li>Seating chart planner</li>
+        <li>Partner collaboration</li>
+        <li>Export guest list PDF</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="login.html" class="pbtn pbtn-dk">Start planning →</a>
+    </div>
+  </div>
+  <p class="pnote">The average UK wedding costs £20,775. Our planner costs less than a coffee.</p>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-fin">
+  <div class="cta-fin-inner">
+    <h2>Your perfect day<br><em>starts here</em></h2>
+    <p>Join thousands of UK couples planning their wedding with confidence.</p>
+    <a href="login.html" class="btn-dark" style="font-size:15px;padding:16px 44px;display:inline-flex">✨ Start planning for free</a>
+    <p class="cta-fin-note">No credit card · Free forever · 🇬🇧 Built for UK couples</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="index.html" class="foot-logo">Wedding<em>Ledger</em></a>
+  <div class="flinks">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="login.html">Log in</a>
+  </div>
+  <p>© 2025 WeddingLedger · Made with 💍 for UK couples</p>
+</footer>
+
+<script>
+(function(){
+
+/* ── Nav scroll ── */
+window.addEventListener('scroll',()=>{
+  document.getElementById('mainNav').classList.toggle('scrolled',scrollY>30);
+});
+
+/* ── Mobile drawer ── */
+window.toggleDrawer=function(){
+  const btn=document.getElementById('mnavBtn');
+  const drawer=document.getElementById('mDrawer');
+  btn.classList.toggle('open');
+  drawer.classList.toggle('open');
+  document.body.style.overflow=drawer.classList.contains('open')?'hidden':'';
+};
+
+/* ── Intersection observer utility ── */
+function onVisible(sel,fn,thresh){
+  new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting) fn(e.target)});
+  },{threshold:thresh||.12}).observe(
+    typeof sel==='string'?document.querySelector(sel):sel
+  );
+}
+function onVisibleAll(sel,fn,thresh){
+  document.querySelectorAll(sel).forEach(el=>{
+    new IntersectionObserver(entries=>{
+      entries.forEach(e=>{if(e.isIntersecting) fn(e.target)});
+    },{threshold:thresh||.12}).observe(el);
+  });
+}
+
+/* ── Stats count-up ── */
+onVisibleAll('.stat',el=>{
+  el.classList.add('vis');
+  const n=el.querySelector('[data-to]');
+  if(!n)return;
+  const to=parseFloat(n.dataset.to),sfx=n.dataset.sfx||'',dp=parseInt(n.dataset.dp||0);
+  let s=performance.now();
+  (function tick(now){
+    const p=Math.min((now-s)/1100,1),v=(1-Math.pow(1-p,3))*to;
+    n.textContent=(dp?v.toFixed(dp):Math.round(v))+sfx;
+    if(p<1)requestAnimationFrame(tick);
+  })(s);
+});
+
+/* ── Bento cards ── */
+onVisibleAll('.bcard',el=>{
+  el.classList.add('vis');
+  el.querySelectorAll('.bc-bar-fill').forEach((b,i)=>{
+    setTimeout(()=>b.style.width=b.dataset.w,180+i*130);
+  });
+});
+
+/* ── Magnetic bento hover ── */
+document.querySelectorAll('.bcard').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect();
+    c.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    c.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+/* ── How steps ── */
+onVisibleAll('.how-step',el=>el.classList.add('vis'));
+
+/* ── Testimonials ── */
+onVisibleAll('.tc',el=>el.classList.add('vis'));
+
+/* ── Pricing ── */
+onVisibleAll('.pcard',el=>el.classList.add('vis'));
+
+})();
+</script>
