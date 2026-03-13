@@ -5,7 +5,7 @@
  */
 
 const ICONS = ['💒','🌸','📸','🎥','💐','🎵','💎','💄','💇','👗','🥂','🍰','🚗','✈️','🏨','📋','📝','💌','🎪','🎭','🕯️','🌹','👰','🤵'];
-const FREE_VENDOR_LIMIT = 5;
+let FREE_VENDOR_LIMIT = 5; // overridden by admin settings after loadPlatformSettings()
 
 const DEFAULT_VENDORS = [
   {category:'Wedding Planner',icon:'📋'},{category:'Hotel / Venue',icon:'🏨'},
@@ -88,6 +88,8 @@ async function init() {
   renderIconSelector();
   startCountdown();
   initCurrencyUI();
+  // Load platform-wide settings (subscription price, plan ID) from admin settings
+  loadPlatformSettings();
 
   try {
     await loadProfile();
@@ -102,6 +104,7 @@ async function init() {
   }
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
     fetchLiveRates(); // async - updates rates in background
+  loadPlatformSettings(); // load subscription price from admin settings
   } catch(e) {
     console.error('Init error:', e);
     showLoadingState(false);
@@ -116,7 +119,7 @@ async function init() {
       hero.innerHTML = `<div style="text-align:center;padding:32px 24px;background:#fff8f0;border:1px solid #f5c0a0;margin:16px;border-radius:12px">
         <div style="font-size:16px;color:#c04040;margin-bottom:8px">⚠️ Could not load your dashboard</div>
         <div style="font-size:13px;color:#888;margin-bottom:16px">${e.message || 'Connection error'}</div>
-        <button onclick="location.reload()" style="background:var(--gold);color:white;border:none;border-radius:99px;padding:10px 24px;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer">
+        <button onclick="location.reload()" style="background:var(--gold);color:white;border:none;border-radius:99px;padding:10px 24px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">
           🔄 Try Again
         </button>
       </div>`;
@@ -249,6 +252,21 @@ async function loadTasks() {
   renderTasks();
 }
 
+
+// ─── PLATFORM SETTINGS (admin-configured, loaded for all users) ──────────────
+async function loadPlatformSettings() {
+  try {
+    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id,free_vendor_limit)&select=key,value&limit=10', accessToken);
+    if(rows) rows.forEach(r => {
+      if(r.key === 'sub_price')         window.WL_SUB_PRICE      = r.value;
+      if(r.key === 'paypal_plan_id')    window.WL_PLAN_ID        = r.value;
+      if(r.key === 'free_vendor_limit'){ window.WL_FREE_LIMIT = parseInt(r.value) || 5; FREE_VENDOR_LIMIT = window.WL_FREE_LIMIT; }
+    });
+  } catch(e) { /* non-critical — defaults apply */ }
+  // Load PayPal SDK NOW that we know which intent to use
+  if(typeof window.loadPayPalSDK === 'function') window.loadPayPalSDK();
+}
+
 async function loadSettings() {
   const rows=await DB.query(`settings?user_id=eq.${userId}`,accessToken);
   rows.forEach(r=>{
@@ -263,6 +281,9 @@ async function loadSettings() {
       const lim=parseInt(r.value)||0;
       if(lim>0&&profile){profile.custom_vendor_limit=lim;}
     }
+    // Platform-wide subscription price (set by admin, stored under a system user)
+    if(r.key==='sub_price') window.WL_SUB_PRICE = r.value;
+    if(r.key==='paypal_plan_id') window.WL_PLAN_ID = r.value;
   });
   updateStats();updateVendorLimitUI();
 }
@@ -359,7 +380,7 @@ function updateVendorLimitUI(){
       <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">${isCustom?'Custom':'Free'} vendors: <strong style="color:${n>=lim?'var(--danger)':'var(--charcoal)'}">${n}/${lim}</strong>${n>=lim?' — <span style="color:var(--danger)">Limit reached</span>':''}</div>
       <div style="background:var(--border);border-radius:99px;height:5px;"><div style="width:${pct}%;background:${n>=lim?'var(--danger)':'var(--gold)'};border-radius:99px;height:5px;transition:width 0.3s"></div></div>
     </div>
-    ${n>=lim&&!isCustom?`<button onclick="openUpgradeModal()" style="margin-left:14px;background:var(--gold);color:white;border:none;border-radius:99px;padding:6px 16px;font-size:11px;cursor:pointer;font-family:Jost,sans-serif;font-weight:500;white-space:nowrap">Upgrade →</button>`:''}`;
+    ${n>=lim&&!isCustom?`<button onclick="openUpgradeModal()" style="margin-left:14px;background:var(--gold);color:white;border:none;border-radius:99px;padding:6px 16px;font-size:11px;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-weight:500;white-space:nowrap">Upgrade →</button>`:''}`;
 }
 
 // ─── RENDER VENDORS ───────────────────────────────────────────────────────────
@@ -697,88 +718,25 @@ async function saveSharePermissions(){
 }
 function copyShareUrl(){navigator.clipboard.writeText(getShareUrl()).then(()=>showToast('Link copied! 📋'));}
 
-// ─── UPGRADE MODAL ───────────────────────────────────────────────────────────
-window.initPayPal=function(){
-  if(typeof paypal==='undefined'){
-    // SDK failed to load — show the fallback button
-    showPayPalFallback();
-    return;
-  }
-  // Hide fallback, show SDK button
-  const fb=document.getElementById('paypalFallback');
-  if(fb) fb.style.display='none';
-  const container=document.getElementById('paypalButtonContainer');
-  if(!container) return;
-
-  paypal.Buttons({
-    style:{layout:'vertical',color:'gold',shape:'pill',label:'pay'},
-    createOrder:function(data,actions){
-      return actions.order.create({
-        purchase_units:[{
-          amount:{value:'9.00',currency_code:'GBP'},
-          description:'WeddingLedger Pro — Unlimited Vendors'
-        }]
-      });
-    },
-    onApprove:async function(data,actions){
-      const btn=container.querySelector('button,iframe');
-      if(btn) btn.disabled=true;
-      showToast('Processing your payment…');
-      const order=await actions.order.capture();
-      await activatePro(order.id);
-    },
-    onCancel:function(){
-      showToast('Payment cancelled — you can try again anytime.');
-    },
-    onError:function(err){
-      showToast('Payment failed, please try again.',true);
-      console.error(err);
-    }
-  }).render('#paypalButtonContainer');
-};
-
-function showPayPalFallback(){
-  const fb=document.getElementById('paypalFallback');
-  const container=document.getElementById('paypalButtonContainer');
-  if(fb) fb.style.display='block';
-  if(container) container.style.display='none';
-
-  // Build a PayPal checkout link that works without PayPal.me
-  // It creates a payment request directly — user pays, then emails you
-  // REPLACE the two values below once you have your PayPal details:
-  const PAYPAL_EMAIL = 'YOUR_PAYPAL_EMAIL@gmail.com'; // your PayPal account email
-  const RETURN_URL   = 'https://pamupro.github.io/wedding-budget/dashboard.html';
-
-  const link = document.getElementById('paypalDirectLink');
-  if(link){
-    // PayPal standard checkout URL — works for any PayPal account
-    const params = new URLSearchParams({
-      cmd: '_xclick',
-      business: PAYPAL_EMAIL,
-      item_name: 'WeddingLedger Pro',
-      amount: '9.00',
-      currency_code: 'GBP',
-      return: RETURN_URL,
-      cancel_return: RETURN_URL,
-      no_shipping: '1',
-    });
-    link.href = 'https://www.paypal.com/cgi-bin/webscr?' + params.toString();
-    link.onclick = function(){
-      // Show manual activation notice since we can't auto-detect payment
-      setTimeout(()=>{
-        document.getElementById('manualActivationNotice').style.display='block';
-      }, 2000);
-    };
-  }
-}
-
 // ─── PAYPAL & UPGRADE ────────────────────────────────────────────────────────
+
+
 
 let paypalRendered = false;
 
 function openUpgradeModal(){
-  document.getElementById('upgradeModal').style.display='flex';
-  // Render PayPal buttons if SDK is ready and not already rendered
+  const modal = document.getElementById('upgradeModal');
+  if(!modal) return;
+
+  // Update price + period from platform settings loaded at init
+  const price  = parseFloat(window.WL_SUB_PRICE || '9.99').toFixed(2);
+  const planId = (window.WL_PLAN_ID || '').trim();
+  const amountEl = document.getElementById('upgradeAmount') || modal.querySelector('.upgrade-amount');
+  const periodEl = document.getElementById('upgradePeriod') || modal.querySelector('.upgrade-period');
+  if(amountEl) amountEl.textContent = '£' + price;
+  if(periodEl) periodEl.textContent  = planId ? 'per month · cancel anytime' : 'one-time · per couple';
+
+  modal.style.display='flex';
   if(typeof paypal !== 'undefined' && !paypalRendered){
     initPayPal();
   } else if(typeof paypal === 'undefined'){
@@ -814,27 +772,34 @@ window.initPayPal = function(){
     },
 
     createOrder: function(data, actions){
+      const price = String(window.WL_SUB_PRICE || '9.99');
+      const planId = window.WL_PLAN_ID || '';
+      if(planId) {
+        // Recurring subscription
+        return actions.subscription.create({ plan_id: planId });
+      }
       return actions.order.create({
         purchase_units: [{
-          amount: {
-            value: '1.00',
-            currency_code: 'GBP'
-          },
-          description: 'WeddingLedger Pro — Unlimited Vendors (Test)'
+          amount: { value: price, currency_code: 'GBP' },
+          description: 'WeddingLedger Pro — Unlimited Access'
         }]
       });
     },
 
     onApprove: async function(data, actions){
-      // Show processing state
-      container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gold);font-size:14px">⏳ Processing your payment…</div>';
+      container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gold);font-size:14px">⏳ Processing…</div>';
       try{
-        const order = await actions.order.capture();
-        await activatePro(order.id);
+        const id = data.subscriptionID || data.orderID;
+        if(data.subscriptionID) {
+          await activatePro(data.subscriptionID, true);
+        } else {
+          const order = await actions.order.capture();
+          await activatePro(order.id, false);
+        }
       }catch(e){
         container.innerHTML = '';
         paypalRendered = false;
-        showToast('Payment capture failed — please try again.', true);
+        showToast('Payment failed — please try again.', true);
         console.error(e);
       }
     },
@@ -866,14 +831,14 @@ function showPayPalFallback(){
     <div style="text-align:center;padding:16px;border:1px solid #e0d0c0;border-radius:12px;background:#fdf9f3">
       <p style="font-size:13px;color:#888;margin-bottom:12px">PayPal button failed to load</p>
       <button onclick="retryPayPal()" style="background:var(--gold);color:white;border:none;
-        border-radius:99px;padding:11px 24px;font-family:'Jost',sans-serif;font-size:13px;
+        border-radius:99px;padding:11px 24px;font-family:'Instrument Sans',sans-serif;font-size:13px;
         font-weight:600;cursor:pointer;display:block;width:100%;margin-bottom:10px;">🔄 Retry PayPal</button>
       <div style="font-size:11px;color:#aaa;margin-bottom:10px">— or pay directly —</div>
       <a href="https://www.paypal.com/ncp/payment/REPLACE_WITH_PAYMENT_LINK" target="_blank"
         onclick="setTimeout(()=>{document.getElementById('manualActivationNotice').style.display='block'},3000)"
         style="display:block;background:#003087;color:white;border-radius:99px;padding:12px 24px;
-        font-family:'Jost',sans-serif;font-size:13px;font-weight:600;text-decoration:none;text-align:center;">
-        💳 Pay £12 via PayPal
+        font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:none;text-align:center;">
+        💳 Pay via PayPal
       </a>
       <p style="font-size:11px;color:#aaa;margin-top:8px">You'll be redirected to PayPal secure checkout</p>
     </div>`;
@@ -891,7 +856,7 @@ function retryPayPal(){
   
   const s = document.createElement('script');
   s.src = document.querySelector('script[data-paypal-src]')?.dataset.paypalSrc || 
-    'https://www.paypal.com/sdk/js?client-id=ATZzrtJSsZenyiUIqeApCOS1QkNMP-hs3aavRQgXGv5QHrfYDGOlb1SLsOJnJn1j3YGhE8cn39VUnOvU&currency=USD&intent=capture&locale=en_US';
+    'https://www.paypal.com/sdk/js?client-id=AcMxe9xGOHUIKBPp9c8yOL5XOc-eKbG3ydN4okrzXxnfICJQG3gk1598QcS2ERHQ9MDcQdmKiBo4IWX4&currency=GBP&intent=capture';
   s.onload = function(){ initPayPal(); };
   s.onerror = function(){ 
     if(container) container.innerHTML = '<div style="text-align:center;padding:12px;color:#c04040;font-size:13px">⚠️ PayPal unavailable — please try again later</div>';
@@ -899,22 +864,27 @@ function retryPayPal(){
   document.head.appendChild(s);
 }
 
-async function activatePro(orderId){
+async function activatePro(paymentId, isSubscription=false){
   try{
-    await DB.patch('profiles', profile.id, {
+    const patch = {
       is_pro: true,
-      paypal_order_id: orderId
-    }, accessToken);
-
+      paypal_order_id: paymentId,
+      subscription_id: isSubscription ? paymentId : null,
+      subscription_status: 'active',
+      subscription_start: new Date().toISOString()
+    };
+    await DB.patch('profiles', profile.id, patch, accessToken);
     isPro = true;
     profile.is_pro = true;
-    profile.paypal_order_id = orderId;
-
+    profile.subscription_status = 'active';
+    profile.subscription_id = paymentId;
     closeUpgradeModal();
     updateProBadge();
     updateVendorLimitUI();
     renderVendors();
-    showToast('🎉 Welcome to Pro! All features are now unlocked.');
+    // Confetti-style celebration
+    const msg = window.WL_PLAN_ID ? '🎉 Subscribed! Welcome to Pro — enjoy unlimited features.' : '🎉 Welcome to Pro! All features are now unlocked.';
+    showToast(msg);
   }catch(e){
     console.error('Activation error:', e);
     showToast('Payment received but activation failed — please contact support.', true);
@@ -945,7 +915,7 @@ async function manualActivateCheck(){
             'Email your PayPal receipt to:<br><strong>pamupvt@gmail.com</strong><br>' +
             "We'll activate your Pro within a few hours.</p>" +
             '<button onclick="closeUpgradeModal()" style="background:var(--gold);color:white;border:none;' +
-            'border-radius:99px;padding:9px 20px;font-family:Jost,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">' +
+            'border-radius:99px;padding:9px 20px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">' +
             'Got it</button>';
       }
     }
@@ -1226,47 +1196,8 @@ function openWeddingPage() {
   window.open(url, '_blank');
 }
 
-// ─── SUBSCRIPTION (PayPal recurring) ─────────────────────────────────────────
 
-const PAYPAL_PLAN_ID = ''; // unused
-const ONE_TIME_PRICE = 9;
 
-function openUpgradeModal() {
-  const modal=document.getElementById('upgradeModal');
-  if(!modal)return;
-  modal.style.display='flex';
-}
-async function activatePro(subscriptionId, isSubscription=false) {
-  await DB.patch(`profiles?user_id=eq.${userId}`, {
-    is_pro: true,
-    subscription_status: isSubscription ? 'active' : 'active',
-    subscription_id: subscriptionId,
-    subscription_start: new Date().toISOString()
-  }, accessToken);
-  isPro = true;
-  profile.is_pro = true;
-  profile.subscription_status = 'active';
-  // If user was referred, mark referrer's discount too
-  if(profile?.referred_by) applyReferralReward(profile.referred_by);
-  closeUpgradeModal();
-  showToast('🎉 Pro activated! Welcome to WeddingLedger Pro');
-  await loadVendors();
-  renderChart();
-}
-
-async function applyReferralReward(referralCode) {
-  // Find referrer and give them £2 discount on next payment
-  try {
-    const rows = await DB.query(`profiles?referral_code=eq.${referralCode}&select=user_id`, accessToken);
-    if(rows && rows[0]) {
-      await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${rows[0].user_id}`, {
-        method:'PATCH',
-        headers:{...DB._h(accessToken),'Prefer':'return=minimal'},
-        body: JSON.stringify({ referral_discount: true })
-      });
-    }
-  } catch(e){ console.error('Referral reward error:', e); }
-}
 
 // ─── PARTNER LINKING ─────────────────────────────────────────────────────────
 
@@ -1576,6 +1507,20 @@ function renderChart() {
 // ─── PDF EXPORT ───────────────────────────────────────────────────────────────
 
 async function exportPDF() {
+  // Lazy-load jsPDF on first use (saves ~300kb on initial page load)
+  if(typeof window.jspdf === 'undefined'){
+    showToast('Loading PDF library…');
+    const s1 = document.createElement('script');
+    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s1.onload = function(){
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
+      s2.onload = function(){ exportPDF(); };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+    return;
+  }
   const { jsPDF } = window.jspdf;
   if(!jsPDF) { showToast('PDF library not loaded yet — try again', true); return; }
 
