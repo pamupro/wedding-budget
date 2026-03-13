@@ -759,71 +759,74 @@ window.initPayPal = function(){
   }
 
   const container = document.getElementById('paypalButtonContainer');
-  if(!container || paypalRendered) return;
+  if(!container) return;
 
-  // Hide fallback, show SDK container
+  // Reset rendered state when plan changes
+  container.innerHTML = '';
+  paypalRendered = false;
+
   const fb = document.getElementById('paypalFallback');
   if(fb) fb.style.display = 'none';
-  container.style.display = 'block';
+
+  // Determine selected plan
+  const plan     = window._selectedPlan || 'monthly';
+  const isBundle = (plan === 'bundle');
+  const price    = isBundle
+    ? parseFloat(window.WL_SUB_PRICE_BUNDLE  || '15.00').toFixed(2)
+    : parseFloat(window.WL_SUB_PRICE_MONTHLY || '4.99').toFixed(2);
+  const planId   = isBundle
+    ? (window.WL_PLAN_ID_BUNDLE   || '').trim()
+    : (window.WL_PLAN_ID_MONTHLY  || '').trim();
+
+  // Update fallback link
+  const dl = document.getElementById('paypalDirectLink');
+  if(dl) dl.href = planId
+    ? 'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=' + planId
+    : 'https://www.paypal.com/';
 
   paypal.Buttons({
-    style:{
-      layout: 'vertical',
-      color:  'gold',
-      shape:  'pill',
-      label:  'pay',
-      height: 48
-    },
+    style:{ layout:'vertical', color:'gold', shape:'pill', label:'pay', height:48 },
 
     createOrder: function(data, actions){
-      const price = String(window.WL_SUB_PRICE || '9.99');
-      const planId = window.WL_PLAN_ID || '';
-      if(planId) {
-        // Recurring subscription
+      if(isBundle){
+        // One-time payment for bundle
+        return actions.order.create({
+          purchase_units:[{ amount:{ value: price, currency_code:'GBP' },
+            description:'WeddingLedger 4-Month Bundle' }]
+        });
+      } else if(planId){
+        // Subscription
         return actions.subscription.create({ plan_id: planId });
+      } else {
+        // Fallback one-time if no plan ID set
+        return actions.order.create({
+          purchase_units:[{ amount:{ value: price, currency_code:'GBP' },
+            description:'WeddingLedger Monthly Pro' }]
+        });
       }
-      return actions.order.create({
-        purchase_units: [{
-          amount: { value: price, currency_code: 'GBP' },
-          description: 'WeddingLedger Pro — Unlimited Access'
-        }]
-      });
     },
 
     onApprove: async function(data, actions){
-      container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--gold);font-size:14px">⏳ Processing…</div>';
       try{
-        const id = data.subscriptionID || data.orderID;
-        if(data.subscriptionID) {
-          await activatePro(data.subscriptionID, true);
-        } else {
-          const order = await actions.order.capture();
-          await activatePro(order.id, false);
-        }
-      }catch(e){
-        container.innerHTML = '';
-        paypalRendered = false;
-        showToast('Payment failed — please try again.', true);
-        console.error(e);
+        const paymentId = data.subscriptionID || data.orderID;
+        await activatePro(paymentId, !isBundle && !!planId);
+        closeUpgradeModal();
+        showToast("🎉 You're now Pro! All features unlocked.");
+        renderVendors();
+      } catch(e){
+        showToast('Payment received but activation failed. Contact support.', true);
       }
-    },
-
-    onCancel: function(){
-      showToast('Payment cancelled — no charge was made.');
     },
 
     onError: function(err){
       console.error('PayPal error:', err);
       showPayPalFallback();
-      showToast('PayPal encountered an error — try the button below.', true);
+      showToast('PayPal error — try the button below.', true);
     }
 
   }).render('#paypalButtonContainer')
     .then(()=>{ paypalRendered = true; })
-    .catch(err=>{
-      console.error('PayPal render failed:', err);
-      showPayPalFallback();
-    });
+    .catch(err=>{ console.error('PayPal render failed:', err); showPayPalFallback(); });
 };
 
 function showPayPalFallback(){

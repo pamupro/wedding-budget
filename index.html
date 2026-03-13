@@ -1798,7 +1798,9 @@ else init();
 <section class="pricing" id="pricing">
   <span class="section-pre">Pricing</span>
   <h2 class="section-h">Simple.<br><em>Honest. British.</em></h2>
-  <div class="pgrid">
+  <div class="pgrid" style="grid-template-columns:repeat(3,1fr)">
+
+    <!-- FREE -->
     <div class="pcard" style="transition-delay:0s">
       <div class="p-name">Free</div>
       <div class="p-amount">£0</div>
@@ -1810,12 +1812,14 @@ else init();
         <li>RSVP links</li>
         <li>Wedding page</li>
       </ul>
-      <a href="login.html" class="pbtn pbtn-lt">Get started</a>
+      <a href="login.html" class="pbtn pbtn-lt">Get started free</a>
     </div>
+
+    <!-- MONTHLY -->
     <div class="pcard pro" style="transition-delay:.1s">
       <div class="p-badge">Most popular</div>
-      <div class="p-name">Couple</div>
-      <div class="p-amount">£9</div>
+      <div class="p-name">Monthly</div>
+      <div class="p-amount">£4.99</div>
       <div class="p-per">per month · cancel anytime</div>
       <div class="p-sep"></div>
       <ul class="p-feats">
@@ -1824,11 +1828,31 @@ else init();
         <li>Partner collaboration</li>
         <li>Export guest list PDF</li>
         <li>Priority support</li>
+        <li>New features every month</li>
       </ul>
       <a href="login.html" class="pbtn pbtn-dk">Start planning →</a>
     </div>
+
+    <!-- 4-MONTH BUNDLE -->
+    <div class="pcard" style="transition-delay:.2s;border:2px solid var(--gold);background:var(--gold-pale)">
+      <div class="p-badge" style="background:var(--gold);color:white;border-color:var(--gold)">Best value 🎉</div>
+      <div class="p-name">4-Month Bundle</div>
+      <div class="p-amount" style="color:var(--gold)">£15</div>
+      <div class="p-per">one payment · save £4.96</div>
+      <div class="p-sep"></div>
+      <ul class="p-feats">
+        <li>Everything in Monthly</li>
+        <li>4 months for price of 3</li>
+        <li>No recurring charges</li>
+        <li>Perfect for your planning period</li>
+        <li>Priority support</li>
+        <li>New features included</li>
+      </ul>
+      <a href="login.html" class="pbtn pbtn-dk" style="background:var(--gold)">Get 4 months →</a>
+    </div>
+
   </div>
-  <p class="pnote">The average UK wedding costs £20,775. Our planner costs less than a coffee.</p>
+  <p class="pnote">The average UK wedding costs £20,775. WeddingLedger costs less than a bouquet.</p>
 </section>
 
 <!-- FINAL CTA -->

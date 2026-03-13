@@ -1088,22 +1088,46 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
             <div style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:99px;background:var(--sage-pale);color:var(--sage);font-weight:600" id="adminPriceModeTag">ACTIVE</div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
-            <div>
-              <label class="s-label">Monthly Price (£)</label>
-              <input type="number" id="subPrice" class="s-input" placeholder="e.g. 9.99" min="0.50" max="99.99" step="0.01"
-                oninput="document.getElementById('adminPricePreview').textContent='£'+parseFloat(this.value||9.99).toFixed(2)">
-              <div style="font-size:10px;color:var(--muted2);margin-top:4px">What users pay per month</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+
+              <!-- MONTHLY PLAN -->
+              <div style="background:var(--bg2);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">📅 Monthly Plan</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div>
+                    <label class="s-label">Price (£/month)</label>
+                    <input type="number" id="subPriceMonthly" class="s-input" placeholder="4.99" min="0.50" max="99.99" step="0.01" value="4.99">
+                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">Charged monthly</div>
+                  </div>
+                  <div>
+                    <label class="s-label">PayPal Plan ID</label>
+                    <input type="text" id="paypalPlanIdMonthly" class="s-input" placeholder="P-XXXXXXXXXXXX">
+                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">From PayPal dashboard</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- BUNDLE PLAN -->
+              <div style="background:var(--gold-pale);border-radius:12px;padding:16px;border:1px solid var(--gold-bd)">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">🎉 4-Month Bundle</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div>
+                    <label class="s-label">Bundle Price (£)</label>
+                    <input type="number" id="subPriceBundle" class="s-input" placeholder="15.00" min="1" max="999" step="0.01" value="15.00">
+                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">One-time payment</div>
+                  </div>
+                  <div>
+                    <label class="s-label">PayPal Plan ID</label>
+                    <input type="text" id="paypalPlanIdBundle" class="s-input" placeholder="P-XXXXXXXXXXXX">
+                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">Leave blank = one-time pay</div>
+                  </div>
+                </div>
+              </div>
+
             </div>
-            <div>
-              <label class="s-label">PayPal Plan ID</label>
-              <input type="text" id="paypalPlanId" class="s-input" placeholder="P-XXXXXXXXXXXXXXXXXXXX"
-                oninput="const v=this.value.trim();const ml=document.getElementById('adminPriceModeLabel');const mt=document.getElementById('adminPriceModeTag');if(ml)ml.textContent=v?'per month · subscription':'one-time · per couple';if(mt)mt.textContent=v?'SUBSCRIPTION':'ONE-TIME';">
-              <div style="font-size:10px;color:var(--muted2);margin-top:4px">From PayPal Subscriptions dashboard — leave blank for one-time</div>
-            </div>
-            <div>
+            <div style="margin-bottom:16px">
               <label class="s-label">Free Vendor Limit</label>
-              <input type="number" id="freeVendorLimit" class="s-input" placeholder="5" min="1" max="20">
+              <input type="number" id="freeVendorLimit" class="s-input" placeholder="5" min="1" max="20" style="max-width:120px">
               <div style="font-size:10px;color:var(--muted2);margin-top:4px">Vendors allowed on free plan</div>
             </div>
           </div>
@@ -1945,64 +1969,67 @@ function changeAdminPassword() {
 
 // ─── PLATFORM SETTINGS (subscription price etc) ──────────────────────────────
 async function loadPlatformSettings(){
-  try{
-    // Use any user_id as owner for platform settings — use a fixed admin key
-    const r = await fetch(`${ADMIN_URL}/rest/v1/settings?key=in.(sub_price,paypal_plan_id,free_vendor_limit)&select=key,value&limit=10`,{headers:H});
-    if(!r.ok) return;
-    const rows = await r.json();
-    rows.forEach(row => {
-      if(row.key==='sub_price') {
-          const el=document.getElementById('subPrice'); if(el) el.value=row.value;
-          const prev=document.getElementById('adminPricePreview'); if(prev && row.value) prev.textContent='£'+parseFloat(row.value).toFixed(2);
-        }
-      if(row.key==='paypal_plan_id') {
-          const el=document.getElementById('paypalPlanId'); if(el) el.value=row.value;
-          const ml=document.getElementById('adminPriceModeLabel'); const mt=document.getElementById('adminPriceModeTag');
-          const isRecurring = !!(row.value && row.value.trim());
-          if(ml) ml.textContent = isRecurring ? 'per month · subscription' : 'one-time · per couple';
-          if(mt) mt.textContent = isRecurring ? 'SUBSCRIPTION' : 'ONE-TIME';
-        }
-      if(row.key==='free_vendor_limit'){ const el=document.getElementById('freeVendorLimit'); if(el) el.value=row.value; }
-    });
-  }catch(e){ console.warn('loadPlatformSettings error:', e); }
+  try {
+    const rows = await apiFetch('settings?key=in.(sub_price_monthly,sub_price_bundle,paypal_plan_id_monthly,paypal_plan_id_bundle,free_vendor_limit,sub_price,paypal_plan_id)&user_id=is.null', 'GET');
+    if(!rows) return;
+    const map = {};
+    rows.forEach(r => map[r.key] = r.value);
+
+    // New fields
+    if(map.sub_price_monthly)      { const el=document.getElementById('subPriceMonthly');      if(el) el.value=map.sub_price_monthly; }
+    if(map.sub_price_bundle)       { const el=document.getElementById('subPriceBundle');       if(el) el.value=map.sub_price_bundle; }
+    if(map.paypal_plan_id_monthly) { const el=document.getElementById('paypalPlanIdMonthly'); if(el) el.value=map.paypal_plan_id_monthly; }
+    if(map.paypal_plan_id_bundle)  { const el=document.getElementById('paypalPlanIdBundle');  if(el) el.value=map.paypal_plan_id_bundle; }
+    // Legacy fallback
+    if(!map.sub_price_monthly && map.sub_price) { const el=document.getElementById('subPriceMonthly'); if(el) el.value=map.sub_price; }
+    if(!map.paypal_plan_id_monthly && map.paypal_plan_id) { const el=document.getElementById('paypalPlanIdMonthly'); if(el) el.value=map.paypal_plan_id; }
+    if(map.free_vendor_limit)      { const el=document.getElementById('freeVendorLimit');     if(el) el.value=map.free_vendor_limit; }
+  } catch(e){ console.warn('loadPlatformSettings error:', e); }
 }
 
 async function savePlatformSettings(){
-  const price    = document.getElementById('subPrice')?.value?.trim();
-  const planId   = document.getElementById('paypalPlanId')?.value?.trim();
-  const freeLimit= document.getElementById('freeVendorLimit')?.value?.trim();
-  const status   = document.getElementById('platformSettingsStatus');
+  const monthlyPrice = document.getElementById('subPriceMonthly')?.value?.trim();
+  const bundlePrice  = document.getElementById('subPriceBundle')?.value?.trim();
+  const monthlyPlanId = document.getElementById('paypalPlanIdMonthly')?.value?.trim();
+  const bundlePlanId  = document.getElementById('paypalPlanIdBundle')?.value?.trim();
+  const vendorLimit  = document.getElementById('freeVendorLimit')?.value?.trim();
 
-  if(price && (isNaN(price)||+price<0.50)){showToast('Price must be at least £0.50',true);return;}
+  if(!monthlyPrice || isNaN(monthlyPrice)){
+    alert('Please enter a valid monthly price'); return;
+  }
+  if(!bundlePrice || isNaN(bundlePrice)){
+    alert('Please enter a valid bundle price'); return;
+  }
 
-  if(status) status.textContent = 'Saving…';
-  try{
-    const entries = [];
-    if(price)     entries.push({key:'sub_price',        value:price});
-    if(planId!==undefined) entries.push({key:'paypal_plan_id',  value:planId||''});
-    if(freeLimit) entries.push({key:'free_vendor_limit',value:freeLimit});
+  const btn = event?.target;
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
 
-    for(const entry of entries){
-      // Upsert by key (no user_id — platform-wide setting)
-      const checkRes = await fetch(`${ADMIN_URL}/rest/v1/settings?key=eq.${entry.key}&user_id=is.null`,{headers:H});
-      const existing = await checkRes.json();
-      if(Array.isArray(existing)&&existing.length){
-        await fetch(`${ADMIN_URL}/rest/v1/settings?key=eq.${entry.key}&user_id=is.null`,{
-          method:'PATCH',headers:{...H,'Prefer':'return=minimal'},
-          body:JSON.stringify({value:entry.value})
-        });
+  try {
+    const settings = [
+      { key:'sub_price_monthly',      value: parseFloat(monthlyPrice).toFixed(2) },
+      { key:'sub_price_bundle',       value: parseFloat(bundlePrice).toFixed(2) },
+      { key:'paypal_plan_id_monthly', value: monthlyPlanId || '' },
+      { key:'paypal_plan_id_bundle',  value: bundlePlanId  || '' },
+      // Legacy keys for backwards compat
+      { key:'sub_price',              value: parseFloat(monthlyPrice).toFixed(2) },
+      { key:'paypal_plan_id',         value: monthlyPlanId || '' },
+    ];
+    if(vendorLimit) settings.push({ key:'free_vendor_limit', value: vendorLimit });
+
+    for(const s of settings){
+      const existing = await apiFetch('settings?key=eq.'+s.key+'&user_id=is.null', 'GET');
+      if(existing && existing.length){
+        await apiFetch('settings?key=eq.'+s.key+'&user_id=is.null', 'PATCH', { value: s.value });
       } else {
-        await fetch(`${ADMIN_URL}/rest/v1/settings`,{
-          method:'POST',headers:H,
-          body:JSON.stringify({key:entry.key,value:entry.value,user_id:null})
-        });
+        await apiFetch('settings', 'POST', { key: s.key, value: s.value, user_id: null });
       }
     }
-    if(status) status.textContent = '✓ Saved at ' + new Date().toLocaleTimeString();
-    showToast('Platform settings saved ✓','success');
-  }catch(e){
-    if(status) status.textContent = '⚠ Save failed';
-    showToast('Error: '+e.message,true);
+
+    showToast('✅ Pricing updated successfully!');
+  } catch(e){
+    showToast('❌ Save failed: '+e.message, true);
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='Save Settings'; }
   }
 }
 
