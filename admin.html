@@ -2,662 +2,1968 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>WeddingLedger — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{
-  --cream:#fdf9f3;--warm:#f5ede0;--gold:#c9a84c;--gold-pale:#fdf0d8;
-  --rose:#b85c6e;--sage:#5a7a5a;--sage-pale:#e8f0e8;
-  --muted:#8a7968;--border:#e8ddd0;--charcoal:#2d2416;--danger:#e05555;
-  --bg:#111009;--surface:#1e1a10;--surface2:#2a2416;--text:rgba(255,255,255,0.88);--textm:rgba(255,255,255,0.45);
+/* ══════════════════════════════════════════════════════
+   WeddingLedger Admin — Landing Page Theme
+══════════════════════════════════════════════════════ */
+:root {
+  --bg:#faf7f2; --bg2:#f4efe6; --surface:#ffffff; --surface2:#fdf9f4;
+  --ink:#1a1612; --ink2:#2e2820; --muted:#7a6e5e; --muted2:#b0a090;
+  --gold:#a07828; --gold2:#c49a3a; --gold-pale:#fdf3dc;
+  --gold-bd:rgba(160,120,40,.22); --border:rgba(26,22,18,.09); --border2:rgba(26,22,18,.05);
+  --sage:#2a6a3a; --sage-pale:#eef7f1; --sage-bd:rgba(42,106,58,.2);
+  --rose:#b83030; --rose-pale:#fef0f0; --rose-bd:rgba(184,48,48,.2);
+  --amber:#9a5c00; --amber-pale:#fff8e6; --amber-bd:rgba(154,92,0,.2);
+  --shadow:0 1px 4px rgba(26,22,18,.05),0 4px 20px rgba(26,22,18,.07);
+  --shadow2:0 8px 40px rgba(26,22,18,.11); --shadow3:0 20px 70px rgba(26,22,18,.14);
+  --r:12px; --R:16px; --nav:240px; --topbar:60px;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{
+  font-family:'Instrument Sans',sans-serif;
+  background:var(--bg); color:var(--ink);
+  background-image:
+    linear-gradient(rgba(26,22,18,.016) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(26,22,18,.016) 1px,transparent 1px);
+  background-size:52px 52px; background-attachment:fixed;
+  min-height:100vh;
+}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--gold-bd);border-radius:2px}
 
-/* ── LOGIN ── */
-#loginGate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
-.login-box{background:var(--surface);border:1px solid rgba(201,168,76,0.2);border-radius:20px;padding:44px;width:100%;max-width:380px;text-align:center;}
-.login-logo{font-family:'Cormorant Garamond',serif;font-size:30px;color:white;font-style:italic;margin-bottom:4px;}
-.login-logo span{color:var(--gold);}
-.login-sub{font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:32px;opacity:0.7;}
-.login-input{width:100%;padding:13px 16px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;font-family:'Jost',sans-serif;font-size:14px;color:white;background:rgba(255,255,255,0.06);outline:none;margin-bottom:12px;}
-.login-input:focus{border-color:var(--gold);}
-.login-btn{width:100%;background:var(--gold);color:var(--charcoal);border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Jost',sans-serif;}
-.login-btn:hover{opacity:0.9;}
-.login-error{color:var(--danger);font-size:12px;margin-top:8px;display:none;}
+/* ─── LOGIN ──────────────────────────────────────── */
+#loginGate{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;
+}
+.login-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:24px;padding:52px 44px;width:100%;max-width:400px;
+  text-align:center;box-shadow:var(--shadow3);
+  animation:fadeUp .5s ease both;
+}
+.login-logo{
+  font-family:'Fraunces',serif;font-size:28px;font-style:italic;
+  font-weight:300;color:var(--ink);margin-bottom:4px;
+}
+.login-logo em{color:var(--gold)}
+.login-eyebrow{
+  font-size:9px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--gold);font-weight:700;margin-bottom:36px;
+  display:block;opacity:.8;
+}
+.login-input{
+  width:100%;padding:12px 16px;border:1.5px solid var(--border);
+  border-radius:10px;font-family:'Instrument Sans',sans-serif;
+  font-size:14px;color:var(--ink);background:var(--surface);
+  outline:none;margin-bottom:12px;transition:.17s;
+}
+.login-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(160,120,40,.1)}
+.login-btn{
+  width:100%;background:var(--ink);color:#fff;border:none;
+  border-radius:10px;padding:13px;font-size:14px;font-weight:600;
+  cursor:pointer;font-family:'Instrument Sans',sans-serif;transition:.17s;
+}
+.login-btn:hover{background:var(--gold)}
+.login-error{
+  color:var(--rose);font-size:12px;margin-top:8px;
+  display:none;background:var(--rose-pale);
+  border-radius:7px;padding:7px 12px;
+}
 
-/* ── LAYOUT ── */
-#adminApp{display:none;}
-.topbar{background:var(--surface);border-bottom:1px solid rgba(201,168,76,0.15);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--gold);font-style:italic;}
-.topbar-logo span{color:white;}
-.topbar-tag{font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);opacity:0.6;margin-left:10px;font-style:normal;}
-.topbar-nav{display:flex;gap:4px;}
-.nav-btn{background:none;border:none;color:var(--textm);padding:8px 16px;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
-.nav-btn:hover,.nav-btn.active{background:rgba(201,168,76,0.12);color:var(--gold);}
-.signout-btn{background:rgba(255,255,255,0.05);color:var(--textm);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;font-family:'Jost',sans-serif;}
-.signout-btn:hover{border-color:var(--danger);color:var(--danger);}
+/* ─── APP SHELL ───────────────────────────────────── */
+#adminApp{display:none}
 
-/* ── PAGE ── */
-.page{display:none;padding:36px 28px;max-width:1200px;margin:0 auto;}
-.page.active{display:block;}
-.page-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;font-style:italic;color:white;margin-bottom:4px;}
-.page-sub{font-size:13px;color:var(--textm);margin-bottom:28px;}
+/* Sidebar */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--nav);
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:100;overflow-y:auto;
+}
+.sidebar-logo{
+  padding:22px 24px 20px;border-bottom:1px solid var(--border2);
+  flex-shrink:0;
+}
+.sidebar-logo-text{
+  font-family:'Fraunces',serif;font-size:19px;font-style:italic;
+  font-weight:300;color:var(--ink);
+}
+.sidebar-logo-text em{color:var(--gold)}
+.sidebar-eyebrow{
+  font-size:8px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--muted2);margin-top:3px;font-weight:700;display:block;
+}
+.sidebar-nav{padding:16px 12px;flex:1}
+.nav-section-lbl{
+  font-size:8px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--muted2);font-weight:700;padding:0 10px;margin:16px 0 6px;
+}
+.nav-section-lbl:first-child{margin-top:0}
+.nav-btn{
+  display:flex;align-items:center;gap:10px;
+  width:100%;padding:9px 12px;border-radius:9px;border:none;
+  background:none;font-family:'Instrument Sans',sans-serif;
+  font-size:13px;font-weight:500;color:var(--muted);
+  cursor:pointer;transition:.17s;text-align:left;
+  margin-bottom:2px;
+}
+.nav-btn:hover{background:var(--bg2);color:var(--ink)}
+.nav-btn.active{background:var(--gold-pale);color:var(--gold);font-weight:600}
+.nav-btn .nav-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.nav-btn .nav-badge{
+  margin-left:auto;background:var(--rose);color:#fff;
+  border-radius:99px;padding:1px 6px;font-size:10px;font-weight:700;
+}
+.sidebar-footer{
+  padding:16px 20px;border-top:1px solid var(--border2);flex-shrink:0;
+}
+.sidebar-user{
+  font-size:11px;color:var(--muted2);margin-bottom:10px;
+  display:flex;align-items:center;gap:7px;
+}
+.sidebar-user-dot{
+  width:7px;height:7px;background:var(--sage);
+  border-radius:50%;flex-shrink:0;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.signout-btn{
+  width:100%;background:none;border:1.5px solid var(--border);
+  border-radius:9px;padding:8px;font-family:'Instrument Sans',sans-serif;
+  font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:.17s;
+}
+.signout-btn:hover{border-color:var(--rose-bd);color:var(--rose);background:var(--rose-pale)}
 
-/* ── METRIC CARDS ── */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;}
-.metric-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:20px 22px;}
-.metric-label{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--textm);margin-bottom:10px;}
-.metric-value{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:white;line-height:1;}
-.metric-sub{font-size:12px;color:var(--gold);margin-top:5px;}
-.metric-card.highlight{border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.05);}
-.metric-card.danger-card{border-color:rgba(224,85,85,0.3);}
+/* Topbar */
+.topbar{
+  position:fixed;top:0;left:var(--nav);right:0;height:var(--topbar);
+  background:rgba(250,247,242,.94);backdrop-filter:blur(20px) saturate(1.8);
+  border-bottom:1px solid var(--border);z-index:90;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;gap:16px;transition:box-shadow .3s;
+}
+.topbar.scrolled{box-shadow:0 2px 20px rgba(26,22,18,.07)}
+.topbar-title{
+  font-family:'Fraunces',serif;font-size:16px;font-style:italic;
+  font-weight:300;color:var(--muted);
+}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-refresh{
+  background:none;border:1.5px solid var(--border);border-radius:8px;
+  padding:6px 12px;font-size:12px;font-weight:500;color:var(--muted);
+  cursor:pointer;font-family:'Instrument Sans',sans-serif;transition:.17s;
+  display:flex;align-items:center;gap:5px;
+}
+.topbar-refresh:hover{border-color:var(--gold-bd);color:var(--gold);background:var(--gold-pale)}
+.topbar-refresh.spinning .refresh-icon{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.search-wrap{position:relative}
+.topbar-search{
+  background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:9px;padding:7px 12px 7px 32px;
+  font-family:'Instrument Sans',sans-serif;font-size:13px;
+  color:var(--ink);outline:none;width:220px;transition:.17s;
+}
+.topbar-search:focus{border-color:var(--gold);background:var(--surface);width:260px}
+.topbar-search::placeholder{color:var(--muted2)}
+.search-icon{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  font-size:12px;pointer-events:none;
+}
 
-/* ── TABLE ── */
-.table-wrap{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;overflow:hidden;}
-.table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);}
-.table-title{font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--textm);}
-.table-search{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px 12px;color:white;font-family:'Jost',sans-serif;font-size:13px;outline:none;width:240px;}
-.table-search::placeholder{color:var(--textm);}
-.table-search:focus{border-color:var(--gold);}
-table{width:100%;border-collapse:collapse;}
-th{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--textm);padding:12px 18px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);}
-td{padding:13px 18px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(255,255,255,0.02);}
-.loading{text-align:center;padding:32px;color:var(--textm);font-style:italic;}
+/* Main content area */
+.main{
+  margin-left:var(--nav);padding-top:var(--topbar);
+  min-height:100vh;
+}
+.page{display:none;padding:32px 28px 60px;max-width:1200px}
+.page.active{display:block}
 
-/* ── BADGES ── */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
-.badge-pro{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
-.badge-free{background:rgba(255,255,255,0.06);color:var(--textm);border:1px solid rgba(255,255,255,0.08);}
-.badge-overdue{background:rgba(224,85,85,0.15);color:#ff7070;}
-.badge-soon{background:rgba(255,160,0,0.15);color:#ffb030;}
-.badge-ok{background:rgba(90,122,90,0.15);color:#7dc87d;}
+/* ─── PAGE HEADER ─────────────────────────────────── */
+.page-header{margin-bottom:28px}
+.page-title{
+  font-family:'Fraunces',serif;font-size:32px;font-weight:200;
+  font-style:italic;color:var(--ink);letter-spacing:-.02em;
+  line-height:1.1;margin-bottom:4px;
+}
+.page-title em{color:var(--gold);font-weight:300}
+.page-sub{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.page-sub-dot{
+  width:4px;height:4px;border-radius:50%;
+  background:var(--gold);opacity:.6;
+}
+.last-updated{
+  font-size:11px;color:var(--muted2);
+  display:flex;align-items:center;gap:5px;
+}
 
-/* ── BUTTONS ── */
-.action-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--textm);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:'Jost',sans-serif;margin-right:4px;transition:all 0.2s;white-space:nowrap;}
-.action-btn:hover{background:rgba(255,255,255,0.12);color:white;}
-.action-btn.success{border-color:rgba(201,168,76,0.3);color:var(--gold);}
-.action-btn.success:hover{background:rgba(201,168,76,0.12);}
-.action-btn.danger{border-color:rgba(224,85,85,0.3);color:#ff7070;}
-.action-btn.danger:hover{background:rgba(224,85,85,0.1);}
+/* ─── METRIC CARDS ────────────────────────────────── */
+.metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:10px;margin-bottom:24px;
+}
+.metric-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--R);padding:20px 20px 16px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
+  cursor:default;transition:.2s;
+}
+.metric-card::after{
+  content:'';position:absolute;top:0;left:16px;right:16px;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0;transition:.3s;
+}
+.metric-card:hover{box-shadow:var(--shadow2);transform:translateY(-2px)}
+.metric-card:hover::after{opacity:.6}
+.metric-card.highlight{border-color:var(--gold-bd);background:linear-gradient(135deg,var(--gold-pale),var(--surface))}
+.metric-card.danger{border-color:var(--rose-bd)}
+.metric-card.success{border-color:var(--sage-bd)}
+.metric-card.amber{border-color:var(--amber-bd)}
+.m-label{
+  font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--muted2);font-weight:700;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.m-icon{font-size:13px}
+.m-value{
+  font-family:'Fraunces',serif;font-size:36px;font-weight:200;
+  color:var(--ink);line-height:1;letter-spacing:-.03em;
+}
+.m-value.gold{color:var(--gold)}
+.m-value.sage{color:var(--sage)}
+.m-value.rose{color:var(--rose)}
+.m-value.amber{color:var(--amber)}
+.m-sub{
+  font-size:11px;color:var(--muted2);margin-top:6px;
+  display:flex;align-items:center;gap:4px;
+}
+.m-sub em{color:var(--gold);font-style:normal;font-weight:600}
+.m-trend{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+  margin-top:6px;display:inline-flex;align-items:center;gap:3px;
+}
+.m-trend.up{background:var(--sage-pale);color:var(--sage)}
+.m-trend.down{background:var(--rose-pale);color:var(--rose)}
+.m-sparkline{
+  position:absolute;bottom:0;right:0;width:72px;height:40px;
+  opacity:.15;
+}
 
-/* ── VENDOR LIMIT INLINE ── */
-.limit-row{display:inline-flex;align-items:center;gap:6px;}
-.limit-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:white;font-family:'Jost',sans-serif;font-size:12px;padding:4px 8px;width:52px;outline:none;text-align:center;}
-.limit-input:focus{border-color:var(--gold);}
-.limit-save-btn{background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:var(--gold);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Jost',sans-serif;}
-.limit-save-btn:hover{background:rgba(201,168,76,0.25);}
+/* ─── BENTO OVERVIEW ROW ──────────────────────────── */
+.bento-row{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;margin-bottom:24px;
+}
+.bento-row.two-col{grid-template-columns:2fr 1fr}
+.bento-row.one-two{grid-template-columns:1fr 2fr}
+.bento-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--R);padding:22px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+}
+.bento-card.full{grid-column:1/-1}
+.bc-title{
+  font-family:'Fraunces',serif;font-size:16px;font-weight:300;
+  font-style:italic;color:var(--ink);margin-bottom:14px;
+}
+.bc-title em{color:var(--gold);font-weight:400}
 
-/* ── SETTINGS FORM ── */
-.settings-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:24px;max-width:480px;margin-bottom:16px;}
-.settings-title{font-size:13px;font-weight:600;color:white;margin-bottom:16px;letter-spacing:0.05em;}
-.s-label{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--textm);margin-bottom:5px;margin-top:14px;display:block;}
-.s-input{width:100%;padding:10px 13px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:white;background:rgba(255,255,255,0.05);font-family:'Jost',sans-serif;font-size:14px;outline:none;}
-.s-input:focus{border-color:var(--gold);}
-.s-btn{margin-top:12px;background:var(--charcoal);color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;font-family:'Jost',sans-serif;}
-.s-btn:hover{background:var(--gold);color:var(--charcoal);}
-.info-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
-.info-row:last-child{border:none;}
-.info-row span{color:var(--textm);}
+/* ─── ACTIVITY FEED ───────────────────────────────── */
+.feed-list{display:flex;flex-direction:column;gap:0;max-height:340px;overflow-y:auto}
+.feed-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border2);
+}
+.feed-item:last-child{border-bottom:none}
+.feed-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;
+}
+.feed-dot.pro{background:var(--gold)}
+.feed-dot.signup{background:var(--sage)}
+.feed-dot.warn{background:var(--rose)}
+.feed-body{flex:1;min-width:0}
+.feed-text{font-size:12px;color:var(--ink);line-height:1.4}
+.feed-text strong{font-weight:600}
+.feed-time{font-size:10px;color:var(--muted2);margin-top:2px}
+.feed-badge{
+  font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 7px;border-radius:99px;flex-shrink:0;
+}
+.feed-badge.pro{background:var(--gold-pale);color:var(--gold)}
+.feed-badge.new{background:var(--sage-pale);color:var(--sage)}
+.feed-badge.warn{background:var(--rose-pale);color:var(--rose)}
 
-/* ── USER DETAIL MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
-.modal{background:var(--surface2);border:1px solid rgba(201,168,76,0.2);border-radius:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.07);}
-.modal-head h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:white;font-style:italic;}
-.modal-close{background:none;border:none;color:var(--textm);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;}
-.modal-close:hover{background:rgba(255,255,255,0.08);}
-.modal-body{padding:18px 22px 24px;}
-.modal-section{margin-bottom:16px;}
-.modal-sec-title{font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;opacity:0.7;}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.detail-item{background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px;}
-.detail-item-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--textm);margin-bottom:4px;}
-.detail-item-value{font-size:14px;color:white;font-weight:500;}
+/* ─── REVENUE CHART ───────────────────────────────── */
+.chart-wrap{position:relative}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--charcoal);color:white;padding:11px 22px;border-radius:99px;font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.toast.error{background:var(--danger);}
+/* ─── CONVERSION FUNNEL ───────────────────────────── */
+.funnel-row{
+  display:flex;align-items:center;gap:10px;margin-bottom:8px;
+}
+.funnel-label{font-size:11px;color:var(--muted);width:90px;flex-shrink:0;font-weight:500}
+.funnel-bar-track{flex:1;height:20px;background:var(--bg2);border-radius:99px;overflow:hidden}
+.funnel-bar-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  transition:width 1s cubic-bezier(.4,0,.2,1);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:7px;
+  font-size:9px;font-weight:700;color:rgba(255,255,255,.9);
+  min-width:30px;
+}
+.funnel-bar-fill.sage{background:linear-gradient(90deg,var(--sage),#3d8a50)}
+.funnel-bar-fill.rose{background:linear-gradient(90deg,var(--rose),#d44040)}
+.funnel-count{font-size:11px;color:var(--muted2);width:32px;text-align:right;font-weight:600}
 
-/* ── HAMBURGER ── */
-.hamburger{display:none;background:none;border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--textm);font-size:18px;padding:6px 10px;cursor:pointer;line-height:1;}
-.hamburger:hover{border-color:var(--gold);color:var(--gold);}
-.mobile-menu{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);}
-.mobile-menu.open{display:flex;align-items:flex-end;}
-.mobile-menu-inner{background:var(--surface2);border-top:1px solid rgba(201,168,76,0.2);border-radius:18px 18px 0 0;padding:20px 16px 36px;width:100%;display:flex;flex-direction:column;gap:8px;}
-.mobile-menu-inner .nav-btn{width:100%;text-align:left;padding:13px 16px;font-size:15px;border-radius:10px;}
-.mobile-menu-close{background:none;border:none;color:var(--textm);font-size:22px;cursor:pointer;position:absolute;top:16px;right:20px;}
+/* ─── DATA TABLE ──────────────────────────────────── */
+.table-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--R);overflow:hidden;box-shadow:var(--shadow);
+  margin-bottom:16px;
+}
+.table-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  flex-wrap:wrap;gap:10px;
+}
+.table-topbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.table-count-badge{
+  font-size:10px;font-weight:700;color:var(--muted2);
+  background:var(--bg2);border-radius:99px;padding:3px 10px;letter-spacing:.06em;
+}
+.table-filters{display:flex;gap:6px}
+.tfilter{
+  padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);
+  background:none;font-family:'Instrument Sans',sans-serif;
+  font-size:11px;font-weight:600;cursor:pointer;transition:.17s;color:var(--muted);
+}
+.tfilter.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tfilter:hover:not(.active){border-color:var(--gold-bd);color:var(--ink)}
+.table-search{
+  background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:9px;padding:7px 12px;
+  font-family:'Instrument Sans',sans-serif;font-size:13px;
+  color:var(--ink);outline:none;transition:.17s;width:240px;
+}
+.table-search:focus{border-color:var(--gold);background:var(--surface)}
+.table-search::placeholder{color:var(--muted2)}
+.table-export{
+  background:none;border:1.5px solid var(--border);
+  border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;
+  color:var(--muted);cursor:pointer;font-family:'Instrument Sans',sans-serif;
+  transition:.17s;display:flex;align-items:center;gap:5px;
+}
+.table-export:hover{border-color:var(--gold-bd);color:var(--gold);background:var(--gold-pale)}
+table{width:100%;border-collapse:collapse}
+thead th{
+  font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted2);padding:11px 16px;text-align:left;
+  border-bottom:1px solid var(--border);font-weight:700;
+  background:var(--surface2);cursor:pointer;
+  user-select:none;white-space:nowrap;
+}
+thead th:hover{color:var(--gold)}
+thead th.sorted{color:var(--gold)}
+thead th.sorted::after{content:' ↓';font-size:9px}
+thead th.sorted.asc::after{content:' ↑'}
+tbody td{
+  padding:12px 16px;font-size:13px;
+  border-bottom:1px solid var(--border2);vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(160,120,40,.025)}
+.td-muted{color:var(--muted2);font-size:12px}
+.td-mono{font-family:monospace;font-size:11px;color:var(--muted)}
+.loading-row td{text-align:center;padding:32px;color:var(--muted2);font-style:italic}
 
-@media(max-width:700px){
-  .topbar-nav{display:none;}
-  .hamburger{display:block;}
-  th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){display:none;}
-  .metrics-grid{grid-template-columns:1fr 1fr;}
-  .table-search{width:140px;}
-  .page{padding:24px 14px;}
+/* Badges */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:99px;font-size:10px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.badge-pro{background:var(--gold-pale);color:var(--gold);border:1px solid var(--gold-bd)}
+.badge-pro::before{background:var(--gold)}
+.badge-free{background:var(--bg2);color:var(--muted);border:1px solid var(--border)}
+.badge-free::before{background:var(--muted2)}
+.badge-overdue{background:var(--rose-pale);color:var(--rose)}
+.badge-overdue::before{background:var(--rose)}
+.badge-soon{background:var(--amber-pale);color:var(--amber)}
+.badge-soon::before{background:var(--amber)}
+.badge-ok{background:var(--sage-pale);color:var(--sage)}
+.badge-ok::before{background:var(--sage)}
+
+/* Action buttons */
+.act-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 11px;border-radius:7px;
+  border:1.5px solid var(--border);background:none;
+  font-family:'Instrument Sans',sans-serif;font-size:11px;
+  font-weight:600;cursor:pointer;transition:.17s;color:var(--muted);
+  white-space:nowrap;
+}
+.act-btn:hover{background:var(--bg2);color:var(--ink)}
+.act-btn.gold{border-color:var(--gold-bd);color:var(--gold)}
+.act-btn.gold:hover{background:var(--gold-pale)}
+.act-btn.rose{border-color:var(--rose-bd);color:var(--rose)}
+.act-btn.rose:hover{background:var(--rose-pale)}
+.act-btn.sage{border-color:var(--sage-bd);color:var(--sage)}
+.act-btn.sage:hover{background:var(--sage-pale)}
+
+/* Vendor limit inline */
+.limit-row{display:inline-flex;align-items:center;gap:5px}
+.limit-input{
+  background:var(--bg2);border:1.5px solid var(--border);
+  border-radius:6px;color:var(--ink);
+  font-family:'Instrument Sans',sans-serif;font-size:12px;
+  padding:4px 7px;width:50px;outline:none;text-align:center;transition:.17s;
+}
+.limit-input:focus{border-color:var(--gold)}
+.limit-save{
+  background:var(--gold-pale);border:1.5px solid var(--gold-bd);
+  color:var(--gold);border-radius:6px;padding:4px 10px;
+  font-size:11px;font-weight:700;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:.17s;
+}
+.limit-save:hover{background:var(--gold);color:#fff}
+
+/* ─── USER DETAIL PANEL ───────────────────────────── */
+.detail-panel{
+  position:fixed;top:0;right:-480px;bottom:0;width:480px;
+  background:var(--surface);border-left:1px solid var(--border);
+  z-index:300;display:flex;flex-direction:column;
+  box-shadow:-20px 0 60px rgba(26,22,18,.1);
+  transition:right .32s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;
+}
+.detail-panel.open{right:0}
+.panel-overlay{
+  position:fixed;inset:0;background:rgba(26,22,18,.25);
+  z-index:290;display:none;backdrop-filter:blur(4px);
+}
+.panel-overlay.open{display:block}
+.panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--surface);z-index:1;flex-shrink:0;
+}
+.panel-title{
+  font-family:'Fraunces',serif;font-size:20px;font-style:italic;
+  font-weight:300;color:var(--ink);
+}
+.panel-close{
+  background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:16px;padding:4px 7px;border-radius:6px;transition:.15s;
+}
+.panel-close:hover{background:var(--bg2)}
+.panel-body{padding:20px 24px 32px}
+.panel-section{margin-bottom:22px}
+.panel-section-title{
+  font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:12px;opacity:.9;
+}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.detail-cell{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:9px;padding:10px 12px;
+}
+.dc-label{
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted2);margin-bottom:4px;font-weight:700;
+}
+.dc-value{font-size:14px;color:var(--ink);font-weight:500}
+.dc-value.mono{font-family:monospace;font-size:11px;word-break:break-all}
+.panel-actions{
+  display:flex;flex-direction:column;gap:8px;margin-top:14px;
+}
+.panel-action-btn{
+  width:100%;padding:10px;border-radius:9px;border:1.5px solid var(--border);
+  background:none;font-family:'Instrument Sans',sans-serif;font-size:13px;
+  font-weight:600;cursor:pointer;transition:.17s;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.panel-action-btn:hover{background:var(--bg2);color:var(--ink);border-color:var(--ink)}
+.panel-action-btn.gold{border-color:var(--gold-bd);color:var(--gold)}
+.panel-action-btn.gold:hover{background:var(--gold);color:#fff}
+.panel-action-btn.rose{border-color:var(--rose-bd);color:var(--rose)}
+.panel-action-btn.rose:hover{background:var(--rose);color:#fff}
+
+/* Vendor row in panel */
+.vendor-mini-row{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;background:var(--surface2);
+  border-radius:8px;margin-bottom:5px;font-size:12px;
+  border:1px solid var(--border2);
+}
+.vr-icon{font-size:14px;flex-shrink:0}
+.vr-name{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vr-amount{color:var(--muted2);flex-shrink:0}
+.vr-due{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;flex-shrink:0}
+.vr-due.over{background:var(--rose-pale);color:var(--rose)}
+.vr-due.soon{background:var(--amber-pale);color:var(--amber)}
+
+/* ─── SETTINGS CARDS ──────────────────────────────── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.settings-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--R);padding:24px;box-shadow:var(--shadow);
+}
+.sc-title{
+  font-family:'Fraunces',serif;font-size:17px;font-weight:300;
+  font-style:italic;color:var(--ink);margin-bottom:16px;
+}
+.sc-title em{color:var(--gold)}
+.s-label{
+  display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted2);margin-bottom:5px;margin-top:12px;font-weight:700;
+}
+.s-label:first-child{margin-top:0}
+.s-input{
+  width:100%;padding:10px 13px;border:1.5px solid var(--border);
+  border-radius:9px;color:var(--ink);background:var(--surface);
+  font-family:'Instrument Sans',sans-serif;font-size:13px;
+  outline:none;transition:.17s;
+}
+.s-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(160,120,40,.1)}
+.s-btn{
+  margin-top:12px;background:var(--ink);color:#fff;border:none;
+  border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;
+  cursor:pointer;font-family:'Instrument Sans',sans-serif;transition:.17s;
+}
+.s-btn:hover{background:var(--gold)}
+.info-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--border2);font-size:13px;
+}
+.info-row:last-child{border-bottom:none}
+.info-row span{color:var(--muted)}
+.info-row strong{font-weight:600;color:var(--ink)}
+.info-row a{color:var(--gold);text-decoration:none;font-weight:600}
+.info-row a:hover{text-decoration:underline}
+
+/* Stats mini-row inside settings */
+.stats-mini{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+}
+.stat-mini{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:9px;padding:11px 12px;text-align:center;
+}
+.stat-mini-val{
+  font-family:'Fraunces',serif;font-size:22px;font-weight:200;
+  color:var(--ink);line-height:1;
+}
+.stat-mini-lbl{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);font-weight:700;margin-top:4px}
+
+/* ─── HEALTH CHECK ────────────────────────────────── */
+.health-list{display:flex;flex-direction:column;gap:8px}
+.health-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 13px;background:var(--surface2);
+  border:1px solid var(--border2);border-radius:9px;font-size:13px;
+}
+.health-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.health-dot.ok{background:var(--sage)}
+.health-dot.warn{background:var(--amber)}
+.health-dot.err{background:var(--rose)}
+.health-label{flex:1;font-weight:500}
+.health-val{font-size:11px;color:var(--muted2)}
+
+/* ─── TOAST ───────────────────────────────────────── */
+.toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:var(--ink);color:#fff;padding:10px 22px;border-radius:99px;
+  font-size:13px;font-weight:500;opacity:0;transition:.28s;
+  pointer-events:none;z-index:999;white-space:nowrap;
+  box-shadow:var(--shadow2);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--rose)}
+.toast.success{background:var(--sage)}
+
+/* ─── EMPTY ───────────────────────────────────────── */
+.empty-row td{text-align:center;padding:40px;color:var(--muted2);font-style:italic}
+
+/* ─── MOBILE ──────────────────────────────────────── */
+.mobile-topbar{
+  display:none;position:fixed;top:0;left:0;right:0;
+  height:56px;background:rgba(250,247,242,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);z-index:200;
+  align-items:center;justify-content:space-between;padding:0 16px;
+}
+.mobile-topbar-logo{
+  font-family:'Fraunces',serif;font-size:17px;font-style:italic;
+  font-weight:300;color:var(--ink);
+}
+.mobile-topbar-logo em{color:var(--gold)}
+.mnav-btn{
+  width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);
+  background:var(--surface);display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:4px;cursor:pointer;
+}
+.mnav-btn span{display:block;width:14px;height:1.5px;background:var(--ink);border-radius:2px;transition:.25s}
+.mnav-btn.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+.mnav-btn.open span:nth-child(2){opacity:0}
+.mnav-btn.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+.mobile-drawer{
+  display:none;position:fixed;inset:0;z-index:400;
+  flex-direction:column;background:var(--bg);padding:0 24px 48px;overflow-y:auto;
+}
+.mobile-drawer.open{display:flex}
+.mobile-drawer-top{
+  display:flex;align-items:center;justify-content:space-between;
+  height:56px;flex-shrink:0;border-bottom:1px solid var(--border2);
+  margin:0 -24px;padding:0 24px;margin-bottom:28px;
+}
+.mobile-drawer-logo{font-family:'Fraunces',serif;font-size:17px;font-style:italic;font-weight:300;color:var(--ink)}
+.mobile-drawer-logo em{color:var(--gold)}
+.mobile-drawer-item{
+  display:block;width:100%;text-align:left;background:none;border:none;
+  font-family:'Fraunces',serif;font-size:28px;font-weight:200;font-style:italic;
+  color:var(--ink);padding:13px 0;cursor:pointer;
+  border-bottom:1px solid var(--border2);transition:color .17s;
+}
+.mobile-drawer-item:hover{color:var(--gold)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .topbar{display:none}
+  .main{margin-left:0;padding-top:56px}
+  .mobile-topbar{display:flex}
+  .bento-row{grid-template-columns:1fr}
+  .bento-row.two-col,.bento-row.one-two{grid-template-columns:1fr}
+  .settings-grid{grid-template-columns:1fr}
+  .detail-panel{width:100%;right:-100%}
+  .table-search{width:160px}
+  .page{padding:24px 14px 60px}
+  thead th:nth-child(n+4),tbody td:nth-child(n+4){display:none}
+}
+@media(max-width:600px){
+  .metrics-grid{grid-template-columns:1fr 1fr}
+  .detail-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
-<!-- ── LOGIN GATE ── -->
+<!-- ═══ LOGIN ════════════════════════════════════════════════════════════════ -->
 <div id="loginGate">
-  <div class="login-box">
-    <div class="login-logo">Wedding<span>Ledger</span></div>
-    <div class="login-sub">Admin Panel</div>
-    <input type="password" id="adminPassword" class="login-input" placeholder="Admin password"
+  <div class="login-card">
+    <div class="login-logo">Wedding<em>Ledger</em></div>
+    <span class="login-eyebrow">Admin Dashboard</span>
+    <input type="password" id="adminPassword" class="login-input" placeholder="Enter admin password"
       onkeydown="if(event.key==='Enter')adminLogin()">
-    <button class="login-btn" onclick="adminLogin()">Sign In →</button>
-    <div class="login-error" id="loginError">Incorrect password</div>
+    <button class="login-btn" onclick="adminLogin()">Access Dashboard →</button>
+    <div class="login-error" id="loginError">⚠ Incorrect password</div>
   </div>
 </div>
 
-<!-- ── ADMIN APP ── -->
+<!-- ═══ MOBILE TOPBAR ════════════════════════════════════════════════════════ -->
+<div class="mobile-topbar" id="mobileTopbar" style="display:none">
+  <div class="mobile-topbar-logo">Wedding<em>Ledger</em></div>
+  <div class="mnav-btn" id="mobileNavBtn" onclick="toggleMobileDrawer()">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- ═══ MOBILE DRAWER ════════════════════════════════════════════════════════ -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-drawer-top">
+    <div class="mobile-drawer-logo">Wedding<em>Ledger</em></div>
+    <div class="mnav-btn open" onclick="toggleMobileDrawer()"><span></span><span></span><span></span></div>
+  </div>
+  <button class="mobile-drawer-item" onclick="showPage('overview');toggleMobileDrawer()">📊 Overview</button>
+  <button class="mobile-drawer-item" onclick="showPage('users');toggleMobileDrawer()">👥 Users</button>
+  <button class="mobile-drawer-item" onclick="showPage('payments');toggleMobileDrawer()">💳 Revenue</button>
+  <button class="mobile-drawer-item" onclick="showPage('vendors');toggleMobileDrawer()">🏪 Vendors</button>
+  <button class="mobile-drawer-item" onclick="showPage('health');toggleMobileDrawer()">❤️ Health</button>
+  <button class="mobile-drawer-item" onclick="showPage('settings');toggleMobileDrawer()">⚙️ Settings</button>
+  <div style="flex:1"></div>
+  <button onclick="adminLogout()" style="background:var(--ink);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif;width:100%;margin-top:20px">Sign Out</button>
+</div>
+
+<!-- ═══ ADMIN APP ═════════════════════════════════════════════════════════════ -->
 <div id="adminApp">
-  <nav class="topbar">
-    <div style="display:flex;align-items:center">
-      <div class="topbar-logo">Wedding<span>Ledger</span></div>
-      <div class="topbar-tag">ADMIN</div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Wedding<em>Ledger</em></div>
+      <span class="sidebar-eyebrow">Admin Console</span>
     </div>
-    <div class="topbar-nav">
-      <button class="nav-btn active" onclick="showPage('overview',this)">📊 Overview</button>
-      <button class="nav-btn" onclick="showPage('users',this)">👥 Users</button>
-      <button class="nav-btn" onclick="showPage('payments',this)">💳 Pro Upgrades</button>
-      <button class="nav-btn" onclick="showPage('settings',this)">⚙️ Settings</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="hamburger" onclick="openMobileMenu()">☰</button>
+    <nav class="sidebar-nav">
+      <div class="nav-section-lbl">Analytics</div>
+      <button class="nav-btn active" id="nav-overview" onclick="showPage('overview')">
+        <span class="nav-icon">📊</span> Overview
+      </button>
+      <button class="nav-btn" id="nav-payments" onclick="showPage('payments')">
+        <span class="nav-icon">💳</span> Revenue
+      </button>
+      <div class="nav-section-lbl">Management</div>
+      <button class="nav-btn" id="nav-users" onclick="showPage('users')">
+        <span class="nav-icon">👥</span> Users
+        <span class="nav-badge" id="navBadgeUsers" style="display:none"></span>
+      </button>
+      <button class="nav-btn" id="nav-vendors" onclick="showPage('vendors')">
+        <span class="nav-icon">🏪</span> Vendors
+      </button>
+      <div class="nav-section-lbl">System</div>
+      <button class="nav-btn" id="nav-health" onclick="showPage('health')">
+        <span class="nav-icon">❤️</span> Platform Health
+      </button>
+      <button class="nav-btn" id="nav-settings" onclick="showPage('settings')">
+        <span class="nav-icon">⚙️</span> Settings
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-dot"></div>
+        <span>Admin · Connected</span>
+      </div>
       <button class="signout-btn" onclick="adminLogout()">Sign Out</button>
     </div>
-  </nav>
+  </aside>
 
-  <!-- ── OVERVIEW ── -->
-  <div class="page active" id="page-overview">
-    <div class="page-title">Overview</div>
-    <div class="page-sub">Platform health at a glance</div>
-    <div class="metrics-grid">
-      <div class="metric-card"><div class="metric-label">Total Users</div><div class="metric-value" id="m-total">—</div></div>
-      <div class="metric-card highlight"><div class="metric-label">Pro Users</div><div class="metric-value" id="m-pro">—</div><div class="metric-sub" id="m-revenue">— revenue</div></div>
-      <div class="metric-card"><div class="metric-label">Free Users</div><div class="metric-value" id="m-free">—</div></div>
-      <div class="metric-card danger-card"><div class="metric-label">Overdue Payments</div><div class="metric-value" id="m-overdue">—</div></div>
-      <div class="metric-card"><div class="metric-label">Due This Week</div><div class="metric-value" id="m-dueweek">—</div></div>
-    </div>
-    <div class="table-wrap">
-      <div class="table-header"><div class="table-title">Recent Signups</div></div>
-      <table>
-        <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Wedding Date</th><th>Joined</th></tr></thead>
-        <tbody id="recentSignups"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ── USERS ── -->
-  <div class="page" id="page-users">
-    <div class="page-title">All Users</div>
-    <div class="page-sub">Manage accounts, plans and vendor limits</div>
-    <div class="table-wrap">
-      <div class="table-header">
-        <div class="table-title" id="userCount">ALL USERS</div>
-        <input class="table-search" placeholder="Search by name or email..." oninput="filterUsers(this.value)">
+  <!-- TOPBAR -->
+  <div class="topbar" id="mainTopbar">
+    <div class="topbar-title" id="topbarTitle">Overview</div>
+    <div class="topbar-right">
+      <div class="last-updated">Last updated: <span id="lastUpdatedTime">—</span></div>
+      <button class="topbar-refresh" onclick="refreshData()" id="refreshBtn">
+        <span class="refresh-icon">↻</span> Refresh
+      </button>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="topbar-search" placeholder="Search users…" oninput="globalSearch(this.value)" id="globalSearchInput">
       </div>
-      <table>
-        <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Vendor Limit</th><th>Wedding Date</th><th>Joined</th><th>Actions</th></tr></thead>
-        <tbody id="usersTable"><tr><td colspan="7" class="loading">Loading...</td></tr></tbody>
-      </table>
     </div>
   </div>
 
-  <!-- ── PAYMENTS ── -->
-  <div class="page" id="page-payments">
-    <div class="page-title">Payments</div>
-    <div class="page-sub">Pro upgrades and platform revenue</div>
-    <div class="metrics-grid" style="grid-template-columns:repeat(3,1fr);max-width:600px">
-      <div class="metric-card highlight"><div class="metric-label">Total Revenue</div><div class="metric-value" id="rev-total">—</div></div>
-      <div class="metric-card"><div class="metric-label">Pro Users</div><div class="metric-value" id="rev-count">—</div></div>
-      <div class="metric-card"><div class="metric-label">Free Users</div><div class="metric-value" id="rev-free">—</div></div>
-    </div>
-    <div class="table-wrap" style="margin-bottom:24px">
-      <div class="table-header"><div class="table-title">Pro Purchases (Your Revenue)</div></div>
-      <table>
-        <thead><tr><th>Couple</th><th>Email</th><th>PayPal Order ID</th><th>Amount Paid</th><th>Upgrade Date</th></tr></thead>
-        <tbody id="purchasesTable"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
+  <!-- ═══ PAGES ═══════════════════════════════════════════════════════════════ -->
+  <main class="main">
 
-  <!-- ── SETTINGS ── -->
-  <div class="page" id="page-settings">
-    <div class="page-title">Settings</div>
-    <div class="page-sub">Admin configuration</div>
-    <div class="settings-card">
-      <div class="settings-title">🔐 Change Admin Password</div>
-      <label class="s-label">New Password</label>
-      <input type="password" id="newAdminPass" class="s-input" placeholder="Enter new password">
-      <button class="s-btn" onclick="changeAdminPassword()">Update Password</button>
+    <!-- ── OVERVIEW ── -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div class="page-title"><em>Overview</em></div>
+        <div class="page-sub">Platform health at a glance <span class="page-sub-dot"></span> <span id="overviewDate"></span></div>
+      </div>
+
+      <!-- Metric Cards -->
+      <div class="metrics-grid" id="metricsGrid">
+        <div class="metric-card highlight">
+          <div class="m-label"><span class="m-icon">👥</span> Total Users</div>
+          <div class="m-value gold" id="m-total">—</div>
+          <div class="m-sub" id="m-total-sub">Loading…</div>
+        </div>
+        <div class="metric-card success">
+          <div class="m-label"><span class="m-icon">✨</span> Pro Users</div>
+          <div class="m-value sage" id="m-pro">—</div>
+          <div class="m-sub" id="m-pro-sub">— conversion</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">🆓</span> Free Users</div>
+          <div class="m-value" id="m-free">—</div>
+          <div class="m-sub">Potential upgrades</div>
+        </div>
+        <div class="metric-card highlight">
+          <div class="m-label"><span class="m-icon">💰</span> Total Revenue</div>
+          <div class="m-value gold" id="m-revenue">—</div>
+          <div class="m-sub"><em id="m-revenue-sub">—</em> from PayPal</div>
+        </div>
+        <div class="metric-card danger">
+          <div class="m-label"><span class="m-icon">⚠</span> Overdue Payments</div>
+          <div class="m-value rose" id="m-overdue">—</div>
+          <div class="m-sub">Across all vendors</div>
+        </div>
+        <div class="metric-card amber">
+          <div class="m-label"><span class="m-icon">📅</span> Due This Week</div>
+          <div class="m-value amber" id="m-dueweek">—</div>
+          <div class="m-sub">Vendor payments</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">🏪</span> Total Vendors</div>
+          <div class="m-value" id="m-vendors">—</div>
+          <div class="m-sub" id="m-vendors-sub">— avg per user</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">📋</span> Tasks Created</div>
+          <div class="m-value" id="m-tasks">—</div>
+          <div class="m-sub" id="m-tasks-sub">— avg per user</div>
+        </div>
+      </div>
+
+      <!-- Bento row: Chart + Funnel + Activity -->
+      <div class="bento-row" style="grid-template-columns:1.6fr 1fr">
+        <div class="bento-card">
+          <div class="bc-title">Revenue <em>Over Time</em></div>
+          <div class="chart-wrap" style="height:200px">
+            <canvas id="revenueChart"></canvas>
+            <div id="revenueChartEmpty" style="display:none;text-align:center;padding:60px 0;font-size:13px;color:var(--muted2)">No revenue data yet</div>
+          </div>
+        </div>
+        <div class="bento-card">
+          <div class="bc-title">Conversion <em>Funnel</em></div>
+          <div id="funnelWrap" style="padding-top:4px">
+            <div class="funnel-row">
+              <div class="funnel-label">Signed up</div>
+              <div class="funnel-bar-track"><div class="funnel-bar-fill sage" id="f-signups" style="width:0%">—</div></div>
+              <div class="funnel-count" id="fc-signups">0</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">Has profile</div>
+              <div class="funnel-bar-track"><div class="funnel-bar-fill" id="f-profiles" style="width:0%">—</div></div>
+              <div class="funnel-count" id="fc-profiles">0</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">Added vendor</div>
+              <div class="funnel-bar-track"><div class="funnel-bar-fill" id="f-vendors" style="width:0%">—</div></div>
+              <div class="funnel-count" id="fc-vendors">0</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">Upgraded Pro</div>
+              <div class="funnel-bar-track"><div class="funnel-bar-fill" id="f-pro" style="width:0%">—</div></div>
+              <div class="funnel-count" id="fc-pro">0</div>
+            </div>
+            <div class="funnel-row">
+              <div class="funnel-label">Paid via PayPal</div>
+              <div class="funnel-bar-track"><div class="funnel-bar-fill rose" id="f-paid" style="width:0%">—</div></div>
+              <div class="funnel-count" id="fc-paid">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent signups + Activity feed -->
+      <div class="bento-row two-col">
+        <div class="bento-card">
+          <div class="bc-title">Recent <em>Signups</em></div>
+          <table style="margin-top:4px">
+            <thead><tr><th>Couple</th><th>Email</th><th>Plan</th><th>Joined</th></tr></thead>
+            <tbody id="recentSignups"><tr class="loading-row"><td colspan="4">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="bento-card">
+          <div class="bc-title">Activity <em>Feed</em></div>
+          <div class="feed-list" id="activityFeed">
+            <div style="color:var(--muted2);font-size:13px;text-align:center;padding:20px">Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wedding date distribution -->
+      <div class="bento-card full" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="bc-title" style="margin:0">Wedding <em>Calendar</em></div>
+          <div style="font-size:11px;color:var(--muted2)">Upcoming weddings by month</div>
+        </div>
+        <div style="height:160px;position:relative"><canvas id="weddingCalChart"></canvas></div>
+      </div>
     </div>
-    <div class="settings-card">
-      <div class="settings-title">⚙️ Platform Info</div>
-      <div class="info-row"><span>Supabase URL</span><strong>bqggtyguhedlyfffjkkw.supabase.co</strong></div>
-      <div class="info-row"><span>Pro Price</span><strong>$12 USD (one-time)</strong></div>
-      <div class="info-row"><span>Default Free Vendor Limit</span><strong>5 vendors</strong></div>
-      <div class="info-row"><span>Admin Panel</span><a href="https://supabase.com/dashboard" target="_blank" style="color:var(--gold)">Open Supabase →</a></div>
+
+    <!-- ── USERS ── -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <div class="page-title">All <em>Users</em></div>
+        <div class="page-sub">Manage accounts, plans and vendor limits</div>
+      </div>
+      <div class="table-card">
+        <div class="table-topbar">
+          <div class="table-topbar-left">
+            <div class="table-count-badge" id="userCount">ALL USERS</div>
+            <div class="table-filters">
+              <button class="tfilter active" id="uf-all" onclick="setUserFilter('all',this)">All</button>
+              <button class="tfilter" id="uf-pro" onclick="setUserFilter('pro',this)">✨ Pro</button>
+              <button class="tfilter" id="uf-free" onclick="setUserFilter('free',this)">Free</button>
+              <button class="tfilter" id="uf-noprofile" onclick="setUserFilter('noprofile',this)">⚠ No Profile</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="table-search" id="userSearch" placeholder="Search name or email…" oninput="filterUsers(this.value)">
+            <button class="table-export" onclick="exportUsersCSV()">⬇ CSV</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="sortUsers('name')">Couple</th>
+                <th onclick="sortUsers('email')">Email</th>
+                <th onclick="sortUsers('plan')">Plan</th>
+                <th>Vendor Limit</th>
+                <th onclick="sortUsers('date')">Wedding Date</th>
+                <th onclick="sortUsers('joined')" class="sorted">Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"><tr class="loading-row"><td colspan="7">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
+
+    <!-- ── REVENUE ── -->
+    <div class="page" id="page-payments">
+      <div class="page-header">
+        <div class="page-title">Revenue & <em>Payments</em></div>
+        <div class="page-sub">Pro upgrades, PayPal transactions and platform earnings</div>
+      </div>
+
+      <div class="metrics-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+        <div class="metric-card highlight">
+          <div class="m-label"><span class="m-icon">💰</span> Gross Revenue</div>
+          <div class="m-value gold" id="rev-gross">—</div>
+          <div class="m-sub">PayPal paid only</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">🎁</span> Admin Granted</div>
+          <div class="m-value" id="rev-granted">—</div>
+          <div class="m-sub">Free Pro upgrades</div>
+        </div>
+        <div class="metric-card success">
+          <div class="m-label"><span class="m-icon">✨</span> Pro Users</div>
+          <div class="m-value sage" id="rev-pro-count">—</div>
+          <div class="m-sub" id="rev-conversion">—% conversion</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">🔄</span> ARPU</div>
+          <div class="m-value" id="rev-arpu">—</div>
+          <div class="m-sub">Avg revenue per user</div>
+        </div>
+      </div>
+
+      <div class="bento-row" style="margin-bottom:16px">
+        <div class="bento-card">
+          <div class="bc-title">Revenue <em>Breakdown</em></div>
+          <div style="height:200px"><canvas id="revenueBreakdownChart"></canvas></div>
+        </div>
+        <div class="bento-card">
+          <div class="bc-title">Pro <em>Growth</em></div>
+          <div style="height:200px"><canvas id="proGrowthChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-topbar">
+          <div class="table-topbar-left">
+            <div class="table-count-badge" id="paymentsCount">PRO USERS</div>
+          </div>
+          <button class="table-export" onclick="exportPaymentsCSV()">⬇ CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Couple</th>
+                <th>Email</th>
+                <th>PayPal Order ID</th>
+                <th>Amount</th>
+                <th>Type</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="purchasesTable"><tr class="loading-row"><td colspan="6">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VENDORS (PLATFORM) ── -->
+    <div class="page" id="page-vendors">
+      <div class="page-header">
+        <div class="page-title">Platform <em>Vendors</em></div>
+        <div class="page-sub">All vendor data across all users</div>
+      </div>
+
+      <div class="metrics-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px">
+        <div class="metric-card"><div class="m-label"><span class="m-icon">🏪</span> Total Vendors</div><div class="m-value" id="pv-total">—</div></div>
+        <div class="metric-card success"><div class="m-label"><span class="m-icon">✅</span> Fully Paid</div><div class="m-value sage" id="pv-paid">—</div></div>
+        <div class="metric-card danger"><div class="m-label"><span class="m-icon">⚠</span> Overdue</div><div class="m-value rose" id="pv-overdue">—</div></div>
+        <div class="metric-card amber"><div class="m-label"><span class="m-icon">📅</span> Due Soon</div><div class="m-value amber" id="pv-soon">—</div></div>
+        <div class="metric-card highlight"><div class="m-label"><span class="m-icon">💷</span> Platform Total</div><div class="m-value gold" id="pv-value">—</div></div>
+      </div>
+
+      <div class="bento-row" style="margin-bottom:16px">
+        <div class="bento-card">
+          <div class="bc-title">Top Vendor <em>Categories</em></div>
+          <div style="height:200px"><canvas id="vendorCatChart"></canvas></div>
+        </div>
+        <div class="bento-card">
+          <div class="bc-title">Payment <em>Status</em></div>
+          <div style="height:200px"><canvas id="vendorStatusChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-topbar">
+          <div class="table-topbar-left">
+            <div class="table-count-badge" id="vendorsCount">ALL VENDORS</div>
+            <div class="table-filters">
+              <button class="tfilter active" id="vf-all" onclick="setVendorFilter('all',this)">All</button>
+              <button class="tfilter" id="vf-overdue" onclick="setVendorFilter('overdue',this)">⚠ Overdue</button>
+              <button class="tfilter" id="vf-soon" onclick="setVendorFilter('soon',this)">📅 Due Soon</button>
+              <button class="tfilter" id="vf-unpaid" onclick="setVendorFilter('unpaid',this)">Unpaid</button>
+            </div>
+          </div>
+          <input class="table-search" id="vendorSearch" placeholder="Search vendors…" oninput="filterVendors(this.value)">
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Owner</th>
+                <th>Total Cost</th>
+                <th>Status</th>
+                <th>Due Date</th>
+                <th>Due Amount</th>
+              </tr>
+            </thead>
+            <tbody id="vendorsTable"><tr class="loading-row"><td colspan="6">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PLATFORM HEALTH ── -->
+    <div class="page" id="page-health">
+      <div class="page-header">
+        <div class="page-title">Platform <em>Health</em></div>
+        <div class="page-sub">System status, database checks and diagnostics</div>
+      </div>
+
+      <div class="bento-row" style="grid-template-columns:1fr 1fr;margin-bottom:16px">
+        <div class="bento-card">
+          <div class="bc-title">System <em>Status</em></div>
+          <div class="health-list" id="healthList">
+            <div style="color:var(--muted2);font-size:13px;padding:10px">Checking…</div>
+          </div>
+        </div>
+        <div class="bento-card">
+          <div class="bc-title">Data <em>Integrity</em></div>
+          <div class="health-list" id="integrityList">
+            <div style="color:var(--muted2);font-size:13px;padding:10px">Checking…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bento-card">
+        <div class="bc-title">Recent <em>Errors & Warnings</em></div>
+        <div id="errorsList" style="color:var(--muted2);font-size:13px;padding:10px">Running diagnostics…</div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Admin <em>Settings</em></div>
+        <div class="page-sub">Configuration, platform info and account management</div>
+      </div>
+
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="sc-title">🔐 Change <em>Password</em></div>
+          <label class="s-label">New Admin Password</label>
+          <input type="password" id="newAdminPass" class="s-input" placeholder="Enter new password (min 4 chars)">
+          <button class="s-btn" onclick="changeAdminPassword()">Update Password</button>
+        </div>
+
+        <div class="settings-card">
+          <div class="sc-title">📊 Platform <em>Stats</em></div>
+          <div class="stats-mini" id="platformStatsMini">
+            <div class="stat-mini"><div class="stat-mini-val" id="sm-users">—</div><div class="stat-mini-lbl">Users</div></div>
+            <div class="stat-mini"><div class="stat-mini-val" id="sm-vendors">—</div><div class="stat-mini-lbl">Vendors</div></div>
+            <div class="stat-mini"><div class="stat-mini-val gold" id="sm-revenue">—</div><div class="stat-mini-lbl">Revenue</div></div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="sc-title">⚙️ Platform <em>Config</em></div>
+          <div class="info-row"><span>Supabase Project</span><strong>bqggtyguhedlyfffjkkw</strong></div>
+          <div class="info-row"><span>Pro Price</span><strong>£9 GBP (one-time)</strong></div>
+          <div class="info-row"><span>Free Vendor Limit</span><strong>5 vendors</strong></div>
+          <div class="info-row"><span>PayPal Mode</span><strong>Live</strong></div>
+          <div class="info-row"><span>Supabase Dashboard</span><a href="https://supabase.com/dashboard/project/bqggtyguhedlyfffjkkw" target="_blank">Open →</a></div>
+        </div>
+
+        <div class="settings-card">
+          <div class="sc-title">🔗 Quick <em>Links</em></div>
+          <div class="info-row"><span>Live Site</span><a href="https://pamupro.github.io/wedding-budget/" target="_blank">pamupro.github.io →</a></div>
+          <div class="info-row"><span>GitHub Repo</span><a href="https://github.com/pamupro/wedding-budget" target="_blank">pamupro/wedding-budget →</a></div>
+          <div class="info-row"><span>PayPal Business</span><a href="https://www.paypal.com/businessmanage/account/overview" target="_blank">PayPal Dashboard →</a></div>
+          <div class="info-row"><span>Auth Users</span><a href="https://supabase.com/dashboard/project/bqggtyguhedlyfffjkkw/auth/users" target="_blank">Supabase Auth →</a></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
-<!-- ── MOBILE MENU ── -->
-<div class="mobile-menu" id="mobileMenu" onclick="if(event.target===this)closeMobileMenu()">
-  <div class="mobile-menu-inner">
-    <button class="mobile-menu-close" onclick="closeMobileMenu()">✕</button>
-    <button class="nav-btn" onclick="showPage('overview',null);closeMobileMenu()">📊 Overview</button>
-    <button class="nav-btn" onclick="showPage('users',null);closeMobileMenu()">👥 Users</button>
-    <button class="nav-btn" onclick="showPage('payments',null);closeMobileMenu()">💳 Pro Upgrades</button>
-    <button class="nav-btn" onclick="showPage('settings',null);closeMobileMenu()">⚙️ Settings</button>
-    <button class="nav-btn" style="color:#ff7070;margin-top:8px;border-top:1px solid rgba(255,255,255,0.07);padding-top:16px" onclick="adminLogout();closeMobileMenu()">Sign Out</button>
+<!-- ═══ USER DETAIL PANEL ═════════════════════════════════════════════════════ -->
+<div class="panel-overlay" id="panelOverlay" onclick="closeUserPanel()"></div>
+<div class="detail-panel" id="userPanel">
+  <div class="panel-header">
+    <div class="panel-title" id="panelTitle">User Details</div>
+    <button class="panel-close" onclick="closeUserPanel()">✕</button>
   </div>
-</div>
-
-<!-- ── USER DETAIL MODAL ── -->
-<div class="modal-overlay" id="userModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="modalTitle">User Details</h3>
-      <button class="modal-close" onclick="document.getElementById('userModal').style.display='none'">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
+  <div class="panel-body" id="panelBody"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CREDENTIALS ───────────────────────────────────────────────────────────────
-const ADMIN_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc1MDQ3NiwiZXhwIjoyMDg4MzI2NDc2fQ.6-OlI0KtlY4f1XkLIF8KEp_Rk1Wqos5Z89Zzm1UKy_Q';
-
-const HEADERS = {
+// ═══════════════════════════════════════════════════════════════════
+//  ADMIN — WeddingLedger v4
+// ═══════════════════════════════════════════════════════════════════
+const ADMIN_URL  = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const SERVICE_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc1MDQ3NiwiZXhwIjoyMDg4MzI2NDc2fQ.6-OlI0KtlY4f1XkLIF8KEp_Rk1Wqos5Z89Zzm1UKy_Q';
+const DEFAULT_PW = 'admin123';
+const H = {
   'apikey': SERVICE_KEY,
   'Authorization': 'Bearer ' + SERVICE_KEY,
   'Content-Type': 'application/json',
   'Prefer': 'return=representation'
 };
 
+// ─── STATE ────────────────────────────────────────
+let allUsers=[], allVendors=[], allPayments=[], allSettings=[], allTasks=[];
+let chartRevenue=null, chartBreakdown=null, chartProGrowth=null,
+    chartVendorCat=null, chartVendorStatus=null, chartWeddingCal=null;
+let userFilter='all', vendorFilter='all', userSort={key:'joined',dir:'desc'};
+
+// ─── DB HELPERS ────────────────────────────────────
 async function dbGet(path) {
-  const r = await fetch(`${ADMIN_URL}/rest/v1/${path}`, { headers: HEADERS });
+  const r = await fetch(`${ADMIN_URL}/rest/v1/${path}`, { headers: H });
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
-
-async function dbPatch(table, id, data) {
-  const r = await fetch(`${ADMIN_URL}/rest/v1/${table}?id=eq.${id}`, {
-    method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' },
-    body: JSON.stringify(data)
+async function dbPatch(table, filter, data) {
+  const r = await fetch(`${ADMIN_URL}/rest/v1/${table}?${filter}`, {
+    method:'PATCH', headers:{...H,'Prefer':'return=minimal'},
+    body:JSON.stringify(data)
   });
   if (!r.ok) throw new Error(await r.text());
 }
-
+async function dbPost(table, data) {
+  const r = await fetch(`${ADMIN_URL}/rest/v1/${table}`, {
+    method:'POST', headers:H, body:JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
 async function dbUpsertSetting(userId, key, value) {
-  // Try patch first
   const r = await fetch(`${ADMIN_URL}/rest/v1/settings?user_id=eq.${userId}&key=eq.${key}`, {
-    method: 'PATCH', headers: HEADERS, body: JSON.stringify({ value: String(value) })
+    method:'PATCH', headers:H, body:JSON.stringify({value:String(value)})
   });
   const rows = await r.json();
-  if (!Array.isArray(rows) || !rows.length) {
-    await fetch(`${ADMIN_URL}/rest/v1/settings`, {
-      method: 'POST', headers: HEADERS,
-      body: JSON.stringify({ user_id: userId, key, value: String(value) })
-    });
+  if (!Array.isArray(rows)||!rows.length) {
+    await fetch(`${ADMIN_URL}/rest/v1/settings`,{method:'POST',headers:H,body:JSON.stringify({user_id:userId,key,value:String(value)})});
   }
 }
 
-// ── LOGIN ────────────────────────────────────────────────────────────────────
-const DEFAULT_PASSWORD = 'admin123';
-
+// ─── LOGIN ────────────────────────────────────────
 function adminLogin() {
   const pw = document.getElementById('adminPassword').value;
-  const stored = localStorage.getItem('wl_admin_pw') || DEFAULT_PASSWORD;
+  const stored = localStorage.getItem('wl_admin_pw') || DEFAULT_PW;
   if (pw === stored) {
-    document.getElementById('loginGate').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
+    document.getElementById('loginGate').style.display='none';
+    document.getElementById('adminApp').style.display='block';
+    document.getElementById('mobileTopbar').style.display='flex';
     loadAllData();
   } else {
-    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginError').style.display='block';
   }
 }
-
 function adminLogout() {
-  document.getElementById('loginGate').style.display = 'flex';
-  document.getElementById('adminApp').style.display = 'none';
-  document.getElementById('adminPassword').value = '';
+  document.getElementById('loginGate').style.display='flex';
+  document.getElementById('adminApp').style.display='none';
+  document.getElementById('mobileTopbar').style.display='none';
+  document.getElementById('adminPassword').value='';
 }
 
-function changeAdminPassword() {
-  const pw = document.getElementById('newAdminPass').value.trim();
-  if (!pw || pw.length < 4) { showToast('Password too short', true); return; }
-  localStorage.setItem('wl_admin_pw', pw);
-  document.getElementById('newAdminPass').value = '';
-  showToast('Admin password updated ✓');
+// ─── NAV ──────────────────────────────────────────
+const PAGE_TITLES = {
+  overview:'Overview', users:'All Users', payments:'Revenue & Payments',
+  vendors:'Platform Vendors', health:'Platform Health', settings:'Admin Settings'
+};
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const pg = document.getElementById('page-'+name);
+  const nb = document.getElementById('nav-'+name);
+  if (pg) pg.classList.add('active');
+  if (nb) nb.classList.add('active');
+  const tt = document.getElementById('topbarTitle');
+  if (tt) tt.textContent = PAGE_TITLES[name]||name;
 }
 
-// ── NAV ──────────────────────────────────────────────────────────────────────
-function showPage(name, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  if (btn) btn.classList.add('active');
-}
-
-// ── DATA ─────────────────────────────────────────────────────────────────────
-let allUsers = [], allVendors = [], allSettings = [];
-
+// ─── LOAD DATA ─────────────────────────────────────
 async function loadAllData() {
+  setRefreshing(true);
   try {
-    const [profiles, vendors, settings, authRes] = await Promise.all([
+    const [profiles, vendors, settings, tasks, authRes] = await Promise.all([
       dbGet('profiles?select=*&order=created_at.desc'),
       dbGet('vendors?select=*'),
       dbGet('settings?select=*'),
-      fetch(`${ADMIN_URL}/auth/v1/admin/users?per_page=1000`, { headers: HEADERS })
+      dbGet('tasks?select=*'),
+      fetch(`${ADMIN_URL}/auth/v1/admin/users?per_page=1000`,{headers:H})
     ]);
-
-    allVendors = vendors;
-    allSettings = settings;
-
-    // Get auth users (always has emails)
-    let authUsers = [];
-    if (authRes.ok) {
-      const authData = await authRes.json();
-      authUsers = authData.users || [];
-    }
-
-    // Build user list: start from auth users so we never miss anyone
-    // Even if profiles table is empty, we still show auth users
+    allVendors=vendors; allSettings=settings; allTasks=tasks;
+    let authUsers=[];
+    if (authRes.ok) { const d=await authRes.json(); authUsers=d.users||[]; }
     allUsers = authUsers.map(au => {
-      const profile = profiles.find(p => p.user_id === au.id) || {};
+      const p = profiles.find(x=>x.user_id===au.id)||{};
       return {
-        id: profile.id || au.id,           // profile table PK (for patch)
-        user_id: au.id,                     // auth UID
-        email: au.email || '',
-        name1: profile.name1 || '',
-        name2: profile.name2 || '',
-        wedding_date: profile.wedding_date || '',
-        is_pro: profile.is_pro || false,
-        paypal_order_id: profile.paypal_order_id || null,
-        created_at: au.created_at || profile.created_at || '',
-        updated_at: profile.updated_at || '',
-        _hasProfile: !!profile.id,          // flag: does a profiles row exist?
+        id: p.id||au.id, user_id:au.id,
+        email:au.email||'',
+        name1:p.name1||'', name2:p.name2||'',
+        wedding_date:p.wedding_date||'',
+        is_pro:p.is_pro||false,
+        paypal_order_id:p.paypal_order_id||null,
+        created_at:au.created_at||p.created_at||'',
+        updated_at:p.updated_at||'',
+        _hasProfile:!!p.id,
+        _partnerLinked:!!(p.partner_id),
+        _referralCode:p.referral_code||null,
       };
     });
+    allUsers.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
-    // Sort newest first
-    allUsers.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    const t = document.getElementById('lastUpdatedTime');
+    if (t) t.textContent = new Date().toLocaleTimeString();
 
     renderOverview();
-    renderUsersTable(allUsers);
-    renderPurchases();
-    renderVendorDues();
+    renderUsersTable();
+    renderPayments();
+    renderVendorsPage();
+    renderHealthPage();
+    renderSettingsPage();
   } catch(e) {
     console.error(e);
-    showToast('Error loading data: ' + e.message, true);
+    showToast('Error loading data: '+e.message, true);
   }
+  setRefreshing(false);
 }
+function setRefreshing(on) {
+  const btn=document.getElementById('refreshBtn');
+  if (!btn) return;
+  btn.classList.toggle('spinning',on);
+  btn.disabled=on;
+}
+async function refreshData() { await loadAllData(); showToast('Data refreshed ✓','success'); }
 
-// ── OVERVIEW ─────────────────────────────────────────────────────────────────
+// ─── OVERVIEW ─────────────────────────────────────
 function renderOverview() {
-  const total = allUsers.length;
-  const pro = allUsers.filter(u => u.is_pro).length;
-  document.getElementById('m-total').textContent = total;
-  document.getElementById('m-pro').textContent = pro;
-  document.getElementById('m-revenue').textContent = '$' + (pro * 12).toLocaleString() + ' revenue';
-  document.getElementById('m-free').textContent = total - pro;
+  const total=allUsers.length, pro=allUsers.filter(u=>u.is_pro).length;
+  const free=total-pro;
+  const paidPro=allUsers.filter(u=>u.is_pro&&u.paypal_order_id).length;
+  const revenue=paidPro*9;
+  const convPct=total>0?Math.round((pro/total)*100):0;
 
-  // Count vendor due dates across platform
-  const today = new Date(); today.setHours(0,0,0,0);
-  let overdue = 0, dueWeek = 0;
-  allVendors.forEach(v => {
-    if (!v.due_date) return;
-    const dd = new Date(v.due_date + 'T00:00:00');
-    const diff = Math.round((dd - today) / 86400000);
-    if (diff < 0) overdue++;
-    else if (diff <= 7) dueWeek++;
+  // Date header
+  const od=document.getElementById('overviewDate');
+  if(od) od.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Metric values
+  animateNum('m-total',total);
+  animateNum('m-pro',pro);
+  animateNum('m-free',free);
+  setText('m-revenue','£'+revenue.toLocaleString());
+  setText('m-revenue-sub','£'+revenue.toLocaleString());
+  setText('m-pro-sub',convPct+'% conversion rate');
+  setText('m-total-sub','↑ '+total+' total signups');
+
+  // Vendor stats
+  const namedVendors=allVendors.filter(v=>v.name);
+  const today=new Date(); today.setHours(0,0,0,0);
+  let overdue=0, dueWeek=0;
+  allVendors.forEach(v=>{
+    if(!v.due_date)return;
+    const dd=new Date(v.due_date+'T00:00:00');
+    const diff=Math.round((dd-today)/86400000);
+    if(diff<0)overdue++;
+    else if(diff<=7)dueWeek++;
   });
-  document.getElementById('m-overdue').textContent = overdue;
-  document.getElementById('m-dueweek').textContent = dueWeek;
+  animateNum('m-overdue',overdue);
+  animateNum('m-dueweek',dueWeek);
+  animateNum('m-vendors',allVendors.length);
+  animateNum('m-tasks',allTasks.length);
+
+  const usersWithVendors=new Set(allVendors.map(v=>v.user_id)).size;
+  const avgV=total>0?(allVendors.length/total).toFixed(1):0;
+  setText('m-vendors-sub',avgV+' avg per user');
+  const avgT=total>0?(allTasks.length/total).toFixed(1):0;
+  setText('m-tasks-sub',avgT+' avg per user');
+
+  // Navbar badge for users with no profile
+  const noProfile=allUsers.filter(u=>!u._hasProfile).length;
+  const nb=document.getElementById('navBadgeUsers');
+  if(nb){if(noProfile>0){nb.textContent=noProfile;nb.style.display='inline'}else{nb.style.display='none'}}
 
   // Recent signups
-  const tbody = document.getElementById('recentSignups');
-  tbody.innerHTML = allUsers.slice(0, 10).map(u => `
+  const rs=document.getElementById('recentSignups');
+  if(rs) rs.innerHTML=allUsers.slice(0,8).map(u=>`
     <tr>
-      <td><strong>${esc(u.name1||'')}${u.name2 ? ' & ' + esc(u.name2) : ''}</strong></td>
-      <td style="color:var(--textm)">${esc(u.email||'')}</td>
-      <td><span class="badge ${u.is_pro ? 'badge-pro' : 'badge-free'}">${u.is_pro ? '✨ Pro' : 'Free'}</span></td>
-      <td style="color:var(--textm)">${u.wedding_date || '—'}</td>
-      <td style="color:var(--textm)">${u.created_at ? u.created_at.split('T')[0] : '—'}</td>
-    </tr>`).join('') || '<tr><td colspan="5" class="loading">No users yet</td></tr>';
+      <td><strong>${esc(u.name1||'')}${u.name2?' & '+esc(u.name2):''||'<em style="color:var(--muted2);font-style:italic;font-weight:400">No profile</em>'}</strong></td>
+      <td class="td-muted">${esc(u.email)}</td>
+      <td><span class="badge ${u.is_pro?'badge-pro':'badge-free'}">${u.is_pro?'✨ Pro':'Free'}</span></td>
+      <td class="td-muted">${fmtDate(u.created_at)}</td>
+    </tr>`).join('')||'<tr class="empty-row"><td colspan="4">No users yet</td></tr>';
+
+  // Activity feed
+  renderActivityFeed();
+
+  // Funnel
+  const usersWithProfile=allUsers.filter(u=>u._hasProfile).length;
+  const pct=(n,d)=>d>0?Math.round((n/d)*100):0;
+  setFunnel('f-signups','fc-signups',total,total,100);
+  setFunnel('f-profiles','fc-profiles',usersWithProfile,total,pct(usersWithProfile,total));
+  setFunnel('f-vendors','fc-vendors',usersWithVendors,total,pct(usersWithVendors,total));
+  setFunnel('f-pro','fc-pro',pro,total,pct(pro,total));
+  setFunnel('f-paid','fc-paid',paidPro,total,pct(paidPro,total));
+
+  // Charts
+  renderRevenueChart();
+  renderWeddingCalChart();
 }
 
-// ── USERS TABLE ──────────────────────────────────────────────────────────────
-function getUserVendorLimit(userId) {
-  // Check settings for custom vendor limit, fall back to default (5 for free, unlimited for pro)
-  const setting = allSettings.find(s => s.user_id === userId && s.key === 'vendor_limit');
-  return setting ? parseInt(setting.value) : null;
+function setFunnel(barId, countId, val, total, pct) {
+  const bar=document.getElementById(barId);
+  const count=document.getElementById(countId);
+  if(bar){setTimeout(()=>{bar.style.width=Math.max(pct,4)+'%';bar.textContent=pct+'%'},100)}
+  if(count)count.textContent=val;
 }
 
-function renderUsersTable(users) {
-  document.getElementById('userCount').textContent = `ALL USERS (${users.length})`;
-  const tbody = document.getElementById('usersTable');
+function renderActivityFeed() {
+  const feed=document.getElementById('activityFeed');
+  if(!feed)return;
+  const items=[];
+  // Sort users by join date for signups
+  allUsers.slice(0,5).forEach(u=>{
+    items.push({
+      type:u.is_pro?'pro':'signup',
+      text:`<strong>${esc(u.email)}</strong> ${u.is_pro?'upgraded to Pro':'signed up'}`,
+      time:fmtDate(u.created_at),
+      badge:u.is_pro?'pro':'new'
+    });
+  });
+  // Add some overdue alerts
+  const today=new Date();today.setHours(0,0,0,0);
+  allVendors.filter(v=>v.due_date&&new Date(v.due_date+'T00:00:00')<today).slice(0,3).forEach(v=>{
+    const owner=allUsers.find(u=>u.user_id===v.user_id);
+    items.push({
+      type:'warn',
+      text:`<strong>${esc(v.name||v.category||'Vendor')}</strong> payment overdue${owner?' for '+esc(owner.email):''}`,
+      time:v.due_date,
+      badge:'warn'
+    });
+  });
+  items.sort(()=>Math.random()-.5);
+  feed.innerHTML=items.slice(0,8).map(i=>`
+    <div class="feed-item">
+      <div class="feed-dot ${i.type}"></div>
+      <div class="feed-body">
+        <div class="feed-text">${i.text}</div>
+        <div class="feed-time">${i.time}</div>
+      </div>
+      <div class="feed-badge ${i.badge}">${i.badge==='pro'?'Pro':i.badge==='warn'?'Alert':'New'}</div>
+    </div>`).join('')||'<div style="color:var(--muted2);font-size:13px;padding:16px;text-align:center">No recent activity</div>';
+}
 
-  tbody.innerHTML = users.map(u => {
-    const customLimit = getUserVendorLimit(u.user_id);
-    const vendorCount = allVendors.filter(v => v.user_id === u.user_id).length;
-    const coupleName = (u.name1 || u.name2)
-      ? esc(u.name1||'') + (u.name2 ? ' & ' + esc(u.name2) : '')
-      : '<span style="color:var(--textm);font-style:italic">No profile yet</span>';
+function renderRevenueChart() {
+  const canvas=document.getElementById('revenueChart');
+  const empty=document.getElementById('revenueChartEmpty');
+  if(!canvas)return;
+  const proUsers=allUsers.filter(u=>u.is_pro&&u.paypal_order_id);
+  if(!proUsers.length){if(empty)empty.style.display='block';canvas.style.display='none';return;}
+  const months={};
+  proUsers.forEach(u=>{
+    const m=u.created_at?new Date(u.created_at).toLocaleString('en-GB',{month:'short',year:'2-digit'}):'?';
+    months[m]=(months[m]||0)+9;
+  });
+  const labels=Object.keys(months).slice(-8);
+  const data=labels.map(l=>months[l]||0);
+  if(chartRevenue)chartRevenue.destroy();
+  chartRevenue=new Chart(canvas,{
+    type:'bar',
+    data:{labels,datasets:[{
+      data,backgroundColor:'rgba(160,120,40,.18)',
+      borderColor:'rgba(160,120,40,.7)',borderWidth:1.5,borderRadius:5
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Instrument Sans',size:10},color:'#b0a090'}},
+        y:{grid:{color:'rgba(26,22,18,.04)'},ticks:{font:{family:'Instrument Sans',size:10},color:'#b0a090',callback:v=>'£'+v}}}}
+  });
+}
 
-    return `<tr id="user-row-${u.id}">
+function renderWeddingCalChart() {
+  const canvas=document.getElementById('weddingCalChart');
+  if(!canvas)return;
+  const today=new Date();
+  const counts={};
+  for(let i=0;i<12;i++){
+    const d=new Date(today.getFullYear(),today.getMonth()+i,1);
+    const key=d.toLocaleString('en-GB',{month:'short',year:'2-digit'});
+    counts[key]=0;
+  }
+  allUsers.forEach(u=>{
+    if(!u.wedding_date)return;
+    const d=new Date(u.wedding_date);
+    if(d<today)return;
+    const key=d.toLocaleString('en-GB',{month:'short',year:'2-digit'});
+    if(counts[key]!==undefined)counts[key]++;
+  });
+  const labels=Object.keys(counts);
+  const data=labels.map(l=>counts[l]);
+  if(chartWeddingCal)chartWeddingCal.destroy();
+  chartWeddingCal=new Chart(canvas,{
+    type:'bar',
+    data:{labels,datasets:[{
+      data,
+      backgroundColor:data.map((_,i)=>i===0?'rgba(160,120,40,.5)':'rgba(160,120,40,.15)'),
+      borderColor:'rgba(160,120,40,.4)',borderWidth:1.5,borderRadius:6
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Instrument Sans',size:10},color:'#b0a090'}},
+        y:{grid:{color:'rgba(26,22,18,.04)'},ticks:{font:{family:'Instrument Sans',size:10},color:'#b0a090',stepSize:1}}}}
+  });
+}
+
+// ─── USERS ────────────────────────────────────────
+function getFilteredUsers() {
+  const q=(document.getElementById('userSearch')?.value||'').toLowerCase();
+  let users=allUsers.filter(u=>{
+    if(userFilter==='pro')return u.is_pro;
+    if(userFilter==='free')return !u.is_pro;
+    if(userFilter==='noprofile')return !u._hasProfile;
+    return true;
+  });
+  if(q)users=users.filter(u=>(u.name1+u.name2+u.email).toLowerCase().includes(q));
+  users.sort((a,b)=>{
+    const dir=userSort.dir==='desc'?-1:1;
+    if(userSort.key==='name')return dir*(a.name1+a.name2).localeCompare(b.name1+b.name2);
+    if(userSort.key==='email')return dir*a.email.localeCompare(b.email);
+    if(userSort.key==='plan')return dir*(a.is_pro?1:0)-(b.is_pro?1:0);
+    if(userSort.key==='date')return dir*(a.wedding_date||'').localeCompare(b.wedding_date||'');
+    return dir*(new Date(b.created_at)-new Date(a.created_at));
+  });
+  return users;
+}
+function setUserFilter(f,btn){
+  userFilter=f;
+  document.querySelectorAll('.tfilter[id^="uf-"]').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderUsersTable();
+}
+function sortUsers(key){
+  if(userSort.key===key)userSort.dir=userSort.dir==='desc'?'asc':'desc';
+  else{userSort.key=key;userSort.dir='asc'}
+  renderUsersTable();
+}
+function filterUsers(){renderUsersTable()}
+
+function renderUsersTable() {
+  const users=getFilteredUsers();
+  const uc=document.getElementById('userCount');
+  if(uc)uc.textContent=`${users.length} USER${users.length!==1?'S':''}`;
+  const tbody=document.getElementById('usersTable');
+  if(!tbody)return;
+  if(!users.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">No users found</td></tr>';return;}
+  tbody.innerHTML=users.map(u=>{
+    const lim=getUserVendorLimit(u.user_id);
+    const vc=allVendors.filter(v=>v.user_id===u.user_id).length;
+    const couple=(u.name1||u.name2)?esc(u.name1||'')+(u.name2?' & '+esc(u.name2):'')
+      :'<span style="color:var(--muted2);font-style:italic">No profile</span>';
+    return `<tr>
       <td>
-        <div style="font-weight:500">${coupleName}</div>
-        ${!u._hasProfile ? '<div style="font-size:10px;color:#ffb030;margin-top:2px">⚠ Profile not created</div>' : ''}
+        <div style="font-weight:600">${couple}</div>
+        ${u._partnerLinked?'<div style="font-size:10px;color:var(--sage);margin-top:2px">💑 Partner linked</div>':''}
+        ${!u._hasProfile?'<div style="font-size:10px;color:var(--amber);margin-top:2px">⚠ No profile row</div>':''}
       </td>
-      <td style="color:var(--textm);font-size:12px">${esc(u.email||'')}</td>
-      <td><span class="badge ${u.is_pro ? 'badge-pro' : 'badge-free'}">${u.is_pro ? '✨ Pro' : 'Free'}</span></td>
+      <td class="td-muted">${esc(u.email)}</td>
+      <td><span class="badge ${u.is_pro?'badge-pro':'badge-free'}">${u.is_pro?'✨ Pro':'Free'}</span></td>
       <td>
         <div class="limit-row">
-          <span style="font-size:12px;color:var(--textm)">${vendorCount}/</span>
-          <input class="limit-input" type="number" min="1" max="999"
-            value="${customLimit !== null ? customLimit : (u.is_pro ? '' : 5)}"
-            placeholder="${u.is_pro ? '∞' : '5'}"
-            id="limit-${u.id}" title="Set custom vendor limit for this user">
-          <button class="limit-save-btn" onclick="saveVendorLimit('${u.id}','${u.user_id}')">Set</button>
+          <span style="font-size:11px;color:var(--muted2)">${vc}/</span>
+          <input class="limit-input" type="number" min="1" max="999" id="lim-${u.id}"
+            value="${lim!==null?lim:u.is_pro?'':5}"
+            placeholder="${u.is_pro?'∞':'5'}">
+          <button class="limit-save" onclick="saveVendorLimit('${u.id}','${u.user_id}')">Set</button>
         </div>
       </td>
-      <td style="color:var(--textm);font-size:12px">${u.wedding_date || '—'}</td>
-      <td style="color:var(--textm);font-size:12px">${u.created_at ? u.created_at.split('T')[0] : '—'}</td>
+      <td class="td-muted">${u.wedding_date||'—'}</td>
+      <td class="td-muted">${fmtDate(u.created_at)}</td>
       <td>
-        ${u.is_pro
-          ? `<button class="action-btn danger" onclick="revokePro('${u.id}')">Revoke Pro</button>`
-          : `<button class="action-btn success" onclick="grantPro('${u.id}')">Grant Pro ✨</button>`
-        }
-        <button class="action-btn" onclick="viewUser('${u.id}')">View</button>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          ${u.is_pro
+            ?`<button class="act-btn rose" onclick="revokePro('${u.id}')">Revoke</button>`
+            :`<button class="act-btn gold" onclick="grantPro('${u.id}')">✨ Grant Pro</button>`
+          }
+          <button class="act-btn" onclick="openUserPanel('${u.id}')">View →</button>
+        </div>
       </td>
     </tr>`;
-  }).join('') || '<tr><td colspan="7" class="loading">No users found</td></tr>';
+  }).join('');
 }
 
-function filterUsers(query) {
-  const q = query.toLowerCase();
-  const filtered = allUsers.filter(u =>
-    (u.name1||'').toLowerCase().includes(q) ||
-    (u.name2||'').toLowerCase().includes(q) ||
-    (u.email||'').toLowerCase().includes(q)
-  );
-  renderUsersTable(filtered);
+// ─── VENDOR LIMIT ─────────────────────────────────
+function getUserVendorLimit(userId) {
+  const s=allSettings.find(x=>x.user_id===userId&&x.key==='vendor_limit');
+  return s?parseInt(s.value):null;
 }
-
-// ── VENDOR LIMIT CONTROL ─────────────────────────────────────────────────────
-async function saveVendorLimit(profileId, userId) {
-  const input = document.getElementById('limit-' + profileId);
-  const val = input.value.trim();
-  if (!val || isNaN(val) || parseInt(val) < 1) {
-    showToast('Enter a valid number (1 or more)', true); return;
-  }
+async function saveVendorLimit(profileId,userId) {
+  const inp=document.getElementById('lim-'+profileId);
+  const val=inp?.value.trim();
+  if(!val||isNaN(val)||+val<1){showToast('Enter a valid number',true);return;}
   try {
-    await dbUpsertSetting(userId, 'vendor_limit', parseInt(val));
-    // Update local cache
-    const existing = allSettings.find(s => s.user_id === userId && s.key === 'vendor_limit');
-    if (existing) existing.value = String(val);
-    else allSettings.push({ user_id: userId, key: 'vendor_limit', value: String(val) });
-    showToast(`Vendor limit set to ${val} ✓`);
-  } catch(e) {
-    showToast('Error: ' + e.message, true);
-  }
+    await dbUpsertSetting(userId,'vendor_limit',+val);
+    const ex=allSettings.find(s=>s.user_id===userId&&s.key==='vendor_limit');
+    if(ex)ex.value=String(val); else allSettings.push({user_id:userId,key:'vendor_limit',value:String(val)});
+    showToast('Vendor limit set to '+val+' ✓','success');
+  } catch(e){showToast('Error: '+e.message,true)}
 }
 
-// ── GRANT / REVOKE PRO ───────────────────────────────────────────────────────
-async function grantPro(userId) {
-  if (!confirm('Grant Pro access to this user for free?')) return;
+// ─── GRANT / REVOKE PRO ───────────────────────────
+async function grantPro(profileId) {
+  if(!confirm('Grant Pro access free of charge?'))return;
   try {
-    const u = allUsers.find(x => x.id === userId || x.user_id === userId);
-    if (!u) throw new Error('User not found');
-    await dbUpsertProfile(u.user_id, { is_pro: true });
-    u.is_pro = true; u._hasProfile = true;
-    renderUsersTable(allUsers); renderOverview(); renderPurchases();
-    showToast('Pro access granted ✓');
-  } catch(e) { showToast('Error: ' + e.message, true); }
+    const u=allUsers.find(x=>x.id===profileId||x.user_id===profileId);
+    if(!u)throw new Error('User not found');
+    const d={is_pro:true};
+    const pr=await fetch(`${ADMIN_URL}/rest/v1/profiles?user_id=eq.${u.user_id}`,{method:'PATCH',headers:H,body:JSON.stringify(d)});
+    const rows=await pr.json();
+    if(!Array.isArray(rows)||!rows.length){
+      await fetch(`${ADMIN_URL}/rest/v1/profiles`,{method:'POST',headers:H,body:JSON.stringify({user_id:u.user_id,...d})});
+    }
+    u.is_pro=true;u._hasProfile=true;
+    renderUsersTable();renderOverview();renderPayments();
+    showToast('Pro granted ✓','success');
+  }catch(e){showToast('Error: '+e.message,true)}
 }
-
-async function revokePro(userId) {
-  if (!confirm('Revoke Pro access from this user?')) return;
+async function revokePro(profileId) {
+  if(!confirm('Revoke Pro access?'))return;
   try {
-    const u = allUsers.find(x => x.id === userId || x.user_id === userId);
-    if (!u) throw new Error('User not found');
-    await dbUpsertProfile(u.user_id, { is_pro: false, paypal_order_id: null });
-    u.is_pro = false; u.paypal_order_id = null;
-    renderUsersTable(allUsers); renderOverview(); renderPurchases();
-    showToast('Pro access revoked');
-  } catch(e) { showToast('Error: ' + e.message, true); }
+    const u=allUsers.find(x=>x.id===profileId||x.user_id===profileId);
+    if(!u)throw new Error('User not found');
+    await fetch(`${ADMIN_URL}/rest/v1/profiles?user_id=eq.${u.user_id}`,{
+      method:'PATCH',headers:{...H,'Prefer':'return=minimal'},
+      body:JSON.stringify({is_pro:false,paypal_order_id:null})
+    });
+    u.is_pro=false;u.paypal_order_id=null;
+    renderUsersTable();renderOverview();renderPayments();
+    showToast('Pro revoked');
+  }catch(e){showToast('Error: '+e.message,true)}
 }
 
-// Upsert a profile row (create if missing, update if exists)
-async function dbUpsertProfile(authUserId, data) {
-  // Try update first
-  const patchRes = await fetch(`${ADMIN_URL}/rest/v1/profiles?user_id=eq.${authUserId}`, {
-    method: 'PATCH',
-    headers: { ...HEADERS, 'Prefer': 'return=representation' },
-    body: JSON.stringify(data)
+// ─── USER DETAIL PANEL ─────────────────────────────
+function openUserPanel(profileId) {
+  const u=allUsers.find(x=>x.id===profileId);
+  if(!u)return;
+  const uv=allVendors.filter(v=>v.user_id===u.user_id);
+  const lim=getUserVendorLimit(u.user_id);
+  const today=new Date();today.setHours(0,0,0,0);
+
+  document.getElementById('panelTitle').textContent=
+    (u.name1||u.name2)?(u.name1+(u.name2?' & '+u.name2:'')):'User Details';
+
+  const overdueV=uv.filter(v=>{
+    if(!v.due_date)return false;
+    return new Date(v.due_date+'T00:00:00')<today;
   });
-  const patched = await patchRes.json();
-  if (Array.isArray(patched) && patched.length > 0) return patched[0];
-  // No row existed — insert
-  const insertRes = await fetch(`${ADMIN_URL}/rest/v1/profiles`, {
-    method: 'POST',
-    headers: { ...HEADERS, 'Prefer': 'return=representation' },
-    body: JSON.stringify({ user_id: authUserId, ...data })
-  });
-  if (!insertRes.ok) throw new Error(await insertRes.text());
-  const inserted = await insertRes.json();
-  return Array.isArray(inserted) ? inserted[0] : inserted;
-}
+  const totalBudget=uv.reduce((s,v)=>s+(parseFloat(v.total_cost)||0),0);
 
-// ── VIEW USER ────────────────────────────────────────────────────────────────
-function viewUser(profileId) {
-  const u = allUsers.find(x => x.id === profileId);
-  if (!u) return;
-  const userVendors = allVendors.filter(v => v.user_id === u.user_id);
-  const customLimit = getUserVendorLimit(u.user_id);
-
-  document.getElementById('modalTitle').textContent =
-    (u.name1 || '') + (u.name2 ? ' & ' + u.name2 : '') || 'User Details';
-
-  document.getElementById('modalBody').innerHTML = `
-    <div class="modal-section">
-      <div class="modal-sec-title">Account Info</div>
+  document.getElementById('panelBody').innerHTML=`
+    <div class="panel-section">
+      <div class="panel-section-title">Account</div>
       <div class="detail-grid">
-        <div class="detail-item"><div class="detail-item-label">Name 1</div><div class="detail-item-value">${esc(u.name1||'—')}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Name 2</div><div class="detail-item-value">${esc(u.name2||'—')}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Email</div><div class="detail-item-value" style="font-size:12px">${esc(u.email||'—')}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Plan</div><div class="detail-item-value">${u.is_pro ? '✨ Pro' : 'Free'}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Wedding Date</div><div class="detail-item-value">${u.wedding_date||'—'}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Joined</div><div class="detail-item-value">${u.created_at?u.created_at.split('T')[0]:'—'}</div></div>
+        <div class="detail-cell"><div class="dc-label">Name 1</div><div class="dc-value">${esc(u.name1||'—')}</div></div>
+        <div class="detail-cell"><div class="dc-label">Name 2</div><div class="dc-value">${esc(u.name2||'—')}</div></div>
+        <div class="detail-cell"><div class="dc-label">Plan</div><div class="dc-value">${u.is_pro?'✨ Pro':'Free'}</div></div>
+        <div class="detail-cell"><div class="dc-label">Wedding Date</div><div class="dc-value">${u.wedding_date||'—'}</div></div>
+        <div class="detail-cell"><div class="dc-label">Joined</div><div class="dc-value">${fmtDate(u.created_at)}</div></div>
+        <div class="detail-cell"><div class="dc-label">Partner Linked</div><div class="dc-value">${u._partnerLinked?'💑 Yes':'No'}</div></div>
+      </div>
+      <div class="detail-cell" style="margin-top:8px"><div class="dc-label">Email</div><div class="dc-value" style="font-size:13px">${esc(u.email)}</div></div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Vendor Usage</div>
+      <div class="detail-grid">
+        <div class="detail-cell"><div class="dc-label">Vendors Created</div><div class="dc-value">${uv.length}</div></div>
+        <div class="detail-cell"><div class="dc-label">Limit</div><div class="dc-value">${lim!==null?lim+' (custom)':u.is_pro?'Unlimited':'5 (free)'}</div></div>
+        <div class="detail-cell"><div class="dc-label">Total Budget</div><div class="dc-value">£${totalBudget.toLocaleString()}</div></div>
+        <div class="detail-cell"><div class="dc-label">Overdue</div><div class="dc-value" style="color:${overdueV.length?'var(--rose)':'var(--sage)'}">${overdueV.length}</div></div>
       </div>
     </div>
-    <div class="modal-section">
-      <div class="modal-sec-title">Vendor Usage</div>
-      <div class="detail-grid">
-        <div class="detail-item"><div class="detail-item-label">Vendors Created</div><div class="detail-item-value">${userVendors.length}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Limit</div><div class="detail-item-value">${customLimit !== null ? customLimit + ' (custom)' : u.is_pro ? 'Unlimited' : '5 (free)'}</div></div>
-        <div class="detail-item"><div class="detail-item-label">Named Vendors</div><div class="detail-item-value">${userVendors.filter(v=>v.name).length}</div></div>
-        <div class="detail-item"><div class="detail-item-label">With Due Dates</div><div class="detail-item-value">${userVendors.filter(v=>v.due_date).length}</div></div>
-      </div>
-    </div>
-    ${u.paypal_order_id ? `<div class="modal-section">
-      <div class="modal-sec-title">PayPal Transaction</div>
-      <div class="detail-item" style="word-break:break-all"><div class="detail-item-label">Order ID</div><div class="detail-item-value" style="font-size:11px;font-family:monospace">${esc(u.paypal_order_id)}</div></div>
-    </div>` : ''}
-    <div style="display:flex;gap:8px;margin-top:8px">
+
+    ${uv.length?`
+    <div class="panel-section">
+      <div class="panel-section-title">Vendors (${uv.length})</div>
+      ${uv.map(v=>{
+        const today2=new Date();today2.setHours(0,0,0,0);
+        let dueHtml='';
+        if(v.due_date){const d=new Date(v.due_date+'T00:00:00'),diff=Math.round((d-today2)/86400000);
+          if(diff<0)dueHtml=`<span class="vr-due over">Overdue ${Math.abs(diff)}d</span>`;
+          else if(diff<=7)dueHtml=`<span class="vr-due soon">Due ${diff}d</span>`;
+        }
+        return `<div class="vendor-mini-row">
+          <span class="vr-icon">${v.icon||'💒'}</span>
+          <span class="vr-name">${esc(v.name||v.category||'Unnamed')}</span>
+          <span class="vr-amount">£${parseFloat(v.total_cost||0).toLocaleString()}</span>
+          ${dueHtml}
+        </div>`;
+      }).join('')}
+    </div>`:''}
+
+    ${u.paypal_order_id?`
+    <div class="panel-section">
+      <div class="panel-section-title">PayPal Transaction</div>
+      <div class="detail-cell"><div class="dc-label">Order ID</div><div class="dc-value mono">${esc(u.paypal_order_id)}</div></div>
+    </div>`:''}
+
+    <div class="panel-actions">
       ${u.is_pro
-        ? `<button class="action-btn danger" style="flex:1" onclick="revokePro('${u.id}');document.getElementById('userModal').style.display='none'">Revoke Pro</button>`
-        : `<button class="action-btn success" style="flex:1" onclick="grantPro('${u.id}');document.getElementById('userModal').style.display='none'">Grant Pro ✨</button>`
+        ?`<button class="panel-action-btn rose" onclick="revokePro('${u.id}');closeUserPanel()">Revoke Pro Access</button>`
+        :`<button class="panel-action-btn gold" onclick="grantPro('${u.id}');closeUserPanel()">✨ Grant Pro Access</button>`
       }
-      <button class="action-btn" style="flex:1" onclick="document.getElementById('userModal').style.display='none'">Close</button>
-    </div>
-  `;
-  document.getElementById('userModal').style.display = 'flex';
+    </div>`;
+
+  document.getElementById('userPanel').classList.add('open');
+  document.getElementById('panelOverlay').classList.add('open');
+}
+function closeUserPanel() {
+  document.getElementById('userPanel').classList.remove('open');
+  document.getElementById('panelOverlay').classList.remove('open');
 }
 
-// ── PURCHASES (Pro upgrades = your revenue) ─────────────────────────────────
-function renderPurchases() {
-  const proUsers = allUsers.filter(u => u.is_pro);
-  const paidUsers = proUsers.filter(u => u.paypal_order_id);
-  const total = paidUsers.length * 12;
+// ─── PAYMENTS ─────────────────────────────────────
+function renderPayments() {
+  const proUsers=allUsers.filter(u=>u.is_pro);
+  const paidUsers=proUsers.filter(u=>u.paypal_order_id);
+  const granted=proUsers.filter(u=>!u.paypal_order_id);
+  const gross=paidUsers.length*9;
+  const arpu=allUsers.length>0?(gross/allUsers.length).toFixed(2):0;
+  const conv=allUsers.length>0?Math.round((proUsers.length/allUsers.length)*100):0;
 
-  document.getElementById('rev-total').textContent = '$' + total.toLocaleString();
-  document.getElementById('rev-count').textContent = proUsers.length;
-  document.getElementById('rev-free').textContent = allUsers.length - proUsers.length;
+  setText('rev-gross','£'+gross.toLocaleString());
+  setText('rev-granted',granted.length);
+  setText('rev-pro-count',proUsers.length);
+  setText('rev-conversion',conv+'% conversion');
+  setText('rev-arpu','£'+arpu);
+  setText('paymentsCount',proUsers.length+' PRO USERS');
 
-  const tbody = document.getElementById('purchasesTable');
-  tbody.innerHTML = proUsers.map(u => `
+  // Revenue breakdown chart (doughnut)
+  const rbc=document.getElementById('revenueBreakdownChart');
+  if(rbc){
+    if(chartBreakdown)chartBreakdown.destroy();
+    chartBreakdown=new Chart(rbc,{type:'doughnut',data:{
+      labels:['PayPal Revenue','Admin Granted'],
+      datasets:[{data:[paidUsers.length,granted.length],
+        backgroundColor:['rgba(160,120,40,.7)','rgba(160,120,40,.2)'],
+        borderColor:['rgba(160,120,40,.9)','rgba(160,120,40,.4)'],
+        borderWidth:1.5
+      }]
+    },options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{family:'Instrument Sans',size:11},color:'#7a6e5e',boxWidth:10}}}
+    }});
+  }
+
+  // Pro growth over time (line)
+  const pgc=document.getElementById('proGrowthChart');
+  if(pgc){
+    const months={};
+    proUsers.forEach(u=>{
+      const m=u.created_at?new Date(u.created_at).toLocaleString('en-GB',{month:'short',year:'2-digit'}):'?';
+      months[m]=(months[m]||0)+1;
+    });
+    const labels=Object.keys(months).slice(-8);
+    const data=labels.map(l=>months[l]||0);
+    if(chartProGrowth)chartProGrowth.destroy();
+    chartProGrowth=new Chart(pgc,{type:'line',data:{labels,datasets:[{
+      data,borderColor:'rgba(42,106,58,.7)',backgroundColor:'rgba(42,106,58,.08)',
+      tension:.4,fill:true,pointBackgroundColor:'rgba(42,106,58,.8)',pointRadius:3
+    }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{family:'Instrument Sans',size:10},color:'#b0a090'}},
+        y:{grid:{color:'rgba(26,22,18,.04)'},ticks:{font:{family:'Instrument Sans',size:10},color:'#b0a090',stepSize:1}}}}
+    });
+  }
+
+  // Table
+  const tbody=document.getElementById('purchasesTable');
+  if(!tbody)return;
+  tbody.innerHTML=proUsers.map(u=>`
     <tr>
       <td><strong>${esc(u.name1||'—')}${u.name2?' & '+esc(u.name2):''}</strong></td>
-      <td style="color:var(--textm);font-size:12px">${esc(u.email||'—')}</td>
-      <td style="font-family:monospace;font-size:11px;color:var(--textm)">
-        ${u.paypal_order_id ? esc(u.paypal_order_id) : '<span style="color:var(--gold);font-family:Jost,sans-serif;font-size:12px">Admin granted (free)</span>'}
+      <td class="td-muted">${esc(u.email)}</td>
+      <td class="td-mono">${u.paypal_order_id?esc(u.paypal_order_id):'<span style="color:var(--gold);font-size:12px">Admin granted</span>'}</td>
+      <td style="color:${u.paypal_order_id?'var(--gold)':'var(--muted2)'};font-weight:${u.paypal_order_id?'700':'400'}">${u.paypal_order_id?'£9.00':'—'}</td>
+      <td><span class="badge ${u.paypal_order_id?'badge-pro':'badge-free'}">${u.paypal_order_id?'Paid':'Granted'}</span></td>
+      <td class="td-muted">${fmtDate(u.updated_at||u.created_at)}</td>
+    </tr>`).join('')||'<tr class="empty-row"><td colspan="6">No Pro users yet</td></tr>';
+}
+
+// ─── VENDORS PAGE ─────────────────────────────────
+function renderVendorsPage() {
+  const today=new Date();today.setHours(0,0,0,0);
+  const named=allVendors.filter(v=>v.name);
+  const withCost=allVendors.filter(v=>v.total_cost>0);
+  const totalVal=allVendors.reduce((s,v)=>s+(parseFloat(v.total_cost)||0),0);
+  let overdueV=0,soonV=0,paidV=0;
+  allVendors.forEach(v=>{
+    if(!v.due_date){if(v.total_cost>0)paidV++;return;}
+    const dd=new Date(v.due_date+'T00:00:00');
+    const diff=Math.round((dd-today)/86400000);
+    if(diff<0)overdueV++;
+    else if(diff<=7)soonV++;
+    else paidV++;
+  });
+  setText('pv-total',allVendors.length);
+  setText('pv-paid',paidV);
+  setText('pv-overdue',overdueV);
+  setText('pv-soon',soonV);
+  setText('pv-value','£'+Math.round(totalVal/1000)+'k');
+  setText('vendorsCount',allVendors.length+' VENDORS');
+
+  // Category chart
+  const catMap={};
+  allVendors.forEach(v=>{const c=v.category||'Other';catMap[c]=(catMap[c]||0)+1;});
+  const topCats=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const vcc=document.getElementById('vendorCatChart');
+  if(vcc){
+    if(chartVendorCat)chartVendorCat.destroy();
+    chartVendorCat=new Chart(vcc,{type:'bar',data:{
+      labels:topCats.map(c=>c[0]),
+      datasets:[{data:topCats.map(c=>c[1]),
+        backgroundColor:'rgba(160,120,40,.2)',borderColor:'rgba(160,120,40,.6)',
+        borderWidth:1.5,borderRadius:5}]
+    },options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(26,22,18,.04)'},ticks:{font:{family:'Instrument Sans',size:10},color:'#b0a090'}},
+        y:{grid:{display:false},ticks:{font:{family:'Instrument Sans',size:10},color:'#7a6e5e'}}}}
+    });
+  }
+
+  // Status chart
+  const vsc=document.getElementById('vendorStatusChart');
+  if(vsc){
+    if(chartVendorStatus)chartVendorStatus.destroy();
+    chartVendorStatus=new Chart(vsc,{type:'doughnut',data:{
+      labels:['No Due Date','Overdue','Due Soon','On Track'],
+      datasets:[{data:[allVendors.filter(v=>!v.due_date).length,overdueV,soonV,Math.max(0,paidV)],
+        backgroundColor:['rgba(160,120,40,.2)','rgba(184,48,48,.4)','rgba(154,92,0,.3)','rgba(42,106,58,.35)'],
+        borderWidth:0
+      }]
+    },options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{family:'Instrument Sans',size:11},color:'#7a6e5e',boxWidth:10}}}
+    }});
+  }
+
+  renderVendorsTable();
+}
+
+function setVendorFilter(f,btn){
+  vendorFilter=f;
+  document.querySelectorAll('.tfilter[id^="vf-"]').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderVendorsTable();
+}
+function filterVendors(){renderVendorsTable()}
+
+function renderVendorsTable() {
+  const q=(document.getElementById('vendorSearch')?.value||'').toLowerCase();
+  const today=new Date();today.setHours(0,0,0,0);
+  let vendors=allVendors.filter(v=>{
+    if(vendorFilter==='overdue'){if(!v.due_date)return false;return new Date(v.due_date+'T00:00:00')<today;}
+    if(vendorFilter==='soon'){if(!v.due_date)return false;const d=new Date(v.due_date+'T00:00:00');const diff=Math.round((d-today)/86400000);return diff>=0&&diff<=7;}
+    if(vendorFilter==='unpaid'){return (parseFloat(v.total_cost)||0)>0;}
+    return true;
+  });
+  if(q)vendors=vendors.filter(v=>(v.name+v.category).toLowerCase().includes(q));
+  const tbody=document.getElementById('vendorsTable');
+  if(!tbody)return;
+  setText('vendorsCount',vendors.length+' VENDORS');
+  tbody.innerHTML=vendors.map(v=>{
+    const owner=allUsers.find(u=>u.user_id===v.user_id);
+    let dueHtml='—',dueAmt='—';
+    if(v.due_date){
+      const dd=new Date(v.due_date+'T00:00:00');
+      const diff=Math.round((dd-today)/86400000);
+      if(diff<0)dueHtml=`<span class="badge badge-overdue">⚠ Overdue ${Math.abs(diff)}d</span>`;
+      else if(diff<=7)dueHtml=`<span class="badge badge-soon">📅 In ${diff}d</span>`;
+      else dueHtml=`<span class="badge badge-ok">✓ ${v.due_date}</span>`;
+      if(v.due_amount)dueAmt='£'+parseFloat(v.due_amount).toLocaleString();
+    }
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          <span style="font-size:14px">${v.icon||'💒'}</span>
+          <div>
+            <div style="font-weight:600">${esc(v.name||'—')}</div>
+            <div style="font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.1em">${esc(v.category||'')}</div>
+          </div>
+        </div>
       </td>
-      <td style="${u.paypal_order_id ? 'color:var(--gold);font-weight:600' : 'color:var(--textm)'}">
-        ${u.paypal_order_id ? '$12.00' : '—'}
-      </td>
-      <td style="color:var(--textm);font-size:12px">${u.updated_at ? u.updated_at.split('T')[0] : (u.created_at ? u.created_at.split('T')[0] : '—')}</td>
-    </tr>`).join('') || '<tr><td colspan="5" class="loading">No Pro users yet</td></tr>';
+      <td class="td-muted" style="font-size:11px">${owner?esc(owner.email):'—'}</td>
+      <td style="font-family:'Fraunces',serif;font-size:16px;font-weight:300">£${parseFloat(v.total_cost||0).toLocaleString()}</td>
+      <td>${dueHtml}</td>
+      <td class="td-muted">${v.due_date||'—'}</td>
+      <td class="td-muted">${dueAmt}</td>
+    </tr>`;
+  }).join('')||'<tr class="empty-row"><td colspan="6">No vendors found</td></tr>';
 }
 
-// ── VENDOR DUE DATES (users\'s wedding vendor payments) ───────────────────────
-function renderVendorDues() {
-  // This is rendered in the old "Payments" tab — now called via Overview only
-  // The Payments nav tab now shows Pro purchases above
+// ─── HEALTH PAGE ──────────────────────────────────
+async function renderHealthPage() {
+  const health=document.getElementById('healthList');
+  const integrity=document.getElementById('integrityList');
+  const errors=document.getElementById('errorsList');
+  if(!health)return;
+
+  // Data integrity checks
+  const usersWithNoProfile=allUsers.filter(u=>!u._hasProfile).length;
+  const orphanVendors=allVendors.filter(v=>!allUsers.find(u=>u.user_id===v.user_id)).length;
+  const today=new Date();today.setHours(0,0,0,0);
+  const overdueCount=allVendors.filter(v=>v.due_date&&new Date(v.due_date+'T00:00:00')<today).length;
+
+  health.innerHTML=[
+    {ok:true,label:'Supabase Connection',val:'Connected'},
+    {ok:allUsers.length>0,label:'Auth Users',val:allUsers.length+' users'},
+    {ok:allVendors.length>=0,label:'Vendors Table',val:allVendors.length+' rows'},
+    {ok:allSettings.length>=0,label:'Settings Table',val:allSettings.length+' rows'},
+    {ok:allTasks.length>=0,label:'Tasks Table',val:allTasks.length+' rows'},
+    {ok:true,label:'Service Role Key',val:'Active'},
+  ].map(r=>`<div class="health-row">
+    <div class="health-dot ${r.ok?'ok':'err'}"></div>
+    <div class="health-label">${r.label}</div>
+    <div class="health-val">${r.val}</div>
+  </div>`).join('');
+
+  integrity.innerHTML=[
+    {ok:usersWithNoProfile===0,warn:usersWithNoProfile>0,label:'Users without profile',val:usersWithNoProfile>0?usersWithNoProfile+' users':' All ok'},
+    {ok:orphanVendors===0,warn:false,label:'Orphan vendor rows',val:orphanVendors>0?orphanVendors+' found':'None'},
+    {ok:overdueCount===0,warn:overdueCount>0&&overdueCount<5,label:'Overdue vendor payments',val:overdueCount>0?overdueCount+' overdue':'All clear'},
+    {ok:true,label:'Partner links',val:allUsers.filter(u=>u._partnerLinked).length+' linked pairs'},
+    {ok:true,label:'Pro users verified',val:allUsers.filter(u=>u.is_pro&&u.paypal_order_id).length+' paid, '+allUsers.filter(u=>u.is_pro&&!u.paypal_order_id).length+' granted'},
+  ].map(r=>`<div class="health-row">
+    <div class="health-dot ${r.ok?'ok':r.warn?'warn':'err'}"></div>
+    <div class="health-label">${r.label}</div>
+    <div class="health-val">${r.val}</div>
+  </div>`).join('');
+
+  const errs=[];
+  if(usersWithNoProfile>0)errs.push(`⚠ ${usersWithNoProfile} auth user(s) have no profile row — they may not have completed signup.`);
+  if(orphanVendors>0)errs.push(`⚠ ${orphanVendors} vendor row(s) have no matching user.`);
+  if(overdueCount>0)errs.push(`📅 ${overdueCount} vendor payment(s) are overdue across the platform.`);
+  errors.innerHTML=errs.length
+    ?errs.map(e=>`<div style="padding:9px 12px;background:var(--amber-pale);border:1px solid var(--amber-bd);border-radius:8px;font-size:12px;color:var(--amber);margin-bottom:6px">${e}</div>`).join('')
+    :`<div style="padding:9px 12px;background:var(--sage-pale);border:1px solid var(--sage-bd);border-radius:8px;font-size:13px;color:var(--sage)">✓ No issues detected — platform looks healthy.</div>`;
 }
 
-// ── HELPERS ──────────────────────────────────────────────────────────────────
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ── MOBILE MENU ──────────────────────────────────────────────────────────────
-function openMobileMenu() {
-  document.getElementById('mobileMenu').classList.add('open');
-  document.body.style.overflow = 'hidden';
+// ─── SETTINGS PAGE ────────────────────────────────
+function renderSettingsPage() {
+  const pro=allUsers.filter(u=>u.is_pro).length;
+  const paid=allUsers.filter(u=>u.is_pro&&u.paypal_order_id).length;
+  setText('sm-users',allUsers.length);
+  setText('sm-vendors',allVendors.length);
+  setText('sm-revenue','£'+paid*9);
 }
-function closeMobileMenu() {
-  document.getElementById('mobileMenu').classList.remove('open');
-  document.body.style.overflow = '';
+
+function changeAdminPassword() {
+  const pw=document.getElementById('newAdminPass').value.trim();
+  if(!pw||pw.length<4){showToast('Password too short (min 4 chars)',true);return;}
+  localStorage.setItem('wl_admin_pw',pw);
+  document.getElementById('newAdminPass').value='';
+  showToast('Admin password updated ✓','success');
+}
+
+// ─── GLOBAL SEARCH ────────────────────────────────
+function globalSearch(q) {
+  if(!q.trim())return;
+  showPage('users');
+  document.getElementById('userSearch').value=q;
+  filterUsers();
+}
+
+// ─── EXPORT CSV ───────────────────────────────────
+function exportUsersCSV() {
+  const rows=[['Name1','Name2','Email','Plan','VendorCount','WeddingDate','Joined']];
+  allUsers.forEach(u=>{
+    rows.push([u.name1,u.name2,u.email,u.is_pro?'Pro':'Free',
+      allVendors.filter(v=>v.user_id===u.user_id).length,
+      u.wedding_date,u.created_at?.split('T')[0]]);
+  });
+  downloadCSV(rows,'weddingledger-users.csv');
+}
+function exportPaymentsCSV() {
+  const rows=[['Name1','Name2','Email','PayPalOrderID','Amount','Date']];
+  allUsers.filter(u=>u.is_pro).forEach(u=>{
+    rows.push([u.name1,u.name2,u.email,u.paypal_order_id||'admin-granted',
+      u.paypal_order_id?'£9':'—',u.updated_at?.split('T')[0]||u.created_at?.split('T')[0]]);
+  });
+  downloadCSV(rows,'weddingledger-revenue.csv');
+}
+function downloadCSV(rows,filename) {
+  const csv=rows.map(r=>r.map(v=>'"'+(v||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=filename;a.click();
+  showToast('CSV exported ✓','success');
+}
+
+// ─── MOBILE DRAWER ────────────────────────────────
+function toggleMobileDrawer() {
+  const d=document.getElementById('mobileDrawer');
+  const btn=document.getElementById('mobileNavBtn');
+  const open=d.classList.toggle('open');
+  if(btn)btn.classList.toggle('open',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+
+// ─── HELPERS ──────────────────────────────────────
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v}
+function fmtDate(s){
+  if(!s)return'—';
+  try{return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});}
+  catch{return s.split('T')[0]}
+}
+function animateNum(id,target) {
+  const el=document.getElementById(id);if(!el||isNaN(target))return;
+  const start=performance.now();
+  (function tick(now){
+    const p=Math.min((now-start)/700,1),v=Math.round((1-Math.pow(1-p,3))*target);
+    el.textContent=v;if(p<1)requestAnimationFrame(tick);
+  })(start);
 }
 
 let toastTimer;
-function showToast(msg, isError=false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show' + (isError ? ' error' : '');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = 'toast'; }, 3000);
+function showToast(msg,type='') {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show'+(type==='error'?' error':type==='success'?' success':'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.className='toast'},3000);
 }
+
+// Topbar scroll shadow
+window.addEventListener('scroll',()=>{
+  document.getElementById('mainTopbar')?.classList.toggle('scrolled',scrollY>10);
+},true);
 </script>
 </body>
 </html>
