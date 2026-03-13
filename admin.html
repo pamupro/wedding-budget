@@ -1970,7 +1970,7 @@ function changeAdminPassword() {
 // ─── PLATFORM SETTINGS (subscription price etc) ──────────────────────────────
 async function loadPlatformSettings(){
   try {
-    const rows = await apiFetch('settings?key=in.(sub_price_monthly,sub_price_bundle,paypal_plan_id_monthly,paypal_plan_id_bundle,free_vendor_limit,sub_price,paypal_plan_id)&user_id=is.null', 'GET');
+    const rows = await apiFetch('settings?key=in.(sub_price_monthly,sub_price_bundle,paypal_plan_id_monthly,paypal_plan_id_bundle,free_vendor_limit,sub_price,paypal_plan_id)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2', 'GET');
     if(!rows) return;
     const map = {};
     rows.forEach(r => map[r.key] = r.value);
@@ -2017,11 +2017,11 @@ async function savePlatformSettings(){
     if(vendorLimit) settings.push({ key:'free_vendor_limit', value: vendorLimit });
 
     for(const s of settings){
-      const existing = await apiFetch('settings?key=eq.'+s.key+'&user_id=is.null', 'GET');
+      const existing = await apiFetch('settings?key=eq.'+s.key+'&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2', 'GET');
       if(existing && existing.length){
-        await apiFetch('settings?key=eq.'+s.key+'&user_id=is.null', 'PATCH', { value: s.value });
+        await apiFetch('settings?key=eq.'+s.key+'&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2', 'PATCH', { value: s.value });
       } else {
-        await apiFetch('settings', 'POST', { key: s.key, value: s.value, user_id: null });
+        await apiFetch('settings', 'POST', { key: s.key, value: s.value, user_id: 'a151e7e9-25db-4d03-9a17-1ddcf8aa53a2' });
       }
     }
 

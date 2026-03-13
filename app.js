@@ -262,11 +262,14 @@ async function loadTasks() {
 // ─── PLATFORM SETTINGS (admin-configured, loaded for all users) ──────────────
 async function loadPlatformSettings() {
   try {
-    // Platform price is stored in settings table with a known key, no user restriction
-    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id)&limit=10', accessToken);
+    const rows = await DB.query('settings?key=in.(sub_price_monthly,sub_price_bundle,paypal_plan_id_monthly,paypal_plan_id_bundle,sub_price,paypal_plan_id)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2&limit=10', accessToken);
     if(rows) rows.forEach(r => {
-      if(r.key === 'sub_price')       window.WL_SUB_PRICE = r.value;
-      if(r.key === 'paypal_plan_id')  window.WL_PLAN_ID   = r.value;
+      if(r.key === 'sub_price_monthly')      window.WL_SUB_PRICE_MONTHLY = r.value;
+      if(r.key === 'sub_price_bundle')       window.WL_SUB_PRICE_BUNDLE  = r.value;
+      if(r.key === 'paypal_plan_id_monthly') window.WL_PLAN_ID_MONTHLY   = r.value;
+      if(r.key === 'paypal_plan_id_bundle')  window.WL_PLAN_ID_BUNDLE    = r.value;
+      if(r.key === 'sub_price')              window.WL_SUB_PRICE         = r.value;
+      if(r.key === 'paypal_plan_id')         window.WL_PLAN_ID           = r.value;
     });
   } catch(e) { /* non-critical */ }
 }
