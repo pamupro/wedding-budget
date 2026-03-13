@@ -550,7 +550,18 @@ async function doFacebookAuth(){
   }
 })();
 
-if(localStorage.getItem('wl_token'))window.location.href='dashboard.html';
+// Only redirect to dashboard if token is actually valid (not expired)
+(function(){
+  const tok = localStorage.getItem('wl_token');
+  const uid = localStorage.getItem('wl_uid');
+  if(tok && uid){
+    try{
+      const p = JSON.parse(atob(tok.split('.')[1]));
+      if(p.exp * 1000 > Date.now()) window.location.href='dashboard.html';
+      else { localStorage.removeItem('wl_token'); localStorage.removeItem('wl_refresh'); }
+    }catch(e){}
+  }
+})();
 
 // Particle canvas on left panel
 (function(){
