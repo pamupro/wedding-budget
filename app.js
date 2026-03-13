@@ -70,6 +70,7 @@ let weddingDate=new Date('2027-02-11T09:00:00');
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
+  console.log('[WL] ✅ app.js v2 loaded, init() running, uid=', localStorage.getItem('wl_uid')?.slice(0,8));
   const urlRef = new URLSearchParams(window.location.search).get('ref');
   if(urlRef) localStorage.setItem('wl_ref', urlRef);
 
