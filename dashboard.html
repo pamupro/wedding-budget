@@ -731,20 +731,8 @@ textarea.modal-input{resize:vertical;min-height:80px}
 
 <!-- PayPal SDK — loaded after DOM ready so defer scripts are available -->
 <script>
-// PayPal SDK is loaded lazily by loadPayPalSDK() in app.js
-// after platform settings (plan ID + price) have been fetched.
-// This avoids loading the wrong intent (capture vs subscription).
-window.loadPayPalSDK = function() {
-  if(document.querySelector('script[src*="paypal.com/sdk"]')) return; // already loaded
-  const planId = window.WL_PLAN_ID || '';
-  const intent = planId ? 'subscription' : 'capture';
-  const vault  = planId ? '&vault=true&intent=subscription' : '&intent=capture';
-  const s = document.createElement('script');
-  s.src = 'https://www.paypal.com/sdk/js?client-id=AcMxe9xGOHUIKBPp9c8yOL5XOc-eKbG3ydN4okrzXxnfICJQG3gk1598QcS2ERHQ9MDcQdmKiBo4IWX4&currency=GBP' + vault;
-  s.onload  = function(){ if(typeof initPayPal==='function') initPayPal(); };
-  s.onerror = function(){ if(typeof showPayPalFallback==='function') showPayPalFallback(); };
-  document.head.appendChild(s);
-};
+// PayPal SDK loads lazily only when upgrade modal opens (via initPayPal in app.js)
+// This avoids blocking page load and CSP issues on GitHub Pages
 </script>
 </head>
 <body>
@@ -1191,7 +1179,7 @@ window.loadPayPalSDK = function() {
 
 <div class="toast" id="toast"></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // Nav scroll effect
 window.addEventListener('scroll',()=>document.getElementById('mainTopbar')?.classList.toggle('scrolled',scrollY>30));
 
@@ -1238,14 +1226,16 @@ function animateStat(el,target,prefix=''){
 }
 
 // Checklist progress bar mini-indicator in section title
-const done=document.querySelectorAll('.checklist-item.done').length;
+function updateChecklistBadge(){
+  const done=document.querySelectorAll('.checklist-item.done').length;
   const total=document.querySelectorAll('.checklist-item').length;
   const badge=document.getElementById('checklistBadge');
   if(badge&&total>0)badge.textContent=`${done}/${total}`;
 }
 
-// init() is called by app.js boot block after it loads
+// init() called by app.js boot block
 </script>
+
 <script src="db.js"></script>
 <script src="app.js"></script>
 </body>
