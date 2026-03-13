@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <title>Guest List — WeddingLedger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/umd/supabase.min.js"></script>
   <style>
@@ -15,12 +15,12 @@
     .stat-pill:last-child{border-right:none}
     .stat-pill:hover,.stat-pill.active{background:#fdf9f0}
     .stat-pill.active .stat-num{color:var(--gold)}
-    .stat-num{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--charcoal);line-height:1;display:block}
+    .stat-num{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:var(--ink);line-height:1;display:block}
     .stat-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:3px;display:block}
     .toolbar{display:flex;align-items:center;gap:10px;padding:14px 24px;background:white;border-bottom:1px solid var(--border);flex-wrap:wrap}
-    .search-wrap{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--border);border-radius:99px;padding:9px 16px}
-    .search-wrap input{background:none;border:none;outline:none;font-family:'Jost',sans-serif;font-size:13px;color:var(--charcoal);width:100%}
-    .tbar-sel{padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;font-family:'Jost',sans-serif;font-size:12px;background:white;outline:none;cursor:pointer}
+    .search-wrap{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:9px 16px}
+    .search-wrap input{background:none;border:none;outline:none;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--ink);width:100%}
+    .tbar-sel{padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;font-family:'Instrument Sans',sans-serif;font-size:12px;background:white;outline:none;cursor:pointer}
     .grid{padding:20px 24px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
     .gcard{background:white;border-radius:14px;border:1.5px solid var(--border);padding:16px;transition:.2s;position:relative}
     .gcard.no-contact{background:#fffbf0;border-color:#e8c84a;border-style:dashed}
@@ -28,8 +28,8 @@
     .gcard:hover{border-color:rgba(201,168,76,.5);box-shadow:0 4px 16px rgba(0,0,0,.07)}
     .gcard.sel{border-color:var(--gold);background:#fdf9f0}
     .gcard-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
-    .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e4d4a0);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--charcoal);flex-shrink:0}
-    .gname{font-size:14px;font-weight:600;color:var(--charcoal);margin-bottom:2px}
+    .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e4d4a0);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink);flex-shrink:0}
+    .gname{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
     .gmeta{font-size:11px;color:var(--muted)}
     .gcheck{position:absolute;top:14px;right:14px;width:16px;height:16px;cursor:pointer;accent-color:var(--gold)}
     .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;margin:2px}
@@ -41,7 +41,7 @@
     .b-plus{background:#e8f0ff;color:#1a2a7a}
     .b-menu{background:#fff8e8;color:#7a5000}
     .gactions{display:flex;gap:5px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
-    .gbtn{padding:5px 12px;border-radius:99px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;letter-spacing:.02em}
+    .gbtn{padding:5px 12px;border-radius:99px;font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:.15s;display:inline-flex;align-items:center;letter-spacing:.02em}
     .gbtn.edit    {background:#f0ece4;color:#5a4a2a}
     .gbtn.edit:hover{background:#e4ddd0;color:#3d2e1a}
     .gbtn.wa      {background:#e6f9ee;color:#1a6e3a}
@@ -60,7 +60,7 @@
     .empty-box{grid-column:1/-1;text-align:center;padding:60px 20px}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
     .empty-box .ei{font-size:52px;margin-bottom:14px}
-    .empty-box h3{font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:6px}
+    .empty-box h3{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px}
     .empty-box p{font-size:13px;color:var(--muted);margin-bottom:20px}
     /* ── Bulk action bar ── */
     .bulk-bar{
@@ -83,12 +83,12 @@
       background:var(--gold);color:white;
       font-size:12px;font-weight:700;
       padding:3px 10px;border-radius:99px;
-      font-family:'Jost',sans-serif;
+      font-family:'Instrument Sans',sans-serif;
       min-width:28px;text-align:center;
     }
     .bulk-count-label{
-      font-size:13px;font-weight:600;color:var(--charcoal);
-      font-family:'Jost',sans-serif;
+      font-size:13px;font-weight:600;color:var(--ink);
+      font-family:'Instrument Sans',sans-serif;
     }
     .bulk-close{
       background:none;border:none;cursor:pointer;
@@ -96,7 +96,7 @@
       display:flex;align-items:center;justify-content:center;
       color:var(--muted);font-size:16px;transition:.15s;
     }
-    .bulk-close:hover{background:var(--cream);color:var(--charcoal)}
+    .bulk-close:hover{background:var(--bg);color:var(--ink)}
     .bulk-actions{
       display:grid;
       grid-template-columns:repeat(6,1fr);
@@ -107,7 +107,7 @@
       display:flex;flex-direction:column;align-items:center;
       gap:4px;padding:10px 4px 12px;
       border:none;background:none;cursor:pointer;
-      font-family:'Jost',sans-serif;transition:.15s;
+      font-family:'Instrument Sans',sans-serif;transition:.15s;
       position:relative;
     }
     .ba:hover{background:#f9f5ee}
@@ -129,49 +129,49 @@
     .ba.del       .ba-icon{background:#fdf0f0;color:#aa2020}
     .ba.side-bulk .ba-icon{background:#f0eeff;color:#5a40cc}
     .ba:hover .ba-icon{transform:scale(1.08)}
-    .msg-prev-box{background:var(--cream);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;border:1px solid var(--border);white-space:pre-wrap;margin-bottom:12px;min-height:80px}
+    .msg-prev-box{background:var(--bg);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;border:1px solid var(--border);white-space:pre-wrap;margin-bottom:12px;min-height:80px}
     .vchip{background:white;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;font-family:monospace;display:inline-block;margin:2px}
     .vchip:hover{border-color:var(--gold);color:var(--gold)}
     .tab-row{display:flex;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
-    .mtab{flex:1;padding:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;font-family:'Jost',sans-serif;color:var(--muted);transition:.15s}
+    .mtab{flex:1;padding:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;font-family:'Instrument Sans',sans-serif;color:var(--muted);transition:.15s}
     .mtab.on{color:var(--gold);background:#fdf9f0}
-    .course-box{background:var(--cream);border-radius:10px;padding:12px;margin-bottom:10px}
+    .course-box{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:10px}
     .opt-chip{display:inline-flex;align-items:center;gap:4px;background:white;border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:12px;margin:2px}
     .drop-label{border:2px dashed var(--border);border-radius:12px;padding:28px;cursor:pointer;transition:.2s;text-align:center;display:block}
     .drop-label:hover{border-color:var(--gold);background:#fdf9f0}
     /* ── New guest modal ── */
     .gmodal{display:flex;background:white;border-radius:20px;overflow:hidden;width:min(680px,94vw);max-height:90vh;box-shadow:0 24px 64px rgba(0,0,0,.18)}
     .gmodal-aside{width:130px;flex-shrink:0;background:linear-gradient(160deg,#2a2118 0%,#3d2e1a 100%);padding:28px 14px;display:flex;flex-direction:column;align-items:center;gap:4px}
-    .gmodal-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(201,168,76,.5);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#e4d4a0;margin-bottom:4px}
+    .gmodal-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(201,168,76,.5);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:#e4d4a0;margin-bottom:4px}
     .gmodal-aside-label{font-size:11px;color:rgba(255,255,255,.45);text-align:center;margin-bottom:14px;font-style:italic;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .gmodal-nav{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:10px;border:none;background:none;cursor:pointer;width:100%;transition:.15s;color:rgba(255,255,255,.5)}
     .gmodal-nav:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
     .gmodal-nav.on{background:rgba(201,168,76,.2);color:#e4c870}
     .gnav-icon{font-size:18px;line-height:1}
-    .gnav-lbl{font-size:10px;font-family:'Jost',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+    .gnav-lbl{font-size:10px;font-family:'Instrument Sans',sans-serif;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
     .gmodal-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
     .gmodal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
-    .gmodal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--charcoal);margin:0}
+    .gmodal-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--ink);margin:0}
     .gmodal-panel{flex:1;overflow-y:auto;padding:16px 24px;scrollbar-width:thin}
     .gmodal-footer{display:flex;gap:10px;padding:16px 24px;border-top:1px solid var(--border);background:white}
     .gfield{margin-bottom:14px}
     .gfield-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
     .glabel{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-    .ginput{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Jost',sans-serif;font-size:13px;color:var(--charcoal);background:var(--cream);outline:none;box-sizing:border-box;transition:.15s}
+    .ginput{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--bg);outline:none;box-sizing:border-box;transition:.15s}
     .ginput:focus{border-color:var(--gold);background:white;box-shadow:0 0 0 3px rgba(201,168,76,.1)}
     .ghint{font-size:11px;color:var(--muted);margin-top:4px}
     .rsvp-picker{display:flex;gap:6px;flex-wrap:wrap}
-    .rsvp-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
+    .rsvp-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
     .rsvp-opt.on.pend{border-color:#aaa;background:#f5f5f5;color:#555}
     .rsvp-opt.on.yes{border-color:#2a7a2a;background:#e8f5e8;color:#1a5a1a}
     .rsvp-opt.on.maybe{border-color:#c89020;background:#fff3cd;color:#7a5000}
     .rsvp-opt.on.no{border-color:#c04040;background:#fde8e8;color:#7a1a1a}
     .side-picker{display:flex;gap:6px;flex-wrap:wrap}
-    .side-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
-    .bks-opt{padding:6px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--charcoal)}
-    .bks-opt:hover,.bks-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
+    .side-opt{padding:7px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted)}
+    .bks-opt{padding:6px 12px;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--ink)}
+    .bks-opt:hover,.bks-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--ink)}
     .ba.side-bulk{background:rgba(201,168,76,.12);color:var(--gold)}
-    .side-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--charcoal)}
+    .side-opt.on{border-color:var(--gold);background:#fdf9f0;color:var(--ink)}
     /* family member rows */
     .fmrow{background:white;border-radius:14px;border:1.5px solid var(--border);
       padding:14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);
@@ -179,10 +179,10 @@
     @keyframes fmSlideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
     .fmrow-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
     .fmrow-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e4d4a0);
-      display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--charcoal)}
+      display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink)}
     .fmrow-type-sel{padding:4px 10px;border-radius:99px;border:1.5px solid var(--border);
-      font-family:'Jost',sans-serif;font-size:11px;font-weight:600;background:var(--cream);
-      color:var(--charcoal);outline:none;cursor:pointer}
+      font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;background:var(--bg);
+      color:var(--ink);outline:none;cursor:pointer}
     .fmrow-type-sel:focus{border-color:var(--gold)}
     .fm-del{width:28px;height:28px;border-radius:8px;border:none;background:#fff0f0;
       color:#c04040;cursor:pointer;font-size:13px;display:flex;align-items:center;
@@ -193,8 +193,8 @@
     .fmrow-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
     .fmrow-label .req{color:var(--gold)}
     .fmrow-input{padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;
-      font-family:'Jost',sans-serif;font-size:12px;background:var(--cream);
-      color:var(--charcoal);outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
+      font-family:'Instrument Sans',sans-serif;font-size:12px;background:var(--bg);
+      color:var(--ink);outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
     .fmrow-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.1);background:white}
     .fmrow-input.err{border-color:#f0a060}
     .fmrow-errmsg{font-size:9px;color:#c04040;margin-top:1px}
@@ -240,9 +240,9 @@
 
 <nav class="topbar">
   <div style="display:flex;align-items:center;gap:14px">
-    <a href="dashboard.html" class="topbar-logo">Wedding<span>Ledger</span></a>
+    <a href="dashboard.html" class="topbar-logo">Wedding<em>Ledger</em></a>
     <span style="color:var(--border);font-size:18px">|</span>
-    <span style="font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--muted);font-style:italic">Guest List</span>
+    <span style="font-family:'Fraunces',serif;font-size:15px;color:var(--muted);font-style:italic">Guest List</span>
   </div>
   <div class="topbar-right">
     <button onclick="openMenuModal()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu</button>
@@ -271,7 +271,7 @@
   </div>
 </div>
 
-<main style="padding-top:64px;min-height:100vh;background:var(--cream)">
+<main style="padding-top:64px;min-height:100vh;background:var(--bg)">
   <div class="stats-strip">
     <div class="stat-pill active" id="pill-all"  onclick="setF('all',this)"><span class="stat-num" id="sAll">0</span><span class="stat-lbl">Invited</span></div>
     <div class="stat-pill" id="pill-yes"          onclick="setF('yes',this)"><span class="stat-num" id="sYes" style="color:#2a7a2a">0</span><span class="stat-lbl">✅ Attending</span></div>
@@ -361,7 +361,7 @@
     </div>
     <button onclick="closeBkSide()" style="margin-top:12px;width:100%;padding:7px;
       border-radius:8px;border:1px solid var(--border);background:white;
-      font-family:'Jost',sans-serif;font-size:12px;cursor:pointer;color:var(--muted)">Cancel</button>
+      font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;color:var(--muted)">Cancel</button>
   </div>
   </div>
 </main>
@@ -437,7 +437,7 @@
         <div class="gfield">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <label class="glabel" style="margin-bottom:0">Family Members</label>
-            <button type="button" onclick="addFamilyMember()" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:99px;border:1.5px solid var(--gold);background:white;color:var(--gold);font-family:'Jost',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:.15s" onmouseover="this.style.background='var(--gold)';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='var(--gold)'">＋ Add Family Member</button>
+            <button type="button" onclick="addFamilyMember()" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:99px;border:1.5px solid var(--gold);background:white;color:var(--gold);font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:.15s" onmouseover="this.style.background='var(--gold)';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='var(--gold)'">＋ Add Family Member</button>
           </div>
           <div id="familyList" style="display:flex;flex-direction:column;gap:8px"></div>
           <div style="font-size:11px;color:var(--muted);margin-top:6px">e.g. spouse, children — each counts towards your guest total</div>
@@ -478,8 +478,8 @@
         <div class="gfield">
           <label class="glabel">Quick Send</label>
           <div style="display:flex;gap:8px">
-            <button onclick="quickWA()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #25D366;background:white;color:#25D366;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s" onmouseover="this.style.background='#25D366';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#25D366'">💬 WhatsApp</button>
-            <button onclick="quickEmail()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #4a90d9;background:white;color:#4a90d9;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s" onmouseover="this.style.background='#4a90d9';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#4a90d9'">✉️ Email</button>
+            <button onclick="quickWA()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #25D366;background:white;color:#25D366;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s" onmouseover="this.style.background='#25D366';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#25D366'">💬 WhatsApp</button>
+            <button onclick="quickEmail()" style="flex:1;padding:11px;border-radius:10px;border:1.5px solid #4a90d9;background:white;color:#4a90d9;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:.15s" onmouseover="this.style.background='#4a90d9';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='#4a90d9'">✉️ Email</button>
           </div>
         </div>
       </div>
@@ -488,7 +488,7 @@
       <div id="p-meal" class="gmodal-panel" style="display:none">
         <div id="noMenuMsg" style="text-align:center;padding:32px 16px">
           <div style="font-size:40px;margin-bottom:12px">🍽</div>
-          <div style="font-size:14px;font-weight:600;color:var(--charcoal);margin-bottom:6px">No menu configured</div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px">No menu configured</div>
           <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Only needed for set menus.<br>Leave empty for buffets.</div>
           <button class="btn-secondary" onclick="closeEdit();openMenuModal()" style="font-size:12px">⚙️ Configure Menu</button>
         </div>
@@ -519,7 +519,7 @@
       <button class="modal-close" onclick="closeMsg()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--warm);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">
+      <div style="background:var(--bg2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6">
         Click a variable to insert it into your message
       </div>
       <div style="margin-bottom:12px">
@@ -549,7 +549,7 @@
       <button class="modal-close" onclick="closeMenuModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--warm);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      <div style="background:var(--bg2);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
         Only set up courses if you have a <strong>set menu</strong>. Leave empty for buffets or casual receptions.
       </div>
       <div id="courseList"></div>
@@ -573,13 +573,13 @@
       <button class="modal-close" onclick="closeImport()">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--warm);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">
+      <div style="background:var(--bg2);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">
         Required column: <strong>name</strong><br>
         Optional: email, phone, group, rsvp, dietary, notes
       </div>
       <label class="drop-label" onclick="document.getElementById('csvFile').click()">
         <div style="font-size:36px;margin-bottom:8px">📂</div>
-        <div style="font-size:13px;font-weight:600;color:var(--charcoal)">Click to choose CSV</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink)">Click to choose CSV</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">or drag and drop</div>
         <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="previewCSV(this)">
       </label>
@@ -1645,9 +1645,9 @@ function doExport() {
 <meta charset="UTF-8">
 <title>Guest List — WeddingLedger</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Jost',sans-serif;background:white;color:#2a2010;padding:32px;max-width:900px;margin:0 auto}
+  body{font-family:'Instrument Sans',sans-serif;background:white;color:#2a2010;padding:32px;max-width:900px;margin:0 auto}
   @media print{body{padding:16px}@page{margin:1.5cm}}
   tr:nth-child(even) td{background:#fdf9f5}
 </style>
@@ -1655,7 +1655,7 @@ function doExport() {
 <body>
   <!-- Header -->
   <div style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #C9A84C">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;font-style:italic;color:#2a2010;margin-bottom:6px">
+    <div style="font-family:'Fraunces',serif;font-size:36px;font-weight:600;font-style:italic;color:#2a2010;margin-bottom:6px">
       Wedding<span style="color:#C9A84C">Ledger</span>
     </div>
     <div style="font-size:14px;color:#8a7a60">Guest List Export · ${today}</div>
