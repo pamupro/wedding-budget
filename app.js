@@ -178,15 +178,13 @@ function renderHero() {
   if (hero) {
     if (n1||n2) {
       const wdStr=profile.wedding_date?formatDateLong(profile.wedding_date):'';
-      hero.innerHTML=`<div class="couple-hero">
-        <div class="couple-hero-sparkle">✦</div>
-        <div class="couple-hero-tag">💍 Your Wedding Budget</div>
-        <div class="couple-hero-names">
-          <span class="hero-name1">${esc(n1)}</span>
-          ${n2?`<span class="hero-amp"> &amp; </span><span class="hero-name2">${esc(n2)}</span>`:''}
+      hero.innerHTML=`<div class="dash-hero">
+        <div class="dash-hero-eyebrow">💍 Your Wedding Budget</div>
+        <div class="dash-hero-names">
+          ${esc(n1)}${n2?` <em>&amp;</em> ${esc(n2)}`:''}
         </div>
-        ${wdStr?`<div class="couple-hero-date">📅 ${wdStr}</div>`:''}
-        <div class="couple-hero-divider"><span>✦</span></div>
+        ${wdStr?`<div class="dash-hero-date">${wdStr}</div>`:''}
+        <div class="dash-hero-divider">✦ &nbsp; ✦ &nbsp; ✦</div>
       </div>`;
     } else {
       hero.innerHTML=''; // cleared until names set
