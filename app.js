@@ -1927,8 +1927,10 @@ async function saveWelcomeSetup() {
 // ─── SETTINGS MODAL ──────────────────────────────────────────────────────────
 function openSettingsModal() {
   const m = document.getElementById('settingsModal');
-  if (!m) return;
-  loadGalleryPhotos();
+  if (!m) { window.location.href='settings.html'; return; }
+  loadGalleryPhotos().then(()=>{
+    if(window.renderDashPhotoStrip) window.renderDashPhotoStrip(galleryPhotos);
+  });
   // Pre-fill with current values
   const n1 = document.getElementById('settingsName1');
   const n2 = document.getElementById('settingsName2');
@@ -2090,6 +2092,7 @@ async function uploadGalleryPhotos(input) {
   if(done > 0) {
     await saveGalleryPhotos();
     showToast(`📸 ${done} photo(s) uploaded!`);
+    if(window.renderDashPhotoStrip) window.renderDashPhotoStrip(galleryPhotos);
   }
 
   if(prog) { prog.style.display = 'none'; if(bar) bar.style.width = '0%'; }
@@ -2128,6 +2131,7 @@ async function deleteGalleryPhoto(idx) {
   galleryPhotos.splice(idx, 1);
   await saveGalleryPhotos();
   renderGalleryPreview();
+  if(window.renderDashPhotoStrip) window.renderDashPhotoStrip(galleryPhotos);
   showToast('Photo removed');
 }
 
