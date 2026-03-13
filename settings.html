@@ -777,7 +777,7 @@ const KEY  = SUPABASE_ANON_KEY;
 let profile={}, galleryPhotos=[], userId='', tok='';
 
 /* ── INIT ── */
-async function init(){
+async function settingsInit(){
   const t=localStorage.getItem('wl_token');
   if(!t){window.location.href='login.html';return;}
   try{
@@ -1214,7 +1214,7 @@ function toggleSettingsDrawer(){
   document.body.style.overflow=open?'hidden':'';
 }
 
-init();
+settingsInit();
 </script>
 <script src="db.js"></script>
 <script src="app.js"></script>
