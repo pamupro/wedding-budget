@@ -21,12 +21,99 @@ window.addEventListener('load', function(){
   <!-- jsPDF for PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+/* ── Dashboard mobile nav overrides ─────────────────────────── */
+
+/* Topbar logo — italic like landing */
+.topbar-logo { font-family:'Fraunces',serif; font-size:20px; font-style:italic; font-weight:400; color:var(--charcoal); text-decoration:none; }
+.topbar-logo em { color:var(--gold); font-style:italic; }
+
+/* Burger button (shared with landing style) */
+.mnav-btn {
+  width:36px; height:36px; border-radius:8px;
+  background:var(--card-bg); border:1.5px solid var(--border);
+  display:none; align-items:center; justify-content:center;
+  cursor:pointer; flex-direction:column; gap:4px;
+  flex-shrink:0;
+}
+.mnav-btn span { display:block; width:16px; height:1.5px; background:var(--charcoal); border-radius:2px; transition:.25s; }
+.mnav-btn.open span:nth-child(1) { transform:translateY(5.5px) rotate(45deg); }
+.mnav-btn.open span:nth-child(2) { opacity:0; }
+.mnav-btn.open span:nth-child(3) { transform:translateY(-5.5px) rotate(-45deg); }
+
+/* Full-screen drawer */
+.dash-drawer {
+  display:none; position:fixed; inset:0; z-index:400;
+  flex-direction:column;
+  background:var(--cream); padding:0 28px 40px;
+  overflow-y:auto;
+}
+.dash-drawer.open { display:flex; }
+
+.dash-drawer-top {
+  display:flex; align-items:center; justify-content:space-between;
+  height:56px; flex-shrink:0; border-bottom:1px solid var(--border);
+  margin:0 -28px; padding:0 28px; margin-bottom:32px;
+}
+.dash-drawer-logo {
+  font-family:'Fraunces',serif; font-size:20px; font-style:italic;
+  font-weight:400; color:var(--charcoal); text-decoration:none;
+}
+.dash-drawer-logo em { color:var(--gold); }
+
+/* In the drawer, show the burger in open state */
+.dash-drawer .mnav-btn { display:flex; }
+
+.dash-drawer-couple {
+  font-family:'Fraunces',serif; font-size:13px; font-style:italic;
+  color:var(--muted); margin-bottom:24px;
+}
+
+.dash-drawer-item {
+  display:block; width:100%; text-align:left; background:none; border:none;
+  font-family:'Fraunces',serif; font-size:28px; font-weight:200; font-style:italic;
+  color:var(--charcoal); padding:14px 0; cursor:pointer;
+  border-bottom:1px solid var(--border);
+  opacity:0; transform:translateY(8px);
+  animation:mSlide .3s ease both;
+  transition:color .18s;
+}
+.dash-drawer-item:hover { color:var(--gold); }
+.dash-drawer-item:nth-child(3) { animation-delay:.05s; }
+.dash-drawer-item:nth-child(4) { animation-delay:.1s; }
+.dash-drawer-item:nth-child(5) { animation-delay:.15s; }
+.dash-drawer-item:nth-child(6) { animation-delay:.2s; }
+.dash-drawer-item:nth-child(7) { animation-delay:.25s; }
+.dash-drawer-item:nth-child(8) { animation-delay:.3s; }
+
+.dash-drawer-cta {
+  display:block; width:100%; text-align:center;
+  padding:15px; border-radius:10px;
+  background:var(--charcoal); color:var(--cream);
+  font-family:'Instrument Sans',sans-serif; font-size:14px; font-weight:600;
+  border:none; cursor:pointer; transition:.18s; margin-top:16px;
+  opacity:1; transform:none; animation:none;
+}
+.dash-drawer-cta:hover { background:var(--gold); }
+
+@keyframes mSlide { to { opacity:1; transform:none; } }
+
+@media(max-width:680px) {
+  .mnav-btn { display:flex; }
+  .hamburger-btn { display:none; }
+  .topbar { padding:0 16px; }
+  .topbar-center { display:none; }
+  .desktop-only { display:none !important; }
+  body { padding-top:56px; }
+  .topbar { height:56px; }
+}
+</style>
 </head>
 <body>
 
 <!-- ── TOP BAR ────────────────────────────────────────────────────────────── -->
 <nav class="topbar">
-  <a href="index.html" class="topbar-logo">Wedding<span>Ledger</span></a>
+  <a href="index.html" class="topbar-logo">Wedding<em>Ledger</em></a>
   <div class="topbar-center" id="coupleNames"></div>
   <div class="topbar-right">
     <div style="display:flex;align-items:center;gap:6px">
@@ -47,28 +134,26 @@ window.addEventListener('load', function(){
     <button class="topbar-btn share-btn desktop-only" onclick="openShareModal()">🔗 Share</button>
     <button class="topbar-btn signout-btn desktop-only" onclick="doLogout()">Sign Out</button>
     <!-- Mobile hamburger -->
-    <button class="hamburger-btn" onclick="openMobileNav()" aria-label="Menu">☰</button>
+    <div class="mnav-btn" id="dashBurger" onclick="toggleDashDrawer()" aria-label="Menu"><span></span><span></span><span></span></div>
   </div>
 </nav>
 
 <!-- ── MOBILE NAV DRAWER ── -->
-<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
-<div class="mobile-nav-drawer" id="mobileNavDrawer">
-  <div class="mobile-nav-header">
-    <div id="mobileNavNames" class="mobile-nav-names"></div>
-    <button onclick="closeMobileNav()" class="mobile-nav-close">✕</button>
+<div class="dash-drawer" id="dashDrawer">
+  <div class="dash-drawer-top">
+    <a href="index.html" class="dash-drawer-logo">Wedding<em>Ledger</em></a>
+    <div class="mnav-btn open" onclick="toggleDashDrawer()"><span></span><span></span><span></span></div>
   </div>
-  <div class="mobile-nav-items">
-    <div id="mobileProBadge" style="margin-bottom:8px"></div>
-    <button class="mobile-nav-item" onclick="openShareModal();closeMobileNav()">🔗 Share Budget</button>
-    <button class="mobile-nav-item" onclick="location.href='guests.html'">👥 Guest List</button>
-    <button class="mobile-nav-item" onclick="location.href='seating.html'" style="display:none">🪑 Seating Chart</button>
-    <button class="mobile-nav-item" onclick="location.href='timeline.html'" style="display:none">📅 Day-of Timeline</button>
-    <button class="mobile-nav-item" onclick="openSettingsModal();closeMobileNav()">⚙️ Settings</button>
-    <button class="mobile-nav-item" onclick="openPartnerModal();closeMobileNav()" style="color:var(--gold);font-weight:600">💌 Invite Partner</button>
-    <div style="height:1px;background:var(--border);margin:8px 0"></div>
-    <button class="mobile-nav-item danger" onclick="doLogout()">Sign Out</button>
-  </div>
+  <div class="dash-drawer-couple" id="mobileNavNames"></div>
+  <div id="mobileProBadge" style="margin-bottom:8px"></div>
+  <button class="dash-drawer-item" onclick="toggleDashDrawer();openShareModal()">🔗 Share Budget</button>
+  <button class="dash-drawer-item" onclick="location.href='guests.html'">👥 Guest List</button>
+  <button class="dash-drawer-item" onclick="location.href='seating.html'" style="display:none">🪑 Seating Chart</button>
+  <button class="dash-drawer-item" onclick="location.href='timeline.html'" style="display:none">📅 Timeline</button>
+  <button class="dash-drawer-item" onclick="toggleDashDrawer();openSettingsModal()">⚙️ Settings</button>
+  <button class="dash-drawer-item" onclick="toggleDashDrawer();openPartnerModal()" style="color:var(--gold);font-weight:700">💌 Invite Partner</button>
+  <div style="flex:1"></div>
+  <button class="dash-drawer-cta" onclick="doLogout()">Sign Out</button>
 </div>
 
 <!-- ── COUPLE HERO ────────────────────────────────────────────────────────── -->
@@ -640,6 +725,22 @@ window.addEventListener('load', function(){
 <script src="app.js"></script>
 <script>
 // Mobile nav & couple name now in app.js
+function toggleDashDrawer(){
+  var d=document.getElementById('dashDrawer');
+  var b=document.getElementById('dashBurger');
+  var open=d.classList.toggle('open');
+  if(b){ b.classList.toggle('open',open); }
+  document.body.style.overflow=open?'hidden':'';
+}
+// Keep backward compat if app.js calls these
+function openMobileNav(){ toggleDashDrawer(); }
+function closeMobileNav(){
+  var d=document.getElementById('dashDrawer');
+  var b=document.getElementById('dashBurger');
+  d.classList.remove('open');
+  if(b) b.classList.remove('open');
+  document.body.style.overflow='';
+}
 </script>
 </body>
 </html>
