@@ -731,16 +731,8 @@ textarea.modal-input{resize:vertical;min-height:80px}
 
 <!-- PayPal SDK — loaded after DOM ready so defer scripts are available -->
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-  const planId = window.WL_PLAN_ID || '';
-  const intent = planId ? 'subscription' : 'capture';
-  const vault  = planId ? '&vault=true' : '';
-  const s = document.createElement('script');
-  s.src = 'https://www.paypal.com/sdk/js?client-id=AcMxe9xGOHUIKBPp9c8yOL5XOc-eKbG3ydN4okrzXxnfICJQG3gk1598QcS2ERHQ9MDcQdmKiBo4IWX4&currency=GBP&intent=' + intent + vault;
-  s.onload  = function(){ if(typeof initPayPal==='function') initPayPal(); };
-  s.onerror = function(){ if(typeof showPayPalFallback==='function') showPayPalFallback(); };
-  document.head.appendChild(s);
-});
+// PayPal SDK loads lazily only when upgrade modal opens (via initPayPal in app.js)
+// This avoids blocking page load and CSP issues on GitHub Pages
 </script>
 </head>
 <body>
@@ -1187,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <div class="toast" id="toast"></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // Nav scroll effect
 window.addEventListener('scroll',()=>document.getElementById('mainTopbar')?.classList.toggle('scrolled',scrollY>30));
 
