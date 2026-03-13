@@ -281,8 +281,8 @@ function initCurrencyUI() {
 function setCurrencyUI(code){activeCurrency=code;const sel=document.getElementById('currencySelect');if(sel)sel.value=code;}
 async function changeCurrency(code){
   activeCurrency=code;
-  await DB.upsertSetting(userId,'currency',code,accessToken);
   renderVendors(); updateStats(); renderChart();
+  try{ await DB.upsertSetting(userId,'currency',code,accessToken); }catch(e){ console.warn('Currency save failed:',e); }
   const rate = CURRENCIES[code].rate;
   const msg = code==='GBP'
     ? 'Currency: British Pound (£) ✓'
@@ -715,7 +715,7 @@ window.initPayPal=function(){
     createOrder:function(data,actions){
       return actions.order.create({
         purchase_units:[{
-          amount:{value:'12.00',currency_code:'USD'},
+          amount:{value:'9.00',currency_code:'GBP'},
           description:'WeddingLedger Pro — Unlimited Vendors'
         }]
       });
@@ -756,7 +756,7 @@ function showPayPalFallback(){
       cmd: '_xclick',
       business: PAYPAL_EMAIL,
       item_name: 'WeddingLedger Pro',
-      amount: '12.00',
+      amount: '9.00',
       currency_code: 'GBP',
       return: RETURN_URL,
       cancel_return: RETURN_URL,
@@ -1228,51 +1228,14 @@ function openWeddingPage() {
 
 // ─── SUBSCRIPTION (PayPal recurring) ─────────────────────────────────────────
 
-const PAYPAL_PLAN_ID = ''; // Set after creating PayPal recurring plan
-const MONTHLY_PRICE  = 7.99;
+const PAYPAL_PLAN_ID = ''; // unused
+const ONE_TIME_PRICE = 9;
 
 function openUpgradeModal() {
-  // Check if referred (£2 off first month)
-  const hasDiscount = profile?.referral_discount;
-  const price = hasDiscount ? (MONTHLY_PRICE - 2).toFixed(2) : MONTHLY_PRICE.toFixed(2);
-  const modal = document.getElementById('upgradeModal');
-  if(!modal) return;
-  // Update price display
-  const priceEl = modal.querySelector('.upgrade-price');
-  if(priceEl) priceEl.innerHTML = hasDiscount
-    ? `<span style="text-decoration:line-through;color:var(--muted);font-size:14px">£${MONTHLY_PRICE}</span>
-       <span style="color:var(--gold);font-size:22px;font-weight:700"> £${price}/month</span>
-       <span style="font-size:11px;background:#f0faf0;color:#2a5a2a;border-radius:99px;padding:3px 10px;margin-left:6px">£2 referral discount applied!</span>`
-    : `<span style="font-size:22px;font-weight:700;color:var(--gold)">£${price}/month</span>`;
+  const modal=document.getElementById('upgradeModal');
+  if(!modal)return;
   modal.style.display='flex';
-  initPayPalSubscription(price);
 }
-
-function initPayPalSubscription(price) {
-  const container = document.getElementById('paypal-button-container');
-  if(!container) return;
-  container.innerHTML = '';
-  if(typeof paypal === 'undefined') { showPayPalFallback(); return; }
-  try {
-    paypal.Buttons({
-      style: { layout:'vertical', color:'gold', shape:'pill', label:'subscribe' },
-      createSubscription: function(data, actions) {
-        // Without a plan ID, fall back to one-time order for now
-        if(PAYPAL_PLAN_ID) {
-          return actions.subscription.create({ plan_id: PAYPAL_PLAN_ID });
-        }
-        return actions.order.create({
-          purchase_units:[{ amount:{ currency_code:'GBP', value: price } }]
-        });
-      },
-      onApprove: function(data) {
-        activatePro(data.subscriptionID || data.orderID, true);
-      },
-      onError: function(err){ console.error(err); showPayPalFallback(); }
-    }).render('#paypal-button-container');
-  } catch(e){ showPayPalFallback(); }
-}
-
 async function activatePro(subscriptionId, isSubscription=false) {
   await DB.patch(`profiles?user_id=eq.${userId}`, {
     is_pro: true,
@@ -1988,8 +1951,7 @@ async function saveNotesFromSettings() {
   showToast('Notes saved ✓');
 }
 
-init();  updateWeddingPageUrl();
-  const pmEl=document.getElementById('settingsPageMessage');if(pmEl)pmEl.value=profile?.page_message||'';
+// updateWeddingPageUrl called from init() after loadProfile()
 
 
 
@@ -2162,4 +2124,11 @@ function closeMobileNav() {
   overlay.classList.remove('open');
   drawer.classList.remove('open');
   document.body.style.overflow = '';
+}
+
+// ── BOOT ────────────────────────────────────────────────────────────────────
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init(); // DOM already ready (script loaded at end of body)
 }
