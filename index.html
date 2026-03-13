@@ -686,7 +686,14 @@ footer p{font-size:12px;color:var(--muted2)}
 ══════════════════════════════════════ */
 @media(max-width:900px){
   .hero-inner{grid-template-columns:1fr;gap:48px}
-  .hero-cards{display:none}
+  .hero-cards{
+    display:flex;flex-direction:column;gap:14px;
+    height:auto;position:static;
+    animation:fadeUp .8s .4s ease both;
+    padding:0 0 4px;
+  }
+  .hcard{position:static !important;transform:none !important;width:100% !important;}
+  .hc-float{background:var(--surface);border:1px solid var(--border2);}
   .hero{padding:90px 32px 60px;min-height:auto}
   .bgrid{grid-template-columns:repeat(2,1fr)}
   .bcard.s2,.bcard.s3{grid-column:span 2}
@@ -708,13 +715,17 @@ footer p{font-size:12px;color:var(--muted2)}
 
   /* Hero */
   .hero{padding:80px 20px 56px;min-height:100svh;align-items:flex-end}
+  .hero-cards{padding:0;}
+  .hcard{border-radius:12px;}
   .hero-title{font-size:clamp(42px,11vw,60px);margin-bottom:20px}
   .hero-title .h-sub{font-size:clamp(22px,6.5vw,32px)}
   .hero-desc{font-size:15px;margin-bottom:32px}
   .hero-acts .btn-outline{display:none}/* hide secondary CTA — bottom bar handles it */
   .hero-acts .btn-dark{width:100%;justify-content:center;padding:16px}
   .hero-note{font-size:11px;gap:8px}
-  .hero-cards{display:none}
+  .hero-cards{display:flex;flex-direction:column;gap:12px;height:auto;position:static;}
+  .hcard{position:static !important;transform:none !important;width:100% !important;border-radius:12px;}
+  .hc-float{top:auto;right:auto;bottom:auto;}
   .hero-eyebrow{margin-bottom:20px}
 
   /* Stats */
