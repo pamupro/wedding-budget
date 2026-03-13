@@ -7,26 +7,31 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/umd/supabase.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/umd/supabase.min.js" defer></script>
   <style>
-    .stats-strip{display:flex;background:white;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:64px;z-index:10}
+    :root{
+      /* Guests page: slightly stronger borders for dense card layout */
+      --border: rgba(26,22,18,.13);
+      --border2: rgba(26,22,18,.07);
+    }
+    .stats-strip{display:flex;background:var(--surface);border-bottom:1px solid rgba(26,22,18,.08);overflow-x:auto;scrollbar-width:none;position:sticky;top:64px;z-index:10}
     .stats-strip::-webkit-scrollbar{display:none}
     .stat-pill{flex:1;min-width:90px;padding:16px 10px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:.15s;user-select:none}
     .stat-pill:last-child{border-right:none}
-    .stat-pill:hover,.stat-pill.active{background:#fdf9f0}
+    .stat-pill:hover,.stat-pill.active{background:var(--gold-pale)}
     .stat-pill.active .stat-num{color:var(--gold)}
     .stat-num{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:var(--ink);line-height:1;display:block}
     .stat-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:3px;display:block}
-    .toolbar{display:flex;align-items:center;gap:10px;padding:14px 24px;background:white;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .toolbar{display:flex;align-items:center;gap:10px;padding:14px 24px;background:var(--surface);border-bottom:1px solid rgba(26,22,18,.08);flex-wrap:wrap}
     .search-wrap{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:9px 16px}
     .search-wrap input{background:none;border:none;outline:none;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--ink);width:100%}
     .tbar-sel{padding:9px 14px;border:1.5px solid var(--border);border-radius:99px;font-family:'Instrument Sans',sans-serif;font-size:12px;background:white;outline:none;cursor:pointer}
     .grid{padding:20px 24px;display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
-    .gcard{background:white;border-radius:14px;border:1.5px solid var(--border);padding:16px;transition:.2s;position:relative}
+    .gcard{background:var(--surface);border-radius:14px;border:1.5px solid rgba(26,22,18,.12);padding:16px;transition:.2s;position:relative}
     .gcard.no-contact{background:#fffbf0;border-color:#e8c84a;border-style:dashed}
     .gcard.no-contact .gname::after{content:' ';display:inline-block}
-    .gcard:hover{border-color:rgba(201,168,76,.5);box-shadow:0 4px 16px rgba(0,0,0,.07)}
-    .gcard.sel{border-color:var(--gold);background:#fdf9f0}
+    .gcard:hover{border-color:rgba(160,120,40,.5);box-shadow:0 4px 16px rgba(0,0,0,.07)}
+    .gcard.sel{border-color:var(--gold);background:var(--gold-pale)}
     .gcard-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
     .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f0e8d0,#e4d4a0);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--ink);flex-shrink:0}
     .gname{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
@@ -134,11 +139,11 @@
     .vchip:hover{border-color:var(--gold);color:var(--gold)}
     .tab-row{display:flex;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
     .mtab{flex:1;padding:10px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;font-family:'Instrument Sans',sans-serif;color:var(--muted);transition:.15s}
-    .mtab.on{color:var(--gold);background:#fdf9f0}
+    .mtab.on{color:var(--gold);background:var(--gold-pale)}
     .course-box{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:10px}
     .opt-chip{display:inline-flex;align-items:center;gap:4px;background:white;border:1px solid var(--border);border-radius:99px;padding:3px 10px;font-size:12px;margin:2px}
     .drop-label{border:2px dashed var(--border);border-radius:12px;padding:28px;cursor:pointer;transition:.2s;text-align:center;display:block}
-    .drop-label:hover{border-color:var(--gold);background:#fdf9f0}
+    .drop-label:hover{border-color:var(--gold);background:var(--gold-pale)}
     /* ── New guest modal ── */
     .gmodal{display:flex;background:white;border-radius:20px;overflow:hidden;width:min(680px,94vw);max-height:90vh;box-shadow:0 24px 64px rgba(0,0,0,.18)}
     .gmodal-aside{width:130px;flex-shrink:0;background:linear-gradient(160deg,#2a2118 0%,#3d2e1a 100%);padding:28px 14px;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -601,7 +606,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
-<script src="db.js"></script>
+
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const SB = 'https://bqggtyguhedlyfffjkkw.supabase.co';
@@ -682,7 +687,7 @@ let pollTimer = null;
 function startRealtime() {
   // ── Polling: refresh guests from DB every 10 seconds ──────────────────────
   // Simple, guaranteed to work regardless of Realtime status
-  pollTimer = setInterval(refreshGuests, 5000);  // every 5s
+  pollTimer = setInterval(refreshGuests, 30000); // every 30s
 
   // ── WebSocket Realtime: instant push when guest row changes ───────────────
   try {
@@ -1375,13 +1380,13 @@ function quickWA() {
   const code = document.getElementById('fCode').value;
   const num  = document.getElementById('fPhone').value.trim().replace(/^0+/,'');
   if(!num) { toast('Enter a phone number first', true); return; }
-  const name = document.getElementById('fName').value.trim() || 'Guest';
+  const name = [document.getElementById('fFirst')?.value||'', document.getElementById('fLast')?.value||''].filter(Boolean).join(' ') || 'Guest';
   window.open('https://wa.me/'+code+num+'?text='+encodeURIComponent(fillTpl(WA_TPL,{name, id: document.getElementById('fId').value||null})), '_blank');
 }
 function quickEmail() {
   const email = document.getElementById('fEmail').value.trim();
   if(!email) { toast('Enter an email first', true); return; }
-  const name = document.getElementById('fName').value.trim() || 'Guest';
+  const name = [document.getElementById('fFirst')?.value||'', document.getElementById('fLast')?.value||''].filter(Boolean).join(' ') || 'Guest';
   window.open('mailto:'+email+'?subject='+encodeURIComponent(fillTpl(EM_SUBJ,{name}))+'&body='+encodeURIComponent(fillTpl(EM_BODY,{name})), '_blank');
 }
 
@@ -1462,7 +1467,7 @@ function rmCourse(i)     { menuCfg.courses.splice(i,1); buildCourseList(); }
 function addOpt(ci)      { const inp=document.getElementById('oi-'+ci); const v=inp.value.trim(); if(!v)return; menuCfg.courses[ci].options.push(v); inp.value=''; buildCourseList(); }
 function rmOpt(ci,oi)    { menuCfg.courses[ci].options.splice(oi,1); buildCourseList(); }
 async function saveMenu() {
-  await DB.upsertSetting(uid,'menu_config',JSON.stringify(menuCfg),tok);
+  await DB.upsertSetting(uid,'menu_config',JSON.stringify(menuCfg),getTok());
   closeMenuModal(); toast('🍽 Menu saved!');
 }
 function buildMealFields() {
@@ -1787,7 +1792,7 @@ window.addEventListener('beforeunload', () => {
     const ids = _undoPending.guests.map(g=>g.id);
     // Use sendBeacon for reliable fire-and-forget
     ids.forEach(id => {
-      const url = SUPABASE_URL+'/rest/v1/guests?id=eq.'+id;
+      const url = SB+'/rest/v1/guests?id=eq.'+id;
       navigator.sendBeacon && navigator.sendBeacon(url);
     });
   }
