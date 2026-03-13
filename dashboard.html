@@ -6,11 +6,9 @@
 <title>Dashboard — WeddingLedger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="db.js"></script>
-<script src="app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+
+
 <style>
 /* ═══════════════════════════════════════════════════
    WeddingLedger Dashboard — v4 (Landing Theme)
@@ -731,15 +729,22 @@ textarea.modal-input{resize:vertical;min-height:80px}
 }
 </style>
 
-<!-- PayPal SDK loader -->
+<!-- PayPal SDK — loaded after DOM ready so defer scripts are available -->
 <script>
-(function(){
-  const s=document.createElement('script');
-  s.src='https://www.paypal.com/sdk/js?client-id=AcMxe9xGOHUIKBPp9c8yOL5XOc-eKbG3ydN4okrzXxnfICJQG3gk1598QcS2ERHQ9MDcQdmKiBo4IWX4&currency=GBP&intent=capture&vault=false';
-  s.onload=function(){if(typeof initPayPal==='function')initPayPal();};
-  s.onerror=function(){if(typeof showPayPalFallback==='function')showPayPalFallback();};
+// PayPal SDK is loaded lazily by loadPayPalSDK() in app.js
+// after platform settings (plan ID + price) have been fetched.
+// This avoids loading the wrong intent (capture vs subscription).
+window.loadPayPalSDK = function() {
+  if(document.querySelector('script[src*="paypal.com/sdk"]')) return; // already loaded
+  const planId = window.WL_PLAN_ID || '';
+  const intent = planId ? 'subscription' : 'capture';
+  const vault  = planId ? '&vault=true&intent=subscription' : '&intent=capture';
+  const s = document.createElement('script');
+  s.src = 'https://www.paypal.com/sdk/js?client-id=AcMxe9xGOHUIKBPp9c8yOL5XOc-eKbG3ydN4okrzXxnfICJQG3gk1598QcS2ERHQ9MDcQdmKiBo4IWX4&currency=GBP' + vault;
+  s.onload  = function(){ if(typeof initPayPal==='function') initPayPal(); };
+  s.onerror = function(){ if(typeof showPayPalFallback==='function') showPayPalFallback(); };
   document.head.appendChild(s);
-})();
+};
 </script>
 </head>
 <body>
@@ -1051,19 +1056,24 @@ textarea.modal-input{resize:vertical;min-height:80px}
       <div class="upgrade-hero">
         <div class="upgrade-icon">💍</div>
         <div class="upgrade-title">Unlock your full wedding budget</div>
-        <div class="upgrade-sub">One-time payment · No subscriptions · Yours forever</div>
+        <div class="upgrade-sub">Monthly subscription · Cancel any time · Always up to date</div>
       </div>
       <div class="upgrade-features">
         <div class="upgrade-feature">✓ Unlimited vendors</div>
-        <div class="upgrade-feature">✓ Due date alerts</div>
+        <div class="upgrade-feature">✓ Guest list (unlimited)</div>
+        <div class="upgrade-feature">✓ Seating chart builder</div>
         <div class="upgrade-feature">✓ Share with planner</div>
-        <div class="upgrade-feature">✓ All currencies</div>
-        <div class="upgrade-feature">✓ All devices</div>
-        <div class="upgrade-feature">✓ Future updates</div>
+        <div class="upgrade-feature">✓ All currencies + live rates</div>
+        <div class="upgrade-feature">✓ Due date alerts</div>
+        <div class="upgrade-feature">✓ Partner access</div>
+        <div class="upgrade-feature">✓ New features monthly</div>
       </div>
       <div class="upgrade-price">
-        <span class="upgrade-amount">£9</span>
-        <span class="upgrade-period">one-time · per couple</span>
+        <span class="upgrade-amount" id="upgradeModalPrice">£9.00</span>
+        <span class="upgrade-period" id="upgradeModalPeriod">per month · cancel anytime</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted2);text-align:center;margin-top:-4px;margin-bottom:4px">
+        Billed monthly via PayPal · Cancel any time from your PayPal account
       </div>
       <div id="paypalButtonContainer" style="margin-top:12px"></div>
       <div id="paypalFallback" style="margin-top:12px;display:none">
@@ -1077,7 +1087,7 @@ textarea.modal-input{resize:vertical;min-height:80px}
         <div style="font-size:14px;margin-bottom:5px">✅ Paid via PayPal?</div>
         <p style="font-size:12px;color:var(--sage);margin-bottom:9px">Once confirmed, click below to activate Pro.</p>
         <button onclick="manualActivateCheck()" style="background:var(--sage);color:white;border:none;border-radius:99px;padding:9px 20px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">✓ I've Paid — Activate Pro</button>
-        <p style="font-size:10px;color:var(--muted2);margin-top:7px">If activation fails, email support@weddingledger.co.uk with your PayPal receipt</p>
+        <p style="font-size:10px;color:var(--muted2);margin-top:7px">If activation fails, email <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d0a3a5a0a0bfa2a490a7b5b4b4b9beb7bcb5b4b7b5a2feb3bffea5bb">[email&#160;protected]</a> with your PayPal receipt</p>
       </div>
       <p style="font-size:11px;color:var(--muted2);text-align:center;margin-top:9px">🔒 Secure payment via PayPal · Instant activation · No subscription</p>
     </div>
@@ -1181,7 +1191,7 @@ textarea.modal-input{resize:vertical;min-height:80px}
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // Nav scroll effect
 window.addEventListener('scroll',()=>document.getElementById('mainTopbar')?.classList.toggle('scrolled',scrollY>30));
 
@@ -1228,12 +1238,18 @@ function animateStat(el,target,prefix=''){
 }
 
 // Checklist progress bar mini-indicator in section title
-function updateChecklistBadge(){
-  const done=document.querySelectorAll('.checklist-item.done').length;
+ecklist-item.done').length;
   const total=document.querySelectorAll('.checklist-item').length;
   const badge=document.getElementById('checklistBadge');
   if(badge&&total>0)badge.textContent=`${done}/${total}`;
 }
+
+// Call init() on page load - app.js defines the async init() function
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof init === 'function') init();
+});
 </script>
+<script src="db.js" defer></script>
+<script src="app.js" defer></script>
 </body>
 </html>
