@@ -1076,6 +1076,53 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
       </div>
 
       <div class="settings-grid">
+        <div class="settings-card" style="grid-column:1/-1;background:linear-gradient(135deg,var(--gold-pale),var(--surface));border-color:var(--gold-bd)">
+          <div class="sc-title">💳 Subscription <em>Pricing</em></div>
+          <!-- Live preview -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--gold-bd)">
+            <div style="font-size:28px;font-family:'Fraunces',serif;font-weight:200;color:var(--gold)" id="adminPricePreview">£9.99</div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:var(--ink)" id="adminPriceModeLabel">per month · subscription</div>
+              <div style="font-size:10px;color:var(--muted2)">currently shown to users on upgrade modal</div>
+            </div>
+            <div style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:99px;background:var(--sage-pale);color:var(--sage);font-weight:600" id="adminPriceModeTag">ACTIVE</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+            <div>
+              <label class="s-label">Monthly Price (£)</label>
+              <input type="number" id="subPrice" class="s-input" placeholder="e.g. 9.99" min="0.50" max="99.99" step="0.01"
+                oninput="document.getElementById('adminPricePreview').textContent='£'+parseFloat(this.value||9.99).toFixed(2)">
+              <div style="font-size:10px;color:var(--muted2);margin-top:4px">What users pay per month</div>
+            </div>
+            <div>
+              <label class="s-label">PayPal Plan ID</label>
+              <input type="text" id="paypalPlanId" class="s-input" placeholder="P-XXXXXXXXXXXXXXXXXXXX"
+                oninput="const v=this.value.trim();const ml=document.getElementById('adminPriceModeLabel');const mt=document.getElementById('adminPriceModeTag');if(ml)ml.textContent=v?'per month · subscription':'one-time · per couple';if(mt)mt.textContent=v?'SUBSCRIPTION':'ONE-TIME';">
+              <div style="font-size:10px;color:var(--muted2);margin-top:4px">From PayPal Subscriptions dashboard — leave blank for one-time</div>
+            </div>
+            <div>
+              <label class="s-label">Free Vendor Limit</label>
+              <input type="number" id="freeVendorLimit" class="s-input" placeholder="5" min="1" max="20">
+              <div style="font-size:10px;color:var(--muted2);margin-top:4px">Vendors allowed on free plan</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button class="s-btn" onclick="savePlatformSettings()" style="margin-top:0">💾 Save Pricing Settings</button>
+            <div id="platformSettingsStatus" style="font-size:12px;color:var(--muted)"></div>
+          </div>
+          <div style="margin-top:16px;padding:12px;background:var(--surface);border-radius:9px;border:1px solid var(--border2)">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px">HOW SUBSCRIPTIONS WORK</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.7">
+              <strong>Without Plan ID:</strong> One-time PayPal order at the price above.<br>
+              <strong>With Plan ID:</strong> Recurring monthly PayPal subscription. Create a billing plan at 
+              <a href="https://www.paypal.com/billing/plans" target="_blank" style="color:var(--gold)">paypal.com/billing/plans</a> 
+              → copy the Plan ID → paste above → save. Users will see "Subscribe" instead of "Pay".<br>
+              <strong>Price changes</strong> take effect for new subscribers immediately. Existing subscribers keep their PayPal agreement price.
+            </div>
+          </div>
+        </div>
+
         <div class="settings-card">
           <div class="sc-title">🔐 Change <em>Password</em></div>
           <label class="s-label">New Admin Password</label>
@@ -1876,11 +1923,14 @@ async function renderHealthPage() {
 
 // ─── SETTINGS PAGE ────────────────────────────────
 function renderSettingsPage() {
+  loadPlatformSettings(); // populate price/plan fields
   const pro=allUsers.filter(u=>u.is_pro).length;
   const paid=allUsers.filter(u=>u.is_pro&&u.paypal_order_id).length;
   setText('sm-users',allUsers.length);
   setText('sm-vendors',allVendors.length);
-  setText('sm-revenue','£'+paid*9);
+  const priceEl=document.getElementById('subPrice');
+  const priceVal=parseFloat(priceEl?.value)||9;
+  setText('sm-revenue','£'+(paid*priceVal).toFixed(0));
 }
 
 function changeAdminPassword() {
@@ -1889,6 +1939,69 @@ function changeAdminPassword() {
   localStorage.setItem('wl_admin_pw',pw);
   document.getElementById('newAdminPass').value='';
   showToast('Admin password updated ✓','success');
+}
+
+// ─── PLATFORM SETTINGS (subscription price etc) ──────────────────────────────
+async function loadPlatformSettings(){
+  try{
+    // Use any user_id as owner for platform settings — use a fixed admin key
+    const r = await fetch(`${ADMIN_URL}/rest/v1/settings?key=in.(sub_price,paypal_plan_id,free_vendor_limit)&select=key,value&limit=10`,{headers:H});
+    if(!r.ok) return;
+    const rows = await r.json();
+    rows.forEach(row => {
+      if(row.key==='sub_price') {
+          const el=document.getElementById('subPrice'); if(el) el.value=row.value;
+          const prev=document.getElementById('adminPricePreview'); if(prev && row.value) prev.textContent='£'+parseFloat(row.value).toFixed(2);
+        }
+      if(row.key==='paypal_plan_id') {
+          const el=document.getElementById('paypalPlanId'); if(el) el.value=row.value;
+          const ml=document.getElementById('adminPriceModeLabel'); const mt=document.getElementById('adminPriceModeTag');
+          const isRecurring = !!(row.value && row.value.trim());
+          if(ml) ml.textContent = isRecurring ? 'per month · subscription' : 'one-time · per couple';
+          if(mt) mt.textContent = isRecurring ? 'SUBSCRIPTION' : 'ONE-TIME';
+        }
+      if(row.key==='free_vendor_limit'){ const el=document.getElementById('freeVendorLimit'); if(el) el.value=row.value; }
+    });
+  }catch(e){ console.warn('loadPlatformSettings error:', e); }
+}
+
+async async function savePlatformSettings(){
+  const price    = document.getElementById('subPrice')?.value?.trim();
+  const planId   = document.getElementById('paypalPlanId')?.value?.trim();
+  const freeLimit= document.getElementById('freeVendorLimit')?.value?.trim();
+  const status   = document.getElementById('platformSettingsStatus');
+
+  if(price && (isNaN(price)||+price<0.50)){showToast('Price must be at least £0.50',true);return;}
+
+  if(status) status.textContent = 'Saving…';
+  try{
+    const entries = [];
+    if(price)     entries.push({key:'sub_price',        value:price});
+    if(planId!==undefined) entries.push({key:'paypal_plan_id',  value:planId||''});
+    if(freeLimit) entries.push({key:'free_vendor_limit',value:freeLimit});
+
+    for(const entry of entries){
+      // Upsert by key (no user_id — platform-wide setting)
+      const checkRes = await fetch(`${ADMIN_URL}/rest/v1/settings?key=eq.${entry.key}&user_id=is.null`,{headers:H});
+      const existing = await checkRes.json();
+      if(Array.isArray(existing)&&existing.length){
+        await fetch(`${ADMIN_URL}/rest/v1/settings?key=eq.${entry.key}&user_id=is.null`,{
+          method:'PATCH',headers:{...H,'Prefer':'return=minimal'},
+          body:JSON.stringify({value:entry.value})
+        });
+      } else {
+        await fetch(`${ADMIN_URL}/rest/v1/settings`,{
+          method:'POST',headers:H,
+          body:JSON.stringify({key:entry.key,value:entry.value,user_id:null})
+        });
+      }
+    }
+    if(status) status.textContent = '✓ Saved at ' + new Date().toLocaleTimeString();
+    showToast('Platform settings saved ✓','success');
+  }catch(e){
+    if(status) status.textContent = '⚠ Save failed';
+    showToast('Error: '+e.message,true);
+  }
 }
 
 // ─── GLOBAL SEARCH ────────────────────────────────
