@@ -1466,7 +1466,7 @@ function renderChart() {
       options: {
         responsive: true,
         plugins: {
-          legend: { position: 'bottom', labels: { font:{family:'Jost',size:12}, padding:16, color:'#5C4A2A' }},
+          legend: { position: 'bottom', labels: { font:{family:'Instrument Sans',size:12}, padding:16, color:'#5C4A2A' }},
           tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${sym}${ctx.parsed.toLocaleString()}` }}
         },
         cutout: '62%'
@@ -1492,9 +1492,9 @@ function renderChart() {
           tooltip: { callbacks: { label: ctx => ` ${sym}${ctx.parsed.y.toLocaleString()}` }}
         },
         scales: {
-          y: { ticks: { callback: v => sym + v.toLocaleString(), font:{family:'Jost'} },
+          y: { ticks: { callback: v => sym + v.toLocaleString(), font:{family:'Instrument Sans'} },
                grid: { color: 'rgba(0,0,0,0.05)' }},
-          x: { ticks: { font:{family:'Jost',size:11} }, grid: { display:false }}
+          x: { ticks: { font:{family:'Instrument Sans',size:11} }, grid: { display:false }}
         }
       }
     });
