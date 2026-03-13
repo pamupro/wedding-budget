@@ -5,7 +5,7 @@
  */
 
 const ICONS = ['💒','🌸','📸','🎥','💐','🎵','💎','💄','💇','👗','🥂','🍰','🚗','✈️','🏨','📋','📝','💌','🎪','🎭','🕯️','🌹','👰','🤵'];
-let FREE_VENDOR_LIMIT = 5; // overridden by admin settings after loadPlatformSettings()
+const FREE_VENDOR_LIMIT = 5;
 
 const DEFAULT_VENDORS = [
   {category:'Wedding Planner',icon:'📋'},{category:'Hotel / Venue',icon:'🏨'},
@@ -256,15 +256,13 @@ async function loadTasks() {
 // ─── PLATFORM SETTINGS (admin-configured, loaded for all users) ──────────────
 async function loadPlatformSettings() {
   try {
-    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id,free_vendor_limit)&select=key,value&limit=10', accessToken);
+    // Platform price is stored in settings table with a known key, no user restriction
+    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id)&limit=10', accessToken);
     if(rows) rows.forEach(r => {
-      if(r.key === 'sub_price')         window.WL_SUB_PRICE      = r.value;
-      if(r.key === 'paypal_plan_id')    window.WL_PLAN_ID        = r.value;
-      if(r.key === 'free_vendor_limit'){ window.WL_FREE_LIMIT = parseInt(r.value) || 5; FREE_VENDOR_LIMIT = window.WL_FREE_LIMIT; }
+      if(r.key === 'sub_price')       window.WL_SUB_PRICE = r.value;
+      if(r.key === 'paypal_plan_id')  window.WL_PLAN_ID   = r.value;
     });
-  } catch(e) { /* non-critical — defaults apply */ }
-  // Load PayPal SDK NOW that we know which intent to use
-  if(typeof window.loadPayPalSDK === 'function') window.loadPayPalSDK();
+  } catch(e) { /* non-critical */ }
 }
 
 async function loadSettings() {
@@ -883,8 +881,7 @@ async function activatePro(paymentId, isSubscription=false){
     updateVendorLimitUI();
     renderVendors();
     // Confetti-style celebration
-    const msg = window.WL_PLAN_ID ? '🎉 Subscribed! Welcome to Pro — enjoy unlimited features.' : '🎉 Welcome to Pro! All features are now unlocked.';
-    showToast(msg);
+    showToast('🎉 Welcome to Pro! All features are now unlocked.');
   }catch(e){
     console.error('Activation error:', e);
     showToast('Payment received but activation failed — please contact support.', true);
