@@ -672,7 +672,7 @@ function toast(msg,err){const t=$('toast');t.textContent=msg;t.className='toast'
 function setSave(s){$('saveLbl').textContent=s;}
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-async function init(){
+async function seatingInit(){
   try{
     const [g,t]=await Promise.all([
       DB.query(`guests?user_id=eq.${uid}&order=name.asc`,tok),
@@ -1608,9 +1608,14 @@ async function applyArrangement(id){
   toast('Arrangement applied ✨');
 }
 
-init();
+seatingInit();
+  function doLogout(){
+    localStorage.removeItem('wl_token');
+    localStorage.removeItem('wl_refresh');
+    localStorage.removeItem('wl_uid');
+    window.location.href='login.html';
+  }
 </script>
 <script src="db.js"></script>
-<script src="app.js"></script>
 </body>
 </html>
