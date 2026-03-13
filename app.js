@@ -159,7 +159,10 @@ function doLogout() {
 
 // ─── PROFILE ─────────────────────────────────────────────────────────────────
 async function loadProfile() {
+  const _dbg = typeof dbg==='function' ? dbg : ()=>{};
+  _dbg('loadProfile: querying profiles for uid='+userId.slice(0,8)+'…');
   const rows=await DB.query(`profiles?user_id=eq.${userId}&select=*`,accessToken);
+  _dbg('loadProfile: got '+rows.length+' rows', rows.length>0);
   if (rows&&rows.length) {
     profile=rows[0]; isPro=profile.is_pro===true;
     renderHero();
