@@ -918,7 +918,7 @@ async function manualActivateCheck(){
             'Email your PayPal receipt to:<br><strong>pamupvt@gmail.com</strong><br>' +
             "We'll activate your Pro within a few hours.</p>" +
             '<button onclick="closeUpgradeModal()" style="background:var(--gold);color:white;border:none;' +
-            'border-radius:99px;padding:9px 20px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">' +
+            'border-radius:99px;padding:9px 20px;font-family:sans-serif;font-size:13px;font-weight:600;cursor:pointer;">' +
             'Got it</button>';
       }
     }
