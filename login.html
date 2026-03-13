@@ -461,9 +461,7 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
 </div>
 
 <script>
-// Supabase constants (db.js also defines these, but inline script needs them too)
-const SUPABASE_URL      = 'https://bqggtyguhedlyfffjkkw.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+// Supabase constants loaded from db.js
 function sw(t){
   document.getElementById('fLogin').style.display=t==='login'?'block':'none';
   document.getElementById('fSignup').style.display=t==='signup'?'block':'none';
