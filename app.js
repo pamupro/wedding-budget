@@ -134,7 +134,9 @@ function showLoadingState(on) {
 }
 
 function doLogout() {
-  localStorage.removeItem('wl_token'); localStorage.removeItem('wl_uid');
+  localStorage.removeItem('wl_token');
+  localStorage.removeItem('wl_refresh');
+  localStorage.removeItem('wl_uid');
   window.location.href='login.html';
 }
 
