@@ -1967,7 +1967,7 @@ async function loadPlatformSettings(){
   }catch(e){ console.warn('loadPlatformSettings error:', e); }
 }
 
-async async function savePlatformSettings(){
+async function savePlatformSettings(){
   const price    = document.getElementById('subPrice')?.value?.trim();
   const planId   = document.getElementById('paypalPlanId')?.value?.trim();
   const freeLimit= document.getElementById('freeVendorLimit')?.value?.trim();

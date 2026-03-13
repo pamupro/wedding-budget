@@ -499,7 +499,7 @@
 <div id="drag-ghost"></div>
 
 <!-- Custom Confirm Modal -->
-<div class="mbg" id="confirmModal" onclick="if(event.target===this)confirmResolve(false)">
+<div class="mbg" id="confirmModal" class="modal-overlay" onclick="if(event.target===this)confirmResolve(false)">
   <div class="mbox" style="max-width:340px">
     <div class="mhead">
       <span class="mtitle" id="confirmTitle">Confirm</span>
@@ -516,7 +516,7 @@
 </div>
 
 <!-- New Table Setup Modal -->
-<div class="mbg" id="newTableModal" onclick="if(event.target===this)closeNewTableModal()">
+<div class="mbg" id="newTableModal" class="modal-overlay" onclick="if(event.target===this)closeNewTableModal()">
   <div class="mbox" style="max-width:400px">
     <div class="mhead">
       <span class="mtitle">New Table</span>
@@ -569,7 +569,7 @@
 </div>
 
 <!-- Edit Table Modal -->
-<div class="mbg" id="editModal" onclick="if(event.target===this)closeModal()">
+<div class="mbg" id="editModal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div class="mbox">
     <div class="mhead">
       <span class="mtitle">Edit Table</span>
@@ -627,7 +627,7 @@
 </div>
 
 <!-- Arrangements Modal -->
-<div class="mbg" id="arrModal" onclick="if(event.target===this)$('arrModal').classList.remove('open')">
+<div class="mbg" id="arrModal" class="modal-overlay" onclick="if(event.target===this)$('arrModal').classList.remove('open')">
   <div class="mbox" style="max-width:560px">
     <div class="mhead">
       <span class="mtitle">Arrangement Templates</span>
