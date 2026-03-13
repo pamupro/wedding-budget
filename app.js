@@ -80,15 +80,19 @@ async function init() {
   showLoadingState(true);
 
   // Validate / refresh token before any DB calls
+  // NOTE: getValidToken will try refresh if expired; if that fails it 
+  // returns the existing token and lets the API calls handle 401s.
   try {
-    accessToken = await DB.getValidToken(accessToken);
-    if (!accessToken) { _dbg('Token invalid, no refresh → login', false); return; }
+    const validToken = await DB.getValidToken(accessToken);
+    if (!validToken) { _dbg('No token returned → login', false); return; }
+    accessToken = validToken;
     localStorage.setItem('wl_token', accessToken);
-    _dbg('Token valid ✓', true);
+    _dbg('Token ready ✓', true);
   } catch(e) {
     _dbg('Token error: ' + e.message, false);
-    window.location.href = 'login.html';
-    return;
+    console.error('[WL] getValidToken threw:', e);
+    // Don't redirect on error - try proceeding, API will handle 401
+    _dbg('Continuing despite token error…', null);
   }
 
   renderIconSelector();
