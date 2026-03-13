@@ -1226,16 +1226,14 @@ async function dbUpsertSetting(userId, key, value) {
 // ─── LOGIN ────────────────────────────────────────
 function adminLogin() {
   const pw = document.getElementById('adminPassword').value;
-  // Always use DEFAULT_PW - ignore any stale localStorage value
-  if (pw === DEFAULT_PW) {
-    localStorage.setItem('wl_admin_pw', DEFAULT_PW);
+  const stored = localStorage.getItem('wl_admin_pw') || DEFAULT_PW;
+  if (pw === stored) {
     document.getElementById('loginGate').style.display='none';
     document.getElementById('adminApp').style.display='block';
     document.getElementById('mobileTopbar').style.display='flex';
     loadAllData();
   } else {
     document.getElementById('loginError').style.display='block';
-    document.getElementById('loginError').textContent='⚠ Incorrect password. Use: admin123';
   }
 }
 function adminLogout() {
