@@ -232,7 +232,7 @@ async function loadVendors() {
 async function loadPayments() {
   const dataUserId2 = getDataUserId();
   payments=await DB.query(`payments?user_id=eq.${dataUserId2}&order=payment_date.asc`,accessToken);
-  renderVendors(); updateStats(); renderNotifications();
+  renderVendors(); updateStats(); renderNotifications(); renderTimeline();
 }
 
 async function loadTasks() {
@@ -413,7 +413,7 @@ function renderVendors() {
     const isFullyPaid=v.total_cost>0&&totalPaid>=v.total_cost;
     const secondLabel=isFullyPaid?'Paid':'Remaining / Due';
     const secondValue=isFullyPaid?totalPaid:remaining;
-    const secondClass=isFullyPaid?'green':'red';
+    const secondClass=isFullyPaid?'ok':'warn';
     const gbpSecond=fmtGBP(secondValue);
     const gbpTotal=fmtGBP(v.total_cost||0);
 
@@ -1900,7 +1900,7 @@ async function loadGalleryPhotos() {
   try {
     const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
     const uid = localStorage.getItem('wl_uid');
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=gallery_photos`, {
+    const r = await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=gallery_photos`, {
       headers: DB._h(tok)
     });
     const d = await r.json();
@@ -1960,7 +1960,7 @@ async function uploadGalleryPhotos(input) {
       const ext  = file.name.split('.').pop().toLowerCase();
       const path = `${uid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      const r = await fetch(`${SUPABASE_URL}/storage/v1/object/wedding-photos/${path}`, {
+      const r = await fetch(`${DB.SUPABASE_URL}/storage/v1/object/wedding-photos/${path}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${tok}`,
@@ -1971,7 +1971,7 @@ async function uploadGalleryPhotos(input) {
       });
 
       if(r.ok) {
-        const url = `${SUPABASE_URL}/storage/v1/object/public/wedding-photos/${path}`;
+        const url = `${DB.SUPABASE_URL}/storage/v1/object/public/wedding-photos/${path}`;
         galleryPhotos.push({ url, path });
         done++;
         if(bar) bar.style.width = (done / toUpload.length * 100) + '%';
@@ -2020,7 +2020,7 @@ async function deleteGalleryPhoto(idx) {
   if(!p) return;
   try {
     const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
-    await fetch(`${SUPABASE_URL}/storage/v1/object/wedding-photos/${p.path}`, {
+    await fetch(`${DB.SUPABASE_URL}/storage/v1/object/wedding-photos/${p.path}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${tok}` }
     });
@@ -2036,7 +2036,7 @@ async function saveGalleryPhotos() {
   try {
     const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
     const uid = localStorage.getItem('wl_uid');
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}`, {
+    const r = await fetch(`${DB.SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}`, {
       method: 'PATCH',
       headers: { ...DB._h(tok), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({ gallery_photos: galleryPhotos })
