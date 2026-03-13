@@ -60,9 +60,6 @@ let weddingDate=new Date('2027-02-11T09:00:00');
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
-  const _dbg = typeof dbg === 'function' ? dbg : ()=>{};
-  _dbg('init() started');
-  // Check for referral code in URL (for new signups)
   const urlRef = new URLSearchParams(window.location.search).get('ref');
   if(urlRef) localStorage.setItem('wl_ref', urlRef);
 
@@ -70,29 +67,19 @@ async function init() {
   accessToken = localStorage.getItem('wl_token');
 
   if (!userId || !accessToken) {
-    _dbg('No credentials → redirecting to login', false);
     window.location.href = 'login.html';
     return;
   }
-  _dbg('Credentials found, validating token…', true);
 
-  // Show loading state
   showLoadingState(true);
 
-  // Validate / refresh token before any DB calls
-  // NOTE: getValidToken will try refresh if expired; if that fails it 
-  // returns the existing token and lets the API calls handle 401s.
   try {
-    const validToken = await DB.getValidToken(accessToken);
-    if (!validToken) { _dbg('No token returned → login', false); return; }
-    accessToken = validToken;
+    accessToken = await DB.getValidToken(accessToken);
+    if (!accessToken) return;
     localStorage.setItem('wl_token', accessToken);
-    _dbg('Token ready ✓', true);
   } catch(e) {
-    _dbg('Token error: ' + e.message, false);
-    console.error('[WL] getValidToken threw:', e);
-    // Don't redirect on error - try proceeding, API will handle 401
-    _dbg('Continuing despite token error…', null);
+    window.location.href = 'login.html';
+    return;
   }
 
   renderIconSelector();
@@ -101,9 +88,7 @@ async function init() {
   loadPlatformSettings();
 
   try {
-    _dbg('Loading profile…');
     await loadProfile();
-    _dbg('Profile loaded ✓', true);
     await loadPartnerData();
     loadReferralCode();
     updateWeddingPageUrl();
@@ -112,12 +97,9 @@ async function init() {
       const n1 = profile?.name1||'', n2 = profile?.name2||'';
       mnEl.textContent = (n1||n2) ? n1+(n2?' & '+n2:'') : 'WeddingLedger';
     }
-    _dbg('Loading vendors/payments/tasks…');
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
-    _dbg('All data loaded ✓', true);
     fetchLiveRates();
   } catch(e) {
-    _dbg('DATA ERROR: ' + e.message, false);
     console.error('Init error:', e);
     showLoadingState(false);
     const msg = e.message || '';
@@ -125,7 +107,6 @@ async function init() {
       doLogout();
       return;
     }
-    // Show visible error banner with retry
     const hero = document.getElementById('coupleHero');
     if (hero) {
       hero.innerHTML = `<div style="text-align:center;padding:32px 24px;background:#fff8f0;border:1px solid #f5c0a0;margin:16px;border-radius:12px">
@@ -159,10 +140,7 @@ function doLogout() {
 
 // ─── PROFILE ─────────────────────────────────────────────────────────────────
 async function loadProfile() {
-  const _dbg = typeof dbg==='function' ? dbg : ()=>{};
-  _dbg('loadProfile: querying profiles for uid='+userId.slice(0,8)+'…');
   const rows=await DB.query(`profiles?user_id=eq.${userId}&select=*`,accessToken);
-  _dbg('loadProfile: got '+rows.length+' rows', rows.length>0);
   if (rows&&rows.length) {
     profile=rows[0]; isPro=profile.is_pro===true;
     renderHero();
