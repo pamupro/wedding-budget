@@ -1,3 +1,13 @@
+// Global error handler - catches any JS crash and shows it visibly
+window.onerror = function(msg, src, line, col, err) {
+  console.error('[WL CRASH]', msg, 'at', src, line+':'+col);
+  const b = document.createElement('div');
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c04040;color:white;padding:12px 16px;font-family:monospace;font-size:12px;z-index:99999;word-break:break-all';
+  b.textContent = '⚠️ JS Error: ' + msg + ' (line ' + line + ')';
+  document.body && document.body.prepend(b);
+  return false;
+};
+
 /**
  * app.js — WeddingLedger v3.1
  * Equal-height vendor cards, collapsible payment history,

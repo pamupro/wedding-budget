@@ -1183,6 +1183,14 @@ textarea.modal-input{resize:vertical;min-height:80px}
 // Nav scroll effect
 window.addEventListener('scroll',()=>document.getElementById('mainTopbar')?.classList.toggle('scrolled',scrollY>30));
 
+// Fallback logout - works even if app.js fails to load
+function doLogout(){
+  localStorage.removeItem('wl_token');
+  localStorage.removeItem('wl_refresh');
+  localStorage.removeItem('wl_uid');
+  window.location.href='login.html';
+}
+
 // Mobile drawer
 function toggleDashDrawer(){
   const d=document.getElementById('dashDrawer');
