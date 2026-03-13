@@ -5,7 +5,7 @@
  */
 
 const ICONS = ['💒','🌸','📸','🎥','💐','🎵','💎','💄','💇','👗','🥂','🍰','🚗','✈️','🏨','📋','📝','💌','🎪','🎭','🕯️','🌹','👰','🤵'];
-const FREE_VENDOR_LIMIT = 5;
+let FREE_VENDOR_LIMIT = 5; // overridden by admin settings after loadPlatformSettings()
 
 const DEFAULT_VENDORS = [
   {category:'Wedding Planner',icon:'📋'},{category:'Hotel / Venue',icon:'🏨'},
@@ -60,6 +60,7 @@ let weddingDate=new Date('2027-02-11T09:00:00');
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
+  // Check for referral code in URL (for new signups)
   const urlRef = new URLSearchParams(window.location.search).get('ref');
   if(urlRef) localStorage.setItem('wl_ref', urlRef);
 
@@ -71,11 +72,13 @@ async function init() {
     return;
   }
 
+  // Show loading state
   showLoadingState(true);
 
+  // Validate / refresh token before any DB calls
   try {
     accessToken = await DB.getValidToken(accessToken);
-    if (!accessToken) return;
+    if (!accessToken) return; // redirected to login
     localStorage.setItem('wl_token', accessToken);
   } catch(e) {
     window.location.href = 'login.html';
@@ -85,20 +88,23 @@ async function init() {
   renderIconSelector();
   startCountdown();
   initCurrencyUI();
+  // Load platform-wide settings (subscription price, plan ID) from admin settings
   loadPlatformSettings();
 
   try {
     await loadProfile();
     await loadPartnerData();
-    loadReferralCode();
-    updateWeddingPageUrl();
-    const mnEl = document.getElementById('mobileNavNames');
-    if(mnEl) {
-      const n1 = profile?.name1||'', n2 = profile?.name2||'';
-      mnEl.textContent = (n1||n2) ? n1+(n2?' & '+n2:'') : 'WeddingLedger';
-    }
+  loadReferralCode();
+  updateWeddingPageUrl();
+  // Update couple name in mobile nav drawer
+  const mnEl = document.getElementById('mobileNavNames');
+  if(mnEl) {
+    const n1 = profile?.name1||'', n2 = profile?.name2||'';
+    mnEl.textContent = (n1||n2) ? n1+(n2?' & '+n2:'') : 'WeddingLedger';
+  }
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
-    fetchLiveRates();
+    fetchLiveRates(); // async - updates rates in background
+  loadPlatformSettings(); // load subscription price from admin settings
   } catch(e) {
     console.error('Init error:', e);
     showLoadingState(false);
@@ -107,6 +113,7 @@ async function init() {
       doLogout();
       return;
     }
+    // Show visible error banner with retry
     const hero = document.getElementById('coupleHero');
     if (hero) {
       hero.innerHTML = `<div style="text-align:center;padding:32px 24px;background:#fff8f0;border:1px solid #f5c0a0;margin:16px;border-radius:12px">
@@ -134,9 +141,7 @@ function showLoadingState(on) {
 }
 
 function doLogout() {
-  localStorage.removeItem('wl_token');
-  localStorage.removeItem('wl_refresh');
-  localStorage.removeItem('wl_uid');
+  localStorage.removeItem('wl_token'); localStorage.removeItem('wl_uid');
   window.location.href='login.html';
 }
 
@@ -251,13 +256,15 @@ async function loadTasks() {
 // ─── PLATFORM SETTINGS (admin-configured, loaded for all users) ──────────────
 async function loadPlatformSettings() {
   try {
-    // Platform price is stored in settings table with a known key, no user restriction
-    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id)&limit=10', accessToken);
+    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id,free_vendor_limit)&select=key,value&limit=10', accessToken);
     if(rows) rows.forEach(r => {
-      if(r.key === 'sub_price')       window.WL_SUB_PRICE = r.value;
-      if(r.key === 'paypal_plan_id')  window.WL_PLAN_ID   = r.value;
+      if(r.key === 'sub_price')         window.WL_SUB_PRICE      = r.value;
+      if(r.key === 'paypal_plan_id')    window.WL_PLAN_ID        = r.value;
+      if(r.key === 'free_vendor_limit'){ window.WL_FREE_LIMIT = parseInt(r.value) || 5; FREE_VENDOR_LIMIT = window.WL_FREE_LIMIT; }
     });
-  } catch(e) { /* non-critical */ }
+  } catch(e) { /* non-critical — defaults apply */ }
+  // Load PayPal SDK NOW that we know which intent to use
+  if(typeof window.loadPayPalSDK === 'function') window.loadPayPalSDK();
 }
 
 async function loadSettings() {
@@ -876,7 +883,8 @@ async function activatePro(paymentId, isSubscription=false){
     updateVendorLimitUI();
     renderVendors();
     // Confetti-style celebration
-    showToast('🎉 Welcome to Pro! All features are now unlocked.');
+    const msg = window.WL_PLAN_ID ? '🎉 Subscribed! Welcome to Pro — enjoy unlimited features.' : '🎉 Welcome to Pro! All features are now unlocked.';
+    showToast(msg);
   }catch(e){
     console.error('Activation error:', e);
     showToast('Payment received but activation failed — please contact support.', true);
@@ -1461,7 +1469,7 @@ function renderChart() {
       options: {
         responsive: true,
         plugins: {
-          legend: { position: 'bottom', labels: { font:{family:'Instrument Sans',size:12}, padding:16, color:'#5C4A2A' }},
+          legend: { position: 'bottom', labels: { font:{family:'Jost',size:12}, padding:16, color:'#5C4A2A' }},
           tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${sym}${ctx.parsed.toLocaleString()}` }}
         },
         cutout: '62%'
@@ -1487,9 +1495,9 @@ function renderChart() {
           tooltip: { callbacks: { label: ctx => ` ${sym}${ctx.parsed.y.toLocaleString()}` }}
         },
         scales: {
-          y: { ticks: { callback: v => sym + v.toLocaleString(), font:{family:'Instrument Sans'} },
+          y: { ticks: { callback: v => sym + v.toLocaleString(), font:{family:'Jost'} },
                grid: { color: 'rgba(0,0,0,0.05)' }},
-          x: { ticks: { font:{family:'Instrument Sans',size:11} }, grid: { display:false }}
+          x: { ticks: { font:{family:'Jost',size:11} }, grid: { display:false }}
         }
       }
     });

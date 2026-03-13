@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <title>Day-of Timeline — WeddingLedger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
     .timeline-wrap{max-width:780px;margin:0 auto;padding:24px}
     .tl-event{display:flex;gap:0;margin-bottom:0;position:relative}
     .tl-time-col{width:80px;min-width:80px;text-align:right;padding-right:16px;padding-top:4px}
-    .tl-time{font-size:13px;font-weight:600;color:var(--charcoal);font-family:'Cormorant Garamond',serif;font-size:16px}
+    .tl-time{font-size:13px;font-weight:600;color:var(--ink);font-family:'Fraunces',serif;font-size:16px}
     .tl-line-col{width:32px;min-width:32px;display:flex;flex-direction:column;align-items:center}
     .tl-dot{width:14px;height:14px;border-radius:50%;border:3px solid;background:white;flex-shrink:0;margin-top:6px;z-index:1}
     .tl-line{width:2px;background:var(--border);flex:1;margin-top:2px}
@@ -19,7 +19,7 @@
     .tl-card{background:white;border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);
       border:1.5px solid var(--border);transition:.2s;cursor:pointer}
     .tl-card:hover{border-color:var(--gold);box-shadow:0 4px 16px rgba(201,168,76,.15)}
-    .tl-card-title{font-size:15px;font-weight:600;color:var(--charcoal);margin-bottom:4px}
+    .tl-card-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px}
     .tl-card-meta{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
     .cat-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;
       padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em}
@@ -48,7 +48,7 @@
   </div>
 </nav>
 
-<main style="padding-top:64px;min-height:100vh;background:var(--cream)">
+<main style="padding-top:64px;min-height:100vh;background:var(--bg)">
   <div class="timeline-wrap">
     <!-- Public view banner -->
     <div id="publicBanner" style="display:none" class="public-banner">
@@ -61,14 +61,14 @@
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
       <div>
-        <h1 style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--charcoal);margin-bottom:4px">
+        <h1 style="font-family:'Fraunces',serif;font-size:28px;color:var(--ink);margin-bottom:4px">
           📅 Day-of Timeline
         </h1>
         <div style="font-size:13px;color:var(--muted)" id="weddingDateLabel"></div>
       </div>
       <div style="display:flex;gap:8px">
         <select id="catFilter" onchange="renderTimeline()" style="padding:8px 12px;border:1.5px solid var(--border);
-          border-radius:99px;font-size:12px;font-family:'Jost',sans-serif;background:white;outline:none">
+          border-radius:99px;font-size:12px;font-family:'Instrument Sans',sans-serif;background:white;outline:none">
           <option value="">All</option>
           <option value="ceremony">Ceremony</option>
           <option value="reception">Reception</option>
@@ -83,7 +83,7 @@
 
     <div id="emptyTimeline" style="display:none;text-align:center;padding:60px 20px">
       <div style="font-size:48px;margin-bottom:12px">📅</div>
-      <div style="font-size:16px;font-weight:600;color:var(--charcoal);margin-bottom:8px">No events yet</div>
+      <div style="font-size:16px;font-weight:600;color:var(--ink);margin-bottom:8px">No events yet</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:20px">Build your perfect wedding day schedule</div>
       <button onclick="loadDefaults()" class="btn-secondary">✨ Load default schedule</button>
     </div>
@@ -140,7 +140,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
-<script src="db.js"></script>
+
 <script>
 const SUPABASE_URL = 'https://bqggtyguhedlyfffjkkw.supabase.co';
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
@@ -352,5 +352,7 @@ function showToast(msg,err=false){const t=document.getElementById('toast');t.tex
 
 init();
 </script>
+<script src="db.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

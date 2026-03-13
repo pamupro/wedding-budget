@@ -91,7 +91,7 @@
   </main>
 </div>
 
-<script src="db.js"></script>
+
 <script>
 async function loadSharedData() {
   const params = new URLSearchParams(window.location.search);
@@ -200,5 +200,7 @@ function formatDate(d){if(!d)return '';const dt=new Date(d+'T00:00:00');return d
 
 loadSharedData();
 </script>
+<script src="db.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

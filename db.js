@@ -9,6 +9,7 @@ const DB = {
   SUPABASE_URL,
   ANON_KEY: SUPABASE_ANON_KEY,
 
+  // ── TOKEN MANAGEMENT ───────────────────────────────────────────────────────
   getToken() {
     return localStorage.getItem('wl_token') || '';
   },
@@ -17,13 +18,14 @@ const DB = {
     if (!token) return true;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+      // Expire 60s early to avoid edge cases
       return (payload.exp * 1000) < (Date.now() + 60000);
-    } catch(e) { return false; }
+    } catch(e) { return true; }
   },
 
   async refreshToken() {
     const refreshToken = localStorage.getItem('wl_refresh');
-    if (!refreshToken || refreshToken === '' || refreshToken === 'undefined') return null;
+    if (!refreshToken) return null;
     try {
       const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
         method: 'POST',
@@ -34,8 +36,12 @@ const DB = {
       const d = await r.json();
       if (d.access_token) {
         localStorage.setItem('wl_token', d.access_token);
-        if (d.refresh_token) localStorage.setItem('wl_refresh', d.refresh_token);
-        if (typeof accessToken !== 'undefined') accessToken = d.access_token;
+        localStorage.setItem('wl_refresh', d.refresh_token || refreshToken);
+        // Update accessToken in app if available
+        if (typeof accessToken !== 'undefined') {
+          // eslint-disable-next-line no-global-assign
+          accessToken = d.access_token;
+        }
         return d.access_token;
       }
     } catch(e) { console.error('Token refresh failed:', e); }
@@ -43,10 +49,11 @@ const DB = {
   },
 
   async getValidToken(token) {
+    // If passed token is valid, use it; otherwise try refresh
     if (token && !this.isTokenExpired(token)) return token;
     const refreshed = await this.refreshToken();
     if (refreshed) return refreshed;
-    // Could not refresh — redirect to login
+    // Refresh failed — redirect to login
     localStorage.removeItem('wl_token');
     localStorage.removeItem('wl_refresh');
     localStorage.removeItem('wl_uid');
@@ -54,6 +61,7 @@ const DB = {
     return null;
   },
 
+  // ── HEADERS ────────────────────────────────────────────────────────────────
   _h(token) {
     return {
       'Content-Type': 'application/json',
@@ -63,18 +71,20 @@ const DB = {
     };
   },
 
+  // ── DB METHODS ─────────────────────────────────────────────────────────────
   async query(path, token) {
     const t = await this.getValidToken(token);
     if (!t) return [];
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: this._h(t) });
     if (r.status === 401) {
+      // Token rejected — force re-login
       const refreshed = await this.refreshToken();
       if (!refreshed) { window.location.href = 'login.html'; return []; }
       const r2 = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: this._h(refreshed) });
       if (!r2.ok) { const e = await r2.json(); throw new Error(e.message || JSON.stringify(e)); }
       return r2.json();
     }
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || 'HTTP '+r.status); }
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message || JSON.stringify(e)); }
     return r.json();
   },
 
@@ -84,16 +94,21 @@ const DB = {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
       method: 'POST', headers: this._h(t), body: JSON.stringify(data)
     });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || 'HTTP '+r.status); }
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message || JSON.stringify(e)); }
     return r.json();
   },
 
   async patch(tableOrPath, idOrData, dataOrToken, token) {
+    // Supports two call styles:
+    // patch('table', id, data, token)  — new style
+    // patch('table?id=eq.X', data, token) — old style (query string)
     let path, data, tok;
-    if (token !== undefined) {
+    if(token !== undefined){
+      // new style: (table, id, data, token)
       path = `${tableOrPath}?id=eq.${idOrData}`;
       data = dataOrToken; tok = token;
     } else {
+      // old style: (querypath, data, token)
       path = tableOrPath; data = idOrData; tok = dataOrToken;
     }
     const t = await this.getValidToken(tok);
@@ -101,13 +116,14 @@ const DB = {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       method: 'PATCH', headers: this._h(t), body: JSON.stringify(data)
     });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || 'HTTP '+r.status); }
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message || JSON.stringify(e)); }
     return r.json();
   },
 
   async del(tableOrPath, idOrToken, token) {
+    // Supports: del('table', id, token) or del('table?id=eq.X', token)
     let path, tok;
-    if (token !== undefined) {
+    if(token !== undefined){
       path = `${tableOrPath}?id=eq.${idOrToken}`; tok = token;
     } else {
       path = tableOrPath; tok = idOrToken;
@@ -117,7 +133,7 @@ const DB = {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
       method: 'DELETE', headers: this._h(t)
     });
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.message || 'HTTP '+r.status); }
+    if (!r.ok) { const e = await r.json(); throw new Error(e.message || JSON.stringify(e)); }
     return true;
   },
 
@@ -127,7 +143,7 @@ const DB = {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?user_id=eq.${userId}&key=eq.${key}`, {
       method: 'PATCH', headers: this._h(t), body: JSON.stringify({ value: String(value) })
     });
-    const rows = await r.json().catch(()=>[]);
+    const rows = await r.json();
     if (!Array.isArray(rows) || !rows.length) {
       await this.post('settings', { user_id: userId, key, value: String(value) }, t);
     }
