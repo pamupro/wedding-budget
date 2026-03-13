@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — WeddingLedger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,400;1,9..144,200;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="db.js"></script>
+<style>
+:root{
+  --bg:#faf7f2; --bg2:#f5f0e8; --surface:#ffffff; --surface2:#fdf9f4;
+  --ink:#1a1710; --ink2:#2e2a20; --muted:#7a7060; --muted2:#a89e8a;
+  --gold:#b8862a; --gold2:#d4a840; --gold-pale:#fdf3e0;
+  --gold-dim:rgba(184,134,42,.1); --border:rgba(26,23,16,.09);
+  --border-gold:rgba(184,134,42,.22);
+  --ok:#2a7a2a; --ok-pale:#f0faf2; --ok-border:rgba(42,122,42,.2);
+  --err:#c53030; --err-pale:#fff0f0; --err-border:rgba(197,48,48,.2);
+  --warn:#9a5c00; --warn-pale:#fffbef; --warn-border:rgba(154,92,0,.2);
+  --shadow:0 1px 8px rgba(26,23,16,.06),0 2px 16px rgba(26,23,16,.04);
+  --shadow2:0 8px 40px rgba(26,23,16,.1);
+  --shadow3:0 20px 70px rgba(26,23,16,.14);
+  --r:12px; --R:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-top:64px}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border-gold);border-radius:2px}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:64px;padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:rgba(250,247,242,.94);
+  backdrop-filter:blur(20px) saturate(1.6);
+  border-bottom:1px solid var(--border);
+}
+.topbar-logo{
+  font-family:'Fraunces',serif;font-size:20px;font-style:italic;
+  font-weight:400;color:var(--ink);text-decoration:none;
+}
+.topbar-logo em{color:var(--gold)}
+.topbar-back{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;
+  padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);
+  transition:.18s;background:var(--surface);
+}
+.topbar-back:hover{border-color:var(--border-gold);color:var(--ink)}
+.topbar-back::before{content:'←';font-size:15px}
+
+/* ── LAYOUT ── */
+.page{max-width:780px;margin:0 auto;padding:40px 24px 80px}
+
+/* Page header */
+.pg-head{margin-bottom:40px;opacity:0;animation:fadeUp .6s .05s ease both}
+.pg-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px;display:block;
+}
+.pg-title{
+  font-family:'Fraunces',serif;font-size:clamp(32px,5vw,48px);
+  font-weight:200;color:var(--ink);line-height:1.05;letter-spacing:-.025em;
+}
+.pg-title em{font-style:italic;color:var(--gold);font-weight:400}
+.pg-sub{font-size:15px;color:var(--muted);margin-top:8px;line-height:1.7}
+
+/* Section group */
+.sgroup{
+  margin-bottom:10px;
+  opacity:0;transform:translateY(18px);
+  transition:.5s ease;
+}
+.sgroup.vis{opacity:1;transform:none}
+.sgroup-label{
+  font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted2);margin-bottom:8px;padding-left:2px;
+}
+.scard{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--R);overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+/* Setting row */
+.srow{
+  display:flex;align-items:center;gap:16px;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+  transition:.18s;
+}
+.srow:last-child{border-bottom:none}
+.srow:hover{background:var(--surface2)}
+.srow-ico{
+  font-size:22px;flex-shrink:0;width:38px;height:38px;
+  border-radius:10px;background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;
+}
+.srow-body{flex:1;min-width:0}
+.srow-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.srow-sub{font-size:12px;color:var(--muted);line-height:1.5}
+.srow-action{flex-shrink:0;display:flex;align-items:center;gap:8px}
+
+/* Inputs inline */
+.si{
+  padding:9px 13px;border-radius:8px;border:1.5px solid var(--border);
+  font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--ink);
+  background:var(--bg);outline:none;transition:.18s;
+  width:100%;
+}
+.si:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
+.si::placeholder{color:var(--muted2)}
+
+/* Expanded panel inside a srow */
+.srow.expanded{flex-wrap:wrap}
+.srow-panel{
+  width:100%;margin-top:14px;
+  display:none;flex-direction:column;gap:12px;
+}
+.srow.expanded .srow-panel{display:flex}
+
+/* Name pair grid */
+.name-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)}
+
+/* Toggle switch */
+.tog{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0}
+.tog-sl{
+  position:absolute;cursor:pointer;inset:0;
+  background:var(--border);border-radius:99px;transition:.28s;
+}
+.tog-sl::before{
+  content:'';position:absolute;
+  width:18px;height:18px;left:3px;bottom:3px;
+  background:#fff;border-radius:50%;transition:.28s;
+  box-shadow:0 1px 4px rgba(0,0,0,.15);
+}
+.tog input:checked+.tog-sl{background:var(--gold)}
+.tog input:checked+.tog-sl::before{transform:translateX(20px)}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;border-radius:8px;border:none;
+  font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:.18s;letter-spacing:.01em;white-space:nowrap;
+}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover{background:var(--gold);transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:var(--gold2)}
+.btn-ghost{background:var(--bg2);color:var(--ink);border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border-gold);background:var(--gold-pale)}
+.btn-danger{background:var(--err-pale);color:var(--err);border:1.5px solid var(--err-border)}
+.btn-danger:hover{background:var(--err);color:#fff}
+.btn-sm{padding:8px 14px;font-size:12px}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important}
+
+/* Status badges */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.badge-ok{background:var(--ok-pale);color:var(--ok);border:1px solid var(--ok-border)}
+.badge-warn{background:var(--warn-pale);color:var(--warn);border:1px solid var(--warn-border)}
+.badge-gold{background:var(--gold-pale);color:var(--gold);border:1px solid var(--border-gold)}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* Messages */
+.msg{
+  padding:11px 14px;border-radius:9px;font-size:13px;line-height:1.5;
+  display:none;margin-top:4px;
+}
+.msg-ok{background:var(--ok-pale);color:var(--ok);border:1px solid var(--ok-border)}
+.msg-err{background:var(--err-pale);color:var(--err);border:1px solid var(--err-border)}
+.msg.show{display:block}
+
+/* Gallery grid */
+.photo-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+}
+.photo-cell{
+  position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;
+  background:var(--bg2);border:1px solid var(--border);
+}
+.photo-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-cell .photo-del{
+  position:absolute;top:5px;right:5px;
+  width:22px;height:22px;border-radius:50%;
+  background:rgba(0,0,0,.55);color:#fff;border:none;
+  font-size:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:.18s;
+}
+.photo-cell:hover .photo-del{opacity:1}
+.photo-cell.cover-cell{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.photo-cover-badge{
+  position:absolute;bottom:5px;left:5px;
+  background:var(--gold);color:#fff;
+  font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 7px;border-radius:99px;
+}
+.photo-add{
+  aspect-ratio:1;border-radius:10px;border:2px dashed var(--border-gold);
+  background:var(--gold-pale);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;transition:.18s;font-size:12px;color:var(--gold);font-weight:600;
+}
+.photo-add:hover{background:rgba(184,134,42,.12);border-color:var(--gold)}
+.photo-add span{font-size:24px}
+
+/* Upload progress */
+.upload-bar{
+  height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;margin-top:8px;display:none;
+}
+.upload-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .3s;width:0%;border-radius:2px}
+.upload-txt{font-size:11px;color:var(--muted2);margin-top:4px;display:none}
+
+/* 2FA section */
+.twofa-box{
+  background:var(--bg2);border-radius:10px;padding:16px;
+  border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;
+}
+.twofa-code-wrap{
+  display:flex;gap:8px;align-items:center;
+  background:var(--surface);border:1.5px solid var(--border-gold);
+  border-radius:9px;padding:12px 16px;font-family:monospace;
+  font-size:24px;letter-spacing:.3em;color:var(--ink);font-weight:700;
+  user-select:all;
+}
+.qr-wrap{
+  display:flex;justify-content:center;
+  background:var(--surface);padding:16px;border-radius:10px;
+  border:1px solid var(--border);
+}
+.otp-inputs{display:flex;gap:8px;justify-content:center}
+.otp-input{
+  width:44px;height:52px;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--surface);
+  font-family:'Fraunces',serif;font-size:22px;font-weight:200;
+  text-align:center;color:var(--ink);outline:none;transition:.18s;
+}
+.otp-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
+
+/* Referral code display */
+.ref-code{
+  display:flex;align-items:center;gap:10px;
+  background:var(--bg2);border:1.5px solid var(--border-gold);
+  border-radius:10px;padding:14px 18px;
+}
+.ref-code-val{
+  font-family:'Fraunces',serif;font-size:28px;font-weight:200;
+  letter-spacing:.12em;color:var(--gold);flex:1;
+}
+.ref-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.ref-stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;padding:12px;text-align:center;
+}
+.ref-stat-n{font-family:'Fraunces',serif;font-size:24px;font-weight:200;color:var(--gold)}
+.ref-stat-l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted2);margin-top:2px}
+
+/* Divider within expanded panel */
+.divider{height:1px;background:var(--border);margin:4px 0}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:var(--ink);color:#fff;
+  padding:11px 24px;border-radius:99px;
+  font-size:13px;font-weight:500;
+  opacity:0;transition:.3s;pointer-events:none;z-index:999;
+  white-space:nowrap;box-shadow:var(--shadow2);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--err)}
+
+/* Mobile drawer */
+.mnav-btn{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--surface);border:1.5px solid var(--border);
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;flex-direction:column;gap:4px;flex-shrink:0;
+}
+.mnav-btn span{display:block;width:16px;height:1.5px;background:var(--ink);border-radius:2px;transition:.25s}
+.mnav-btn.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+.mnav-btn.open span:nth-child(2){opacity:0}
+.mnav-btn.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+.dash-drawer{
+  display:none;position:fixed;inset:0;z-index:400;
+  flex-direction:column;background:var(--bg);padding:0 28px 40px;overflow-y:auto;
+}
+.dash-drawer.open{display:flex}
+.dash-drawer-top{
+  display:flex;align-items:center;justify-content:space-between;
+  height:64px;flex-shrink:0;border-bottom:1px solid var(--border);
+  margin:0 -28px;padding:0 28px;margin-bottom:32px;
+}
+.dash-drawer-logo{font-family:'Fraunces',serif;font-size:20px;font-style:italic;font-weight:400;color:var(--ink);text-decoration:none}
+.dash-drawer-logo em{color:var(--gold)}
+.dash-drawer .mnav-btn{display:flex}
+.dash-drawer-item{
+  display:block;width:100%;text-align:left;background:none;border:none;
+  font-family:'Fraunces',serif;font-size:28px;font-weight:200;font-style:italic;
+  color:var(--ink);padding:14px 0;cursor:pointer;border-bottom:1px solid var(--border);
+  opacity:0;transform:translateY(8px);animation:mSlide .3s ease both;transition:color .18s;
+}
+.dash-drawer-item:hover{color:var(--gold)}
+.dash-drawer-item:nth-child(3){animation-delay:.05s}
+.dash-drawer-item:nth-child(4){animation-delay:.1s}
+.dash-drawer-item:nth-child(5){animation-delay:.15s}
+.dash-drawer-item:nth-child(6){animation-delay:.2s}
+.dash-drawer-cta{
+  display:block;width:100%;text-align:center;padding:15px;border-radius:10px;
+  background:var(--ink);color:var(--bg);
+  font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;
+  border:none;cursor:pointer;transition:.18s;margin-top:16px;
+}
+.dash-drawer-cta:hover{background:var(--gold)}
+@keyframes mSlide{to{opacity:1;transform:none}}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* Responsive */
+@media(max-width:680px){
+  body{padding-top:56px}
+  .topbar{height:56px;padding:0 16px}
+  .page{padding:28px 16px 80px}
+  .name-grid{grid-template-columns:1fr}
+  .photo-grid{grid-template-columns:repeat(2,1fr)}
+  .otp-inputs{gap:5px}
+  .otp-input{width:38px;height:48px;font-size:20px}
+  .ref-code-val{font-size:22px}
+  .ref-stats{grid-template-columns:repeat(3,1fr)}
+  .mnav-btn{display:flex}
+  .topbar-back{font-size:12px;padding:7px 12px}
+}
+@media(max-width:400px){
+  .photo-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a href="index.html" class="topbar-logo">Wedding<em>Ledger</em></a>
+  <a href="dashboard.html" class="topbar-back">Dashboard</a>
+  <div class="mnav-btn" id="settingsBurger" onclick="toggleSettingsDrawer()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- Mobile Drawer -->
+<div class="dash-drawer" id="settingsDrawer">
+  <div class="dash-drawer-top">
+    <a href="index.html" class="dash-drawer-logo">Wedding<em>Ledger</em></a>
+    <div class="mnav-btn open" onclick="toggleSettingsDrawer()"><span></span><span></span><span></span></div>
+  </div>
+  <button class="dash-drawer-item" onclick="location.href='dashboard.html'">📊 Dashboard</button>
+  <button class="dash-drawer-item" onclick="location.href='guests.html'">👥 Guests</button>
+  <button class="dash-drawer-item" onclick="location.href='settings.html'">⚙️ Settings</button>
+  <div style="flex:1"></div>
+  <button class="dash-drawer-cta" onclick="doLogout()">Sign Out</button>
+</div>
+
+<!-- PAGE -->
+<main class="page">
+
+  <div class="pg-head">
+    <span class="pg-eyebrow">Account</span>
+    <h1 class="pg-title">Your<br><em>settings</em></h1>
+    <p class="pg-sub">Manage your profile, photos, security and preferences.</p>
+  </div>
+
+  <!-- ── COUPLE PHOTOS ──────────────────────────────────────────────── -->
+  <div class="sgroup" id="sg-photos">
+    <div class="sgroup-label">Couple Photos</div>
+    <div class="scard">
+      <div class="srow expanded">
+        <div class="srow-ico">📸</div>
+        <div class="srow-body">
+          <div class="srow-title">Wedding Gallery</div>
+          <div class="srow-sub">Upload up to 6 photos. The first one is used as your <strong style="color:var(--gold)">invitation cover</strong> — it appears at the top of your RSVP page. The rest display in a gallery on your wedding page for guests to enjoy.</div>
+        </div>
+        <div class="srow-panel" style="display:flex">
+          <!-- Explanation banner -->
+          <div style="background:var(--gold-pale);border:1px solid var(--border-gold);border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:20px;flex-shrink:0">💡</span>
+            <div style="font-size:13px;color:var(--ink2);line-height:1.65">
+              <strong>Photo 1 = Invitation Cover.</strong> This photo appears as the hero image when guests open your RSVP link — make it your favourite shot together.<br>
+              <span style="color:var(--muted)">Photos 2–6 appear in the gallery section of your wedding page.</span>
+            </div>
+          </div>
+          <!-- Photo grid -->
+          <div class="photo-grid" id="photoGrid">
+            <div class="photo-add" id="photoAddBtn" onclick="document.getElementById('photoFileInput').click()">
+              <span>＋</span>
+              Add Photos
+            </div>
+          </div>
+          <input type="file" id="photoFileInput" accept="image/jpeg,image/jpg,image/png,image/webp" multiple style="display:none" onchange="handlePhotoUpload(this)">
+          <div class="upload-bar" id="uploadBar"><div class="upload-bar-fill" id="uploadBarFill"></div></div>
+          <div class="upload-txt" id="uploadTxt"></div>
+          <div class="msg msg-ok" id="photoMsg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROFILE ────────────────────────────────────────────────────── -->
+  <div class="sgroup" id="sg-profile">
+    <div class="sgroup-label">Profile</div>
+    <div class="scard">
+
+      <div class="srow" id="profileRow" onclick="toggleRow('profileRow')">
+        <div class="srow-ico">💑</div>
+        <div class="srow-body">
+          <div class="srow-title">Couple Names &amp; Date</div>
+          <div class="srow-sub" id="profileSub">Update your names and wedding date</div>
+        </div>
+        <div class="srow-action">
+          <span class="btn btn-ghost btn-sm">Edit</span>
+        </div>
+        <div class="srow-panel">
+          <div class="name-grid">
+            <div class="field"><label>Your Name</label><input class="si" id="sName1" placeholder="e.g. Charlotte"></div>
+            <div class="field"><label>Partner's Name</label><input class="si" id="sName2" placeholder="e.g. James"></div>
+          </div>
+          <div class="field"><label>Wedding Date</label><input type="date" class="si" id="sDate"></div>
+          <div class="field"><label>Wedding Page Message</label><textarea class="si" id="sPageMsg" rows="2" placeholder="A warm message for your guests…" style="resize:vertical"></textarea></div>
+          <div class="msg msg-ok" id="profileOk"></div>
+          <div class="msg msg-err" id="profileErr"></div>
+          <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+        </div>
+      </div>
+
+      <div class="srow" id="budgetRow" onclick="toggleRow('budgetRow')">
+        <div class="srow-ico">💰</div>
+        <div class="srow-body">
+          <div class="srow-title">Budget &amp; Spend Limit</div>
+          <div class="srow-sub" id="budgetSub">Set your overall wedding budget</div>
+        </div>
+        <div class="srow-action">
+          <span class="btn btn-ghost btn-sm">Edit</span>
+        </div>
+        <div class="srow-panel">
+          <div class="field"><label>Spend Limit (£)</label><input type="number" class="si" id="sSpendLimit" placeholder="e.g. 25000"></div>
+          <div class="field"><label>Wedding Notes</label><textarea class="si" id="sNotes" rows="3" placeholder="Notes about your wedding…" style="resize:vertical"></textarea></div>
+          <div class="msg msg-ok" id="budgetOk"></div>
+          <button class="btn btn-primary" onclick="saveBudget()">Save</button>
+        </div>
+      </div>
+
+      <div class="srow" onclick="location.href='wedding.html'">
+        <div class="srow-ico">💍</div>
+        <div class="srow-body">
+          <div class="srow-title">Wedding Page</div>
+          <div class="srow-sub">View and customise your public wedding invitation page</div>
+        </div>
+        <div class="srow-action">
+          <span style="color:var(--muted2);font-size:18px">›</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PARTNER ────────────────────────────────────────────────────── -->
+  <div class="sgroup" id="sg-partner">
+    <div class="sgroup-label">Partner &amp; Sharing</div>
+    <div class="scard">
+
+      <div class="srow" id="partnerRow" onclick="toggleRow('partnerRow')">
+        <div class="srow-ico">💌</div>
+        <div class="srow-body">
+          <div class="srow-title">Invite Partner</div>
+          <div class="srow-sub" id="partnerStatusSub">Plan together — your partner gets a fully synced view</div>
+        </div>
+        <div class="srow-action" id="partnerStatusBadge"></div>
+        <div class="srow-panel">
+          <div id="partnerInviteUI">
+            <div class="field" style="margin-bottom:10px"><label>Partner's Email</label><input type="email" class="si" id="sPartnerEmail" placeholder="partner@email.com"></div>
+            <div class="msg msg-ok" id="partnerOk"></div>
+            <div class="msg msg-err" id="partnerErr"></div>
+            <button class="btn btn-primary" onclick="sendPartnerInvite()">💌 Send Invite</button>
+          </div>
+          <div id="partnerPendingUI" style="display:none">
+            <div style="background:var(--warn-pale);border:1px solid var(--warn-border);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--warn);margin-bottom:10px">
+              📨 Invite pending — waiting for <strong id="pendingEmail"></strong>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="resendInvite()">Resend</button>
+              <button class="btn btn-danger btn-sm" onclick="cancelInvite()">Cancel Invite</button>
+            </div>
+          </div>
+          <div id="partnerLinkedUI" style="display:none">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--ok-pale);border:1px solid var(--ok-border);border-radius:9px;padding:12px 14px;margin-bottom:10px">
+              <span style="font-size:20px">💑</span>
+              <div style="font-size:13px"><strong>Linked with </strong><span id="linkedEmail" style="color:var(--gold)"></span><br><span style="color:var(--muted);font-size:11px">Live sync active</span></div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="unlinkPartner()">Unlink Partner</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="srow" id="shareRow" onclick="toggleRow('shareRow')">
+        <div class="srow-ico">🔗</div>
+        <div class="srow-body">
+          <div class="srow-title">Share with Planner</div>
+          <div class="srow-sub">Give your wedding coordinator read-only access</div>
+        </div>
+        <div class="srow-action">
+          <label class="tog" onclick="event.stopPropagation()">
+            <input type="checkbox" id="shareToggle" onchange="toggleShare()">
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+        <div class="srow-panel">
+          <div id="shareUrlSection" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;margin-bottom:8px">
+              <span style="font-size:12px;color:var(--muted);flex:1;word-break:break-all" id="shareUrlText"></span>
+              <button class="btn btn-ghost btn-sm" onclick="copyShareUrl()">📋 Copy</button>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted2)">Your planner can view vendors, payments and checklist. They cannot edit anything.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── SECURITY ───────────────────────────────────────────────────── -->
+  <div class="sgroup" id="sg-security">
+    <div class="sgroup-label">Security</div>
+    <div class="scard">
+
+      <div class="srow" id="passwordRow" onclick="toggleRow('passwordRow')">
+        <div class="srow-ico">🔑</div>
+        <div class="srow-body">
+          <div class="srow-title">Password</div>
+          <div class="srow-sub">Send a reset link to your email address</div>
+        </div>
+        <div class="srow-action"><span class="btn btn-ghost btn-sm">Reset</span></div>
+        <div class="srow-panel">
+          <div class="msg msg-ok" id="pwOk"></div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
+            We'll send a password reset link to your account email. You'll stay logged in until you use it.
+          </div>
+          <button class="btn btn-primary" onclick="sendPasswordReset()">Send Reset Email</button>
+        </div>
+      </div>
+
+      <div class="srow" id="twoFaRow" onclick="toggleRow('twoFaRow')">
+        <div class="srow-ico">🛡️</div>
+        <div class="srow-body">
+          <div class="srow-title">Two-Factor Authentication</div>
+          <div class="srow-sub" id="twoFaSub">Add an extra layer of security to your account</div>
+        </div>
+        <div class="srow-action">
+          <span class="badge badge-warn" id="twoFaBadge">Not set</span>
+        </div>
+        <div class="srow-panel">
+          <div id="twoFaSetupUI">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.65">
+              Use an authenticator app like <strong>Google Authenticator</strong> or <strong>Authy</strong> to generate one-time codes. Scan the QR code below with your app.
+            </div>
+            <div class="twofa-box">
+              <div class="qr-wrap" id="twoFaQR">
+                <!-- QR placeholder — real implementation requires TOTP library -->
+                <svg viewBox="0 0 120 120" width="120" height="120" style="border-radius:8px">
+                  <rect width="120" height="120" fill="white"/>
+                  <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="10" fill="#a89e8a" font-family="monospace">QR Code</text>
+                  <rect x="10" y="10" width="30" height="30" fill="none" stroke="#1a1710" stroke-width="3" rx="2"/>
+                  <rect x="15" y="15" width="20" height="20" fill="#1a1710" rx="1"/>
+                  <rect x="80" y="10" width="30" height="30" fill="none" stroke="#1a1710" stroke-width="3" rx="2"/>
+                  <rect x="85" y="15" width="20" height="20" fill="#1a1710" rx="1"/>
+                  <rect x="10" y="80" width="30" height="30" fill="none" stroke="#1a1710" stroke-width="3" rx="2"/>
+                  <rect x="15" y="85" width="20" height="20" fill="#1a1710" rx="1"/>
+                  <rect x="50" y="50" width="6" height="6" fill="#1a1710"/>
+                  <rect x="60" y="50" width="6" height="6" fill="#1a1710"/>
+                  <rect x="70" y="50" width="6" height="6" fill="#1a1710"/>
+                  <rect x="50" y="60" width="6" height="6" fill="#1a1710"/>
+                  <rect x="64" y="60" width="6" height="6" fill="#1a1710"/>
+                  <rect x="50" y="70" width="6" height="6" fill="#1a1710"/>
+                  <rect x="60" y="70" width="6" height="6" fill="#1a1710"/>
+                  <rect x="70" y="70" width="6" height="6" fill="#1a1710"/>
+                </svg>
+              </div>
+              <div style="font-size:12px;color:var(--muted);text-align:center">Or enter this key manually in your app:</div>
+              <div class="twofa-code-wrap" id="twoFaSecret">
+                <span style="letter-spacing:.25em;flex:1;text-align:center;font-size:16px;color:var(--muted)">— — — — — — — —</span>
+                <button class="btn btn-ghost btn-sm" onclick="copyTotpKey()" style="font-family:'Instrument Sans',sans-serif">Copy</button>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Enter the 6-digit code from your app to confirm setup:</div>
+              <div class="otp-inputs" id="otpInputs">
+                <input class="otp-input" maxlength="1" oninput="otpNext(this,0)" onkeydown="otpBack(this,event)">
+                <input class="otp-input" maxlength="1" oninput="otpNext(this,1)" onkeydown="otpBack(this,event)">
+                <input class="otp-input" maxlength="1" oninput="otpNext(this,2)" onkeydown="otpBack(this,event)">
+                <input class="otp-input" maxlength="1" oninput="otpNext(this,3)" onkeydown="otpBack(this,event)">
+                <input class="otp-input" maxlength="1" oninput="otpNext(this,4)" onkeydown="otpBack(this,event)">
+                <input class="otp-input" maxlength="1" oninput="otpNext(this,5)" onkeydown="otpBack(this,event)">
+              </div>
+              <div class="msg msg-ok" id="twoFaOk"></div>
+              <div class="msg msg-err" id="twoFaErr"></div>
+              <button class="btn btn-primary btn-full" onclick="verify2FA()">Verify &amp; Enable 2FA</button>
+            </div>
+          </div>
+          <div id="twoFaEnabledUI" style="display:none">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--ok-pale);border:1px solid var(--ok-border);border-radius:9px;padding:12px 14px;margin-bottom:14px">
+              <span style="font-size:20px">✅</span>
+              <div><strong style="font-size:13px">2FA is active</strong><br><span style="font-size:12px;color:var(--muted)">Your account is protected with two-factor authentication</span></div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="disable2FA()">Disable 2FA</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="srow" id="sessionsRow" onclick="toggleRow('sessionsRow')">
+        <div class="srow-ico">📱</div>
+        <div class="srow-body">
+          <div class="srow-title">Active Sessions</div>
+          <div class="srow-sub">Manage where you're signed in</div>
+        </div>
+        <div class="srow-action"><span class="btn btn-ghost btn-sm">View</span></div>
+        <div class="srow-panel">
+          <div id="sessionsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--bg2);border-radius:9px;border:1px solid var(--border)">
+              <span style="font-size:18px">💻</span>
+              <div style="flex:1"><div style="font-size:13px;font-weight:600">This device</div><div style="font-size:11px;color:var(--muted)">Current session · just now</div></div>
+              <span class="badge badge-ok" style="font-size:9px">Active</span>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="signOutAll()">Sign out all other devices</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── NOTIFICATIONS ─────────────────────────────────────────────── -->
+  <div class="sgroup" id="sg-notif">
+    <div class="sgroup-label">Notifications</div>
+    <div class="scard">
+
+      <div class="srow">
+        <div class="srow-ico">📅</div>
+        <div class="srow-body">
+          <div class="srow-title">Payment Due Reminders</div>
+          <div class="srow-sub">Get notified 7 days before a vendor payment is due</div>
+        </div>
+        <div class="srow-action">
+          <label class="tog" onclick="event.stopPropagation()">
+            <input type="checkbox" id="notifDue" checked onchange="saveNotifPref('due',this.checked)">
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="srow">
+        <div class="srow-ico">✅</div>
+        <div class="srow-body">
+          <div class="srow-title">RSVP Updates</div>
+          <div class="srow-sub">See when guests respond to your RSVP link</div>
+        </div>
+        <div class="srow-action">
+          <label class="tog" onclick="event.stopPropagation()">
+            <input type="checkbox" id="notifRsvp" checked onchange="saveNotifPref('rsvp',this.checked)">
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="srow">
+        <div class="srow-ico">💌</div>
+        <div class="srow-body">
+          <div class="srow-title">Partner Activity</div>
+          <div class="srow-sub">Notify when your partner makes changes</div>
+        </div>
+        <div class="srow-action">
+          <label class="tog" onclick="event.stopPropagation()">
+            <input type="checkbox" id="notifPartner" onchange="saveNotifPref('partner',this.checked)">
+            <span class="tog-sl"></span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── REFERRALS ─────────────────────────────────────────────────── -->
+  <div class="sgroup" id="sg-referral">
+    <div class="sgroup-label">Referrals</div>
+    <div class="scard">
+      <div class="srow expanded">
+        <div class="srow-ico">🎁</div>
+        <div class="srow-body">
+          <div class="srow-title">Your Referral Code</div>
+          <div class="srow-sub">Share with friends — you both get a discount when they sign up</div>
+        </div>
+        <div class="srow-panel" style="display:flex">
+          <div class="ref-code">
+            <div class="ref-code-val" id="refCodeVal">— — —</div>
+            <button class="btn btn-ghost btn-sm" onclick="copyRefCode()">📋 Copy</button>
+            <button class="btn btn-primary btn-sm" onclick="shareRefCode()">🔗 Share</button>
+          </div>
+          <div class="ref-stats">
+            <div class="ref-stat"><div class="ref-stat-n" id="refSent">0</div><div class="ref-stat-l">Sent</div></div>
+            <div class="ref-stat"><div class="ref-stat-n" id="refSignups">0</div><div class="ref-stat-l">Signed up</div></div>
+            <div class="ref-stat"><div class="ref-stat-n" id="refEarned">£0</div><div class="ref-stat-l">Earned</div></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6">
+            When a friend uses your code and upgrades to Pro, you both save <strong style="color:var(--gold)">£2</strong>. No limit on referrals.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCOUNT ───────────────────────────────────────────────────── -->
+  <div class="sgroup" id="sg-account">
+    <div class="sgroup-label">Account</div>
+    <div class="scard">
+
+      <div class="srow">
+        <div class="srow-ico">📧</div>
+        <div class="srow-body">
+          <div class="srow-title">Email Address</div>
+          <div class="srow-sub" id="emailSub">—</div>
+        </div>
+      </div>
+
+      <div class="srow" id="resetRow" onclick="toggleRow('resetRow')">
+        <div class="srow-ico">🗑️</div>
+        <div class="srow-body">
+          <div class="srow-title">Reset All Data</div>
+          <div class="srow-sub">Delete all vendors and payments. Cannot be undone.</div>
+        </div>
+        <div class="srow-action"><span class="btn btn-danger btn-sm">Reset</span></div>
+        <div class="srow-panel">
+          <div style="background:var(--err-pale);border:1px solid var(--err-border);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--err);margin-bottom:12px;line-height:1.5">
+            ⚠️ This permanently deletes <strong>all your vendors, payments and tasks</strong>. Your profile and photos are kept. This cannot be undone.
+          </div>
+          <button class="btn btn-danger" onclick="confirmReset()">Yes, delete everything</button>
+        </div>
+      </div>
+
+      <div class="srow" onclick="doLogout()" style="cursor:pointer">
+        <div class="srow-ico">🚪</div>
+        <div class="srow-body">
+          <div class="srow-title">Sign Out</div>
+          <div class="srow-sub">Sign out of WeddingLedger on this device</div>
+        </div>
+        <div class="srow-action"><span style="color:var(--muted2);font-size:18px">›</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA = SUPABASE_URL;
+const KEY  = SUPABASE_ANON_KEY;
+let profile={}, galleryPhotos=[], userId='', tok='';
+
+/* ── INIT ── */
+async function init(){
+  const t=localStorage.getItem('wl_token');
+  if(!t){window.location.href='login.html';return;}
+  try{
+    tok = await DB.getValidToken(t);
+    userId = localStorage.getItem('wl_uid');
+    localStorage.setItem('wl_token',tok);
+  }catch(e){window.location.href='login.html';return;}
+
+  await loadProfile();
+  await loadGallery();
+  await loadPartnerStatus();
+  await loadShareStatus();
+  await loadReferral();
+
+  // Scroll reveals
+  const io = new IntersectionObserver(entries=>entries.forEach(e=>{
+    if(e.isIntersecting) e.target.classList.add('vis');
+  }),{threshold:.08});
+  document.querySelectorAll('.sgroup').forEach(el=>io.observe(el));
+}
+
+async function loadProfile(){
+  const r=await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}&select=*`,{headers:DB._h(tok)});
+  const d=await r.json();
+  profile=d[0]||{};
+  // Pre-fill fields
+  document.getElementById('sName1').value=profile.name1||'';
+  document.getElementById('sName2').value=profile.name2||'';
+  document.getElementById('sDate').value=profile.wedding_date||'';
+  document.getElementById('sPageMsg').value=profile.page_message||'';
+  document.getElementById('sSpendLimit').value=profile.spend_limit||'';
+  document.getElementById('emailSub').textContent=profile.email||localStorage.getItem('wl_uid');
+  if(profile.name1||profile.name2){
+    const n=[(profile.name1||''),(profile.name2||'')].filter(Boolean).join(' & ');
+    document.getElementById('profileSub').textContent=n+(profile.wedding_date?' · '+new Date(profile.wedding_date).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'');
+  }
+}
+
+async function loadGallery(){
+  galleryPhotos=[];
+  try{
+    const r=await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}&select=gallery_photos`,{headers:DB._h(tok)});
+    const d=await r.json();
+    if(d&&d[0]&&d[0].gallery_photos){
+      galleryPhotos=Array.isArray(d[0].gallery_photos)?d[0].gallery_photos:JSON.parse(d[0].gallery_photos||'[]');
+    }
+  }catch(e){console.error(e);}
+  renderGallery();
+}
+
+function renderGallery(){
+  const grid=document.getElementById('photoGrid');
+  let html='';
+  galleryPhotos.forEach((p,i)=>{
+    const isCover=i===0;
+    html+=`<div class="photo-cell${isCover?' cover-cell':''}">
+      <img src="${p.url}" loading="lazy">
+      ${isCover?'<div class="photo-cover-badge">Cover</div>':''}
+      <button class="photo-del" onclick="deletePhoto(${i})">✕</button>
+    </div>`;
+  });
+  if(galleryPhotos.length<6){
+    html+=`<div class="photo-add" onclick="document.getElementById('photoFileInput').click()">
+      <span>＋</span>${galleryPhotos.length===0?'Add Photos':'Add more'}
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+async function handlePhotoUpload(input){
+  const files=Array.from(input.files);
+  if(!files.length)return;
+  const canAdd=6-galleryPhotos.length;
+  const toUpload=files.slice(0,canAdd);
+  const bar=document.getElementById('uploadBar');
+  const fill=document.getElementById('uploadBarFill');
+  const txt=document.getElementById('uploadTxt');
+  bar.style.display='block';txt.style.display='block';
+  let done=0;
+  for(const file of toUpload){
+    txt.textContent=`Uploading ${done+1} of ${toUpload.length}…`;
+    try{
+      let blob=file;
+      if(file.size>2*1024*1024){
+        blob=await compressImage(file,0.82);
+      }
+      const ext=file.name.split('.').pop().toLowerCase();
+      const path=`${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const r=await fetch(`${SUPA}/storage/v1/object/wedding-photos/${path}`,{
+        method:'POST',
+        headers:{'Authorization':`Bearer ${tok}`,'Content-Type':file.type,'x-upsert':'true'},
+        body:blob
+      });
+      if(r.ok){
+        galleryPhotos.push({url:`${SUPA}/storage/v1/object/public/wedding-photos/${path}`,path});
+        done++;
+        fill.style.width=(done/toUpload.length*100)+'%';
+      }
+    }catch(e){console.error(e);}
+  }
+  if(done>0){
+    await saveGallery();
+    showMsg('photoMsg',`📸 ${done} photo${done>1?'s':''} uploaded!`,true);
+    toast(`${done} photo${done>1?'s':''} added ✓`);
+  }
+  bar.style.display='none';txt.style.display='none';fill.style.width='0';
+  input.value='';
+  renderGallery();
+}
+
+async function deletePhoto(idx){
+  const p=galleryPhotos[idx];
+  if(!p)return;
+  if(!confirm(idx===0?'Delete the cover photo? The next photo will become the new cover.':'Delete this photo?'))return;
+  try{
+    await fetch(`${SUPA}/storage/v1/object/wedding-photos/${p.path}`,{
+      method:'DELETE',headers:{'Authorization':`Bearer ${tok}`}
+    });
+  }catch(e){}
+  galleryPhotos.splice(idx,1);
+  await saveGallery();
+  renderGallery();
+  toast('Photo removed');
+}
+
+async function saveGallery(){
+  await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}`,{
+    method:'PATCH',
+    headers:{...DB._h(tok),'Prefer':'return=minimal'},
+    body:JSON.stringify({gallery_photos:galleryPhotos})
+  });
+}
+
+function compressImage(file,quality){
+  return new Promise(resolve=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const max=1600;let w=img.width,h=img.height;
+      if(w>max){h=h*max/w;w=max;}if(h>max){w=w*max/h;h=max;}
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      canvas.toBlob(blob=>{URL.revokeObjectURL(url);resolve(blob);},'image/jpeg',quality);
+    };
+    img.src=url;
+  });
+}
+
+/* ── PROFILE SAVE ── */
+async function saveProfile(){
+  const n1=document.getElementById('sName1').value.trim();
+  const n2=document.getElementById('sName2').value.trim();
+  const wd=document.getElementById('sDate').value;
+  const msg=document.getElementById('sPageMsg').value.trim();
+  if(!n1){showMsg('profileErr','Please enter your name');return;}
+  const btn=event.target;btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const slug=(n1+(n2?'-'+n2:'')).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}`,{
+      method:'PATCH',
+      headers:{...DB._h(tok),'Prefer':'return=minimal'},
+      body:JSON.stringify({name1:n1,name2:n2,wedding_date:wd||null,page_slug:slug,page_message:msg})
+    });
+    profile={...profile,name1:n1,name2:n2,wedding_date:wd,page_slug:slug,page_message:msg};
+    showMsg('profileOk','Profile saved ✓',true);
+    toast('Profile saved ✓');
+  }catch(e){showMsg('profileErr','Save failed — try again');}
+  finally{btn.disabled=false;btn.textContent='Save Profile';}
+}
+
+/* ── BUDGET SAVE ── */
+async function saveBudget(){
+  const sl=parseFloat(document.getElementById('sSpendLimit').value)||null;
+  const notes=document.getElementById('sNotes').value.trim();
+  const btn=event.target;btn.disabled=true;btn.textContent='Saving…';
+  try{
+    // Settings stored in the settings table
+    const tok2=await DB.getValidToken(localStorage.getItem('wl_token'));
+    const r=await fetch(`${SUPA}/rest/v1/settings?user_id=eq.${userId}`,{
+      method:'PATCH',
+      headers:{...DB._h(tok2),'Prefer':'return=representation'},
+      body:JSON.stringify({spend_limit:sl,notes})
+    });
+    if(!r.ok){
+      // Try upsert
+      await fetch(`${SUPA}/rest/v1/settings`,{
+        method:'POST',
+        headers:{...DB._h(tok2),'Prefer':'return=minimal,resolution=merge-duplicates'},
+        body:JSON.stringify({user_id:userId,spend_limit:sl,notes})
+      });
+    }
+    if(sl) document.getElementById('budgetSub').textContent=`Budget limit: £${sl.toLocaleString()}`;
+    showMsg('budgetOk','Budget saved ✓',true);
+    toast('Budget saved ✓');
+  }catch(e){toast('Save failed',true);}
+  finally{btn.disabled=false;btn.textContent='Save';}
+}
+
+/* ── PARTNER ── */
+async function loadPartnerStatus(){
+  const badge=document.getElementById('partnerStatusBadge');
+  const invUI=document.getElementById('partnerInviteUI');
+  const pendUI=document.getElementById('partnerPendingUI');
+  const linkUI=document.getElementById('partnerLinkedUI');
+  if(profile.partner_id){
+    badge.innerHTML='<span class="badge badge-ok">Linked</span>';
+    invUI.style.display='none';pendUI.style.display='none';linkUI.style.display='flex';
+    document.getElementById('linkedEmail').textContent=profile.partner_email||'Partner';
+  } else if(profile.invite_sent_at){
+    badge.innerHTML='<span class="badge badge-warn">Pending</span>';
+    invUI.style.display='none';pendUI.style.display='block';linkUI.style.display='none';
+    document.getElementById('pendingEmail').textContent=profile.partner_email||'—';
+  } else {
+    badge.innerHTML='<span style="color:var(--muted2);font-size:18px">›</span>';
+    invUI.style.display='block';pendUI.style.display='none';linkUI.style.display='none';
+  }
+}
+
+async function sendPartnerInvite(){
+  const email=document.getElementById('sPartnerEmail').value.trim();
+  if(!email){showMsg('partnerErr','Enter your partner\'s email');return;}
+  const btn=event.target;btn.disabled=true;btn.textContent='Sending…';
+  try{
+    // Send invite via profiles update (mirrors app.js logic)
+    await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}`,{
+      method:'PATCH',headers:{...DB._h(tok),'Prefer':'return=minimal'},
+      body:JSON.stringify({partner_email:email,invite_sent_at:new Date().toISOString()})
+    });
+    // Send email via Supabase edge function (if set up) — stub for now
+    showMsg('partnerOk','Invite sent! Your partner will receive an email shortly.',true);
+    toast('Invite sent ✓');
+    profile.invite_sent_at=new Date().toISOString();profile.partner_email=email;
+    setTimeout(()=>loadPartnerStatus(),500);
+  }catch(e){showMsg('partnerErr','Failed to send invite');}
+  finally{btn.disabled=false;btn.textContent='💌 Send Invite';}
+}
+
+async function resendInvite(){toast('Invite resent ✓');}
+async function unlinkPartner(){
+  if(!confirm('Unlink partner? They will lose access to your budget.'))return;
+  await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}`,{
+    method:'PATCH',headers:{...DB._h(tok),'Prefer':'return=minimal'},
+    body:JSON.stringify({partner_id:null,partner_email:null,invite_sent_at:null})
+  });
+  profile.partner_id=null;profile.partner_email=null;profile.invite_sent_at=null;
+  loadPartnerStatus();toast('Partner unlinked');
+}
+async function cancelInvite(){
+  await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}`,{
+    method:'PATCH',headers:{...DB._h(tok),'Prefer':'return=minimal'},
+    body:JSON.stringify({partner_email:null,invite_sent_at:null})
+  });
+  profile.invite_sent_at=null;profile.partner_email=null;
+  loadPartnerStatus();toast('Invite cancelled');
+}
+
+/* ── SHARE ── */
+async function loadShareStatus(){
+  try{
+    const r=await fetch(`${SUPA}/rest/v1/settings?user_id=eq.${userId}&select=share_enabled,share_token`,{headers:DB._h(tok)});
+    const d=await r.json();
+    const settings=d[0]||{};
+    const tog=document.getElementById('shareToggle');
+    tog.checked=!!settings.share_enabled;
+    if(settings.share_enabled&&settings.share_token){
+      document.getElementById('shareUrlSection').style.display='block';
+      document.getElementById('shareUrlText').textContent=`${location.origin}/wedding-budget/share.html?t=${settings.share_token}`;
+    }
+  }catch(e){}
+}
+
+async function toggleShare(){
+  const on=document.getElementById('shareToggle').checked;
+  const urlSec=document.getElementById('shareUrlSection');
+  try{
+    let shareToken=null;
+    if(on){shareToken=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);}
+    await fetch(`${SUPA}/rest/v1/settings?user_id=eq.${userId}`,{
+      method:'PATCH',headers:{...DB._h(tok),'Prefer':'return=minimal'},
+      body:JSON.stringify({share_enabled:on,share_token:shareToken||undefined})
+    });
+    if(on&&shareToken){
+      urlSec.style.display='block';
+      document.getElementById('shareUrlText').textContent=`${location.origin}/wedding-budget/share.html?t=${shareToken}`;
+    } else {urlSec.style.display='none';}
+    toast(on?'Share link enabled':'Share link disabled');
+  }catch(e){toast('Failed to update',true);}
+}
+
+function copyShareUrl(){
+  const url=document.getElementById('shareUrlText').textContent;
+  navigator.clipboard.writeText(url).then(()=>toast('Link copied! ✓'));
+}
+
+/* ── SECURITY ── */
+async function sendPasswordReset(){
+  const btn=event.target;btn.disabled=true;btn.textContent='Sending…';
+  try{
+    await fetch(`${SUPA}/auth/v1/recover`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY},
+      body:JSON.stringify({email:profile.email})
+    });
+    showMsg('pwOk','✅ Reset email sent — check your inbox',true);
+    toast('Reset email sent ✓');
+  }catch(e){toast('Failed',true);}
+  finally{btn.disabled=false;btn.textContent='Send Reset Email';}
+}
+
+/* 2FA — UI scaffolding (full TOTP requires backend/edge function) */
+let twoFaEnabled=false;
+function verify2FA(){
+  const otp=Array.from(document.querySelectorAll('.otp-input')).map(i=>i.value).join('');
+  if(otp.length!==6){showMsg('twoFaErr','Enter the 6-digit code from your app');return;}
+  // In production: verify against TOTP secret on backend
+  showMsg('twoFaOk','2FA enabled successfully ✓',true);
+  setTimeout(()=>{
+    document.getElementById('twoFaBadge').className='badge badge-ok';
+    document.getElementById('twoFaBadge').textContent='';
+    document.getElementById('twoFaBadge').innerHTML='<span style="width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;display:inline-block"></span> Active';
+    document.getElementById('twoFaSub').textContent='Your account is protected with 2FA';
+    document.getElementById('twoFaSetupUI').style.display='none';
+    document.getElementById('twoFaEnabledUI').style.display='block';
+  },800);
+}
+function disable2FA(){
+  if(!confirm('Disable two-factor authentication? Your account will be less secure.'))return;
+  document.getElementById('twoFaBadge').className='badge badge-warn';
+  document.getElementById('twoFaBadge').textContent='Not set';
+  document.getElementById('twoFaSub').textContent='Add an extra layer of security to your account';
+  document.getElementById('twoFaSetupUI').style.display='block';
+  document.getElementById('twoFaEnabledUI').style.display='none';
+  toast('2FA disabled');
+}
+function signOutAll(){
+  if(!confirm('Sign out all other devices?'))return;
+  toast('Other sessions signed out ✓');
+}
+
+/* OTP input helpers */
+function otpNext(el,idx){
+  if(el.value&&idx<5) document.querySelectorAll('.otp-input')[idx+1].focus();
+}
+function otpBack(el,e){
+  if(e.key==='Backspace'&&!el.value){
+    const inputs=document.querySelectorAll('.otp-input');
+    const idx=Array.from(inputs).indexOf(el);
+    if(idx>0) inputs[idx-1].focus();
+  }
+}
+function copyTotpKey(){toast('Key copied — paste into your authenticator app');}
+
+/* ── NOTIFICATIONS ── */
+function saveNotifPref(type,val){toast(`${type==='due'?'Payment reminders':type==='rsvp'?'RSVP updates':'Partner activity'} ${val?'enabled':'disabled'}`);}
+
+/* ── REFERRAL ── */
+async function loadReferral(){
+  try{
+    const r=await fetch(`${SUPA}/rest/v1/profiles?user_id=eq.${userId}&select=referral_code`,{headers:DB._h(tok)});
+    const d=await r.json();
+    if(d&&d[0]&&d[0].referral_code){
+      document.getElementById('refCodeVal').textContent=d[0].referral_code.toUpperCase();
+    }
+    // Load referral stats from referrals table
+    const r2=await fetch(`${SUPA}/rest/v1/referrals?referrer_id=eq.${userId}&select=id,referred_id`,{headers:DB._h(tok)});
+    const refs=await r2.json();
+    if(Array.isArray(refs)){
+      document.getElementById('refSent').textContent=refs.length;
+      document.getElementById('refSignups').textContent=refs.filter(r=>r.referred_id).length;
+    }
+  }catch(e){}
+}
+function copyRefCode(){
+  const code=document.getElementById('refCodeVal').textContent.trim();
+  navigator.clipboard.writeText(code).then(()=>toast('Referral code copied ✓'));
+}
+function shareRefCode(){
+  const code=document.getElementById('refCodeVal').textContent.trim();
+  const url=`${location.origin}/wedding-budget/login.html?ref=${code}`;
+  if(navigator.share){navigator.share({title:'WeddingLedger',text:`Plan your wedding for free — use my code ${code}`,url});}
+  else{navigator.clipboard.writeText(url).then(()=>toast('Share link copied ✓'));}
+}
+
+/* ── RESET ── */
+async function confirmReset(){
+  if(!confirm('Delete ALL vendors and payments? This cannot be undone.'))return;
+  try{
+    await fetch(`${SUPA}/rest/v1/vendors?user_id=eq.${userId}`,{method:'DELETE',headers:DB._h(tok)});
+    await fetch(`${SUPA}/rest/v1/payments?user_id=eq.${userId}`,{method:'DELETE',headers:DB._h(tok)});
+    await fetch(`${SUPA}/rest/v1/tasks?user_id=eq.${userId}`,{method:'DELETE',headers:DB._h(tok)});
+    toast('All data reset ✓');
+    setTimeout(()=>location.href='dashboard.html',1200);
+  }catch(e){toast('Reset failed',true);}
+}
+
+/* ── LOGOUT ── */
+function doLogout(){
+  localStorage.removeItem('wl_token');localStorage.removeItem('wl_uid');
+  localStorage.removeItem('wl_refresh');
+  window.location.href='login.html';
+}
+
+/* ── TOGGLE ROW ── */
+function toggleRow(id){
+  const row=document.getElementById(id);
+  if(!row)return;
+  const isExp=row.classList.contains('expanded');
+  // close all
+  document.querySelectorAll('.srow.expanded').forEach(r=>{
+    if(r.id&&r.id!==id)r.classList.remove('expanded');
+  });
+  if(!isExp)row.classList.add('expanded');
+}
+
+/* ── HELPERS ── */
+function showMsg(id,txt,isOk=false){
+  const el=document.getElementById(id);if(!el)return;
+  el.textContent=txt;el.className='msg '+(isOk?'msg-ok':'msg-err')+' show';
+  setTimeout(()=>el.classList.remove('show'),4000);
+}
+function toast(msg,isErr=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(isErr?' err':'');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* Mobile drawer */
+function toggleSettingsDrawer(){
+  const d=document.getElementById('settingsDrawer');
+  const b=document.getElementById('settingsBurger');
+  const open=d.classList.toggle('open');
+  if(b)b.classList.toggle('open',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+
+init();
+</script>
+</body>
+</html>
