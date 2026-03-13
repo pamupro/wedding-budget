@@ -84,6 +84,8 @@ const DB = {
     const t = await this.getValidToken(token);
     if (!t) return [];
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: this._h(t) });
+    console.log('[WL] query', path.split('?')[0], '→ HTTP', r.status);
+    if (typeof dbg==='function') dbg('DB: '+path.split('?')[0]+' → HTTP '+r.status, r.ok);
     if (r.status === 401) {
       console.log('[WL] 401 on query, trying one refresh…');
       const refreshed = await this.refreshToken();
