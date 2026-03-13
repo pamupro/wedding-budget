@@ -60,6 +60,8 @@ let weddingDate=new Date('2027-02-11T09:00:00');
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
+  const _dbg = typeof dbg === 'function' ? dbg : ()=>{};
+  _dbg('init() started');
   // Check for referral code in URL (for new signups)
   const urlRef = new URLSearchParams(window.location.search).get('ref');
   if(urlRef) localStorage.setItem('wl_ref', urlRef);
@@ -68,9 +70,11 @@ async function init() {
   accessToken = localStorage.getItem('wl_token');
 
   if (!userId || !accessToken) {
+    _dbg('No credentials → redirecting to login', false);
     window.location.href = 'login.html';
     return;
   }
+  _dbg('Credentials found, validating token…', true);
 
   // Show loading state
   showLoadingState(true);
@@ -78,9 +82,11 @@ async function init() {
   // Validate / refresh token before any DB calls
   try {
     accessToken = await DB.getValidToken(accessToken);
-    if (!accessToken) return; // redirected to login
+    if (!accessToken) { _dbg('Token invalid, no refresh → login', false); return; }
     localStorage.setItem('wl_token', accessToken);
+    _dbg('Token valid ✓', true);
   } catch(e) {
+    _dbg('Token error: ' + e.message, false);
     window.location.href = 'login.html';
     return;
   }
@@ -88,24 +94,26 @@ async function init() {
   renderIconSelector();
   startCountdown();
   initCurrencyUI();
-  // Load platform-wide settings (subscription price, plan ID) from admin settings
   loadPlatformSettings();
 
   try {
+    _dbg('Loading profile…');
     await loadProfile();
+    _dbg('Profile loaded ✓', true);
     await loadPartnerData();
-  loadReferralCode();
-  updateWeddingPageUrl();
-  // Update couple name in mobile nav drawer
-  const mnEl = document.getElementById('mobileNavNames');
-  if(mnEl) {
-    const n1 = profile?.name1||'', n2 = profile?.name2||'';
-    mnEl.textContent = (n1||n2) ? n1+(n2?' & '+n2:'') : 'WeddingLedger';
-  }
+    loadReferralCode();
+    updateWeddingPageUrl();
+    const mnEl = document.getElementById('mobileNavNames');
+    if(mnEl) {
+      const n1 = profile?.name1||'', n2 = profile?.name2||'';
+      mnEl.textContent = (n1||n2) ? n1+(n2?' & '+n2:'') : 'WeddingLedger';
+    }
+    _dbg('Loading vendors/payments/tasks…');
     await Promise.all([loadVendors(), loadPayments(), loadTasks(), loadSettings()]);
-    fetchLiveRates(); // async - updates rates in background
-  loadPlatformSettings(); // load subscription price from admin settings
+    _dbg('All data loaded ✓', true);
+    fetchLiveRates();
   } catch(e) {
+    _dbg('DATA ERROR: ' + e.message, false);
     console.error('Init error:', e);
     showLoadingState(false);
     const msg = e.message || '';
