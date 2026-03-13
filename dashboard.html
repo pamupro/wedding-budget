@@ -6,7 +6,7 @@
 <title>Dashboard — WeddingLedger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 
 <style>
@@ -1238,18 +1238,15 @@ function animateStat(el,target,prefix=''){
 }
 
 // Checklist progress bar mini-indicator in section title
-ecklist-item.done').length;
+const done=document.querySelectorAll('.checklist-item.done').length;
   const total=document.querySelectorAll('.checklist-item').length;
   const badge=document.getElementById('checklistBadge');
   if(badge&&total>0)badge.textContent=`${done}/${total}`;
 }
 
-// Call init() on page load - app.js defines the async init() function
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof init === 'function') init();
-});
+// init() is called by app.js boot block after it loads
 </script>
-<script src="db.js" defer></script>
-<script src="app.js" defer></script>
+<script src="db.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
