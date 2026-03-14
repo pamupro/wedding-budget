@@ -1496,7 +1496,6 @@ function showPage(name) {
   const tt = document.getElementById('topbarTitle');
   if (tt) tt.textContent = PAGE_TITLES[name]||name;
   if (name === 'support') loadSupportTickets();
-  // Scroll to this page
   if (pg) window.scrollTo({top: pg.offsetTop - 60, behavior:'instant'});
 }
 
