@@ -311,7 +311,7 @@
     .toolbar { padding: 10px 14px; }
     .grid { padding: 12px; grid-template-columns: 1fr; }
     .stats-strip { top: 56px; }
-    .toolbar { top: 124px; }
+    .toolbar { top: 125px; }
     .hamburger-btn { display: flex; align-items: center; }
     .desktop-only { display: none !important; }
   }
@@ -814,7 +814,84 @@
     .side-picker { gap: 5px; }
     .side-opt { font-size: 12px; padding: 6px 11px; }
   }
-    /* ── Topbar must sit above sticky strips ── */
+  
+  /* ── Custom Dropdowns ── */
+  .csel-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .csel-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    background: #ffffff;
+    border: 1px solid rgba(26,22,18,.14);
+    border-radius: 99px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .csel-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .csel-wrap.open .csel-btn { border-color: var(--gold); color: var(--gold); }
+  .csel-arrow { transition: transform .2s; flex-shrink: 0; color: var(--muted); }
+  .csel-wrap.open .csel-arrow { transform: rotate(180deg); }
+  .csel-drop {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 190px;
+    background: #ffffff;
+    border: 1px solid rgba(26,22,18,.10);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(26,22,18,.12), 0 2px 8px rgba(26,22,18,.06);
+    padding: 6px;
+    z-index: 500;
+    display: none;
+    animation: dropIn .15s cubic-bezier(.32,.72,0,1);
+  }
+  @keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .csel-wrap.open .csel-drop { display: block; }
+  .csel-section {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    padding: 6px 10px 4px;
+  }
+  .csel-opt {
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background .1s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .csel-opt:hover { background: var(--bg2); }
+  .csel-opt.csel-active { background: var(--gold-pale); color: var(--gold); font-weight: 600; }
+  .csel-opt.csel-active::after { content: "✓"; margin-left: auto; font-size: 12px; }
+  .csel-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── Toolbar mobile fix ── */
+  @media (max-width: 680px) {
+    .toolbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 8px; padding: 10px 14px; }
+    .toolbar::-webkit-scrollbar { display: none; }
+    .search-wrap { min-width: 0; flex: 1; }
+    .csel-btn { padding: 8px 12px; font-size: 12px; }
+    #cntLbl { display: none; }
+    .csel-drop { right: 0; left: auto; }
+  }
+
+  /* ── Topbar must sit above sticky strips ── */
   .topbar { z-index: 400 !important; }
 </style>
 </head>
@@ -853,7 +930,7 @@
   </div>
 </div>
 
-<main style="padding-top:64px;min-height:100vh;background:var(--bg)">
+<main style="min-height:100vh;background:var(--bg)">
   <div class="stats-strip">
     <div class="stat-pill active" id="pill-all"  onclick="setF('all',this)"><span class="stat-num" id="sAll">0</span><span class="stat-lbl">Invited</span></div>
     <div class="stat-pill" id="pill-yes"          onclick="setF('yes',this)"><span class="stat-num" id="sYes" style="color:#2a7a2a">0</span><span class="stat-lbl">✅ Attending</span></div>
@@ -864,29 +941,58 @@
   </div>
   <div class="toolbar">
     <div class="search-wrap">
-      <span style="color:var(--muted)">🔍</span>
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;opacity:.45">
+        <circle cx="7" cy="7" r="5.5" stroke="#1a1612" stroke-width="1.5"/>
+        <path d="M11 11l3 3" stroke="#1a1612" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
       <input id="searchQ" placeholder="Search guests…" oninput="renderList()">
     </div>
-    <select class="tbar-sel" id="grpSel" onchange="renderList()">
-      <option value="">All Sides</option>
-      <optgroup label="Family">
-        <option value="Bride Side">💐 Bride's Family</option>
-        <option value="Groom Side">🤵 Groom's Family</option>
-        <option value="Both Sides">💑 Both Sides</option>
-      </optgroup>
-      <optgroup label="Friends">
-        <option value="Bride's Friend">🌸 Bride's Friends</option>
-        <option value="Groom's Friend">🙌 Groom's Friends</option>
-      </optgroup>
-      <option value="Other">👥 Other</option>
-    </select>
-    <select class="tbar-sel" id="sortSel" onchange="renderList()">
-      <option value="name">Sort: Name</option>
-      <option value="rsvp">Sort: RSVP</option>
-      <option value="group">Sort: Group</option>
-      <option value="new">Sort: Newest</option>
-    </select>
-    <span id="cntLbl" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
+
+    <!-- Custom dropdown: Side filter -->
+    <div class="csel-wrap" id="cselSide">
+      <button class="csel-btn" onclick="toggleCsel('cselSide')">
+        <span class="csel-label" id="cselSideLabel">All Sides</span>
+        <svg class="csel-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="csel-drop" id="cselSideDrop">
+        <div class="csel-section">Filter by side</div>
+        <div class="csel-opt csel-active" data-v="" onclick="pickSideFilter(this,'All Sides')">All Sides</div>
+        <div class="csel-divider"></div>
+        <div class="csel-opt" data-v="Bride Side" onclick="pickSideFilter(this,'Bride's Family')">💐 Bride's Family</div>
+        <div class="csel-opt" data-v="Groom Side" onclick="pickSideFilter(this,'Groom's Family')">🤵 Groom's Family</div>
+        <div class="csel-opt" data-v="Both Sides" onclick="pickSideFilter(this,'Both Sides')">💑 Both Sides</div>
+        <div class="csel-divider"></div>
+        <div class="csel-opt" data-v="Bride's Friend" onclick="pickSideFilter(this,'Bride's Friends')">🌸 Bride's Friends</div>
+        <div class="csel-opt" data-v="Groom's Friend" onclick="pickSideFilter(this,'Groom's Friends')">🙌 Groom's Friends</div>
+        <div class="csel-divider"></div>
+        <div class="csel-opt" data-v="Other" onclick="pickSideFilter(this,'Other')">👥 Other</div>
+      </div>
+    </div>
+
+    <!-- Custom dropdown: Sort -->
+    <div class="csel-wrap" id="cselSort">
+      <button class="csel-btn" onclick="toggleCsel('cselSort')">
+        <span class="csel-label" id="cselSortLabel">Name</span>
+        <svg class="csel-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="csel-drop" id="cselSortDrop">
+        <div class="csel-section">Sort by</div>
+        <div class="csel-opt csel-active" data-v="name" onclick="pickSortFilter(this,'Name')">A–Z Name</div>
+        <div class="csel-opt" data-v="rsvp" onclick="pickSortFilter(this,'RSVP')">RSVP Status</div>
+        <div class="csel-opt" data-v="group" onclick="pickSortFilter(this,'Group')">Group</div>
+        <div class="csel-opt" data-v="new" onclick="pickSortFilter(this,'Newest')">Newest First</div>
+      </div>
+    </div>
+
+    <!-- Hidden native selects still used by renderList() -->
+    <select id="grpSel" style="display:none"></select>
+    <select id="sortSel" style="display:none"><option value="name" selected></option></select>
+
+    <span id="cntLbl" style="font-size:12px;color:var(--muted);white-space:nowrap;margin-left:auto"></span>
   </div>
   <div class="grid" id="guestGrid"></div>
 
@@ -2183,6 +2289,38 @@ function toggleMobileNav() {
 function closeMobileNav() {
   document.getElementById('mobileNavDrawer').classList.remove('open');
   document.getElementById('mobileNavOverlay').classList.remove('open');
+}
+
+
+// ── Custom dropdown logic ──────────────────────────────────────────────────
+function toggleCsel(id) {
+  const wrap = document.getElementById(id);
+  const isOpen = wrap.classList.contains('open');
+  // close all first
+  document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
+  if (!isOpen) wrap.classList.add('open');
+}
+// close on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.csel-wrap')) {
+    document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
+  }
+});
+function pickSideFilter(el, label) {
+  document.querySelectorAll('#cselSideDrop .csel-opt').forEach(o => o.classList.remove('csel-active'));
+  el.classList.add('csel-active');
+  document.getElementById('cselSideLabel').textContent = label;
+  document.getElementById('grpSel').value = el.dataset.v;
+  document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
+  renderList();
+}
+function pickSortFilter(el, label) {
+  document.querySelectorAll('#cselSortDrop .csel-opt').forEach(o => o.classList.remove('csel-active'));
+  el.classList.add('csel-active');
+  document.getElementById('cselSortLabel').textContent = label;
+  document.getElementById('sortSel').value = el.dataset.v;
+  document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
+  renderList();
 }
 
 init();
