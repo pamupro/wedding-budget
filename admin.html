@@ -183,10 +183,11 @@ body{
 
 /* Main content area */
 .main{
-  margin-left:240px;padding-top:60px;
+  margin-left:240px;
+  padding-top:60px;
   min-height:100vh;
 }
-.page{display:none;padding:32px 28px 60px;max-width:1200px}
+.page{display:none;padding:28px 28px 60px;max-width:1200px}
 .page.active{display:block}
 
 /* ─── PAGE HEADER ─────────────────────────────────── */
@@ -651,19 +652,26 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
   .bento-row,.bento-row.two-col,.bento-row.one-two{grid-template-columns:1fr}
   .settings-grid{grid-template-columns:1fr}
   .detail-panel{width:100vw;right:-100vw}
-  .table-search{width:140px}
-  .page{padding:20px 12px 80px}
-  thead th:nth-child(n+4),tbody td:nth-child(n+4){display:none}
-  #supportStats{grid-template-columns:1fr 1fr!important}
-  .table-filters{flex-wrap:wrap;gap:4px}
-  .table-topbar{flex-direction:column;align-items:flex-start;gap:10px}
+  .page{padding:16px 12px 80px}
   .last-updated{display:none}
 }
 @media(max-width:600px){
   .metrics-grid{grid-template-columns:1fr 1fr}
   .detail-grid{grid-template-columns:1fr}
-  #supportStats{grid-template-columns:1fr 1fr!important}
-  .wl-row2{grid-template-columns:1fr}
+}
+/* Support page specific responsive */
+@media(max-width:900px){
+  #page-support [style*="grid-template-columns:repeat(4"]{
+    grid-template-columns:repeat(2,1fr)!important;
+  }
+  #page-support table thead th:nth-child(n+3),
+  #page-support table tbody td:nth-child(n+3){
+    display:none;
+  }
+  #page-support [style*="display:flex;align-items:center;justify-content:space-between"]{
+    flex-direction:column!important;
+    align-items:flex-start!important;
+  }
 }
 
   /* Filter buttons for support tickets */
@@ -1218,30 +1226,30 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
     <div class="page" id="page-support" style="display:none">
 
       <!-- Page header -->
-      <div style="margin-bottom:24px">
-        <h2 style="font-family:'Fraunces',serif;font-size:30px;font-weight:200;font-style:italic;color:#1a1612;margin:0 0 4px">
+      <div style="margin-bottom:20px">
+        <h2 style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;font-style:italic;color:#1a1612;margin:0 0 3px">
           <em style="color:#a07828">Support Tickets</em>
         </h2>
-        <p style="font-size:13px;color:#7a6e5e;margin:0">All user messages and live chat enquiries</p>
+        <p style="font-size:12px;color:#7a6e5e;margin:0">All user messages and live chat enquiries</p>
       </div>
 
       <!-- Stats -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
-        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">📬 Open</div>
-          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#a07828" id="st-open">—</div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#b0a090;margin-bottom:6px">📬 Open</div>
+          <div style="font-family:'Fraunces',serif;font-size:26px;font-weight:200;color:#a07828" id="st-open">—</div>
         </div>
-        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">⚡ In Progress</div>
-          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#1a1612" id="st-progress">—</div>
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#b0a090;margin-bottom:6px">⚡ In Progress</div>
+          <div style="font-family:'Fraunces',serif;font-size:26px;font-weight:200;color:#1a1612" id="st-progress">—</div>
         </div>
-        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">✅ Resolved</div>
-          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#2a6a3a" id="st-resolved">—</div>
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#b0a090;margin-bottom:6px">✅ Resolved</div>
+          <div style="font-family:'Fraunces',serif;font-size:26px;font-weight:200;color:#2a6a3a" id="st-resolved">—</div>
         </div>
-        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">📨 Total</div>
-          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#1a1612" id="st-total">—</div>
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#b0a090;margin-bottom:6px">📨 Total</div>
+          <div style="font-family:'Fraunces',serif;font-size:26px;font-weight:200;color:#1a1612" id="st-total">—</div>
         </div>
       </div>
 
@@ -1409,6 +1417,10 @@ function showPage(name) {
   if (name === 'support' && typeof loadSupportTickets === 'function') {
     loadSupportTickets();
   }
+  // Scroll main content area to top
+  const mainEl = document.querySelector('.main');
+  if (mainEl) mainEl.scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 // ─── LOAD DATA ─────────────────────────────────────
@@ -2243,7 +2255,7 @@ const SVC_H = { 'Content-Type':'application/json', apikey: SVC_KEY, Authorizatio
 async function loadSupportTickets() {
   console.log('[Support] loadSupportTickets() called');
   const tbody = document.getElementById('supportTbody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#7a6e5e">⏳ Loading tickets from Supabase…</td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#7a6e5e">⏳ Loading…</td></tr>';
   try {
     const r = await fetch(`${ADMIN_URL}/rest/v1/support_tickets?order=created_at.desc`, { headers: SVC_H });
     const data = await r.json();
@@ -2251,7 +2263,7 @@ async function loadSupportTickets() {
     if (!r.ok) {
       const msg = data.message || data.hint || 'Table not found — run migration_support_tickets.sql in Supabase';
       console.error('[Support] Error:', msg);
-      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px"><div style="font-size:28px;margin-bottom:10px">⚠️</div><div style="font-weight:700;color:#b83030;margin-bottom:6px">Could not load tickets</div><div style="font-size:12px;color:#7a6e5e">${msg}</div></td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px"><div style="font-size:28px;margin-bottom:10px">⚠️</div><div style="font-weight:700;color:#b83030;margin-bottom:8px">Error: ${escA(msg)}</div><div style="font-size:11px;color:#7a6e5e">Run migration_support_tickets.sql in <a href="https://supabase.com/dashboard/project/bqggtyguhedlyfffjkkw/sql" target="_blank" style="color:#a07828">Supabase SQL Editor</a></div></td></tr>`;
       return;
     }
     allTickets = Array.isArray(data) ? data : [];
@@ -2263,7 +2275,7 @@ async function loadSupportTickets() {
     if (badge) { badge.textContent = open; badge.style.display = open > 0 ? 'inline-block' : 'none'; }
   } catch(e) {
     console.error('Support tickets error:', e);
-    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--rose)">⚠️ Could not load tickets. Check console.</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#b83030">⚠️ Could not load tickets — check browser console (F12)</td></tr>';
   }
 }
 
