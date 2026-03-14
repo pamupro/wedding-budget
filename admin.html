@@ -691,6 +691,7 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
   <button class="mobile-drawer-item" onclick="showPage('users');toggleMobileDrawer()">👥 Users</button>
   <button class="mobile-drawer-item" onclick="showPage('payments');toggleMobileDrawer()">💳 Revenue</button>
   <button class="mobile-drawer-item" onclick="showPage('vendors');toggleMobileDrawer()">🏪 Vendors</button>
+  <button class="mobile-drawer-item" onclick="showPage('support');toggleMobileDrawer()">💬 Support</button>
   <button class="mobile-drawer-item" onclick="showPage('health');toggleMobileDrawer()">❤️ Health</button>
   <button class="mobile-drawer-item" onclick="showPage('settings');toggleMobileDrawer()">⚙️ Settings</button>
   <div style="flex:1"></div>
@@ -721,6 +722,11 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
       </button>
       <button class="nav-btn" id="nav-vendors" onclick="showPage('vendors')">
         <span class="nav-icon">🏪</span> Vendors
+      </button>
+      <div class="nav-section-lbl">Support</div>
+      <button class="nav-btn" id="nav-support" onclick="showPage('support')">
+        <span class="nav-icon">💬</span> Support Tickets
+        <span class="nav-badge" id="navBadgeSupport" style="display:none;background:#b83030;color:white;margin-left:auto;font-size:10px;padding:1px 7px;border-radius:99px;font-weight:700"></span>
       </button>
       <div class="nav-section-lbl">System</div>
       <button class="nav-btn" id="nav-health" onclick="showPage('health')">
@@ -1182,6 +1188,65 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
       </div>
     </div>
 
+
+    <!-- ══ SUPPORT TICKETS ══════════════════════════════════════════════════ -->
+    <div class="page" id="page-support">
+      <div class="page-header">
+        <div class="page-title"><em>Support Tickets</em></div>
+        <div class="page-sub">All user messages and live chat enquiries</div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="metrics-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px" id="supportStats">
+        <div class="metric-card"><div class="m-label"><span class="m-icon">📬</span> Open</div><div class="m-value gold" id="st-open">—</div></div>
+        <div class="metric-card"><div class="m-label"><span class="m-icon">⚡</span> In Progress</div><div class="m-value" id="st-progress">—</div></div>
+        <div class="metric-card success"><div class="m-label"><span class="m-icon">✅</span> Resolved</div><div class="m-value sage" id="st-resolved">—</div></div>
+        <div class="metric-card"><div class="m-label"><span class="m-icon">📨</span> Total</div><div class="m-value" id="st-total">—</div></div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="table-card">
+        <div class="table-topbar">
+          <div class="table-topbar-left">
+            <div class="table-count-badge" id="supportCountBadge">— tickets</div>
+            <div class="table-filters">
+              <button class="filter-btn active" data-sf="all"    onclick="setSF(this,'all')">All</button>
+              <button class="filter-btn"        data-sf="open"   onclick="setSF(this,'open')">Open</button>
+              <button class="filter-btn"        data-sf="in_progress" onclick="setSF(this,'in_progress')">In Progress</button>
+              <button class="filter-btn"        data-sf="resolved" onclick="setSF(this,'resolved')">Resolved</button>
+              <button class="filter-btn"        data-sf="closed" onclick="setSF(this,'closed')">Closed</button>
+            </div>
+          </div>
+          <input class="table-search" id="supportSearch" placeholder="Search tickets…" oninput="renderTickets()">
+        </div>
+
+        <table id="supportTable">
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>Subject</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="supportTbody">
+            <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">Loading tickets…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ TICKET DETAIL PANEL ══ -->
+    <div class="detail-panel" id="ticketPanel">
+      <div class="panel-header">
+        <div class="panel-title" id="ticketPanelTitle">Ticket</div>
+        <button class="panel-close" onclick="closeTicketPanel()">✕</button>
+      </div>
+      <div class="panel-body" id="ticketPanelBody"></div>
+    </div>
+    <div class="panel-overlay" id="ticketOverlay" onclick="closeTicketPanel()"></div>
   </main>
 </div>
 
@@ -1272,7 +1337,7 @@ function adminLogout() {
 // ─── NAV ──────────────────────────────────────────
 const PAGE_TITLES = {
   overview:'Overview', users:'All Users', payments:'Revenue & Payments',
-  vendors:'Platform Vendors', health:'Platform Health', settings:'Admin Settings'
+  vendors:'Platform Vendors', health:'Platform Health', settings:'Admin Settings', support:'Support Tickets'
 };
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -2100,6 +2165,207 @@ function showToast(msg,type='') {
   t.className='toast show'+(type==='error'?' error':type==='success'?' success':'');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>{t.className='toast'},3000);
+}
+
+
+// ═══════════════════════════════════════════════════
+// SUPPORT TICKETS
+// ═══════════════════════════════════════════════════
+let allTickets = [], sfFilter = 'all';
+const SVC_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc1MDQ3NiwiZXhwIjoyMDg4MzI2NDc2fQ.6-OlI0KtlY4f1XkLIF8KEp_Rk1Wqos5Z89Zzm1UKy_Q';
+const SVC_H = { 'Content-Type':'application/json', apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}` };
+
+async function loadSupportTickets() {
+  try {
+    const r = await fetch(`${ADMIN_URL}/rest/v1/support_tickets?order=created_at.desc`, { headers: SVC_H });
+    allTickets = await r.json();
+    if (!Array.isArray(allTickets)) allTickets = [];
+    updateSupportStats();
+    renderTickets();
+    // Badge on nav
+    const open = allTickets.filter(t => t.status === 'open').length;
+    const badge = document.getElementById('navBadgeSupport');
+    if (badge) { badge.textContent = open; badge.style.display = open > 0 ? 'inline-block' : 'none'; }
+  } catch(e) { console.error('Support tickets error:', e); }
+}
+
+function updateSupportStats() {
+  setText('st-open',     allTickets.filter(t=>t.status==='open').length);
+  setText('st-progress', allTickets.filter(t=>t.status==='in_progress').length);
+  setText('st-resolved', allTickets.filter(t=>t.status==='resolved').length);
+  setText('st-total',    allTickets.length);
+}
+
+function setSF(btn, f) {
+  sfFilter = f;
+  document.querySelectorAll('[data-sf]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTickets();
+}
+
+function renderTickets() {
+  const q = (document.getElementById('supportSearch')?.value || '').toLowerCase();
+  let list = allTickets.filter(t => {
+    if (sfFilter !== 'all' && t.status !== sfFilter) return false;
+    if (q && !`${t.name} ${t.email} ${t.subject} ${t.message}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const badge = document.getElementById('supportCountBadge');
+  if (badge) badge.textContent = list.length + ' ticket' + (list.length !== 1 ? 's' : '');
+  const tbody = document.getElementById('supportTbody');
+  if (!tbody) return;
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">No tickets found</td></tr>`;
+    return;
+  }
+  const STATUS_COL = { open:'var(--amber-pale)', in_progress:'#e8f0ff', resolved:'var(--sage-pale)', closed:'var(--bg2)' };
+  const STATUS_TXT = { open:'var(--amber)', in_progress:'#2a5aaa', resolved:'var(--sage)', closed:'var(--muted)' };
+  const STATUS_LBL = { open:'Open', in_progress:'In Progress', resolved:'Resolved', closed:'Closed' };
+  const PRIO_COL   = { urgent:'#fef0f0', high:'#fff8e6', normal:'var(--bg2)', low:'var(--bg2)' };
+  const PRIO_TXT   = { urgent:'var(--rose)', high:'var(--amber)', normal:'var(--muted)', low:'var(--muted2)' };
+
+  tbody.innerHTML = list.map(t => {
+    const date = new Date(t.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const hasReply = !!t.admin_reply;
+    return `<tr style="cursor:pointer" onclick="openTicket('${t.id}')">
+      <td>
+        <div style="font-weight:600;font-size:13px">${escA(t.name||'Anonymous')}</div>
+        <div style="font-size:11px;color:var(--muted2)">${escA(t.email)}</div>
+        ${t.user_id ? '<span style="font-size:9px;background:var(--gold-pale);color:var(--gold);padding:1px 6px;border-radius:4px;font-weight:700">Registered user</span>' : '<span style="font-size:9px;background:var(--bg2);color:var(--muted2);padding:1px 6px;border-radius:4px;font-weight:700">Visitor</span>'}
+      </td>
+      <td>
+        <div style="font-size:13px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escA(t.subject)}</div>
+        <div style="font-size:11px;color:var(--muted2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escA(t.message)}</div>
+        ${hasReply ? '<span style="font-size:9px;color:var(--sage);font-weight:700">✓ Replied</span>' : ''}
+      </td>
+      <td><span style="background:${STATUS_COL[t.status]||'var(--bg2)'};color:${STATUS_TXT[t.status]||'var(--muted)'};padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700">${STATUS_LBL[t.status]||t.status}</span></td>
+      <td><span style="background:${PRIO_COL[t.priority]||'var(--bg2)'};color:${PRIO_TXT[t.priority]||'var(--muted)'};padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;text-transform:capitalize">${t.priority||'normal'}</span></td>
+      <td style="font-size:12px;color:var(--muted2);white-space:nowrap">${date}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="panel-action-btn gold" onclick="event.stopPropagation();openTicket('${t.id}')">Reply</button>
+          <select style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:4px 6px;background:var(--bg);color:var(--ink);cursor:pointer" onchange="event.stopPropagation();updateTicketStatus('${t.id}',this.value)">
+            <option value="">Change status</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openTicket(id) {
+  const t = allTickets.find(x => x.id === id);
+  if (!t) return;
+  const date = new Date(t.created_at).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('ticketPanelTitle').textContent = t.subject;
+  document.getElementById('ticketPanelBody').innerHTML = `
+    <div class="panel-section">
+      <div class="panel-section-title">From</div>
+      <div style="font-weight:600">${escA(t.name)}</div>
+      <div style="font-size:12px;color:var(--muted2)">${escA(t.email)}</div>
+      <div style="font-size:11px;color:var(--muted2);margin-top:4px">${date} · ${t.source||'widget'}</div>
+      ${t.user_id ? '<div style="font-size:11px;background:var(--gold-pale);color:var(--gold);padding:3px 8px;border-radius:6px;margin-top:6px;display:inline-block;font-weight:600">Registered user</div>' : ''}
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Message</div>
+      <div style="background:var(--bg2);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;color:var(--ink);white-space:pre-wrap">${escA(t.message)}</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Status & Priority</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <select id="tpStatus" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:13px;background:var(--surface);color:var(--ink);outline:none">
+          <option value="open"        ${t.status==='open'?'selected':''}>Open</option>
+          <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In Progress</option>
+          <option value="resolved"    ${t.status==='resolved'?'selected':''}>Resolved</option>
+          <option value="closed"      ${t.status==='closed'?'selected':''}>Closed</option>
+        </select>
+        <select id="tpPriority" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:13px;background:var(--surface);color:var(--ink);outline:none">
+          <option value="low"    ${t.priority==='low'?'selected':''}>Low</option>
+          <option value="normal" ${t.priority==='normal'?'selected':''}>Normal</option>
+          <option value="high"   ${t.priority==='high'?'selected':''}>High</option>
+          <option value="urgent" ${t.priority==='urgent'?'selected':''}>Urgent</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Reply to User</div>
+      <textarea id="tpReply" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--surface);outline:none;resize:vertical;min-height:100px;transition:.15s" placeholder="Write your reply here…">${escA(t.admin_reply||'')}</textarea>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Internal Notes</div>
+      <textarea id="tpNotes" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--surface);outline:none;resize:vertical;min-height:70px;transition:.15s" placeholder="Private notes (not shown to user)…">${escA(t.admin_notes||'')}</textarea>
+    </div>
+    <div class="panel-actions" style="display:flex;gap:8px">
+      <button class="panel-action-btn gold" style="flex:1;justify-content:center;padding:11px" onclick="saveTicket('${t.id}')">Save & Reply</button>
+      <button class="panel-action-btn" style="justify-content:center;padding:11px" onclick="closeTicketPanel()">Cancel</button>
+    </div>
+    <div id="tpMsg" style="font-size:12px;margin-top:8px;display:none;text-align:center"></div>
+  `;
+  document.getElementById('ticketPanel').classList.add('open');
+  document.getElementById('ticketOverlay').classList.add('open');
+}
+
+async function saveTicket(id) {
+  const status     = document.getElementById('tpStatus')?.value;
+  const priority   = document.getElementById('tpPriority')?.value;
+  const admin_reply = document.getElementById('tpReply')?.value.trim();
+  const admin_notes = document.getElementById('tpNotes')?.value.trim();
+  const msgEl = document.getElementById('tpMsg');
+  try {
+    const r = await fetch(`${ADMIN_URL}/rest/v1/support_tickets?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...SVC_H, Prefer: 'return=minimal' },
+      body: JSON.stringify({ status, priority, admin_reply, admin_notes, replied_at: admin_reply ? new Date().toISOString() : null })
+    });
+    if (!r.ok) throw new Error('Save failed');
+    // Update local
+    const t = allTickets.find(x => x.id === id);
+    if (t) Object.assign(t, { status, priority, admin_reply, admin_notes });
+    msgEl.textContent = '✅ Saved!';
+    msgEl.style.color = 'var(--sage)';
+    msgEl.style.display = 'block';
+    updateSupportStats();
+    renderTickets();
+    setTimeout(() => closeTicketPanel(), 1200);
+  } catch(e) {
+    msgEl.textContent = '❌ Save failed — try again';
+    msgEl.style.color = 'var(--rose)';
+    msgEl.style.display = 'block';
+  }
+}
+
+async function updateTicketStatus(id, status) {
+  if (!status) return;
+  try {
+    await fetch(`${ADMIN_URL}/rest/v1/support_tickets?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...SVC_H, Prefer: 'return=minimal' },
+      body: JSON.stringify({ status })
+    });
+    const t = allTickets.find(x => x.id === id);
+    if (t) t.status = status;
+    updateSupportStats();
+    renderTickets();
+    showToast('Status updated ✅', 'success');
+  } catch(e) { showToast('Update failed', 'error'); }
+}
+
+function closeTicketPanel() {
+  document.getElementById('ticketPanel')?.classList.remove('open');
+  document.getElementById('ticketOverlay')?.classList.remove('open');
+}
+
+function escA(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Load support tickets when support page is first shown
+const _origShowPage = showPage;
+function showPage(name) {
+  _origShowPage(name);
+  if (name === 'support' && !allTickets.length) loadSupportTickets();
 }
 
 // Topbar scroll shadow
