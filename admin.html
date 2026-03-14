@@ -1466,7 +1466,10 @@ function adminLogin() {
     localStorage.setItem('wl_admin_pw', DEFAULT_PW);
     document.getElementById('loginGate').style.display='none';
     document.getElementById('adminApp').style.display='block';
-    document.getElementById('mobileTopbar').style.display='flex';
+    // Hide all pages, show only overview
+    document.querySelectorAll('.page').forEach(p => p.style.display='none');
+    const ov = document.getElementById('page-overview');
+    if (ov) { ov.style.display='block'; ov.classList.add('active'); }
     loadAllData();
   } else {
     document.getElementById('loginError').style.display='block';
@@ -1487,16 +1490,22 @@ const PAGE_TITLES = {
   support:'Support Tickets'
 };;
 function showPage(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const pg = document.getElementById('page-'+name);
-  const nb = document.getElementById('nav-'+name);
-  if (pg) pg.classList.add('active');
+  // Hide ALL pages completely (zero height when hidden)
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  // Show only the selected page
+  const pg = document.getElementById('page-' + name);
+  const nb = document.getElementById('nav-' + name);
+  if (pg) { pg.classList.add('active'); pg.style.display = 'block'; }
   if (nb) nb.classList.add('active');
   const tt = document.getElementById('topbarTitle');
-  if (tt) tt.textContent = PAGE_TITLES[name]||name;
+  if (tt) tt.textContent = PAGE_TITLES[name] || name;
+  // Scroll to top
+  window.scrollTo(0, 0);
   if (name === 'support') loadSupportTickets();
-  if (pg) window.scrollTo({top: pg.offsetTop - 60, behavior:'instant'});
 }
 
 // ─── LOAD DATA ─────────────────────────────────────
