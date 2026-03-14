@@ -279,7 +279,7 @@ tbody td{padding:11px 14px;font-size:13px;color:var(--ink);vertical-align:middle
 <!-- MOBILE BAR -->
 <div id="mobileBar">
   <div class="mob-logo">Wedding<em>Ledger</em></div>
-  <div class="mob-btn" onclick="toggleMobileDrawer()"><span></span><span></span><span></span></div>
+  <div class="mob-btn" id="mobileNavBtn" onclick="toggleMobileDrawer()"><span></span><span></span><span></span></div>
 </div>
 
 <!-- MOBILE DRAWER -->
@@ -546,7 +546,7 @@ function adminLogin() {
 function adminLogout() {
   document.getElementById('loginGate').style.display='flex';
   document.getElementById('adminShell').style.display='none';
-  document.getElementById('mobileTopbar').style.display='none';
+  document.getElementById('mobileBar').style.display='none';
   document.getElementById('adminPassword').value='';
 }
 
