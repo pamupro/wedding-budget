@@ -40,7 +40,7 @@
     background: var(--bg);
     color: var(--ink);
     min-height: 100vh;
-    padding-top: 60px;
+    /* style.css already sets padding-top:60px / 56px mobile — don't override */
   }
 
   /* ── Stats strip ── */
@@ -51,7 +51,7 @@
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
-    top: 60px;
+    top: 0;
     z-index: 300;
   }
   .stats-strip::-webkit-scrollbar { display: none; }
@@ -96,7 +96,7 @@
     border-bottom: 1px solid rgba(26,22,18,.10);
     flex-wrap: wrap;
     position: sticky;
-    top: 124px;
+    top: 67px;
     z-index: 500;
     overflow: visible;
   }
@@ -309,8 +309,8 @@
   @media (max-width: 680px) {
     .toolbar { padding: 10px 14px; }
     .grid { padding: 12px; grid-template-columns: 1fr; }
-    .stats-strip { top: 56px; }
-    .toolbar { top: 120px; }
+    .stats-strip { top: 0; }
+    .toolbar { top: 67px; }
     .hamburger-btn { display: flex; align-items: center; }
     .desktop-only { display: none !important; }
   }
@@ -944,7 +944,7 @@
   </div>
 </div>
 
-<main style="min-height:100vh;background:var(--bg)">
+<main style="min-height:100vh;background:var(--bg);padding-top:0">
   <div class="stats-strip">
     <div class="stat-pill active" id="pill-all"  onclick="setF('all',this)"><span class="stat-num" id="sAll">0</span><span class="stat-lbl">Invited</span></div>
     <div class="stat-pill" id="pill-yes"          onclick="setF('yes',this)"><span class="stat-num" id="sYes" style="color:#2a7a2a">0</span><span class="stat-lbl">✅ Attending</span></div>
