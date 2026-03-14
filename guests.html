@@ -862,7 +862,7 @@
     padding: 6px 10px 4px;
   }
   .csel-opt {
-    padding: 9px 10px;
+    padding: 8px 10px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -871,11 +871,28 @@
     transition: background .1s;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
   .csel-opt:hover { background: var(--bg2); }
   .csel-opt.csel-active { background: var(--gold-pale); color: var(--gold); font-weight: 600; }
-  .csel-opt.csel-active::after { content: "✓"; margin-left: auto; font-size: 12px; }
+  .csel-opt-icon { font-size: 14px; flex-shrink: 0; width: 20px; text-align: center; }
+  .csel-opt-text { flex: 1; }
+  .csel-opt-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted2);
+    background: var(--bg2);
+    border-radius: 99px;
+    padding: 1px 7px;
+    min-width: 24px;
+    text-align: center;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .csel-opt.csel-active .csel-opt-count {
+    background: rgba(160,120,40,.15);
+    color: var(--gold);
+  }
   .csel-divider { height: 1px; background: var(--border); margin: 4px 0; }
 
   /* ── Toolbar mobile fix ── */
@@ -955,37 +972,77 @@
       </button>
       <div class="csel-drop" id="cselSideDrop">
         <div class="csel-section">Filter by side</div>
-        <div class="csel-opt csel-active" data-v="" onclick="pickSideFilter(this,'All Sides')">All Sides</div>
+        <div class="csel-opt csel-active" data-v="" onclick="pickSideFilter(this,'All Sides')">
+          <span class="csel-opt-icon">👥</span>
+          <span class="csel-opt-text">All Sides</span>
+          <span class="csel-opt-count" id="cnt-all"></span>
+        </div>
         <div class="csel-divider"></div>
-        <div class="csel-opt" data-v="Bride Side" onclick="pickSideFilter(this,'Bride's Family')">💐 Bride's Family</div>
-        <div class="csel-opt" data-v="Groom Side" onclick="pickSideFilter(this,'Groom's Family')">🤵 Groom's Family</div>
-        <div class="csel-opt" data-v="Both Sides" onclick="pickSideFilter(this,'Both Sides')">💑 Both Sides</div>
+        <div class="csel-opt" data-v="Bride Side" onclick="pickSideFilter(this,'Bride's Family')">
+          <span class="csel-opt-icon">💐</span>
+          <span class="csel-opt-text">Bride's Family</span>
+          <span class="csel-opt-count" id="cnt-bride"></span>
+        </div>
+        <div class="csel-opt" data-v="Groom Side" onclick="pickSideFilter(this,'Groom's Family')">
+          <span class="csel-opt-icon">🤵</span>
+          <span class="csel-opt-text">Groom's Family</span>
+          <span class="csel-opt-count" id="cnt-groom"></span>
+        </div>
+        <div class="csel-opt" data-v="Both Sides" onclick="pickSideFilter(this,'Both Sides')">
+          <span class="csel-opt-icon">💑</span>
+          <span class="csel-opt-text">Both Sides</span>
+          <span class="csel-opt-count" id="cnt-both"></span>
+        </div>
         <div class="csel-divider"></div>
-        <div class="csel-opt" data-v="Bride's Friend" onclick="pickSideFilter(this,'Bride's Friends')">🌸 Bride's Friends</div>
-        <div class="csel-opt" data-v="Groom's Friend" onclick="pickSideFilter(this,'Groom's Friends')">🙌 Groom's Friends</div>
+        <div class="csel-opt" data-v="Bride's Friend" onclick="pickSideFilter(this,'Bride's Friends')">
+          <span class="csel-opt-icon">🌸</span>
+          <span class="csel-opt-text">Bride's Friends</span>
+          <span class="csel-opt-count" id="cnt-bfriend"></span>
+        </div>
+        <div class="csel-opt" data-v="Groom's Friend" onclick="pickSideFilter(this,'Groom's Friends')">
+          <span class="csel-opt-icon">🙌</span>
+          <span class="csel-opt-text">Groom's Friends</span>
+          <span class="csel-opt-count" id="cnt-gfriend"></span>
+        </div>
         <div class="csel-divider"></div>
-        <div class="csel-opt" data-v="Other" onclick="pickSideFilter(this,'Other')">👥 Other</div>
+        <div class="csel-opt" data-v="Other" onclick="pickSideFilter(this,'Other')">
+          <span class="csel-opt-icon">👤</span>
+          <span class="csel-opt-text">Other</span>
+          <span class="csel-opt-count" id="cnt-other"></span>
+        </div>
       </div>
     </div>
 
     <!-- Custom dropdown: Sort -->
     <div class="csel-wrap" id="cselSort">
       <button class="csel-btn" onclick="toggleCsel('cselSort')">
-        <span class="csel-label" id="cselSortLabel">Name</span>
+        <span class="csel-label" id="cselSortLabel">A–Z Name</span>
         <svg class="csel-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       <div class="csel-drop" id="cselSortDrop">
         <div class="csel-section">Sort by</div>
-        <div class="csel-opt csel-active" data-v="name" onclick="pickSortFilter(this,'Name')">A–Z Name</div>
-        <div class="csel-opt" data-v="rsvp" onclick="pickSortFilter(this,'RSVP')">RSVP Status</div>
-        <div class="csel-opt" data-v="group" onclick="pickSortFilter(this,'Group')">Group</div>
-        <div class="csel-opt" data-v="new" onclick="pickSortFilter(this,'Newest')">Newest First</div>
+        <div class="csel-opt csel-active" data-v="name" onclick="pickSortFilter(this,'A–Z Name')">
+          <span class="csel-opt-icon">🔤</span>
+          <span class="csel-opt-text">A–Z Name</span>
+        </div>
+        <div class="csel-opt" data-v="rsvp" onclick="pickSortFilter(this,'RSVP')">
+          <span class="csel-opt-icon">✅</span>
+          <span class="csel-opt-text">RSVP Status</span>
+        </div>
+        <div class="csel-opt" data-v="group" onclick="pickSortFilter(this,'Group')">
+          <span class="csel-opt-icon">👥</span>
+          <span class="csel-opt-text">Group / Side</span>
+        </div>
+        <div class="csel-opt" data-v="new" onclick="pickSortFilter(this,'Newest')">
+          <span class="csel-opt-icon">🆕</span>
+          <span class="csel-opt-text">Newest First</span>
+        </div>
       </div>
     </div>
 
-    <!-- Hidden native selects still used by renderList() -->
+    <!-- Hidden native selects used by renderList() -->
     <select id="grpSel" style="display:none"></select>
     <select id="sortSel" style="display:none"><option value="name" selected></option></select>
 
@@ -1484,7 +1541,10 @@ function renderList() {
   if(so === 'group') list.sort((a,b) => (a.group_label||'').localeCompare(b.group_label||''));
   if(so === 'new')   list.reverse();
 
-  document.getElementById('cntLbl').textContent = list.length + ' guest' + (list.length!==1?'s':'');
+  // Count total people (main guests + their family members) in filtered list
+  const filteredTotal = list.reduce((sum, g) => sum + 1 + familyCount(g), 0);
+  const cntEl = document.getElementById('cntLbl');
+  if(cntEl) cntEl.textContent = filteredTotal.toLocaleString() + ' guest' + (filteredTotal!==1?'s':'');
 
   const grid = document.getElementById('guestGrid');
   if(!list.length) {
@@ -2290,19 +2350,47 @@ function closeMobileNav() {
 
 
 // ── Custom dropdown logic ──────────────────────────────────────────────────
+function countByGroup(groupVal) {
+  // Count total people (guests + family) for a given group_label
+  // Empty string = all groups
+  return guests.reduce((sum, g) => {
+    if(groupVal !== '' && g.group_label !== groupVal) return sum;
+    return sum + 1 + familyCount(g);
+  }, 0);
+}
+
+function refreshDropdownCounts() {
+  const map = {
+    'cnt-all':     '',
+    'cnt-bride':   'Bride Side',
+    'cnt-groom':   'Groom Side',
+    'cnt-both':    'Both Sides',
+    'cnt-bfriend': "Bride's Friend",
+    'cnt-gfriend': "Groom's Friend",
+    'cnt-other':   'Other',
+  };
+  for(const [id, val] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if(el) el.textContent = countByGroup(val);
+  }
+}
+
 function toggleCsel(id) {
   const wrap = document.getElementById(id);
   const isOpen = wrap.classList.contains('open');
-  // close all first
   document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
-  if (!isOpen) wrap.classList.add('open');
+  if(!isOpen) {
+    wrap.classList.add('open');
+    refreshDropdownCounts();
+  }
 }
-// close on outside click
+
 document.addEventListener('click', e => {
-  if (!e.target.closest('.csel-wrap')) {
+  if(!e.target.closest('.csel-wrap')) {
     document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
   }
 });
+
 function pickSideFilter(el, label) {
   document.querySelectorAll('#cselSideDrop .csel-opt').forEach(o => o.classList.remove('csel-active'));
   el.classList.add('csel-active');
@@ -2311,6 +2399,7 @@ function pickSideFilter(el, label) {
   document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
   renderList();
 }
+
 function pickSortFilter(el, label) {
   document.querySelectorAll('#cselSortDrop .csel-opt').forEach(o => o.classList.remove('csel-active'));
   el.classList.add('csel-active');
