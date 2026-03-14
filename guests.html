@@ -1387,7 +1387,7 @@ if(!uid || !localStorage.getItem('wl_token')) location.href = 'login.html';
 function getTok() { return localStorage.getItem('wl_token'); }
 
 let guests=[], prof={}, menuCfg={courses:[]};
-let filt='all', selIds=new Set(), csvRows=[];
+let filt='all', grpFilter='', sortFilter='name', selIds=new Set(), csvRows=[];
 let msgKind='', msgPeeps=[];
 
 // ── RAW SUPABASE HELPERS ──────────────────────────────────────────────────────
@@ -1521,8 +1521,8 @@ function setF(f, el) {
 
 function renderList() {
   const q  = (document.getElementById('searchQ').value || '').toLowerCase();
-  const gr = document.getElementById('grpSel').value || '';
-  const so = document.getElementById('sortSel').value || 'name';
+  const gr = grpFilter;
+  const so = sortFilter;
 
   let list = guests.filter(g => {
     const st = g.rsvp_status || 'pending';
@@ -2400,12 +2400,12 @@ document.addEventListener('click', function(e) {
       drop.querySelectorAll('.csel-opt').forEach(o => o.classList.remove('csel-active'));
       opt.classList.add('csel-active');
       document.getElementById('cselSideLabel').textContent = label;
-      document.getElementById('grpSel').value = val;
+      grpFilter = val;
     } else if(isSort) {
       drop.querySelectorAll('.csel-opt').forEach(o => o.classList.remove('csel-active'));
       opt.classList.add('csel-active');
       document.getElementById('cselSortLabel').textContent = label;
-      document.getElementById('sortSel').value = val;
+      sortFilter = val;
     }
     document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
     renderList();
