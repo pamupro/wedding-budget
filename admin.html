@@ -1494,8 +1494,14 @@ function showPage(name) {
   if (nb) nb.classList.add('active');
   const tt = document.getElementById('topbarTitle');
   if (tt) tt.textContent = PAGE_TITLES[name]||name;
-  window.scrollTo(0,0);
   if (name==='support') loadSupportTickets();
+  // Wait for reflow, then scroll to exact page position
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      const p = document.getElementById('page-'+name);
+      if (p) window.scrollTo({top: p.offsetTop - 60, behavior:'instant'});
+    });
+  });
 }
 
 // ─── LOAD DATA ─────────────────────────────────────
