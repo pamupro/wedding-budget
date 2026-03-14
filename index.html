@@ -526,51 +526,116 @@ img{display:block;max-width:100%}
 .tc-loc{font-size:11px;color:var(--muted2)}
 
 /* ══════════════════════════════════════
-   PRICING
+   PRICING — redesigned
 ══════════════════════════════════════ */
-.pricing{padding:80px 48px;max-width:900px;margin:0 auto}
-.pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:48px}
+.pricing{padding:80px 24px;max-width:960px;margin:0 auto}
+
+/* Desktop: 3 cards side by side */
+.pgrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:48px;
+  align-items:start;
+}
+
 .pcard{
-  border:1px solid var(--border2);border-radius:16px;padding:36px;
+  border:1px solid rgba(26,22,18,.09);
+  border-radius:20px;
+  padding:32px 28px;
   background:var(--surface);
   opacity:0;transform:translateY(16px);transition:.5s ease;
+  display:flex;flex-direction:column;
 }
 .pcard.vis{opacity:1;transform:none}
+
+/* Dark "Most Popular" card */
 .pcard.pro{
-  background:var(--ink);color:var(--bg);
+  background:var(--ink);
   border-color:var(--ink);
-  box-shadow:0 16px 64px rgba(26,22,18,.18);
+  box-shadow:0 20px 60px rgba(26,22,18,.22);
+  transform:translateY(-8px) scale(1.02);
 }
+.pcard.pro.vis{transform:translateY(-8px) scale(1.02)}
+
+/* Gold "Best Value" card */
+.pcard.bundle{
+  border:1.5px solid rgba(160,120,40,.35);
+  background:#fffdf6;
+}
+
 .p-badge{
-  display:inline-block;padding:4px 12px;border-radius:99px;
-  background:var(--gold-bg);border:1px solid var(--gold-bd);
-  font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--gold);margin-bottom:14px;
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;border-radius:99px;
+  background:rgba(160,120,40,.1);border:1px solid rgba(160,120,40,.2);
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:16px;width:fit-content;
 }
-.pcard.pro .p-badge{background:rgba(196,154,58,.15);border-color:rgba(196,154,58,.3);color:var(--gold2)}
-.p-name{font-family:'Fraunces',serif;font-size:24px;font-weight:200;color:var(--ink);margin-bottom:2px}
-.pcard.pro .p-name{color:var(--bg)}
+.pcard.pro .p-badge{
+  background:rgba(196,154,58,.18);
+  border-color:rgba(196,154,58,.35);
+  color:#e4c870;
+}
+.pcard.bundle .p-badge{
+  background:var(--gold);
+  border-color:var(--gold);
+  color:white;
+}
+
+.p-name{
+  font-family:'Fraunces',serif;font-size:22px;font-weight:300;
+  color:var(--ink);margin-bottom:4px;
+}
+.pcard.pro .p-name{color:#faf7f2}
+
 .p-amount{
-  font-family:'Fraunces',serif;font-size:54px;font-weight:200;
-  color:var(--gold);letter-spacing:-.04em;line-height:1;margin:14px 0 4px;
+  font-family:'Fraunces',serif;font-size:52px;font-weight:200;
+  color:var(--gold);letter-spacing:-.04em;line-height:1;margin:12px 0 4px;
 }
-.pcard.pro .p-amount{color:var(--gold2)}
-.p-per{font-size:12px;color:var(--muted2);margin-bottom:22px}
-.p-sep{height:1px;background:var(--border2);margin:18px 0}
+.pcard.pro .p-amount{color:#e4c870}
+.pcard.bundle .p-amount{color:var(--gold)}
+
+.p-per{font-size:12px;color:var(--muted2);margin-bottom:0}
+.pcard.pro .p-per{color:rgba(250,247,242,.45)}
+
+.p-sep{height:1px;background:rgba(26,22,18,.07);margin:20px 0}
 .pcard.pro .p-sep{background:rgba(255,255,255,.08)}
-.p-feats{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
-.p-feats li{font-size:13px;color:var(--muted);display:flex;align-items:flex-start;gap:9px;line-height:1.5}
-.pcard.pro .p-feats li{color:rgba(250,247,242,.55)}
-.p-feats li::before{content:'✓';color:var(--gold);flex-shrink:0;font-weight:700;font-size:11px;margin-top:1px}
-.pbtn{
-  display:block;text-align:center;padding:14px;border-radius:8px;
-  font-size:13px;font-weight:600;text-decoration:none;transition:.2s;letter-spacing:.01em;
+.pcard.bundle .p-sep{background:rgba(160,120,40,.15)}
+
+.p-feats{
+  list-style:none;display:flex;flex-direction:column;
+  gap:9px;margin-bottom:24px;flex:1;
 }
-.pbtn-dk{background:var(--ink);color:var(--bg)}
-.pbtn-dk:hover{background:var(--gold)}
-.pbtn-lt{border:1.5px solid var(--border);color:var(--muted)}
+.p-feats li{
+  font-size:13px;color:var(--muted);
+  display:flex;align-items:flex-start;gap:8px;line-height:1.5;
+}
+.pcard.pro .p-feats li{color:rgba(250,247,242,.6)}
+.pcard.bundle .p-feats li{color:#5a4a2a}
+.p-feats li::before{
+  content:'✓';color:var(--gold);flex-shrink:0;
+  font-weight:700;font-size:11px;margin-top:2px;
+}
+.pcard.pro .p-feats li::before{color:#e4c870}
+
+.pbtn{
+  display:block;text-align:center;
+  padding:13px 20px;border-radius:50px;
+  font-size:13px;font-weight:600;text-decoration:none;
+  transition:all .2s;letter-spacing:.01em;margin-top:auto;
+}
+.pbtn-dk{background:var(--ink);color:#faf7f2}
+.pbtn-dk:hover{background:var(--gold);transform:translateY(-1px)}
+.pbtn-lt{border:1.5px solid rgba(26,22,18,.15);color:var(--muted);background:transparent}
 .pbtn-lt:hover{border-color:var(--ink);color:var(--ink)}
-.pnote{text-align:center;font-size:12px;color:var(--muted2);margin-top:18px}
+.pbtn-gold{background:var(--gold);color:white}
+.pbtn-gold:hover{background:#8a6420;transform:translateY(-1px)}
+
+.pnote{
+  text-align:center;font-size:12px;color:var(--muted2);
+  margin-top:28px;max-width:420px;margin-left:auto;margin-right:auto;
+  line-height:1.6;
+}
 
 /* ══════════════════════════════════════
    FINAL CTA
@@ -752,7 +817,7 @@ footer p{font-size:12px;color:var(--muted2)}
 
   /* Demo section */
   .demo-section{padding:56px 20px}
-  .dtabs{gap:5px;margin-bottom:32px}
+  .dtabs{gap:4px;margin-bottom:32px;padding:4px}
   .dtab{padding:8px 14px;font-size:12px}
   .dtab .dtab-icon{display:none}/* just text on mobile */
   .dpanel.on{grid-template-columns:1fr;gap:28px}
@@ -763,9 +828,18 @@ footer p{font-size:12px;color:var(--muted2)}
   .tgrid{grid-template-columns:1fr;gap:10px}
 
   /* Pricing */
-  .pricing{padding:56px 20px}
-  .pgrid{grid-template-columns:1fr;gap:12px}
-  .pcard.pro{order:-1}/* Pro first on mobile */
+  .pricing{padding:48px 16px}
+  .pgrid{
+    grid-template-columns:1fr;
+    gap:14px;
+    max-width:400px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .pcard{padding:28px 24px}
+  .pcard.pro{order:-1;transform:none}
+  .pcard.pro.vis{transform:none}
+  .p-amount{font-size:44px}
 
   /* CTA */
   .cta-fin{padding:72px 20px 100px}/* extra bottom for mob bar */
@@ -1011,19 +1085,33 @@ footer p{font-size:12px;color:var(--muted2)}
    TAB BAR
 ───────────────────────────────────── */
 .dtabs{
-  display:flex;justify-content:center;gap:6px;margin-bottom:56px;flex-wrap:wrap
+  display:flex;justify-content:center;gap:8px;margin-bottom:56px;flex-wrap:wrap;
+  padding:6px;
+  background:rgba(255,255,255,.04);
+  border-radius:99px;
+  border:1px solid rgba(255,255,255,.07);
+  width:fit-content;
+  margin-left:auto;margin-right:auto;
 }
 .dtab{
   display:flex;align-items:center;gap:7px;
-  padding:10px 20px;border-radius:99px;
-  border:1.5px solid rgba(255,255,255,.1);
-  background:transparent;font-family:'Instrument Sans',sans-serif;
-  font-size:13px;font-weight:600;color:rgba(255,255,255,.38);
-  cursor:pointer;transition:.22s;white-space:nowrap
+  padding:10px 22px;border-radius:99px;
+  border:none;
+  background:transparent;
+  font-family:'Instrument Sans',sans-serif;
+  font-size:13px;font-weight:600;
+  color:rgba(255,255,255,.38);
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+  position:relative;
 }
-.dtab:hover{border-color:rgba(255,255,255,.25);color:rgba(255,255,255,.65)}
-.dtab.on{background:#c9a84c;border-color:#c9a84c;color:#0c0b09}
-.dtab .dtab-icon{font-size:15px;line-height:1}
+.dtab:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.06)}
+.dtab.on{
+  background:#fdf3dc;
+  color:#1a1612;
+  box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.dtab.on .dtab-icon{filter:none}
+.dtab .dtab-icon{font-size:15px;line-height:1;transition:.2s}
 
 /* ─────────────────────────────────────
    PANEL LAYOUT
@@ -1252,9 +1340,6 @@ footer p{font-size:12px;color:var(--muted2)}
       <button class="dtab" onclick="dSwitch('guests',this)">
         <span class="dtab-icon">👥</span>Guest List
       </button>
-      <button class="dtab" onclick="dSwitch('seating',this)">
-        <span class="dtab-icon">🪑</span>Seating Chart
-      </button>
       <button class="dtab" onclick="dSwitch('rsvp',this)">
         <span class="dtab-icon">📲</span>RSVP Links
       </button>
@@ -1265,7 +1350,7 @@ footer p{font-size:12px;color:var(--muted2)}
       <!-- ══ PANEL: BUDGET ══ -->
       <div class="dpanel on" id="dp-budget">
         <div class="dpanel-copy">
-          <div class="eyebrow">Feature 1 of 4</div>
+          <div class="eyebrow">Feature 1 of 3</div>
           <h3>Track every pound,<br><em>effortlessly</em></h3>
           <p class="dpanel-desc">Add your vendors, log deposits and payments as you go. See your total budget vs actual spend update in real time — no spreadsheets, no guesswork.</p>
           <ul class="dpanel-bullets">
@@ -1332,7 +1417,7 @@ footer p{font-size:12px;color:var(--muted2)}
       <!-- ══ PANEL: GUESTS ══ -->
       <div class="dpanel" id="dp-guests">
         <div class="dpanel-copy">
-          <div class="eyebrow">Feature 2 of 4</div>
+          <div class="eyebrow">Feature 2 of 3</div>
           <h3>Your guest list,<br><em>finally organised</em></h3>
           <p class="dpanel-desc">Add families as groups, assign bride's or groom's side, track dietary needs and RSVPs. Export a beautifully formatted report at any time.</p>
           <ul class="dpanel-bullets">
@@ -1386,42 +1471,10 @@ footer p{font-size:12px;color:var(--muted2)}
         </div>
       </div>
 
-      <!-- ══ PANEL: SEATING ══ -->
-      <div class="dpanel" id="dp-seating">
-        <div class="dpanel-copy">
-          <div class="eyebrow">Feature 3 of 4</div>
-          <h3>Seat everyone<br><em>without the headache</em></h3>
-          <p class="dpanel-desc">Design your room with round and rectangular tables. Drag guests straight onto chairs — watch their name appear as each seat fills. Done in minutes, not hours.</p>
-          <ul class="dpanel-bullets">
-            <li>Drag and drop guests directly onto tables</li>
-            <li>See chairs fill with guest first names in real time</li>
-            <li>Supports round tables, top tables and long rectangles</li>
-            <li>Export a clean layout for your venue coordinator</li>
-          </ul>
-          <a href="login.html" class="try-btn">Start for free →</a>
-        </div>
-        <div class="dpanel-screen">
-          <div class="dmock">
-            <div class="dmock-bar">
-              <div class="dmock-dots">
-                <div class="dmock-dot" style="background:#ff5f57"></div>
-                <div class="dmock-dot" style="background:#febc2e"></div>
-                <div class="dmock-dot" style="background:#28c840"></div>
-              </div>
-              <div class="dmock-url">weddingledger.app · Seating</div>
-            </div>
-            <div class="dmock-body" style="padding:12px">
-              <div class="seat-canvas" id="sCvs"></div>
-              <div class="seat-chips" id="sChips"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- ══ PANEL: RSVP ══ -->
       <div class="dpanel" id="dp-rsvp">
         <div class="dpanel-copy">
-          <div class="eyebrow">Feature 4 of 4</div>
+          <div class="eyebrow">Feature 3 of 3</div>
           <h3>RSVPs without<br><em>the back-and-forth</em></h3>
           <p class="dpanel-desc">Send every guest a personalised link by WhatsApp or email. They confirm in one tap — no app, no login. Your guest list updates the moment they respond.</p>
           <ul class="dpanel-bullets">
@@ -1798,10 +1851,10 @@ else init();
 <section class="pricing" id="pricing">
   <span class="section-pre">Pricing</span>
   <h2 class="section-h">Simple.<br><em>Honest. British.</em></h2>
-  <div class="pgrid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="pgrid">
 
     <!-- FREE -->
-    <div class="pcard" style="transition-delay:0s">
+    <div class="pcard" style="transition-delay:0.1s">
       <div class="p-name">Free</div>
       <div class="p-amount">£0</div>
       <div class="p-per">forever · no card needed</div>
@@ -1815,16 +1868,15 @@ else init();
       <a href="login.html" class="pbtn pbtn-lt">Get started free</a>
     </div>
 
-    <!-- MONTHLY -->
-    <div class="pcard pro" style="transition-delay:.1s">
-      <div class="p-badge">Most popular</div>
+    <!-- MONTHLY — MOST POPULAR -->
+    <div class="pcard pro" style="transition-delay:0s">
+      <div class="p-badge">✦ Most popular</div>
       <div class="p-name">Monthly</div>
       <div class="p-amount">£4.99</div>
       <div class="p-per">per month · cancel anytime</div>
       <div class="p-sep"></div>
       <ul class="p-feats">
         <li>Unlimited vendors &amp; guests</li>
-        <li>Seating chart planner</li>
         <li>Partner collaboration</li>
         <li>Export guest list PDF</li>
         <li>Priority support</li>
@@ -1833,11 +1885,11 @@ else init();
       <a href="login.html" class="pbtn pbtn-dk">Start planning →</a>
     </div>
 
-    <!-- 4-MONTH BUNDLE -->
-    <div class="pcard" style="transition-delay:.2s;border:2px solid var(--gold);background:var(--gold-pale)">
-      <div class="p-badge" style="background:var(--gold);color:white;border-color:var(--gold)">Best value 🎉</div>
+    <!-- 4-MONTH BUNDLE — BEST VALUE -->
+    <div class="pcard bundle" style="transition-delay:.2s">
+      <div class="p-badge">🎉 Best value</div>
       <div class="p-name">4-Month Bundle</div>
-      <div class="p-amount" style="color:var(--gold)">£15</div>
+      <div class="p-amount">£15</div>
       <div class="p-per">one payment · save £4.96</div>
       <div class="p-sep"></div>
       <ul class="p-feats">
@@ -1848,11 +1900,11 @@ else init();
         <li>Priority support</li>
         <li>New features included</li>
       </ul>
-      <a href="login.html" class="pbtn pbtn-dk" style="background:var(--gold)">Get 4 months →</a>
+      <a href="login.html" class="pbtn pbtn-gold">Get 4 months →</a>
     </div>
 
   </div>
-  <p class="pnote">The average UK wedding costs £20,775. WeddingLedger costs less than a bouquet.</p>
+  <p class="pnote">The average UK wedding costs £20,775. WeddingLedger costs less than a bouquet of flowers.</p>
 </section>
 
 <!-- FINAL CTA -->
