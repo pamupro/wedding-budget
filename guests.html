@@ -47,13 +47,23 @@
   .stats-strip {
     display: flex;
     background: #ffffff;
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 3px 0 rgba(26,22,18,.06);
+    border-bottom: 1px solid rgba(26,22,18,.10);
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
     top: 64px;
     z-index: 300;
+    isolation: isolate;
+  }
+  /* White bridge fills any sub-pixel gap beneath stats strip */
+  .stats-strip::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0; right: 0;
+    height: 4px;
+    background: #ffffff;
+    z-index: 301;
   }
   .stats-strip::-webkit-scrollbar { display: none; }
   .stat-pill {
@@ -92,14 +102,23 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 24px;
+    padding: 12px 24px;
     background: #ffffff;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(26,22,18,.10);
     flex-wrap: wrap;
     position: sticky;
     top: 133px;
     z-index: 299;
-    box-shadow: 0 3px 0 rgba(26,22,18,.04);
+  }
+  /* White bridge fills any sub-pixel gap beneath toolbar */
+  .toolbar::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0; right: 0;
+    height: 4px;
+    background: #ffffff;
+    z-index: 300;
   }
   .search-wrap {
     flex: 1;
@@ -130,7 +149,7 @@
 
   /* ── Grid ── */
   .grid {
-    padding: 20px 24px;
+    padding: 24px 24px 20px;
     display: grid;
     gap: 12px;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
