@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>WeddingLedger — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -687,7 +690,7 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
 <div id="loginGate">
   <div class="login-card">
     <div class="login-logo">Wedding<em>Ledger</em></div>
-    <span class="login-eyebrow">Admin Dashboard</span>
+    <span class="login-eyebrow">Admin Dashboard · v2.1</span>
     <input type="password" id="adminPassword" class="login-input" placeholder="Enter admin password"
       onkeydown="if(event.key==='Enter')adminLogin()">
     <button class="login-btn" onclick="adminLogin()">Access Dashboard →</button>
@@ -1214,8 +1217,8 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
     <!-- ══ SUPPORT TICKETS ══════════════════════════════════════════════════ -->
     <div class="page" id="page-support">
       <div class="page-header">
-        <div class="page-title"><em>Support Tickets</em></div>
-        <div class="page-sub">All user messages and live chat enquiries</div>
+        <div style="font-family:'Fraunces',serif;font-size:32px;font-weight:200;font-style:italic;color:#1a1612;letter-spacing:-.02em;line-height:1.1;margin-bottom:4px"><em style="color:#a07828;font-weight:300">Support Tickets</em></div>
+        <div style="font-size:13px;color:#7a6e5e">All user messages and live chat enquiries</div>
       </div>
 
       <!-- Stats row -->
@@ -1266,10 +1269,10 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
           </thead>
           <tbody id="supportTbody">
             <tr>
-              <td colspan="6" style="text-align:center;padding:48px 20px;color:var(--muted2)">
+              <td colspan="6" style="text-align:center;padding:48px 20px;color:#7a6e5e">
                 <div style="font-size:36px;margin-bottom:10px">📬</div>
-                <div style="font-size:14px;font-weight:600;margin-bottom:6px;color:var(--ink)">Loading support tickets…</div>
-                <div style="font-size:12px">Make sure you have run migration_support_tickets.sql in Supabase</div>
+                <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:#1a1612">Loading support tickets…</div>
+                <div style="font-size:12px;color:#7a6e5e">Fetching from Supabase…</div>
               </td>
             </tr>
           </tbody>
@@ -2221,18 +2224,21 @@ const SVC_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const SVC_H = { 'Content-Type':'application/json', apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}` };
 
 async function loadSupportTickets() {
+  console.log('[Support] loadSupportTickets() called');
   const tbody = document.getElementById('supportTbody');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">Loading tickets…</td></tr>';
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#7a6e5e">⏳ Loading tickets from Supabase…</td></tr>';
   try {
     const r = await fetch(`${ADMIN_URL}/rest/v1/support_tickets?order=created_at.desc`, { headers: SVC_H });
     const data = await r.json();
+    console.log('[Support] response status:', r.status, 'data:', data);
     if (!r.ok) {
-      // Table likely not created yet
-      const msg = data.message || data.hint || 'Table not found — run migration_support_tickets.sql first';
-      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--rose)">⚠️ ${msg}</td></tr>`;
+      const msg = data.message || data.hint || 'Table not found — run migration_support_tickets.sql in Supabase';
+      console.error('[Support] Error:', msg);
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px"><div style="font-size:28px;margin-bottom:10px">⚠️</div><div style="font-weight:700;color:#b83030;margin-bottom:6px">Could not load tickets</div><div style="font-size:12px;color:#7a6e5e">${msg}</div></td></tr>`;
       return;
     }
     allTickets = Array.isArray(data) ? data : [];
+    console.log('[Support] loaded', allTickets.length, 'tickets');
     updateSupportStats();
     renderTickets();
     const open = allTickets.filter(t => t.status === 'open').length;
@@ -2271,8 +2277,8 @@ function renderTickets() {
   if (!tbody) return;
   if (!list.length) {
     tbody.innerHTML = allTickets.length
-      ? '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">No tickets match this filter</td></tr>'
-      : '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted2)"><div style="font-size:32px;margin-bottom:10px">📭</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">No support tickets yet</div><div style="font-size:12px">They will appear here when users send messages via the chat widget</div></td></tr>';
+      ? '<tr><td colspan="6" style="text-align:center;padding:32px;color:#7a6e5e">No tickets match this filter</td></tr>'
+      : '<tr><td colspan="6" style="text-align:center;padding:48px 20px"><div style="font-size:36px;margin-bottom:12px">📭</div><div style="font-size:15px;font-weight:700;color:#1a1612;margin-bottom:6px">No support tickets yet</div><div style="font-size:12px;color:#7a6e5e">They will appear here when users send messages via the chat widget on any page.</div></td></tr>';
     return;
   }
   const STATUS_COL = { open:'var(--amber-pale)', in_progress:'#e8f0ff', resolved:'var(--sage-pale)', closed:'var(--bg2)' };
