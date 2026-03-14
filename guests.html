@@ -53,6 +53,7 @@
     position: sticky;
     top: 60px;
     z-index: 300;
+    will-change: transform;
   }
   .stats-strip::-webkit-scrollbar { display: none; }
   .stat-pill {
@@ -96,7 +97,7 @@
     border-bottom: 1px solid rgba(26,22,18,.10);
     flex-wrap: wrap;
     position: sticky;
-    top: 125px;
+    top: var(--toolbar-top, 125px);
     z-index: 500;
     overflow: visible;
   }
@@ -310,7 +311,6 @@
     .toolbar { padding: 10px 14px; }
     .grid { padding: 12px; grid-template-columns: 1fr; }
     .stats-strip { top: 56px; }
-    .toolbar { top: 121px; }
     .hamburger-btn { display: flex; align-items: center; }
     .desktop-only { display: none !important; }
   }
@@ -2443,6 +2443,26 @@ document.addEventListener('click', function(e) {
 function pickSideFilter(el, label) {}
 function pickSortFilter(el, label) {}
 
+
+// ── Pin toolbar exactly below stats strip ─────────────────────────────────
+function pinToolbar() {
+  const strip = document.querySelector('.stats-strip');
+  const bar   = document.querySelector('.toolbar');
+  if (!strip || !bar) return;
+  const rect = strip.getBoundingClientRect();
+  // rect.bottom is where the strip ends relative to viewport
+  // For sticky: top = scroll position where strip bottom meets viewport top
+  // = distance from viewport top to strip bottom when page is NOT scrolled
+  // = strip.offsetTop + strip.offsetHeight
+  const top = strip.offsetTop + strip.offsetHeight;
+  bar.style.top = top + 'px';
+}
+// Run after fonts and layout settle
+pinToolbar();
+requestAnimationFrame(pinToolbar);
+document.fonts.ready.then(pinToolbar);
+setTimeout(pinToolbar, 200);
+window.addEventListener('resize', pinToolbar);
 
 init();
 </script>
