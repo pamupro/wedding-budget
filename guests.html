@@ -40,7 +40,7 @@
     background: var(--bg);
     color: var(--ink);
     min-height: 100vh;
-    padding-top: 64px;
+    padding-top: 60px;
   }
 
   /* ── Stats strip ── */
@@ -51,7 +51,7 @@
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
-    top: var(--topbar-h, 64px);
+    top: 60px;
     z-index: 300;
   }
   .stats-strip::-webkit-scrollbar { display: none; }
@@ -96,7 +96,7 @@
     border-bottom: 1px solid rgba(26,22,18,.10);
     flex-wrap: wrap;
     position: sticky;
-    top: var(--toolbar-top, 133px);
+    top: 124px;
     z-index: 500;
     overflow: visible;
   }
@@ -309,7 +309,8 @@
   @media (max-width: 680px) {
     .toolbar { padding: 10px 14px; }
     .grid { padding: 12px; grid-template-columns: 1fr; }
-    /* mobile: JS will set --topbar-h correctly */
+    .stats-strip { top: 56px; }
+    .toolbar { top: 120px; }
     .hamburger-btn { display: flex; align-items: center; }
     .desktop-only { display: none !important; }
   }
@@ -2442,27 +2443,6 @@ document.addEventListener('click', function(e) {
 function pickSideFilter(el, label) {}
 function pickSortFilter(el, label) {}
 
-
-// ── Measure topbar height and set sticky tops ─────────────────────────────
-function setStickyTops() {
-  const nav = document.querySelector('.topbar') || document.querySelector('nav');
-  if (!nav) return;
-  const navH = nav.getBoundingClientRect().height;
-  const strip = document.querySelector('.stats-strip');
-  const stripH = strip ? strip.getBoundingClientRect().height : 69;
-  document.documentElement.style.setProperty('--topbar-h', navH + 'px');
-  document.documentElement.style.setProperty('--toolbar-top', (navH + stripH) + 'px');
-  // Also fix body padding to exactly match topbar
-  document.body.style.paddingTop = navH + 'px';
-}
-setStickyTops();
-window.addEventListener('resize', setStickyTops);
-// Re-run after fonts are fully loaded for pixel-perfect accuracy
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(setStickyTops);
-}
-// Fallback re-measure after 300ms
-setTimeout(setStickyTops, 300);
 
 init();
 </script>
