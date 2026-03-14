@@ -1389,13 +1389,13 @@ function showPage(name) {
   if (name === 'support' && typeof loadSupportTickets === 'function') {
     loadSupportTickets();
   }
-  // Force scroll to top after DOM updates
+  // Scroll to where this page actually is in the document
   requestAnimationFrame(function(){
-    window.scrollTo(0,0);
-    document.documentElement.scrollTop=0;
-    document.body.scrollTop=0;
-    var main=document.querySelector('.main');
-    if(main) main.scrollTop=0;
+    var pg = document.getElementById('page-'+name);
+    if (pg) {
+      var top = pg.offsetTop - 60; // subtract topbar height
+      window.scrollTo({top: top, behavior: 'instant'});
+    }
   });
 }
 
