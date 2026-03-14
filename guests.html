@@ -48,13 +48,12 @@
     display: flex;
     background: #ffffff;
     border-bottom: 1px solid var(--border);
-    box-shadow: 0 4px 16px rgba(26,22,18,.07);
+    box-shadow: 0 3px 0 rgba(26,22,18,.06);
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
     top: 64px;
-    z-index: 100;
-    isolation: isolate;
+    z-index: 300;
   }
   .stats-strip::-webkit-scrollbar { display: none; }
   .stat-pill {
@@ -98,9 +97,9 @@
     border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
     position: sticky;
-    top: 116px;
-    z-index: 99;
-    box-shadow: 0 2px 8px rgba(26,22,18,.05);
+    top: 133px;
+    z-index: 299;
+    box-shadow: 0 3px 0 rgba(26,22,18,.04);
   }
   .search-wrap {
     flex: 1;
@@ -312,6 +311,7 @@
     .toolbar { padding: 10px 14px; }
     .grid { padding: 12px; grid-template-columns: 1fr; }
     .stats-strip { top: 56px; }
+    .toolbar { top: 124px; }
     .hamburger-btn { display: flex; align-items: center; }
     .desktop-only { display: none !important; }
   }
@@ -814,7 +814,9 @@
     .side-picker { gap: 5px; }
     .side-opt { font-size: 12px; padding: 6px 11px; }
   }
-  </style>
+    /* ── Topbar must sit above sticky strips ── */
+  .topbar { z-index: 400 !important; }
+</style>
 </head>
 <body>
 
