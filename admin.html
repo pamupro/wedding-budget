@@ -183,11 +183,14 @@ body{
 
 /* Main content area */
 .main{
-  margin-left:240px;
-  margin-top:60px;
-  height:calc(100vh - 60px);
+  position:fixed;
+  top:60px;
+  left:240px;
+  right:0;
+  bottom:0;
   overflow-y:auto;
   overflow-x:hidden;
+  background:var(--bg);
 }
 .page{display:none;padding:28px 28px 60px;max-width:1200px}
 .page.active{display:block}
@@ -649,7 +652,7 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
 @media(max-width:900px){
   .sidebar{display:none}
   .topbar{display:none}
-  .main{margin-left:0;margin-top:56px;height:calc(100vh - 56px)}
+  .main{left:0;top:56px}
   .mobile-topbar{display:flex}
   .bento-row,.bento-row.two-col,.bento-row.one-two{grid-template-columns:1fr}
   .settings-grid{grid-template-columns:1fr}
