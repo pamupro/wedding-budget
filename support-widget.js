@@ -112,15 +112,24 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + (token || ANON), Prefer: 'return=representation' },
         body: JSON.stringify(payload)
-      }).then(function(r){ return r.json(); }).then(function(rows){
+      }).then(function(r){
+        return r.json().then(function(data){ return {ok: r.ok, status: r.status, data: data}; });
+      }).then(function(res){
+        console.log('[Widget] Submit response:', res.status, JSON.stringify(res.data).slice(0,200));
+        if (!res.ok) {
+          var msg = (res.data && (res.data.message || res.data.hint)) || ('Error ' + res.status);
+          showE(msg);
+          return;
+        }
+        var rows = res.data;
         var t = Array.isArray(rows) ? rows[0] : rows;
         var ref = (t && t.id) ? 'WL-' + t.id.substring(0,8).toUpperCase() : 'WL-' + Date.now().toString(36).toUpperCase();
         g('wlRef').textContent = ref;
         if (!uid) { g('wlFName').value = ''; g('wlFEmail').value = ''; }
         g('wlFMsg').value = '';
         showView('Ok');
-      }).catch(function(){ showE('Could not send \u2014 please try again.'); })
-        .finally(function(){ btn.disabled = false; btn.textContent = 'Send Message \u2192'; });
+      }).catch(function(e){ console.error('[Widget] Submit error:', e); showE('Could not send — please try again.'); })
+        .finally(function(){ btn.disabled = false; btn.textContent = 'Send Message →'; });
     });
 
     function loadTix() {
