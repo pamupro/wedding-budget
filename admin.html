@@ -88,7 +88,7 @@ body{
   display:flex;flex-direction:column;z-index:100;overflow-y:auto;
 }
 .sidebar-logo{
-  padding:22px 24px 20px;border-bottom:1px solid var(--border2);
+  padding:24px 24px 20px;border-bottom:1px solid var(--border2);
   flex-shrink:0;
 }
 .sidebar-logo-text{
@@ -600,7 +600,7 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
 .mobile-topbar{
   display:none;position:fixed;top:0;left:0;right:0;
   height:56px;background:rgba(250,247,242,.95);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);z-index:200;
+  border-bottom:1px solid var(--border);z-index:95;
   align-items:center;justify-content:space-between;padding:0 16px;
 }
 .mobile-topbar-logo{
@@ -645,18 +645,40 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
   .topbar{display:none}
   .main{margin-left:0;padding-top:56px}
   .mobile-topbar{display:flex}
-  .bento-row{grid-template-columns:1fr}
-  .bento-row.two-col,.bento-row.one-two{grid-template-columns:1fr}
+  .bento-row,.bento-row.two-col,.bento-row.one-two{grid-template-columns:1fr}
   .settings-grid{grid-template-columns:1fr}
-  .detail-panel{width:100%;right:-100%}
-  .table-search{width:160px}
-  .page{padding:24px 14px 60px}
+  .detail-panel{width:100vw;right:-100vw}
+  .table-search{width:140px}
+  .page{padding:20px 12px 80px}
   thead th:nth-child(n+4),tbody td:nth-child(n+4){display:none}
+  #supportStats{grid-template-columns:1fr 1fr!important}
+  .table-filters{flex-wrap:wrap;gap:4px}
+  .table-topbar{flex-direction:column;align-items:flex-start;gap:10px}
+  .last-updated{display:none}
 }
 @media(max-width:600px){
   .metrics-grid{grid-template-columns:1fr 1fr}
   .detail-grid{grid-template-columns:1fr}
+  #supportStats{grid-template-columns:1fr 1fr!important}
+  .wl-row2{grid-template-columns:1fr}
 }
+
+  /* Filter buttons for support tickets */
+  .filter-btn {
+    padding: 5px 12px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: .15s;
+  }
+  .filter-btn:hover { border-color: var(--gold-bd); color: var(--gold); background: var(--gold-pale); }
+  .filter-btn.active { background: var(--ink); border-color: var(--ink); color: white; }
+  .last-updated { font-size: 11px; color: var(--muted2); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -1197,7 +1219,7 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
       </div>
 
       <!-- Stats row -->
-      <div class="metrics-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px" id="supportStats">
+      <div class="metrics-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px" id="supportStats">
         <div class="metric-card"><div class="m-label"><span class="m-icon">📬</span> Open</div><div class="m-value gold" id="st-open">—</div></div>
         <div class="metric-card"><div class="m-label"><span class="m-icon">⚡</span> In Progress</div><div class="m-value" id="st-progress">—</div></div>
         <div class="metric-card success"><div class="m-label"><span class="m-icon">✅</span> Resolved</div><div class="m-value sage" id="st-resolved">—</div></div>
@@ -1315,12 +1337,11 @@ async function dbUpsertSetting(userId, key, value) {
 // ─── LOGIN ────────────────────────────────────────
 function adminLogin() {
   const pw = document.getElementById('adminPassword').value;
-  // Always use DEFAULT_PW - ignore any stale localStorage value
   if (pw === DEFAULT_PW) {
     localStorage.setItem('wl_admin_pw', DEFAULT_PW);
     document.getElementById('loginGate').style.display='none';
     document.getElementById('adminApp').style.display='block';
-    document.getElementById('mobileTopbar').style.display='flex';
+    // Mobile topbar: only show via CSS media query, not forced here
     loadAllData();
   } else {
     document.getElementById('loginError').style.display='block';
@@ -1330,7 +1351,6 @@ function adminLogin() {
 function adminLogout() {
   document.getElementById('loginGate').style.display='flex';
   document.getElementById('adminApp').style.display='none';
-  document.getElementById('mobileTopbar').style.display='none';
   document.getElementById('adminPassword').value='';
 }
 
@@ -2180,17 +2200,27 @@ const SVC_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const SVC_H = { 'Content-Type':'application/json', apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}` };
 
 async function loadSupportTickets() {
+  const tbody = document.getElementById('supportTbody');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">Loading tickets…</td></tr>';
   try {
     const r = await fetch(`${ADMIN_URL}/rest/v1/support_tickets?order=created_at.desc`, { headers: SVC_H });
-    allTickets = await r.json();
-    if (!Array.isArray(allTickets)) allTickets = [];
+    const data = await r.json();
+    if (!r.ok) {
+      // Table likely not created yet
+      const msg = data.message || data.hint || 'Table not found — run migration_support_tickets.sql first';
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--rose)">⚠️ ${msg}</td></tr>`;
+      return;
+    }
+    allTickets = Array.isArray(data) ? data : [];
     updateSupportStats();
     renderTickets();
-    // Badge on nav
     const open = allTickets.filter(t => t.status === 'open').length;
     const badge = document.getElementById('navBadgeSupport');
     if (badge) { badge.textContent = open; badge.style.display = open > 0 ? 'inline-block' : 'none'; }
-  } catch(e) { console.error('Support tickets error:', e); }
+  } catch(e) {
+    console.error('Support tickets error:', e);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--rose)">⚠️ Could not load tickets. Check console.</td></tr>';
+  }
 }
 
 function updateSupportStats() {
@@ -2219,7 +2249,9 @@ function renderTickets() {
   const tbody = document.getElementById('supportTbody');
   if (!tbody) return;
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">No tickets found</td></tr>`;
+    tbody.innerHTML = allTickets.length
+      ? '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">No tickets match this filter</td></tr>'
+      : '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted2)"><div style="font-size:32px;margin-bottom:10px">📭</div><div style="font-size:14px;font-weight:600;margin-bottom:6px">No support tickets yet</div><div style="font-size:12px">They will appear here when users send messages via the chat widget</div></td></tr>';
     return;
   }
   const STATUS_COL = { open:'var(--amber-pale)', in_progress:'#e8f0ff', resolved:'var(--sage-pale)', closed:'var(--bg2)' };
