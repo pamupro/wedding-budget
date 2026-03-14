@@ -1215,69 +1215,78 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
 
 
     <!-- ══ SUPPORT TICKETS ══════════════════════════════════════════════════ -->
-    <div class="page" id="page-support">
-      <div class="page-header">
-        <div style="font-family:'Fraunces',serif;font-size:32px;font-weight:200;font-style:italic;color:#1a1612;letter-spacing:-.02em;line-height:1.1;margin-bottom:4px"><em style="color:#a07828;font-weight:300">Support Tickets</em></div>
-        <div style="font-size:13px;color:#7a6e5e">All user messages and live chat enquiries</div>
+    <div class="page" id="page-support" style="display:none">
+
+      <!-- Page header -->
+      <div style="margin-bottom:24px">
+        <h2 style="font-family:'Fraunces',serif;font-size:30px;font-weight:200;font-style:italic;color:#1a1612;margin:0 0 4px">
+          <em style="color:#a07828">Support Tickets</em>
+        </h2>
+        <p style="font-size:13px;color:#7a6e5e;margin:0">All user messages and live chat enquiries</p>
       </div>
 
-      <!-- Stats row -->
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px">
-        <div class="metric-card">
-          <div class="m-label"><span class="m-icon">📬</span> Open</div>
-          <div class="m-value gold" id="st-open">—</div>
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">📬 Open</div>
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#a07828" id="st-open">—</div>
         </div>
-        <div class="metric-card">
-          <div class="m-label"><span class="m-icon">⚡</span> In Progress</div>
-          <div class="m-value" id="st-progress">—</div>
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">⚡ In Progress</div>
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#1a1612" id="st-progress">—</div>
         </div>
-        <div class="metric-card success">
-          <div class="m-label"><span class="m-icon">✅</span> Resolved</div>
-          <div class="m-value sage" id="st-resolved">—</div>
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">✅ Resolved</div>
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#2a6a3a" id="st-resolved">—</div>
         </div>
-        <div class="metric-card">
-          <div class="m-label"><span class="m-icon">📨</span> Total</div>
-          <div class="m-value" id="st-total">—</div>
+        <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:12px;padding:18px 20px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#b0a090;margin-bottom:8px">📨 Total</div>
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:200;color:#1a1612" id="st-total">—</div>
         </div>
       </div>
 
-      <!-- Filter + search bar -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--R);overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px">
+      <!-- Filters + table -->
+      <div style="background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:14px;overflow:hidden">
+
+        <!-- Toolbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(26,22,18,.07);flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:700;color:var(--muted2);background:var(--bg2);border-radius:99px;padding:3px 10px;letter-spacing:.06em" id="supportCountBadge">— tickets</span>
-            <div style="display:flex;gap:5px;flex-wrap:wrap">
-              <button class="filter-btn active" data-sf="all"         onclick="setSF(this,'all')">All</button>
-              <button class="filter-btn"        data-sf="open"        onclick="setSF(this,'open')">Open</button>
-              <button class="filter-btn"        data-sf="in_progress" onclick="setSF(this,'in_progress')">In Progress</button>
-              <button class="filter-btn"        data-sf="resolved"    onclick="setSF(this,'resolved')">Resolved</button>
-              <button class="filter-btn"        data-sf="closed"      onclick="setSF(this,'closed')">Closed</button>
+            <span id="supportCountBadge" style="font-size:10px;font-weight:700;color:#b0a090;background:#f4efe6;border-radius:99px;padding:3px 10px">— tickets</span>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <button onclick="setSF(this,'all')"         data-sf="all"         style="padding:5px 12px;border-radius:99px;border:1.5px solid #1a1612;background:#1a1612;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">All</button>
+              <button onclick="setSF(this,'open')"        data-sf="open"        style="padding:5px 12px;border-radius:99px;border:1.5px solid rgba(26,22,18,.15);background:transparent;color:#7a6e5e;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Open</button>
+              <button onclick="setSF(this,'in_progress')" data-sf="in_progress" style="padding:5px 12px;border-radius:99px;border:1.5px solid rgba(26,22,18,.15);background:transparent;color:#7a6e5e;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">In Progress</button>
+              <button onclick="setSF(this,'resolved')"    data-sf="resolved"    style="padding:5px 12px;border-radius:99px;border:1.5px solid rgba(26,22,18,.15);background:transparent;color:#7a6e5e;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Resolved</button>
+              <button onclick="setSF(this,'closed')"      data-sf="closed"      style="padding:5px 12px;border-radius:99px;border:1.5px solid rgba(26,22,18,.15);background:transparent;color:#7a6e5e;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Closed</button>
             </div>
           </div>
-          <input class="table-search" id="supportSearch" placeholder="Search tickets…" oninput="renderTickets()" style="width:200px">
+          <input id="supportSearch" oninput="renderTickets()" placeholder="Search tickets…"
+            style="padding:7px 12px;border:1.5px solid rgba(26,22,18,.12);border-radius:9px;font-size:13px;color:#1a1612;background:#f4efe6;outline:none;width:200px;font-family:inherit">
         </div>
+
+        <!-- Table -->
         <table style="width:100%;border-collapse:collapse">
           <thead>
-            <tr style="background:var(--surface2)">
-              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">From</th>
-              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Subject</th>
-              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Status</th>
-              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Priority</th>
-              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Date</th>
-              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Actions</th>
+            <tr style="background:#fdf9f4">
+              <th style="padding:10px 16px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#b0a090;border-bottom:1px solid rgba(26,22,18,.07)">From</th>
+              <th style="padding:10px 16px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#b0a090;border-bottom:1px solid rgba(26,22,18,.07)">Subject</th>
+              <th style="padding:10px 16px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#b0a090;border-bottom:1px solid rgba(26,22,18,.07)">Status</th>
+              <th style="padding:10px 16px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#b0a090;border-bottom:1px solid rgba(26,22,18,.07)">Date</th>
+              <th style="padding:10px 16px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#b0a090;border-bottom:1px solid rgba(26,22,18,.07)">Actions</th>
             </tr>
           </thead>
           <tbody id="supportTbody">
             <tr>
-              <td colspan="6" style="text-align:center;padding:48px 20px;color:#7a6e5e">
-                <div style="font-size:36px;margin-bottom:10px">📬</div>
-                <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:#1a1612">Loading support tickets…</div>
-                <div style="font-size:12px;color:#7a6e5e">Fetching from Supabase…</div>
+              <td colspan="5" style="text-align:center;padding:48px 20px">
+                <div style="font-size:32px;margin-bottom:10px">⏳</div>
+                <div style="font-size:14px;font-weight:600;color:#1a1612;margin-bottom:6px">Loading tickets…</div>
+                <div style="font-size:12px;color:#7a6e5e">Connecting to Supabase</div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
     </div>
 
     <!-- ══ TICKET DETAIL PANEL ══ -->
@@ -1380,15 +1389,23 @@ const PAGE_TITLES = {
   vendors:'Platform Vendors', health:'Platform Health', settings:'Admin Settings', support:'Support Tickets'
 };
 function showPage(name) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  // Show selected page
   const pg = document.getElementById('page-'+name);
   const nb = document.getElementById('nav-'+name);
-  if (pg) pg.classList.add('active');
+  if (pg) {
+    pg.classList.add('active');
+    pg.style.display = 'block';
+  }
   if (nb) nb.classList.add('active');
   const tt = document.getElementById('topbarTitle');
   if (tt) tt.textContent = PAGE_TITLES[name]||name;
-  // Load/refresh support tickets every time the page is shown
+  // Load support tickets every time
   if (name === 'support' && typeof loadSupportTickets === 'function') {
     loadSupportTickets();
   }
@@ -2259,8 +2276,14 @@ function updateSupportStats() {
 
 function setSF(btn, f) {
   sfFilter = f;
-  document.querySelectorAll('[data-sf]').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('[data-sf]').forEach(b => {
+    b.style.background = 'transparent';
+    b.style.color = '#7a6e5e';
+    b.style.borderColor = 'rgba(26,22,18,.15)';
+  });
+  btn.style.background = '#1a1612';
+  btn.style.color = '#fff';
+  btn.style.borderColor = '#1a1612';
   renderTickets();
 }
 
@@ -2277,8 +2300,8 @@ function renderTickets() {
   if (!tbody) return;
   if (!list.length) {
     tbody.innerHTML = allTickets.length
-      ? '<tr><td colspan="6" style="text-align:center;padding:32px;color:#7a6e5e">No tickets match this filter</td></tr>'
-      : '<tr><td colspan="6" style="text-align:center;padding:48px 20px"><div style="font-size:36px;margin-bottom:12px">📭</div><div style="font-size:15px;font-weight:700;color:#1a1612;margin-bottom:6px">No support tickets yet</div><div style="font-size:12px;color:#7a6e5e">They will appear here when users send messages via the chat widget on any page.</div></td></tr>';
+      ? '<tr><td colspan="5" style="text-align:center;padding:32px;color:#7a6e5e">No tickets match this filter</td></tr>'
+      : '<tr><td colspan="5" style="text-align:center;padding:48px 20px"><div style="font-size:36px;margin-bottom:10px">📭</div><div style="font-size:15px;font-weight:700;color:#1a1612;margin-bottom:6px">No support tickets yet</div><div style="font-size:12px;color:#7a6e5e">They will appear here when users send messages via the 💬 chat widget on any page.</div></td></tr>';
     return;
   }
   const STATUS_COL = { open:'var(--amber-pale)', in_progress:'#e8f0ff', resolved:'var(--sage-pale)', closed:'var(--bg2)' };
@@ -2287,28 +2310,33 @@ function renderTickets() {
   const PRIO_COL   = { urgent:'#fef0f0', high:'#fff8e6', normal:'var(--bg2)', low:'var(--bg2)' };
   const PRIO_TXT   = { urgent:'var(--rose)', high:'var(--amber)', normal:'var(--muted)', low:'var(--muted2)' };
 
+  const ST_COL = {open:'#fdf3dc',in_progress:'#e8f0ff',resolved:'#eef7f1',closed:'#f0f0f0'};
+  const ST_TXT = {open:'#a07828',in_progress:'#2a5aaa',resolved:'#2a6a3a',closed:'#7a6e5e'};
+  const ST_LBL = {open:'Open',in_progress:'In Progress',resolved:'Resolved',closed:'Closed'};
   tbody.innerHTML = list.map(t => {
     const date = new Date(t.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    const hasReply = !!t.admin_reply;
-    return `<tr style="cursor:pointer" onclick="openTicket('${t.id}')">
-      <td>
-        <div style="font-weight:600;font-size:13px">${escA(t.name||'Anonymous')}</div>
-        <div style="font-size:11px;color:var(--muted2)">${escA(t.email)}</div>
-        ${t.user_id ? '<span style="font-size:9px;background:var(--gold-pale);color:var(--gold);padding:1px 6px;border-radius:4px;font-weight:700">Registered user</span>' : '<span style="font-size:9px;background:var(--bg2);color:var(--muted2);padding:1px 6px;border-radius:4px;font-weight:700">Visitor</span>'}
+    const sc = ST_COL[t.status]||'#f4efe6';
+    const st = ST_TXT[t.status]||'#7a6e5e';
+    return `<tr style="cursor:pointer;border-bottom:1px solid rgba(26,22,18,.06)" onclick="openTicket('${t.id}')">
+      <td style="padding:12px 16px">
+        <div style="font-weight:600;font-size:13px;color:#1a1612">${escA(t.name||'Anonymous')}</div>
+        <div style="font-size:11px;color:#b0a090">${escA(t.email)}</div>
+        <span style="font-size:9px;background:${t.user_id?'#fdf3dc':'#f4efe6'};color:${t.user_id?'#a07828':'#7a6e5e'};padding:1px 6px;border-radius:4px;font-weight:700">${t.user_id?'Registered':'Visitor'}</span>
       </td>
-      <td>
-        <div style="font-size:13px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escA(t.subject)}</div>
-        <div style="font-size:11px;color:var(--muted2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escA(t.message)}</div>
-        ${hasReply ? '<span style="font-size:9px;color:var(--sage);font-weight:700">✓ Replied</span>' : ''}
+      <td style="padding:12px 16px;max-width:220px">
+        <div style="font-size:13px;font-weight:500;color:#1a1612;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escA(t.subject)}</div>
+        <div style="font-size:11px;color:#b0a090;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escA(t.message)}</div>
+        ${t.admin_reply?'<span style="font-size:9px;color:#2a6a3a;font-weight:700">✓ Replied</span>':''}
       </td>
-      <td><span style="background:${STATUS_COL[t.status]||'var(--bg2)'};color:${STATUS_TXT[t.status]||'var(--muted)'};padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700">${STATUS_LBL[t.status]||t.status}</span></td>
-      <td><span style="background:${PRIO_COL[t.priority]||'var(--bg2)'};color:${PRIO_TXT[t.priority]||'var(--muted)'};padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;text-transform:capitalize">${t.priority||'normal'}</span></td>
-      <td style="font-size:12px;color:var(--muted2);white-space:nowrap">${date}</td>
-      <td>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="panel-action-btn gold" onclick="event.stopPropagation();openTicket('${t.id}')">Reply</button>
-          <select style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:4px 6px;background:var(--bg);color:var(--ink);cursor:pointer" onchange="event.stopPropagation();updateTicketStatus('${t.id}',this.value)">
-            <option value="">Change status</option>
+      <td style="padding:12px 16px">
+        <span style="background:${sc};color:${st};padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700">${ST_LBL[t.status]||t.status}</span>
+      </td>
+      <td style="padding:12px 16px;font-size:12px;color:#b0a090;white-space:nowrap">${date}</td>
+      <td style="padding:12px 16px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <button onclick="event.stopPropagation();openTicket('${t.id}')" style="padding:5px 12px;border-radius:7px;border:1.5px solid rgba(160,120,40,.3);background:#fdf3dc;color:#a07828;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Reply</button>
+          <select onchange="event.stopPropagation();updateTicketStatus('${t.id}',this.value)" style="font-size:11px;border:1px solid rgba(26,22,18,.12);border-radius:7px;padding:5px 8px;background:#faf7f2;color:#1a1612;cursor:pointer;font-family:inherit">
+            <option value="">Set status…</option>
             <option value="open">Open</option>
             <option value="in_progress">In Progress</option>
             <option value="resolved">Resolved</option>
