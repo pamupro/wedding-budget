@@ -97,7 +97,8 @@
     flex-wrap: wrap;
     position: sticky;
     top: var(--toolbar-top, 133px);
-    z-index: 299;
+    z-index: 500;
+    overflow: visible;
   }
   .search-wrap {
     flex: 1;
@@ -838,20 +839,18 @@
   .csel-arrow { transition: transform .2s; flex-shrink: 0; color: var(--muted); }
   .csel-wrap.open .csel-arrow { transform: rotate(180deg); }
   .csel-drop {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    min-width: 190px;
+    position: fixed;
+    min-width: 210px;
     background: #ffffff;
     border: 1px solid rgba(26,22,18,.10);
     border-radius: 14px;
-    box-shadow: 0 8px 32px rgba(26,22,18,.12), 0 2px 8px rgba(26,22,18,.06);
+    box-shadow: 0 8px 40px rgba(26,22,18,.18), 0 2px 8px rgba(26,22,18,.08);
     padding: 6px;
-    z-index: 500;
+    z-index: 9999;
     display: none;
     animation: dropIn .15s cubic-bezier(.32,.72,0,1);
   }
-  @keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes dropIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
   .csel-wrap.open .csel-drop { display: block; }
   .csel-section {
     font-size: 9px;
@@ -902,7 +901,7 @@
     .search-wrap { min-width: 0; flex: 1; }
     .csel-btn { padding: 8px 12px; font-size: 12px; }
     #cntLbl { display: none; }
-    .csel-drop { right: 0; left: auto; }
+
   }
 
   /* ── Topbar must sit above sticky strips ── */
@@ -2382,6 +2381,28 @@ function toggleCsel(id) {
   if(!isOpen) {
     wrap.classList.add('open');
     refreshDropdownCounts();
+    // Position dropdown using fixed coords so it's never clipped
+    const btn  = wrap.querySelector('.csel-btn');
+    const drop = wrap.querySelector('.csel-drop');
+    const rect = btn.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const dropH = 360; // approx max height
+    if(spaceBelow < dropH && rect.top > dropH) {
+      // Open upward
+      drop.style.top  = (rect.top - dropH - 4) + 'px';
+      drop.style.bottom = 'auto';
+    } else {
+      // Open downward
+      drop.style.top  = (rect.bottom + 6) + 'px';
+      drop.style.bottom = 'auto';
+    }
+    // Align left, but clamp so it doesn't go off right edge
+    let left = rect.left;
+    const dropW = 210;
+    if(left + dropW > window.innerWidth - 8) {
+      left = window.innerWidth - dropW - 8;
+    }
+    drop.style.left = left + 'px';
   }
 }
 
