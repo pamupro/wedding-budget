@@ -183,17 +183,13 @@ body{
 
 /* Main content area */
 .main{
-  position:fixed;
-  top:60px;
-  left:240px;
-  right:0;
-  bottom:0;
-  overflow-y:auto;
-  overflow-x:hidden;
+  margin-left:240px;
+  min-height:100vh;
   background:var(--bg);
 }
 .page{display:none;padding:28px 28px 60px;max-width:1200px}
 .page.active{display:block}
+body{padding-top:60px}
 
 /* ─── PAGE HEADER ─────────────────────────────────── */
 .page-header{margin-bottom:28px}
@@ -652,7 +648,7 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
 @media(max-width:900px){
   .sidebar{display:none}
   .topbar{display:none}
-  .main{left:0;top:56px}
+  .main{margin-left:0;padding-top:0}
   .mobile-topbar{display:flex}
   .bento-row,.bento-row.two-col,.bento-row.one-two{grid-template-columns:1fr}
   .settings-grid{grid-template-columns:1fr}
@@ -1422,9 +1418,8 @@ function showPage(name) {
   if (name === 'support' && typeof loadSupportTickets === 'function') {
     loadSupportTickets();
   }
-  // Scroll the main container to top instantly
-  const mainEl = document.querySelector('.main');
-  if (mainEl) mainEl.scrollTop = 0;
+  // Scroll to top when switching pages
+  window.scrollTo({top:0, behavior:'instant'});
 }
 
 // ─── LOAD DATA ─────────────────────────────────────
@@ -2471,9 +2466,9 @@ function escA(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;
 // Support tickets loaded via showPage (integrated below)
 
 // Topbar scroll shadow
-document.querySelector('.main')?.addEventListener('scroll', function(){
-  document.getElementById('mainTopbar')?.classList.toggle('scrolled', this.scrollTop > 10);
-});
+window.addEventListener('scroll', ()=>{
+  document.getElementById('mainTopbar')?.classList.toggle('scrolled', scrollY > 10);
+}, {passive:true});
 </script>
 </body>
 </html>
