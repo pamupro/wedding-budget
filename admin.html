@@ -7,107 +7,97 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-// ═══════════════════════════════════════════════════
-// SUPPORT TICKETS
-// ═══════════════════════════════════════════════════
-let allTickets = [], sfFilter = 'all';
-const SVC_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc1MDQ3NiwiZXhwIjoyMDg4MzI2NDc2fQ.6-OlI0KtlY4f1XkLIF8KEp_Rk1Wqos5Z89Zzm1UKy_Q';
-const SVC_H = {'Content-Type':'application/json', apikey:SVC_KEY, Authorization:`Bearer ${SVC_KEY}`};
+// ══ SUPPORT TICKETS ══════════════════════════════════════════
+let allTickets=[], sfFilter='all';
+const SVC_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc1MDQ3NiwiZXhwIjoyMDg4MzI2NDc2fQ.6-OlI0KtlY4f1XkLIF8KEp_Rk1Wqos5Z89Zzm1UKy_Q';
+const SVC_H={'Content-Type':'application/json',apikey:SVC_KEY,Authorization:`Bearer ${SVC_KEY}`};
 
-async function loadSupportTickets() {
-  const tbody = document.getElementById('supportTbody');
-  if (tbody) tbody.innerHTML = '<tr class="loading-row"><td colspan="5">Loading tickets…</td></tr>';
-  try {
-    const r = await fetch(`${ADMIN_URL}/rest/v1/support_tickets?order=created_at.desc`, {headers:SVC_H});
-    const data = await r.json();
-    if (!r.ok) {
-      const msg = data.message || data.hint || 'Run migration_support_tickets.sql in Supabase first';
-      if (tbody) tbody.innerHTML = `<tr class="loading-row"><td colspan="5">⚠️ ${msg}</td></tr>`;
+async function loadSupportTickets(){
+  const tbody=document.getElementById('supportTbody');
+  if(tbody) tbody.innerHTML='<tr class="loading-row"><td colspan="5">Loading tickets…</td></tr>';
+  try{
+    const r=await fetch(`${ADMIN_URL}/rest/v1/support_tickets?order=created_at.desc`,{headers:SVC_H});
+    const data=await r.json();
+    if(!r.ok){
+      const msg=data.message||data.hint||'Run migration_support_tickets.sql in Supabase first';
+      if(tbody) tbody.innerHTML=`<tr class="loading-row"><td colspan="5">⚠️ ${msg}</td></tr>`;
       return;
     }
-    allTickets = Array.isArray(data) ? data : [];
-    // Update stats
-    setText('st-open',     allTickets.filter(t=>t.status==='open').length);
-    setText('st-progress', allTickets.filter(t=>t.status==='in_progress').length);
-    setText('st-resolved', allTickets.filter(t=>t.status==='resolved').length);
-    setText('st-total',    allTickets.length);
-    // Badge
-    const open = allTickets.filter(t=>t.status==='open').length;
-    const badge = document.getElementById('navBadgeSupport');
-    if (badge) { badge.textContent=open; badge.style.display=open>0?'inline-block':'none'; }
+    allTickets=Array.isArray(data)?data:[];
+    setText('st-open',    allTickets.filter(t=>t.status==='open').length);
+    setText('st-progress',allTickets.filter(t=>t.status==='in_progress').length);
+    setText('st-resolved',allTickets.filter(t=>t.status==='resolved').length);
+    setText('st-total',   allTickets.length);
+    const open=allTickets.filter(t=>t.status==='open').length;
+    const badge=document.getElementById('navBadgeSupport');
+    if(badge){badge.textContent=open;badge.style.display=open>0?'inline-block':'none';}
     renderTickets();
-  } catch(e) {
-    if (tbody) tbody.innerHTML = '<tr class="loading-row"><td colspan="5">⚠️ Could not connect — check console</td></tr>';
-    console.error(e);
+  }catch(e){
+    if(tbody) tbody.innerHTML='<tr class="loading-row"><td colspan="5">⚠️ Could not load — check console</td></tr>';
   }
 }
 
-function setSF(btn, f) {
-  sfFilter = f;
+function setSF(btn,f){
+  sfFilter=f;
   document.querySelectorAll('[data-sf]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderTickets();
 }
 
-function renderTickets() {
-  const q = (document.getElementById('supportSearch')?.value||'').toLowerCase();
-  const list = allTickets.filter(t=>{
-    if (sfFilter!=='all' && t.status!==sfFilter) return false;
-    if (q && !`${t.name} ${t.email} ${t.subject} ${t.message}`.toLowerCase().includes(q)) return false;
+function renderTickets(){
+  const q=(document.getElementById('supportSearch')?.value||'').toLowerCase();
+  const list=allTickets.filter(t=>{
+    if(sfFilter!=='all'&&t.status!==sfFilter)return false;
+    if(q&&!`${t.name} ${t.email} ${t.subject} ${t.message}`.toLowerCase().includes(q))return false;
     return true;
   });
-  const badge = document.getElementById('supportCountBadge');
-  if (badge) badge.textContent = list.length + ' ticket' + (list.length!==1?'s':'');
-  const tbody = document.getElementById('supportTbody');
-  if (!tbody) return;
-  if (!list.length) {
-    tbody.innerHTML = `<tr class="loading-row"><td colspan="5">${allTickets.length?'No tickets match this filter':'📭 No support tickets yet — they appear when users send messages via the chat widget'}</td></tr>`;
+  const badge=document.getElementById('supportCountBadge');
+  if(badge) badge.textContent=list.length+' ticket'+(list.length!==1?'s':'');
+  const tbody=document.getElementById('supportTbody');
+  if(!tbody)return;
+  if(!list.length){
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="5">${allTickets.length?'No tickets match this filter':'📭 No support tickets yet'}</td></tr>`;
     return;
   }
-  const ST = {open:['#fdf3dc','#a07828','Open'], in_progress:['#e8f0ff','#2a5aaa','In Progress'], resolved:['#eef7f1','#2a6a3a','Resolved'], closed:['#f0f0f0','#7a6e5e','Closed']};
-  tbody.innerHTML = list.map(t => {
-    const d = new Date(t.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
-    const [bg,col,lbl] = ST[t.status]||['#f0f0f0','#7a6e5e',t.status||'—'];
+  const ST={open:['#fdf3dc','#a07828','Open'],in_progress:['#e8f0ff','#2a5aaa','In Progress'],resolved:['#eef7f1','#2a6a3a','Resolved'],closed:['#f0f0f0','#7a6e5e','Closed']};
+  tbody.innerHTML=list.map(t=>{
+    const d=new Date(t.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    const [bg,col,lbl]=ST[t.status]||['#f0f0f0','#7a6e5e',t.status||'—'];
     return `<tr style="cursor:pointer" onclick="openTicket('${t.id}')">
       <td><div style="font-weight:600">${escA(t.name||'Anonymous')}</div><div style="font-size:11px;color:var(--muted2)">${escA(t.email||'')}</div></td>
       <td><div style="font-weight:500">${escA(t.subject||'—')}</div><div style="font-size:11px;color:var(--muted2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escA(t.message||'')}</div></td>
       <td><span style="background:${bg};color:${col};padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700">${lbl}</span></td>
       <td style="font-size:12px;color:var(--muted2);white-space:nowrap">${d}</td>
-      <td onclick="event.stopPropagation()">
-        <div style="display:flex;gap:6px">
-          <button class="panel-action-btn gold" onclick="openTicket('${t.id}')">Reply</button>
-          <select style="font-size:11px;border:1.5px solid var(--border);border-radius:7px;padding:4px 6px;background:var(--bg);color:var(--ink);cursor:pointer" onchange="updateTicketStatus('${t.id}',this.value);this.value=''">
-            <option value="">Status…</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
-      </td>
+      <td onclick="event.stopPropagation()"><div style="display:flex;gap:6px">
+        <button class="panel-action-btn gold" onclick="openTicket('${t.id}')">Reply</button>
+        <select style="font-size:11px;border:1.5px solid var(--border);border-radius:7px;padding:4px 6px;background:var(--bg);color:var(--ink);cursor:pointer" onchange="updateTicketStatus('${t.id}',this.value);this.value=''">
+          <option value="">Status…</option>
+          <option value="open">Open</option><option value="in_progress">In Progress</option>
+          <option value="resolved">Resolved</option><option value="closed">Closed</option>
+        </select>
+      </div></td>
     </tr>`;
   }).join('');
 }
 
-function openTicket(id) {
-  const t = allTickets.find(x=>x.id===id);
-  if (!t) return;
-  const d = new Date(t.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('ticketPanelTitle').textContent = t.subject||'Ticket';
-  document.getElementById('ticketPanelBody').innerHTML = `
+function openTicket(id){
+  const t=allTickets.find(x=>x.id===id);
+  if(!t)return;
+  const d=new Date(t.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('ticketPanelTitle').textContent=t.subject||'Ticket';
+  document.getElementById('ticketPanelBody').innerHTML=`
     <div style="margin-bottom:16px">
       <div style="font-weight:600;font-size:14px">${escA(t.name||'Anonymous')}</div>
       <div style="font-size:12px;color:var(--muted2)">${escA(t.email||'')} · ${d}</div>
-      ${t.user_id?'<span style="font-size:10px;background:var(--gold-pale);color:var(--gold);padding:2px 7px;border-radius:4px;font-weight:700">Registered user</span>':''}
     </div>
     <div style="background:var(--bg2);border-radius:10px;padding:14px;font-size:13px;line-height:1.6;margin-bottom:16px">${escA(t.message||'').replace(/
 /g,'<br>')}</div>
-    ${t.admin_reply?`<div style="background:var(--sage-pale);border-left:3px solid var(--sage);border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:16px"><div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);margin-bottom:4px">Your reply</div><div style="font-size:13px;line-height:1.6">${escA(t.admin_reply).replace(/
-/g,'<br>')}</div></div>`:''}
+    ${t.admin_reply?`<div style="background:var(--sage-pale);border-left:3px solid var(--sage);border-radius:0 8px 8px 0;padding:12px;margin-bottom:16px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--sage);margin-bottom:4px">Your reply</div>${escA(t.admin_reply).replace(/
+/g,'<br>')}</div>`:''}
     <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:6px">Reply</div>
-    <textarea id="ticketReply" placeholder="Write a reply…" style="width:100%;min-height:100px;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;color:var(--ink);resize:vertical;outline:none;background:var(--bg2);margin-bottom:10px">${escA(t.admin_reply||'')}</textarea>
+    <textarea id="ticketReply" placeholder="Write a reply…" style="width:100%;min-height:100px;padding:10px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;outline:none;background:var(--bg2);margin-bottom:10px">${escA(t.admin_reply||'')}</textarea>
     <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:6px">Status</div>
-    <select id="ticketStatus" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;color:var(--ink);background:var(--bg2);margin-bottom:14px">
+    <select id="ticketStatus" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;background:var(--bg2);margin-bottom:14px">
       <option value="open" ${t.status==='open'?'selected':''}>Open</option>
       <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In Progress</option>
       <option value="resolved" ${t.status==='resolved'?'selected':''}>Resolved</option>
@@ -119,48 +109,44 @@ function openTicket(id) {
   document.getElementById('ticketOverlay').classList.add('open');
 }
 
-async function saveTicket(id) {
-  const reply  = document.getElementById('ticketReply')?.value||'';
-  const status = document.getElementById('ticketStatus')?.value||'open';
-  try {
-    await fetch(`${ADMIN_URL}/rest/v1/support_tickets?id=eq.${id}`, {
-      method:'PATCH', headers:{...SVC_H, Prefer:'return=minimal'},
-      body: JSON.stringify({admin_reply:reply, status, replied_at:new Date().toISOString()})
+async function saveTicket(id){
+  const reply=document.getElementById('ticketReply')?.value||'';
+  const status=document.getElementById('ticketStatus')?.value||'open';
+  try{
+    await fetch(`${ADMIN_URL}/rest/v1/support_tickets?id=eq.${id}`,{
+      method:'PATCH',headers:{...SVC_H,Prefer:'return=minimal'},
+      body:JSON.stringify({admin_reply:reply,status,replied_at:new Date().toISOString()})
     });
-    const t = allTickets.find(x=>x.id===id);
-    if (t) { t.admin_reply=reply; t.status=status; }
-    setText('st-open',     allTickets.filter(t=>t.status==='open').length);
-    setText('st-progress', allTickets.filter(t=>t.status==='in_progress').length);
-    setText('st-resolved', allTickets.filter(t=>t.status==='resolved').length);
-    renderTickets();
-    closeTicketPanel();
-    showToast('Reply saved ✓','success');
-  } catch(e) { showToast('Save failed','error'); }
+    const t=allTickets.find(x=>x.id===id);
+    if(t){t.admin_reply=reply;t.status=status;}
+    setText('st-open',allTickets.filter(t=>t.status==='open').length);
+    setText('st-progress',allTickets.filter(t=>t.status==='in_progress').length);
+    setText('st-resolved',allTickets.filter(t=>t.status==='resolved').length);
+    renderTickets(); closeTicketPanel(); showToast('Reply saved ✓','success');
+  }catch(e){showToast('Save failed','error');}
 }
 
-async function updateTicketStatus(id, status) {
-  if (!status) return;
-  await fetch(`${ADMIN_URL}/rest/v1/support_tickets?id=eq.${id}`, {
-    method:'PATCH', headers:{...SVC_H, Prefer:'return=minimal'}, body:JSON.stringify({status})
+async function updateTicketStatus(id,status){
+  if(!status)return;
+  await fetch(`${ADMIN_URL}/rest/v1/support_tickets?id=eq.${id}`,{
+    method:'PATCH',headers:{...SVC_H,Prefer:'return=minimal'},body:JSON.stringify({status})
   });
-  const t = allTickets.find(x=>x.id===id);
-  if (t) t.status=status;
-  setText('st-open',     allTickets.filter(t=>t.status==='open').length);
-  setText('st-progress', allTickets.filter(t=>t.status==='in_progress').length);
-  setText('st-resolved', allTickets.filter(t=>t.status==='resolved').length);
-  renderTickets();
-  showToast('Status updated ✓','success');
+  const t=allTickets.find(x=>x.id===id);
+  if(t)t.status=status;
+  setText('st-open',allTickets.filter(t=>t.status==='open').length);
+  setText('st-progress',allTickets.filter(t=>t.status==='in_progress').length);
+  setText('st-resolved',allTickets.filter(t=>t.status==='resolved').length);
+  renderTickets(); showToast('Status updated ✓','success');
 }
 
-function closeTicketPanel() {
+function closeTicketPanel(){
   document.getElementById('ticketPanel')?.classList.remove('open');
   document.getElementById('ticketOverlay')?.classList.remove('open');
 }
 
-function escA(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escA(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-// Pre-load support tickets 1s after login
-setTimeout(()=>{ if(typeof loadSupportTickets==='function') loadSupportTickets(); }, 1000);
+setTimeout(()=>{if(typeof loadSupportTickets==='function')loadSupportTickets();},1000);
 
 </script>
 <style>
@@ -339,7 +325,7 @@ body{
   margin-left:var(--nav);padding-top:var(--topbar);
   min-height:100vh;
 }
-.page{display:none;padding:32px 28px 60px;max-width:1200px;margin:0 auto}
+.page{display:none;padding:32px 28px 60px;max-width:1200px}
 .page.active{display:block}
 
 /* ─── PAGE HEADER ─────────────────────────────────── */
@@ -813,6 +799,18 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
   .metrics-grid{grid-template-columns:1fr 1fr}
   .detail-grid{grid-template-columns:1fr}
 }
+
+.detail-panel{position:fixed;top:0;right:-440px;width:420px;height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:300;display:flex;flex-direction:column;transition:.3s cubic-bezier(.32,.72,0,1);box-shadow:0 20px 70px rgba(26,22,18,.14)}
+.detail-panel.open{right:0}
+.panel-overlay{position:fixed;inset:0;background:rgba(26,22,18,.2);z-index:290;display:none}
+.panel-overlay.open{display:block}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-family:'Fraunces',serif;font-size:18px;font-weight:300;font-style:italic;color:var(--ink)}
+.panel-close{background:none;border:none;font-size:18px;color:var(--muted2);cursor:pointer;padding:4px;line-height:1}
+.panel-close:hover{color:var(--ink)}
+.panel-body{flex:1;overflow-y:auto;padding:20px}
+.panel-action-btn{padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:1.5px solid var(--border);background:var(--bg2);color:var(--muted)}
+.panel-action-btn.gold{border-color:var(--gold-bd);background:var(--gold-pale);color:var(--gold)}
 </style>
 </head>
 <body>
@@ -1345,7 +1343,7 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
 
 
     <!-- ══ SUPPORT TICKETS ══ -->
-    <div class="page" id="page-support">
+    <div class="page" id="page-support" style="display:none">
       <div class="page-header">
         <div class="page-title">Support <em>Tickets</em></div>
         <div class="page-sub">All user messages and live chat enquiries</div>
@@ -1466,10 +1464,7 @@ function adminLogin() {
     localStorage.setItem('wl_admin_pw', DEFAULT_PW);
     document.getElementById('loginGate').style.display='none';
     document.getElementById('adminApp').style.display='block';
-    // Hide all pages, show only overview
-    document.querySelectorAll('.page').forEach(p => p.style.display='none');
-    const ov = document.getElementById('page-overview');
-    if (ov) { ov.style.display='block'; ov.classList.add('active'); }
+    document.getElementById('mobileTopbar').style.display='flex';
     loadAllData();
   } else {
     document.getElementById('loginError').style.display='block';
@@ -1486,26 +1481,19 @@ function adminLogout() {
 // ─── NAV ──────────────────────────────────────────
 const PAGE_TITLES = {
   overview:'Overview', users:'All Users', payments:'Revenue & Payments',
-  vendors:'Platform Vendors', health:'Platform Health', settings:'Admin Settings',
-  support:'Support Tickets'
-};;
+  vendors:'Platform Vendors', support:'Support Tickets', health:'Platform Health', settings:'Admin Settings'
+};
 function showPage(name) {
-  // Hide ALL pages completely (zero height when hidden)
-  document.querySelectorAll('.page').forEach(p => {
-    p.classList.remove('active');
-    p.style.display = 'none';
-  });
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  // Show only the selected page
-  const pg = document.getElementById('page-' + name);
-  const nb = document.getElementById('nav-' + name);
-  if (pg) { pg.classList.add('active'); pg.style.display = 'block'; }
+  const pg = document.getElementById('page-'+name);
+  const nb = document.getElementById('nav-'+name);
+  if (pg) { pg.classList.add('active'); pg.style.display='block'; }
   if (nb) nb.classList.add('active');
   const tt = document.getElementById('topbarTitle');
-  if (tt) tt.textContent = PAGE_TITLES[name] || name;
-  // Scroll to top
-  window.scrollTo(0, 0);
-  if (name === 'support') loadSupportTickets();
+  if (tt) tt.textContent = PAGE_TITLES[name]||name;
+  window.scrollTo(0,0);
+  if (name==='support') loadSupportTickets();
 }
 
 // ─── LOAD DATA ─────────────────────────────────────
