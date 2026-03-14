@@ -143,7 +143,7 @@ body{
 
 /* Topbar */
 .topbar{
-  position:fixed;top:0;left:var(--nav);right:0;height:var(--topbar);
+  position:fixed;top:0;left:240px;right:0;height:60px;
   background:rgba(250,247,242,.94);backdrop-filter:blur(20px) saturate(1.8);
   border-bottom:1px solid var(--border);z-index:90;
   display:flex;align-items:center;justify-content:space-between;
@@ -180,7 +180,7 @@ body{
 
 /* Main content area */
 .main{
-  margin-left:var(--nav);padding-top:var(--topbar);
+  margin-left:240px;padding-top:60px;
   min-height:100vh;
 }
 .page{display:none;padding:32px 28px 60px;max-width:1200px}
@@ -1348,6 +1348,10 @@ function showPage(name) {
   if (nb) nb.classList.add('active');
   const tt = document.getElementById('topbarTitle');
   if (tt) tt.textContent = PAGE_TITLES[name]||name;
+  // Load support tickets on first visit
+  if (name === 'support' && typeof loadSupportTickets === 'function' && !allTickets.length) {
+    loadSupportTickets();
+  }
 }
 
 // ─── LOAD DATA ─────────────────────────────────────
@@ -2361,12 +2365,7 @@ function closeTicketPanel() {
 
 function escA(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// Load support tickets when support page is first shown
-const _origShowPage = showPage;
-function showPage(name) {
-  _origShowPage(name);
-  if (name === 'support' && !allTickets.length) loadSupportTickets();
-}
+// Support tickets loaded via showPage (integrated below)
 
 // Topbar scroll shadow
 window.addEventListener('scroll',()=>{
