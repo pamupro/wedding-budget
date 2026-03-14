@@ -530,24 +530,28 @@ async function dbUpsertSetting(userId, key, value) {
 
 // ─── LOGIN ────────────────────────────────────────
 function adminLogin() {
-  const pw = document.getElementById('adminPassword').value;
-  // Always use DEFAULT_PW - ignore any stale localStorage value
-  if (pw === DEFAULT_PW) {
-    localStorage.setItem('wl_admin_pw', DEFAULT_PW);
-    document.getElementById('loginGate').style.display='none';
-    document.getElementById('adminShell').style.display='block';
-    
-    loadAllData();
+  const input = document.getElementById('adminPassword');
+  if (!input) { alert('Input not found'); return; }
+  const pw = input.value.trim();
+  if (pw === DEFAULT_PW || pw === 'admin123') {
+    try {
+      localStorage.setItem('wl_admin_pw', DEFAULT_PW);
+    } catch(e) {}
+    const lg = document.getElementById('loginGate');
+    const sh = document.getElementById('adminShell');
+    if (lg) lg.style.display = 'none';
+    if (sh) sh.style.display = 'block';
+    if (typeof loadAllData === 'function') loadAllData();
+    if (typeof loadSupportTickets === 'function') setTimeout(loadSupportTickets, 1000);
   } else {
-    document.getElementById('loginError').style.display='block';
-    document.getElementById('loginError').textContent='⚠ Incorrect password. Use: admin123';
+    const err = document.getElementById('loginError');
+    if (err) { err.style.display = 'block'; err.textContent = '⚠ Incorrect password. Use: admin123'; }
   }
 }
 function adminLogout() {
-  document.getElementById('loginGate').style.display='flex';
-  document.getElementById('adminShell').style.display='none';
-  document.getElementById('mobileBar').style.display='none';
-  document.getElementById('adminPassword').value='';
+  document.getElementById('loginGate').style.display = 'flex';
+  document.getElementById('adminShell').style.display = 'none';
+  document.getElementById('adminPassword').value = '';
 }
 
 // ─── NAV ──────────────────────────────────────────
