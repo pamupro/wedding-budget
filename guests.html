@@ -51,19 +51,8 @@
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
-    top: 64px;
+    top: 0;
     z-index: 300;
-    isolation: isolate;
-  }
-  /* White bridge fills any sub-pixel gap beneath stats strip */
-  .stats-strip::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0; right: 0;
-    height: 4px;
-    background: #ffffff;
-    z-index: 301;
   }
   .stats-strip::-webkit-scrollbar { display: none; }
   .stat-pill {
@@ -107,18 +96,8 @@
     border-bottom: 1px solid rgba(26,22,18,.10);
     flex-wrap: wrap;
     position: sticky;
-    top: 133px;
+    top: 69px;
     z-index: 299;
-  }
-  /* White bridge fills any sub-pixel gap beneath toolbar */
-  .toolbar::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0; right: 0;
-    height: 4px;
-    background: #ffffff;
-    z-index: 300;
   }
   .search-wrap {
     flex: 1;
@@ -329,8 +308,8 @@
   @media (max-width: 680px) {
     .toolbar { padding: 10px 14px; }
     .grid { padding: 12px; grid-template-columns: 1fr; }
-    .stats-strip { top: 56px; }
-    .toolbar { top: 125px; }
+    .stats-strip { top: 0; }
+    .toolbar { top: 69px; }
     .hamburger-btn { display: flex; align-items: center; }
     .desktop-only { display: none !important; }
   }
