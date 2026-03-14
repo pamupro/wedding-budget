@@ -327,7 +327,7 @@ body{
 .table-card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--R);overflow:hidden;box-shadow:var(--shadow);
-  margin-bottom:16px;
+  margin-bottom:16px;min-height:120px;
 }
 .table-topbar{
   display:flex;align-items:center;justify-content:space-between;
@@ -1219,42 +1219,59 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
       </div>
 
       <!-- Stats row -->
-      <div class="metrics-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:20px" id="supportStats">
-        <div class="metric-card"><div class="m-label"><span class="m-icon">📬</span> Open</div><div class="m-value gold" id="st-open">—</div></div>
-        <div class="metric-card"><div class="m-label"><span class="m-icon">⚡</span> In Progress</div><div class="m-value" id="st-progress">—</div></div>
-        <div class="metric-card success"><div class="m-label"><span class="m-icon">✅</span> Resolved</div><div class="m-value sage" id="st-resolved">—</div></div>
-        <div class="metric-card"><div class="m-label"><span class="m-icon">📨</span> Total</div><div class="m-value" id="st-total">—</div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px">
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">📬</span> Open</div>
+          <div class="m-value gold" id="st-open">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">⚡</span> In Progress</div>
+          <div class="m-value" id="st-progress">—</div>
+        </div>
+        <div class="metric-card success">
+          <div class="m-label"><span class="m-icon">✅</span> Resolved</div>
+          <div class="m-value sage" id="st-resolved">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label"><span class="m-icon">📨</span> Total</div>
+          <div class="m-value" id="st-total">—</div>
+        </div>
       </div>
 
-      <!-- Filter bar -->
-      <div class="table-card">
-        <div class="table-topbar">
-          <div class="table-topbar-left">
-            <div class="table-count-badge" id="supportCountBadge">— tickets</div>
-            <div class="table-filters">
-              <button class="filter-btn active" data-sf="all"    onclick="setSF(this,'all')">All</button>
-              <button class="filter-btn"        data-sf="open"   onclick="setSF(this,'open')">Open</button>
+      <!-- Filter + search bar -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--R);overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:700;color:var(--muted2);background:var(--bg2);border-radius:99px;padding:3px 10px;letter-spacing:.06em" id="supportCountBadge">— tickets</span>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <button class="filter-btn active" data-sf="all"         onclick="setSF(this,'all')">All</button>
+              <button class="filter-btn"        data-sf="open"        onclick="setSF(this,'open')">Open</button>
               <button class="filter-btn"        data-sf="in_progress" onclick="setSF(this,'in_progress')">In Progress</button>
-              <button class="filter-btn"        data-sf="resolved" onclick="setSF(this,'resolved')">Resolved</button>
-              <button class="filter-btn"        data-sf="closed" onclick="setSF(this,'closed')">Closed</button>
+              <button class="filter-btn"        data-sf="resolved"    onclick="setSF(this,'resolved')">Resolved</button>
+              <button class="filter-btn"        data-sf="closed"      onclick="setSF(this,'closed')">Closed</button>
             </div>
           </div>
-          <input class="table-search" id="supportSearch" placeholder="Search tickets…" oninput="renderTickets()">
+          <input class="table-search" id="supportSearch" placeholder="Search tickets…" oninput="renderTickets()" style="width:200px">
         </div>
-
-        <table id="supportTable">
+        <table style="width:100%;border-collapse:collapse">
           <thead>
-            <tr>
-              <th>From</th>
-              <th>Subject</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Date</th>
-              <th>Actions</th>
+            <tr style="background:var(--surface2)">
+              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">From</th>
+              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Subject</th>
+              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Status</th>
+              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Priority</th>
+              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Date</th>
+              <th style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;text-align:left;border-bottom:1px solid var(--border);font-weight:700">Actions</th>
             </tr>
           </thead>
           <tbody id="supportTbody">
-            <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted2)">Loading tickets…</td></tr>
+            <tr>
+              <td colspan="6" style="text-align:center;padding:48px 20px;color:var(--muted2)">
+                <div style="font-size:36px;margin-bottom:10px">📬</div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:6px;color:var(--ink)">Loading support tickets…</div>
+                <div style="font-size:12px">Make sure you have run migration_support_tickets.sql in Supabase</div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1368,8 +1385,8 @@ function showPage(name) {
   if (nb) nb.classList.add('active');
   const tt = document.getElementById('topbarTitle');
   if (tt) tt.textContent = PAGE_TITLES[name]||name;
-  // Load support tickets on first visit
-  if (name === 'support' && typeof loadSupportTickets === 'function' && !allTickets.length) {
+  // Load/refresh support tickets every time the page is shown
+  if (name === 'support' && typeof loadSupportTickets === 'function') {
     loadSupportTickets();
   }
 }
@@ -1420,6 +1437,10 @@ async function loadAllData() {
     showToast('Error loading data: '+e.message, true);
   }
   setRefreshing(false);
+  // Pre-load support tickets in background
+  if (typeof loadSupportTickets === 'function') {
+    setTimeout(loadSupportTickets, 500);
+  }
 }
 function setRefreshing(on) {
   const btn=document.getElementById('refreshBtn');
