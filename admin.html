@@ -187,7 +187,7 @@ body{
     linear-gradient(90deg,rgba(26,22,18,.016) 1px,transparent 1px);
   background-size:52px 52px;
 }
-.page{display:none;padding:28px 28px 60px;max-width:1200px}
+.page{display:none;padding:28px 28px 60px;}
 .page.active{display:block}
 
 /* ─── PAGE HEADER ─────────────────────────────────── */
@@ -1388,9 +1388,14 @@ function showPage(name) {
   if (name === 'support' && typeof loadSupportTickets === 'function') {
     loadSupportTickets();
   }
-  // Scroll the main container to top
+  // Scroll the main container to top immediately
   var mainEl = document.querySelector('.main');
-  if (mainEl) mainEl.scrollTop = 0;
+  if (mainEl) { mainEl.scrollTop = 0; }
+  // Also after a tick in case async content shifts scroll
+  setTimeout(function(){ 
+    var m = document.querySelector('.main'); 
+    if(m) m.scrollTop = 0; 
+  }, 50);
 }
 
 // ─── LOAD DATA ─────────────────────────────────────
@@ -2224,6 +2229,9 @@ const SVC_H = { 'Content-Type':'application/json', apikey: SVC_KEY, Authorizatio
 
 async function loadSupportTickets() {
   console.log('[Support] loadSupportTickets() called');
+  // Always scroll to top of main when support loads
+  const mainEl = document.querySelector('.main');
+  if (mainEl) mainEl.scrollTop = 0;
   const tbody = document.getElementById('supportTbody');
   if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#7a6e5e">⏳ Loading…</td></tr>';
   try {
