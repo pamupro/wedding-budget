@@ -46,13 +46,15 @@
   /* ── Stats strip ── */
   .stats-strip {
     display: flex;
-    background: var(--surface);
+    background: #ffffff;
     border-bottom: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(26,22,18,.07);
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
     top: 64px;
-    z-index: 10;
+    z-index: 100;
+    isolation: isolate;
   }
   .stats-strip::-webkit-scrollbar { display: none; }
   .stat-pill {
@@ -92,9 +94,13 @@
     align-items: center;
     gap: 10px;
     padding: 14px 24px;
-    background: var(--surface);
+    background: #ffffff;
     border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
+    position: sticky;
+    top: 116px;
+    z-index: 99;
+    box-shadow: 0 2px 8px rgba(26,22,18,.05);
   }
   .search-wrap {
     flex: 1;
