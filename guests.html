@@ -972,40 +972,40 @@
       </button>
       <div class="csel-drop" id="cselSideDrop">
         <div class="csel-section">Filter by side</div>
-        <div class="csel-opt csel-active" data-v="" onclick="pickSideFilter(this,'All Sides')">
+        <div class="csel-opt csel-active" data-v="" data-label="All Sides">
           <span class="csel-opt-icon">👥</span>
           <span class="csel-opt-text">All Sides</span>
           <span class="csel-opt-count" id="cnt-all"></span>
         </div>
         <div class="csel-divider"></div>
-        <div class="csel-opt" data-v="Bride Side" onclick="pickSideFilter(this,'Bride's Family')">
+        <div class="csel-opt" data-v="Bride Side" data-label="Bride's Family">
           <span class="csel-opt-icon">💐</span>
           <span class="csel-opt-text">Bride's Family</span>
           <span class="csel-opt-count" id="cnt-bride"></span>
         </div>
-        <div class="csel-opt" data-v="Groom Side" onclick="pickSideFilter(this,'Groom's Family')">
+        <div class="csel-opt" data-v="Groom Side" data-label="Groom's Family">
           <span class="csel-opt-icon">🤵</span>
           <span class="csel-opt-text">Groom's Family</span>
           <span class="csel-opt-count" id="cnt-groom"></span>
         </div>
-        <div class="csel-opt" data-v="Both Sides" onclick="pickSideFilter(this,'Both Sides')">
+        <div class="csel-opt" data-v="Both Sides" data-label="Both Sides">
           <span class="csel-opt-icon">💑</span>
           <span class="csel-opt-text">Both Sides</span>
           <span class="csel-opt-count" id="cnt-both"></span>
         </div>
         <div class="csel-divider"></div>
-        <div class="csel-opt" data-v="Bride's Friend" onclick="pickSideFilter(this,'Bride's Friends')">
+        <div class="csel-opt" data-v="Bride's Friend" data-label="Bride's Friends">
           <span class="csel-opt-icon">🌸</span>
           <span class="csel-opt-text">Bride's Friends</span>
           <span class="csel-opt-count" id="cnt-bfriend"></span>
         </div>
-        <div class="csel-opt" data-v="Groom's Friend" onclick="pickSideFilter(this,'Groom's Friends')">
+        <div class="csel-opt" data-v="Groom's Friend" data-label="Groom's Friends">
           <span class="csel-opt-icon">🙌</span>
           <span class="csel-opt-text">Groom's Friends</span>
           <span class="csel-opt-count" id="cnt-gfriend"></span>
         </div>
         <div class="csel-divider"></div>
-        <div class="csel-opt" data-v="Other" onclick="pickSideFilter(this,'Other')">
+        <div class="csel-opt" data-v="Other" data-label="Other">
           <span class="csel-opt-icon">👤</span>
           <span class="csel-opt-text">Other</span>
           <span class="csel-opt-count" id="cnt-other"></span>
@@ -1023,19 +1023,19 @@
       </button>
       <div class="csel-drop" id="cselSortDrop">
         <div class="csel-section">Sort by</div>
-        <div class="csel-opt csel-active" data-v="name" onclick="pickSortFilter(this,'A–Z Name')">
+        <div class="csel-opt csel-active" data-v="name" data-label="A–Z Name">
           <span class="csel-opt-icon">🔤</span>
           <span class="csel-opt-text">A–Z Name</span>
         </div>
-        <div class="csel-opt" data-v="rsvp" onclick="pickSortFilter(this,'RSVP')">
+        <div class="csel-opt" data-v="rsvp" data-label="RSVP Status">
           <span class="csel-opt-icon">✅</span>
           <span class="csel-opt-text">RSVP Status</span>
         </div>
-        <div class="csel-opt" data-v="group" onclick="pickSortFilter(this,'Group')">
+        <div class="csel-opt" data-v="group" data-label="Group">
           <span class="csel-opt-icon">👥</span>
           <span class="csel-opt-text">Group / Side</span>
         </div>
-        <div class="csel-opt" data-v="new" onclick="pickSortFilter(this,'Newest')">
+        <div class="csel-opt" data-v="new" data-label="Newest">
           <span class="csel-opt-icon">🆕</span>
           <span class="csel-opt-text">Newest First</span>
         </div>
@@ -2385,29 +2385,41 @@ function toggleCsel(id) {
   }
 }
 
-document.addEventListener('click', e => {
+// Single delegated listener handles ALL dropdown option clicks
+document.addEventListener('click', function(e) {
+  const opt = e.target.closest('.csel-opt');
+  if(opt) {
+    // Which dropdown is this inside?
+    const drop = opt.closest('.csel-drop');
+    if(!drop) return;
+    const isSide = drop.id === 'cselSideDrop';
+    const isSort = drop.id === 'cselSortDrop';
+    const val   = opt.dataset.v;
+    const label = opt.dataset.label;
+    if(isSide) {
+      drop.querySelectorAll('.csel-opt').forEach(o => o.classList.remove('csel-active'));
+      opt.classList.add('csel-active');
+      document.getElementById('cselSideLabel').textContent = label;
+      document.getElementById('grpSel').value = val;
+    } else if(isSort) {
+      drop.querySelectorAll('.csel-opt').forEach(o => o.classList.remove('csel-active'));
+      opt.classList.add('csel-active');
+      document.getElementById('cselSortLabel').textContent = label;
+      document.getElementById('sortSel').value = val;
+    }
+    document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
+    renderList();
+    return;
+  }
+  // Close dropdowns when clicking outside
   if(!e.target.closest('.csel-wrap')) {
     document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
   }
 });
 
-function pickSideFilter(el, label) {
-  document.querySelectorAll('#cselSideDrop .csel-opt').forEach(o => o.classList.remove('csel-active'));
-  el.classList.add('csel-active');
-  document.getElementById('cselSideLabel').textContent = label;
-  document.getElementById('grpSel').value = el.dataset.v;
-  document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
-  renderList();
-}
-
-function pickSortFilter(el, label) {
-  document.querySelectorAll('#cselSortDrop .csel-opt').forEach(o => o.classList.remove('csel-active'));
-  el.classList.add('csel-active');
-  document.getElementById('cselSortLabel').textContent = label;
-  document.getElementById('sortSel').value = el.dataset.v;
-  document.querySelectorAll('.csel-wrap.open').forEach(w => w.classList.remove('open'));
-  renderList();
-}
+// Keep these as stubs so any old references don't break
+function pickSideFilter(el, label) {}
+function pickSortFilter(el, label) {}
 
 
 // ── Measure topbar height and set sticky tops ─────────────────────────────
