@@ -17,6 +17,8 @@
   <meta name="twitter:description" id="twDesc"        content="Please join us to celebrate our wedding day">
   <meta name="twitter:image"       id="twImage"       content="https://bqggtyguhedlyfffjkkw.supabase.co/storage/v1/object/public/wedding-photos/og-default.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://bqggtyguhedlyfffjkkw.supabase.co">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -391,9 +393,10 @@
     <p class="section-sub" id="pageMsg">We are so excited to celebrate this special day with you!</p>
     <div class="details-grid">
       <div class="detail-card"><div class="detail-icon">📅</div><div class="detail-label">Date</div><div class="detail-val" id="dDate">—</div></div>
-      <div class="detail-card"><div class="detail-icon">🕐</div><div class="detail-label">Ceremony</div><div class="detail-val">1:30 PM</div></div>
-      <div class="detail-card"><div class="detail-icon">🥂</div><div class="detail-label">Reception</div><div class="detail-val">From 3:30 PM</div></div>
-      <div class="detail-card"><div class="detail-icon">👗</div><div class="detail-label">Dress Code</div><div class="detail-val">Smart / Formal</div></div>
+      <div class="detail-card" id="cardCeremony"><div class="detail-icon">🕐</div><div class="detail-label">Ceremony</div><div class="detail-val" id="dCeremony">1:30 PM</div></div>
+      <div class="detail-card" id="cardReception"><div class="detail-icon">🥂</div><div class="detail-label">Reception</div><div class="detail-val" id="dReception">From 3:30 PM</div></div>
+      <div class="detail-card" id="cardDress"><div class="detail-icon">👗</div><div class="detail-label">Dress Code</div><div class="detail-val" id="dDress">Smart / Formal</div></div>
+      <div class="detail-card" id="cardVenue" style="display:none"><div class="detail-icon">📍</div><div class="detail-label">Venue</div><div class="detail-val" id="dVenue"></div><div id="dVenueAddr" style="font-size:12px;color:#8a7a60;margin-top:4px"></div></div>
     </div>
   </div>
 </div>
@@ -590,6 +593,13 @@ async function init() {
     startCountdown(d);
   }
 
+  // Load invitation details (customised from Guest List → Invitation Settings)
+  try {
+    const is_   = await fetch(SB+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.invitation_config', {headers:H});
+    const irows = await is_.json();
+    if(irows && irows[0] && irows[0].value) applyInviteCfg(JSON.parse(irows[0].value));
+  } catch(e) { console.warn('invitation config', e); }
+
   // Load menu config
   try {
     const ms    = await fetch(SB+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.menu_config', {headers:H});
@@ -614,6 +624,28 @@ async function init() {
 }
 
 // ── LOAD GUEST RECORD ─────────────────────────────────────────────────────────
+function applyInviteCfg(cfg) {
+  if(!cfg) return;
+  const setCard = (cardId, valId, text) => {
+    const card = document.getElementById(cardId), val = document.getElementById(valId);
+    if(!card || !val) return;
+    if(text) { val.textContent = text; card.style.display = ''; }
+    else card.style.display = 'none';
+  };
+  if(cfg.msg !== undefined) {
+    const m = document.getElementById('pageMsg');
+    if(m && cfg.msg) m.textContent = cfg.msg;
+  }
+  if(cfg.ceremony  !== undefined) setCard('cardCeremony','dCeremony',cfg.ceremony);
+  if(cfg.reception !== undefined) setCard('cardReception','dReception',cfg.reception);
+  if(cfg.dress     !== undefined) setCard('cardDress','dDress',cfg.dress);
+  if(cfg.venueName) {
+    setCard('cardVenue','dVenue',cfg.venueName);
+    const a = document.getElementById('dVenueAddr');
+    if(a) a.textContent = cfg.venueAddr || '';
+  }
+}
+
 async function loadGuest(gid) {
   const r    = await fetch(SB+'/rest/v1/guests?id=eq.'+gid+'&select=*', {headers:H});
   const rows = await r.json();
@@ -1337,6 +1369,6 @@ window.addEventListener('scroll', () => {
 }, {passive:true});
 </script>
 
-<script src="support-widget.js"></script>
+<script defer src="support-widget.js"></script>
 </body>
 </html>

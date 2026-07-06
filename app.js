@@ -1501,6 +1501,7 @@ function setChartType(type) {
 }
 
 function renderChart() {
+  if(typeof Chart === 'undefined') { setTimeout(renderChart, 200); return; }  // deferred CDN still loading
   const canvas = document.getElementById('budgetChart');
   const empty  = document.getElementById('chartEmpty');
   if(!canvas) return;

@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <title>Guest List — WeddingLedger</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://bqggtyguhedlyfffjkkw.supabase.co">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/umd/supabase.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.3/umd/supabase.min.js"></script>
   <style>
   /* ── Design tokens ── */
   :root {
@@ -918,6 +920,7 @@
     <span style="font-family:'Fraunces',serif;font-size:15px;color:var(--muted);font-style:italic">Guest List</span>
   </div>
   <div class="topbar-right">
+    <button onclick="openInviteCfg()" class="topbar-btn desktop-only" style="color:var(--muted)">💌 Invitation</button>
     <button onclick="openMenuModal()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu</button>
     <button onclick="openImport()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import</button>
     <button onclick="doExport()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
@@ -938,6 +941,7 @@
     <button class="mobile-nav-item" onclick="openMenuModal();closeMobileNav()">🍽 Menu Settings</button>
     <button class="mobile-nav-item" onclick="openImport();closeMobileNav()">📥 Import CSV</button>
     <button class="mobile-nav-item" onclick="doExport();closeMobileNav()">📤 Export CSV</button>
+    <button class="mobile-nav-item" onclick="openInviteCfg();closeMobileNav()">💌 Invitation Settings</button>
     <button class="mobile-nav-item" onclick="location.href='seating.html'">🪑 Seating Chart</button>
     <button class="mobile-nav-item" onclick="location.href='timeline.html'">📅 Day-of Timeline</button>
     <button class="mobile-nav-item" onclick="location.href='dashboard.html'">← Dashboard</button>
@@ -1288,6 +1292,33 @@
 </div>
 
 <!-- MESSAGE MODAL -->
+<!-- ═══ INVITATION SETTINGS ═══ -->
+<div class="modal-overlay" id="inviteCfgModal" style="display:none" onclick="if(event.target===this)closeInviteCfg()">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 class="modal-title">💌 Invitation Settings</h3>
+      <button class="modal-close" onclick="closeInviteCfg()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--bg2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+        These details appear in the <strong>Wedding Details</strong> section of your invitation page. Leave a field empty to hide that card.
+      </div>
+      <label class="glabel">Welcome message</label>
+      <textarea class="ginput" id="icMsg" rows="2" placeholder="We are so excited to celebrate this special day with you!" style="resize:vertical;min-height:54px"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div><label class="glabel">🕐 Ceremony time</label><input class="ginput" id="icCeremony" placeholder="e.g. 1:30 PM"></div>
+        <div><label class="glabel">🥂 Reception time</label><input class="ginput" id="icReception" placeholder="e.g. From 3:30 PM"></div>
+      </div>
+      <div style="margin-top:12px"><label class="glabel">👗 Dress code</label><input class="ginput" id="icDress" placeholder="e.g. Smart / Formal"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div><label class="glabel">📍 Venue name</label><input class="ginput" id="icVenueName" placeholder="e.g. The Golden Hotel"></div>
+        <div><label class="glabel">Venue address</label><input class="ginput" id="icVenueAddr" placeholder="Street, City"></div>
+      </div>
+      <button class="btn-primary" onclick="saveInviteCfg()" style="width:100%;margin-top:18px;padding:12px">Save Invitation Details</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="msgModal" style="display:none" onclick="if(event.target===this)closeMsg()">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
@@ -1422,17 +1453,28 @@ async function sbDel(qs) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+const INVITE_DEFAULTS = {
+  msg: 'We are so excited to celebrate this special day with you!',
+  ceremony: '1:30 PM', reception: 'From 3:30 PM', dress: 'Smart / Formal',
+  venueName: '', venueAddr: ''
+};
+let inviteCfg = Object.assign({}, INVITE_DEFAULTS);
+
 async function init() {
   try {
-    const [g,p,s] = await Promise.all([
+    const [g,p,s,ic] = await Promise.all([
       sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc'),
       sbGet('profiles?user_id=eq.'+uid+'&select=name1,name2,wedding_date,page_slug'),
-      sbGet('settings?user_id=eq.'+uid+'&key=eq.menu_config')
+      sbGet('settings?user_id=eq.'+uid+'&key=eq.menu_config'),
+      sbGet('settings?user_id=eq.'+uid+'&key=eq.invitation_config')
     ]);
     guests = g || [];
     prof   = (p && p[0]) ? p[0] : {};
     if(s && s[0] && s[0].value) {
       try { menuCfg = JSON.parse(s[0].value); } catch(e) {}
+    }
+    if(ic && ic[0] && ic[0].value) {
+      try { inviteCfg = Object.assign({}, INVITE_DEFAULTS, JSON.parse(ic[0].value)); } catch(e) {}
     }
     rebuildGroupSel();
     renderList();
@@ -1450,6 +1492,7 @@ let pollTimer = null;
 
 function startRealtime() {
   pollTimer = setInterval(refreshGuests, 30000);
+  if(typeof supabase === 'undefined') { setTimeout(startRealtime, 400); return; }  // CDN still loading
   try {
     const client = supabase.createClient(SB, SK);
     client
@@ -1998,6 +2041,38 @@ async function copyRsvpLink(gid) {
   } else {
     prompt('Copy this RSVP link for ' + (g.name||'guest') + ':', url);
   }
+}
+
+// ── INVITATION SETTINGS ─────────────────────────────────────────────────────
+function openInviteCfg() {
+  document.getElementById('icMsg').value       = inviteCfg.msg ?? '';
+  document.getElementById('icCeremony').value  = inviteCfg.ceremony ?? '';
+  document.getElementById('icReception').value = inviteCfg.reception ?? '';
+  document.getElementById('icDress').value     = inviteCfg.dress ?? '';
+  document.getElementById('icVenueName').value = inviteCfg.venueName ?? '';
+  document.getElementById('icVenueAddr').value = inviteCfg.venueAddr ?? '';
+  document.getElementById('inviteCfgModal').style.display = 'flex';
+}
+function closeInviteCfg() { document.getElementById('inviteCfgModal').style.display = 'none'; }
+async function saveInviteCfg() {
+  inviteCfg = {
+    msg:       document.getElementById('icMsg').value.trim(),
+    ceremony:  document.getElementById('icCeremony').value.trim(),
+    reception: document.getElementById('icReception').value.trim(),
+    dress:     document.getElementById('icDress').value.trim(),
+    venueName: document.getElementById('icVenueName').value.trim(),
+    venueAddr: document.getElementById('icVenueAddr').value.trim()
+  };
+  try {
+    const existing = await sbGet('settings?user_id=eq.'+uid+'&key=eq.invitation_config&select=id');
+    if(existing && existing.length) {
+      await sbPatch('settings?user_id=eq.'+uid+'&key=eq.invitation_config', { value: JSON.stringify(inviteCfg) });
+    } else {
+      await sbPost('settings', { user_id: uid, key: 'invitation_config', value: JSON.stringify(inviteCfg) });
+    }
+    closeInviteCfg();
+    toast('💌 Invitation details saved — live on your wedding page');
+  } catch(e) { console.error(e); toast('Could not save invitation details', true); }
 }
 
 // Base URL adapts automatically: pamupro.github.io/wedding-budget today,
@@ -2609,6 +2684,6 @@ window.addEventListener('resize', pinToolbar);
 init();
 </script>
 
-<script src="support-widget.js"></script>
+<script defer src="support-widget.js"></script>
 </body>
 </html>
