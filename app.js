@@ -49,7 +49,25 @@ const CURRENCIES = {
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let vendors=[], payments=[], tasks=[];
-let notes='', spendLimit=0;
+let notes='', spendLimit=0, spendLimitOriginal=null, spendLimitCurrency='';
+
+// Spend limit is stored as JSON {gbp, original, currency} so the exact typed
+// amount survives. Legacy plain-number values are treated as GBP.
+function parseSpendLimitSetting(raw){
+  try{ const o=JSON.parse(raw); if(o&&typeof o==='object'&&'gbp' in o){ return {gbp:parseFloat(o.gbp)||0, original:(o.original!=null?parseFloat(o.original):null), currency:o.currency||''}; } }catch(e){}
+  return {gbp:parseFloat(raw)||0, original:null, currency:''};
+}
+function spendLimitActive(){ return amtActive(spendLimit, spendLimitOriginal, spendLimitCurrency); }
+function spendLimitFieldValue(){
+  if(!spendLimit&&!spendLimitOriginal) return '';
+  if(spendLimitCurrency===activeCurrency&&spendLimitOriginal!=null) return spendLimitOriginal;
+  return Math.round(spendLimit*(CURRENCIES[activeCurrency].rate||1)*100)/100;
+}
+async function persistSpendLimit(typed){
+  const gbp=typed/(CURRENCIES[activeCurrency].rate||1);
+  spendLimit=gbp; spendLimitOriginal=typed; spendLimitCurrency=activeCurrency;
+  await DB.upsertSetting(userId,'spend_limit',JSON.stringify({gbp:gbp,original:typed,currency:activeCurrency}),accessToken);
+}
 let shareToken=null, shareEnabled=false;
 let sharePermissions={vendors:true,dueDates:true,budget:true,checklist:false,notes:false};
 let selectedIcon='💒', activeCurrency='GBP', isPro=false;
@@ -277,7 +295,7 @@ async function loadPlatformSettings() {
 async function loadSettings() {
   const rows=await DB.query(`settings?user_id=eq.${userId}`,accessToken);
   rows.forEach(r=>{
-    if(r.key==='spend_limit'){spendLimit=parseFloat(r.value)||0;const el=document.getElementById('spendLimit');if(el)el.value=spendLimit||'';const el2=document.getElementById('settingsSpendLimit');if(el2)el2.value=spendLimit||'';}
+    if(r.key==='spend_limit'){const sl=parseSpendLimitSetting(r.value);spendLimit=sl.gbp;spendLimitOriginal=sl.original;spendLimitCurrency=sl.currency;const fv=spendLimitFieldValue();const el=document.getElementById('spendLimit');if(el)el.value=fv;const el2=document.getElementById('settingsSpendLimit');if(el2)el2.value=fv;}
     if(r.key==='wedding_notes'){notes=r.value;const el=document.getElementById('weddingNotes');if(el)el.value=notes;}
     if(r.key==='share_token') shareToken=r.value;
     if(r.key==='share_enabled') shareEnabled=r.value==='true';
@@ -981,9 +999,11 @@ function updateStats(){
     paid+=vp.reduce((s,p)=>s+pAmtA(p),0);
     paidGBP+=vp.reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
   });
-  const rem=total-paid,remGBP=totalGBP-paidGBP,lim=spendLimit||0;
-  const avail=lim>0?lim-totalGBP:null;
-  const pct=lim>0?Math.min(100,Math.round((totalGBP/lim)*100)):0;
+  const rem=total-paid,remGBP=totalGBP-paidGBP;
+  const limA=spendLimitActive(), limGBP=spendLimit||0;
+  const avail=limA>0?limA-total:null;
+  const availGBP=limGBP>0?limGBP-totalGBP:null;
+  const pct=limGBP>0?Math.min(100,Math.round((totalGBP/limGBP)*100)):0;
 
   setText('stat-total',fmtActive(total));
   setText('stat-paid',fmtActive(paid));
@@ -996,18 +1016,21 @@ function updateStats(){
   const fill=document.getElementById('progress-fill');
   if(fill){fill.style.width=pct+'%';fill.classList.toggle('danger',pct>=90);}
   setText('progress-pct',pct+'%');
-  setText('sum-total',fmtActive(total));setText('sum-paid',fmtActive(paid));
-  setText('sum-remaining',fmtActive(rem));setText('sum-limit',lim>0?fmt(lim):'Not set');
+  const gbpLine=v=>(activeCurrency!=='GBP'&&v!==null&&v!==undefined)?'<span class="sum-gbp">£'+Number(v).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>':'';
+  const setSum=(id,aVal,gVal)=>{const el=document.getElementById(id);if(el)el.innerHTML=fmtActive(aVal)+gbpLine(gVal);};
+  setSum('sum-total',total,totalGBP);
+  setSum('sum-paid',paid,paidGBP);
+  setSum('sum-remaining',rem,remGBP);
+  if(limA>0) setSum('sum-limit',limA,limGBP); else setText('sum-limit','Not set');
   const av=document.getElementById('sum-available');
-  if(av){if(avail!==null){av.textContent=fmt(avail);av.style.color=avail>=0?'var(--sage)':'var(--danger)';}
+  if(av){if(avail!==null){av.innerHTML=fmtActive(avail)+gbpLine(availGBP);av.style.color=avail>=0?'var(--sage)':'var(--danger)';}
   else{av.textContent='Set limit above';av.style.color='var(--muted)';}}
 }
 
 async function saveLimit(){
-  // Spend limit is always entered and stored in GBP — no conversion
+  // Entered in the ACTIVE currency; the exact typed amount is stored
   const input=parseFloat(document.getElementById('spendLimit').value)||0;
-  spendLimit=input;
-  await DB.upsertSetting(userId,'spend_limit',input,accessToken);
+  await persistSpendLimit(input);
   const el=document.getElementById('settingsSpendLimit'); if(el) el.value=input||'';
   updateStats();showToast('Spend limit saved ✓');
 }
@@ -1452,8 +1475,10 @@ let budgetChart = null;
 let chartType = 'doughnut';
 
 const CHART_COLORS = [
-  '#C9A84C','#8B6914','#D4B896','#5C4A2A','#E8D5B0',
-  '#9B8560','#F0E6CF','#7A6040','#BFA878','#4A3820'
+  '#C9A84C','#6F9A74','#C4674A','#5B7DB1','#8E5A8A',
+  '#3F8E8C','#D08AA0','#E0A430','#9E4A5A','#7A8A4A',
+  '#B87333','#3A5A80','#E07A5F','#9A8AC0','#4A7A50',
+  '#6B7A8F','#B08AA8','#8A8A3F','#D0A060','#A05A3A'
 ];
 
 function setChartType(type) {
@@ -1556,7 +1581,7 @@ function renderChart() {
 async function exportPDF() {
   // Lazy-load jsPDF on first use (saves ~300kb on initial page load)
   if(typeof window.jspdf === 'undefined'){
-    showToast('Loading PDF library…');
+    showToast('Loading PDF engine…');
     const s1 = document.createElement('script');
     s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     s1.onload = function(){
@@ -1574,155 +1599,218 @@ async function exportPDF() {
   showToast('Generating PDF…');
 
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-  const sym = CURRENCIES[activeCurrency].symbol;
-  const pageW = 210;
-  const margin = 18;
-  let y = margin;
+  const pageW = 210, pageH = 297, margin = 16;
 
-  // ── HEADER
-  doc.setFillColor(250, 247, 240);
-  doc.rect(0, 0, pageW, 38, 'F');
-  doc.setFontSize(22);
-  doc.setTextColor(90, 70, 30);
-  doc.setFont('helvetica', 'bold');
-  doc.text('WeddingLedger', margin, 16);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(140, 110, 60);
-  const n1 = profile?.name1 || '', n2 = profile?.name2 || '';
-  const coupleStr = n1 && n2 ? `${n1} & ${n2}` : n1 || n2 || 'Budget Report';
-  doc.text(coupleStr, margin, 24);
-  doc.setFontSize(9);
-  doc.setTextColor(160, 130, 80);
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}`, margin, 31);
-  if(profile?.wedding_date) {
-    doc.text(`Wedding Date: ${formatDateLong(profile.wedding_date)}`, pageW - margin, 31, {align:'right'});
-  }
+  // jsPDF built-in fonts only support Latin characters — strip emoji/symbols
+  const clean = s => String(s||'').replace(/[^\x20-\x7E\u00A0-\u00FF]/g,'').replace(/\s+/g,' ').trim();
+  const c = CURRENCIES[activeCurrency];
+  const dec = c.rate > 50 ? 0 : 2;
+  const money = v => (activeCurrency==='GBP' ? '£' : clean(c.symbol)+' ')
+    + Number(v||0).toLocaleString('en-GB',{minimumFractionDigits:dec,maximumFractionDigits:dec});
 
-  // Gold line
-  doc.setDrawColor(201, 168, 76);
-  doc.setLineWidth(0.8);
-  doc.line(margin, 38, pageW - margin, 38);
+  // Theme colors
+  const INK=[26,22,18], GOLD=[160,120,40], GOLD2=[201,168,76], MUTED=[102,90,73],
+        SAGE=[42,106,58], ROSE=[184,48,48], CREAM=[250,247,242], PALE=[253,243,220];
 
-  y = 50;
-
-  // ── SUMMARY STATS
-  const total = vendors.reduce((s,v) => s + parseFloat(v.total_cost||0), 0);
-  const paid  = payments.reduce((s,p) => s + parseFloat(p.amount||0), 0);
+  // ── EXACT DATA (uses the amounts you actually typed) ──
+  const total = vendors.reduce((s,v)=>s+vTotalA(v),0);
+  const paid  = payments.reduce((s,p)=>s+pAmtA(p),0);
   const rem   = total - paid;
   const pct   = total > 0 ? Math.round((paid/total)*100) : 0;
+  const limA  = spendLimitActive();
 
-  const toDisp = v => sym + (v * CURRENCIES[activeCurrency].rate).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+  // ── HEADER ──
+  doc.setFillColor(...CREAM);
+  doc.rect(0, 0, pageW, 44, 'F');
 
+  doc.setFont('helvetica','bolditalic'); doc.setFontSize(24); doc.setTextColor(...INK);
+  doc.text('Wedding', margin, 17);
+  const w1 = doc.getTextWidth('Wedding');
+  doc.setTextColor(...GOLD);
+  doc.text('Ledger', margin + w1, 17);
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.setTextColor(...GOLD);
+  doc.text('W E D D I N G   B U D G E T   R E P O R T', margin, 24);
+
+  const n1 = clean(profile?.name1||''), n2 = clean(profile?.name2||'');
+  const coupleStr = n1 && n2 ? n1 + ' & ' + n2 : (n1 || n2 || 'Budget Report');
+  doc.setFont('helvetica','bolditalic'); doc.setFontSize(14); doc.setTextColor(...INK);
+  doc.text(coupleStr, margin, 33);
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
+  const genStr = 'Generated ' + new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  doc.text(genStr, pageW - margin, 15, {align:'right'});
+  if(profile?.wedding_date){
+    const wd = new Date(profile.wedding_date + 'T00:00:00');
+    doc.setFont('helvetica','bold'); doc.setTextColor(...INK);
+    doc.text('Wedding day: ' + wd.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}), pageW - margin, 21, {align:'right'});
+    const days = Math.max(0, Math.ceil((wd - new Date())/86400000));
+    doc.setFont('helvetica','normal'); doc.setTextColor(...GOLD);
+    doc.text(days + ' days to go', pageW - margin, 27, {align:'right'});
+  }
+
+  doc.setDrawColor(...GOLD2); doc.setLineWidth(0.7);
+  doc.line(margin, 44, pageW - margin, 44);
+
+  let y = 52;
+
+  // ── SUMMARY CARDS ──
   const stats = [
-    { label:'Total Budget', value: toDisp(total), color:[60,120,60] },
-    { label:'Total Paid',   value: toDisp(paid),  color:[60,100,180] },
-    { label:'Remaining',    value: toDisp(rem),    color: rem > 0 ? [180,80,80] : [60,120,60] },
-    { label:'Paid',         value: pct + '%',      color:[130,100,50] },
+    { label:'TOTAL BUDGET', value: money(total), color: INK },
+    { label:'TOTAL PAID',   value: money(paid),  color: SAGE },
+    { label:'REMAINING',    value: money(rem),   color: rem > 0.005 ? ROSE : SAGE },
+    { label:'BUDGET PAID',  value: pct + '%',    color: GOLD },
   ];
-  const boxW = (pageW - margin*2 - 9) / 4;
+  const gap = 4, boxW = (pageW - margin*2 - gap*3) / 4, boxH = 21;
   stats.forEach((s, i) => {
-    const x = margin + i * (boxW + 3);
-    doc.setFillColor(250,245,235);
-    doc.roundedRect(x, y, boxW, 20, 3, 3, 'F');
-    doc.setFontSize(7); doc.setTextColor(130,100,50); doc.setFont('helvetica','normal');
-    doc.text(s.label.toUpperCase(), x + boxW/2, y + 6, {align:'center'});
-    doc.setFontSize(11); doc.setFont('helvetica','bold');
-    doc.setTextColor(...s.color);
-    doc.text(s.value, x + boxW/2, y + 15, {align:'center'});
+    const x = margin + i * (boxW + gap);
+    doc.setFillColor(...CREAM);
+    doc.setDrawColor(232,221,208); doc.setLineWidth(0.3);
+    doc.roundedRect(x, y, boxW, boxH, 2.5, 2.5, 'FD');
+    doc.setFontSize(6.3); doc.setTextColor(...MUTED); doc.setFont('helvetica','bold');
+    doc.text(s.label, x + boxW/2, y + 7, {align:'center', charSpace:0.5});
+    doc.setFontSize(11.5); doc.setFont('helvetica','bold'); doc.setTextColor(...s.color);
+    doc.text(s.value, x + boxW/2, y + 15.5, {align:'center'});
   });
+  y += boxH + 7;
 
-  y += 28;
+  // ── PROGRESS BAR ──
+  doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(...MUTED);
+  doc.text('BUDGET USED', margin, y + 1, {charSpace:0.5});
+  doc.text(pct + '%', pageW - margin, y + 1, {align:'right'});
+  y += 3;
+  const barW = pageW - margin*2;
+  doc.setFillColor(238,231,220);
+  doc.roundedRect(margin, y, barW, 3, 1.5, 1.5, 'F');
+  if(pct > 0){
+    doc.setFillColor(...(pct >= 90 ? ROSE : GOLD2));
+    doc.roundedRect(margin, y, Math.max(3, barW * Math.min(100,pct)/100), 3, 1.5, 1.5, 'F');
+  }
+  y += 8;
 
-  // ── BUDGET CHART as image
+  // ── SPEND LIMIT LINE ──
+  if(limA > 0){
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...MUTED);
+    const availA = limA - total;
+    doc.setFont('helvetica','bold'); doc.setTextColor(...INK);
+    doc.text('Spend limit: ' + money(limA), margin, y);
+    doc.setTextColor(...(availA >= 0 ? SAGE : ROSE));
+    doc.text('Available: ' + money(availA), pageW - margin, y, {align:'right'});
+    y += 7;
+  }
+
+  // ── BUDGET CHART (keep aspect ratio, centred) ──
   const chartCanvas = document.getElementById('budgetChart');
-  if(chartCanvas && vendors.some(v => v.total_cost > 0)) {
+  if(chartCanvas && chartCanvas.width > 0 && vendors.some(v => vTotalA(v) > 0)) {
     try {
       const imgData = chartCanvas.toDataURL('image/png');
-      const chartH = 65;
-      doc.addImage(imgData, 'PNG', margin, y, pageW - margin*2, chartH);
-      y += chartH + 8;
+      const ratio = chartCanvas.height / chartCanvas.width;
+      let imgW = pageW - margin*2 - 40;
+      let imgH = imgW * ratio;
+      const maxH = 72;
+      if(imgH > maxH){ imgH = maxH; imgW = imgH / ratio; }
+      doc.addImage(imgData, 'PNG', (pageW - imgW)/2, y, imgW, imgH);
+      y += imgH + 8;
     } catch(e) { console.log('Chart not captured:', e); }
   }
 
-  // ── VENDOR TABLE
-  doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(90,70,30);
-  doc.text('Vendor Breakdown', margin, y); y += 6;
+  // ── VENDOR BREAKDOWN ──
+  const heading = (title) => {
+    doc.setFontSize(13); doc.setFont('helvetica','bolditalic'); doc.setTextColor(...INK);
+    doc.text(title, margin, y);
+    doc.setDrawColor(...GOLD2); doc.setLineWidth(0.5);
+    doc.line(margin, y + 1.8, margin + doc.getTextWidth(title), y + 1.8);
+    y += 7;
+  };
+  if(y > 230){ doc.addPage(); y = margin + 4; }
+  heading('Vendor Breakdown');
 
-  const tableRows = vendors
-    .filter(v => v.name)
-    .map(v => {
-      const vPaid = payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+parseFloat(p.amount||0),0);
-      const vRem  = Math.max(0,(v.total_cost||0) - vPaid);
-      const status = v.total_cost > 0 && vPaid >= v.total_cost ? 'Paid ✓'
-                   : vPaid > 0 ? 'Partial' : 'Not Paid';
-      return [
-        v.icon + ' ' + v.name,
-        v.category || '—',
-        toDisp(v.total_cost || 0),
-        toDisp(vPaid),
-        toDisp(vRem),
-        status
-      ];
+  const namedVendors = vendors.filter(v => v.name);
+  const tableRows = namedVendors.map(v => {
+      const vTotal = vTotalA(v);
+      const vPaid  = payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+pAmtA(p),0);
+      const vRem   = Math.max(0, vTotal - vPaid);
+      const status = vTotal > 0 && vPaid >= vTotal - 0.005 ? 'Paid'
+                   : vPaid > 0.005 ? 'Partial' : 'Not Paid';
+      return [ clean(v.name) || '-', clean(v.category) || '-',
+               money(vTotal), money(vPaid), money(vRem), status ];
     });
+  const sumPaid = namedVendors.reduce((s,v)=>s+payments.filter(p=>p.vendor_id===v.id).reduce((a,p)=>a+pAmtA(p),0),0);
+  const sumTotal = namedVendors.reduce((s,v)=>s+vTotalA(v),0);
 
   if(tableRows.length) {
     doc.autoTable({
       startY: y,
       head: [['Vendor','Category','Total','Paid','Remaining','Status']],
       body: tableRows,
-      theme: 'grid',
-      styles: { font:'helvetica', fontSize:9, cellPadding:3, textColor:[60,50,30] },
-      headStyles: { fillColor:[201,168,76], textColor:[255,255,255], fontStyle:'bold', fontSize:9 },
-      alternateRowStyles: { fillColor:[250,247,240] },
-      columnStyles: { 0:{cellWidth:38}, 1:{cellWidth:28}, 2:{cellWidth:25}, 3:{cellWidth:25}, 4:{cellWidth:25}, 5:{cellWidth:22} },
+      foot: [['Total','', money(sumTotal), money(sumPaid), money(Math.max(0,sumTotal-sumPaid)), '']],
+      theme: 'plain',
+      styles: { font:'helvetica', fontSize:8.5, cellPadding:{top:2.8,bottom:2.8,left:2.5,right:2.5}, textColor:[42,34,24], lineColor:[236,228,216], lineWidth:{bottom:0.2} },
+      headStyles: { fillColor:GOLD2, textColor:[255,255,255], fontStyle:'bold', fontSize:8 },
+      footStyles: { fillColor:PALE, textColor:INK, fontStyle:'bold', fontSize:8.5 },
+      alternateRowStyles: { fillColor:[252,250,246] },
+      columnStyles: { 0:{cellWidth:42,fontStyle:'bold'}, 1:{cellWidth:30}, 2:{halign:'right'}, 3:{halign:'right'}, 4:{halign:'right'}, 5:{cellWidth:18,halign:'center'} },
+      didParseCell: d => {
+        if(d.section==='body' && d.column.index===5){
+          const t = d.cell.raw;
+          d.cell.styles.textColor = t==='Paid' ? SAGE : t==='Partial' ? GOLD : MUTED;
+          d.cell.styles.fontStyle = 'bold';
+        }
+      },
       margin: { left:margin, right:margin }
     });
     y = doc.lastAutoTable.finalY + 10;
   }
 
-  // ── PAYMENT HISTORY
+  // ── PAYMENT HISTORY ──
   if(payments.length) {
-    if(y > 240) { doc.addPage(); y = margin; }
-    doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(90,70,30);
-    doc.text('Payment History', margin, y); y += 6;
+    if(y > 240) { doc.addPage(); y = margin + 4; }
+    heading('Payment History');
 
-    const pmtRows = payments.map(p => {
-      const vendor = vendors.find(v=>v.id===p.vendor_id);
-      return [
-        vendor ? vendor.icon + ' ' + vendor.name : '—',
-        toDisp(p.amount),
-        p.payment_date ? new Date(p.payment_date+'T00:00:00').toLocaleDateString('en-GB') : '—',
-        p.method || '—',
-        p.note || ''
-      ];
-    }).sort((a,b) => a[2] > b[2] ? -1 : 1);
+    const pmtRows = payments.slice()
+      .sort((a,b) => new Date(b.payment_date||0) - new Date(a.payment_date||0))
+      .map(p => {
+        const vendor = vendors.find(v=>v.id===p.vendor_id);
+        return [
+          vendor ? (clean(vendor.name) || clean(vendor.category) || '-') : '-',
+          money(pAmtA(p)),
+          p.payment_date ? new Date(p.payment_date+'T00:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '-',
+          clean(p.method) || '-',
+          clean(p.note) || ''
+        ];
+      });
 
     doc.autoTable({
       startY: y,
       head: [['Vendor','Amount','Date','Method','Note']],
       body: pmtRows,
-      theme: 'grid',
-      styles: { font:'helvetica', fontSize:9, cellPadding:3, textColor:[60,50,30] },
-      headStyles: { fillColor:[90,70,30], textColor:[255,255,255], fontStyle:'bold' },
-      alternateRowStyles: { fillColor:[250,247,240] },
+      theme: 'plain',
+      styles: { font:'helvetica', fontSize:8.5, cellPadding:{top:2.8,bottom:2.8,left:2.5,right:2.5}, textColor:[42,34,24], lineColor:[236,228,216], lineWidth:{bottom:0.2} },
+      headStyles: { fillColor:[42,34,24], textColor:[255,255,255], fontStyle:'bold', fontSize:8 },
+      alternateRowStyles: { fillColor:[252,250,246] },
+      columnStyles: { 0:{fontStyle:'bold'}, 1:{halign:'right'} },
       margin: { left:margin, right:margin }
     });
   }
 
-  // ── FOOTER on each page
+  // ── FOOTER on each page ──
   const pageCount = doc.internal.getNumberOfPages();
   for(let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(180,150,100); doc.setFont('helvetica','normal');
-    doc.text('WeddingLedger — pamupro.github.io/wedding-budget', margin, 292);
-    doc.text(`Page ${i} of ${pageCount}`, pageW-margin, 292, {align:'right'});
+    doc.setDrawColor(236,228,216); doc.setLineWidth(0.2);
+    doc.line(margin, 288, pageW - margin, 288);
+    doc.setFontSize(7.5); doc.setTextColor(...MUTED); doc.setFont('helvetica','italic');
+    doc.text('WeddingLedger', margin, 292.5);
+    doc.setFont('helvetica','normal');
+    doc.text('pamupro.github.io/wedding-budget', pageW/2, 292.5, {align:'center'});
+    doc.text('Page ' + i + ' of ' + pageCount, pageW - margin, 292.5, {align:'right'});
   }
 
-  // ── SAVE
-  const fileName = coupleStr ? `WeddingLedger_${coupleStr.replace(' & ','_and_')}.pdf` : 'WeddingLedger_Budget.pdf';
+  // ── SAVE ──
+  const fileName = 'WeddingLedger_' + (coupleStr.replace(/[^A-Za-z0-9]+/g,'_') || 'Report') + '.pdf';
   doc.save(fileName);
-  showToast('📄 PDF downloaded!');
+  showToast('PDF downloaded');
 }
 
 // ─── PASSWORD RESET & ACCOUNT RESET ─────────────────────────────────────────
@@ -1860,10 +1948,10 @@ async function saveWelcomeSetup() {
     profile.name1=n1; profile.name2=n2; profile.wedding_date=wd||null;
     // Save budget limit if set
     if (bud) {
-      spendLimit = parseFloat(bud)||0;
-      await DB.upsertSetting(userId,'spend_limit',spendLimit,accessToken);
-      const el=document.getElementById('spendLimit'); if(el) el.value=spendLimit;
-      const sl=document.getElementById('settingsSpendLimit'); if(sl) sl.value=spendLimit;
+      const typed = parseFloat(bud)||0;
+      await persistSpendLimit(typed);
+      const el=document.getElementById('spendLimit'); if(el) el.value=typed;
+      const sl=document.getElementById('settingsSpendLimit'); if(sl) sl.value=typed;
     }
     renderHero();
     updateStats();
@@ -1893,7 +1981,7 @@ function openSettingsModal() {
   if (n1) n1.value = profile?.name1||'';
   if (n2) n2.value = profile?.name2||'';
   if (d)  d.value  = profile?.wedding_date||'';
-  if (sl) sl.value = spendLimit||'';
+  if (sl) sl.value = spendLimitFieldValue();
   if (sn) sn.value = notes||'';
   m.style.display='flex';
 }
@@ -1927,10 +2015,9 @@ async function saveProfileSettings() {
 }
 
 async function saveSpendLimitFromSettings() {
-  // Always stored as GBP — no conversion
+  // Entered in the ACTIVE currency; the exact typed amount is stored
   const val = parseFloat(document.getElementById('settingsSpendLimit').value)||0;
-  spendLimit = val;
-  await DB.upsertSetting(userId,'spend_limit',val,accessToken);
+  await persistSpendLimit(val);
   const el=document.getElementById('spendLimit'); if(el) el.value=val||'';
   updateStats(); showToast('Budget limit saved ✓');
 }
