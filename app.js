@@ -329,6 +329,26 @@ function fmt(gbp){
   return c.symbol + v.toLocaleString(c.locale, {minimumFractionDigits:decimals, maximumFractionDigits:decimals});
 }
 
+// ─── EXACT AMOUNTS (no rounding drift) ─────────────────────────────────────
+// Rows store BOTH the GBP value and the exact amount the user typed
+// (amount_original / total_cost_original) with its currency. When viewing in
+// the same currency it was entered in, we show the typed amount verbatim —
+// zero conversion, zero drift. Conversion only happens across currencies.
+function amtActive(gbp, original, curr){
+  if(original!==null && original!==undefined && original!=='' && curr===activeCurrency) return parseFloat(original)||0;
+  return (parseFloat(gbp)||0)*(CURRENCIES[activeCurrency].rate||1);
+}
+// Format a value that is ALREADY in the active currency
+function fmtActive(v){
+  const c=CURRENCIES[activeCurrency];
+  const decimals=(c.rate>50)?0:2;
+  return c.symbol+(parseFloat(v)||0).toLocaleString(c.locale,{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+}
+function fmtExact(gbp, original, curr){ return fmtActive(amtActive(gbp, original, curr)); }
+function vTotalA(v){ return amtActive(v.total_cost, v.total_cost_original, v.currency); }
+function vDueA(v){ return (v.due_amount!==null&&v.due_amount!==undefined) ? amtActive(v.due_amount, v.due_amount_original, v.currency) : null; }
+function pAmtA(p){ return amtActive(p.amount, p.amount_original, p.currency); }
+
 // Always show £ equivalent as secondary line
 // If already in GBP — no secondary line needed
 // If in another currency — show live £ rate
@@ -398,12 +418,18 @@ function renderVendors() {
 
   vendors.forEach((v,idx)=>{
     const vPmts=payments.filter(p=>p.vendor_id===v.id);
-    const totalPaid=vPmts.reduce((s,p)=>s+parseFloat(p.amount||0),0);
-    const remaining=Math.max(0,(v.total_cost||0)-totalPaid);
+    // Work in the ACTIVE currency using exact entered amounts (no drift)
+    const EPS=0.005;
+    const totalV=vTotalA(v);
+    const totalPaid=vPmts.reduce((s,p)=>s+pAmtA(p),0);
+    const remaining=Math.max(0,totalV-totalPaid);
+    // GBP equivalents for the secondary £ line
+    const totalGBPv=parseFloat(v.total_cost)||0;
+    const totalPaidGBP=vPmts.reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
 
     // Status
     let sCls='status-pending',sTxt='Not Paid';
-    if(v.total_cost>0&&totalPaid>=v.total_cost){sCls='status-paid';sTxt='✓ Fully Paid';}
+    if(totalV>0&&totalPaid>=totalV-EPS){sCls='status-paid';sTxt='✓ Fully Paid';}
     else if(totalPaid>0){sCls='status-partial';sTxt='⏳ Partial';}
 
     // Due date
@@ -412,8 +438,9 @@ function renderVendors() {
       const today=new Date();today.setHours(0,0,0,0);
       const dd=new Date(v.due_date+'T00:00:00');
       const diff=Math.round((dd-today)/86400000);
-      const dueAmt=v.due_amount?parseFloat(v.due_amount):remaining;
-      if(dueAmt>0&&totalPaid<(v.total_cost||0)){
+      const dv=vDueA(v);
+      const dueAmt=(dv!==null&&dv>0)?dv:remaining;
+      if(dueAmt>0&&totalPaid<totalV-EPS){
         upcoming.push({v,dueAmt,diffDays:diff});
         let cls='due-upcoming', lbl='📅 Due '+formatDateShort(v.due_date);
         if(diff<0){cls='due-overdue';lbl=`⚠ Overdue ${Math.abs(diff)}d`;}
@@ -424,18 +451,18 @@ function renderVendors() {
     }
 
     // Show total & paid OR total & remaining depending on status
-    const isFullyPaid=v.total_cost>0&&totalPaid>=v.total_cost;
+    const isFullyPaid=totalV>0&&totalPaid>=totalV-EPS;
     const secondLabel=isFullyPaid?'Paid':'Remaining / Due';
     const secondValue=isFullyPaid?totalPaid:remaining;
     const secondClass=isFullyPaid?'green':'red';
-    const gbpSecond=fmtGBP(secondValue);
-    const gbpTotal=fmtGBP(v.total_cost||0);
+    const gbpSecond=fmtGBP(isFullyPaid?totalPaidGBP:Math.max(0,totalGBPv-totalPaidGBP));
+    const gbpTotal=fmtGBP(totalGBPv);
 
     // Payment history rows
     const pmtCount=vPmts.length;
     const pmtRows=pmtCount
       ?vPmts.map(p=>`<div class="payment-item">
-          <span class="pi-amount">${fmt(parseFloat(p.amount||0))}</span>
+          <span class="pi-amount">${fmtExact(p.amount,p.amount_original,p.currency)}</span>
           <span class="pi-date">${formatDate(p.payment_date)}</span>
           <span class="pi-method">${esc(p.method||'')}</span>
           <span class="pi-note">${esc(p.note||'')}</span>
@@ -464,12 +491,12 @@ function renderVendors() {
       <div class="vc-amounts">
         <div class="vc-amt">
           <div class="vc-amt-label">Total</div>
-          <div class="vc-amt-value">${fmt(v.total_cost||0)}</div>
+          <div class="vc-amt-value">${fmtActive(totalV)}</div>
           ${gbpTotal?`<div class="vc-amt-gbp">${gbpTotal}</div>`:''}
         </div>
         <div class="vc-amt">
           <div class="vc-amt-label">${secondLabel}</div>
-          <div class="vc-amt-value ${secondClass}">${fmt(secondValue)}</div>
+          <div class="vc-amt-value ${secondClass}">${fmtActive(secondValue)}</div>
           ${gbpSecond?`<div class="vc-amt-gbp">${gbpSecond}</div>`:''}
         </div>
       </div>
@@ -515,7 +542,7 @@ function renderUpcomingPanel(upcoming) {
   list.innerHTML=active.map(u=>{
     const cls=u.diffDays<0?'due-overdue':u.diffDays<=7?'due-soon':'due-upcoming';
     const lbl=u.diffDays<0?`${Math.abs(u.diffDays)} days overdue`:u.diffDays===0?'Due today':`Due in ${u.diffDays} days`;
-    const gbp=fmtGBP(u.dueAmt);
+    const gbp=fmtGBP(u.dueAmt/(CURRENCIES[activeCurrency].rate||1));
     return `<div class="upcoming-item">
       <div class="upcoming-icon">${u.v.icon||'💒'}</div>
       <div class="upcoming-info">
@@ -523,7 +550,7 @@ function renderUpcomingPanel(upcoming) {
         <div class="upcoming-date">${formatDate(u.v.due_date)} · <span class="due-badge ${cls}" style="font-size:9px">${lbl}</span></div>
       </div>
       <div>
-        <div class="upcoming-amount">${fmt(u.dueAmt)}</div>
+        <div class="upcoming-amount">${fmtActive(u.dueAmt)}</div>
         ${gbp?`<div class="upcoming-gbp">${gbp}</div>`:''}
       </div>
     </div>`;
@@ -538,10 +565,12 @@ function renderNotifications() {
   const items=vendors.map(v=>{
     if(!v.due_date) return null;
     const vPmts=payments.filter(p=>p.vendor_id===v.id);
-    const paid=vPmts.reduce((s,p)=>s+parseFloat(p.amount||0),0);
-    const rem=Math.max(0,(v.total_cost||0)-paid);
-    const dueAmt=v.due_amount?parseFloat(v.due_amount):rem;
-    if(dueAmt<=0||paid>=(v.total_cost||0)) return null;
+    const totalV=vTotalA(v);
+    const paid=vPmts.reduce((s,p)=>s+pAmtA(p),0);
+    const rem=Math.max(0,totalV-paid);
+    const dv=vDueA(v);
+    const dueAmt=(dv!==null&&dv>0)?dv:rem;
+    if(dueAmt<=0.005||paid>=totalV-0.005) return null;
     const dd=new Date(v.due_date+'T00:00:00');
     const diff=Math.round((dd-today)/86400000);
     if(diff>60) return null;
@@ -565,8 +594,8 @@ function renderNotifications() {
           <div style="margin-top:3px"><span class="due-badge ${cls}" style="font-size:9px">${lbl}</span></div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:13px;font-weight:600;color:var(--charcoal)">${fmt(u.dueAmt)}</div>
-          ${fmtGBP(u.dueAmt)?`<div style="font-size:10px;color:var(--muted)">${fmtGBP(u.dueAmt)}</div>`:''}
+          <div style="font-size:13px;font-weight:600;color:var(--charcoal)">${fmtActive(u.dueAmt)}</div>
+          ${fmtGBP(u.dueAmt/(CURRENCIES[activeCurrency].rate||1))?`<div style="font-size:10px;color:var(--muted)">${fmtGBP(u.dueAmt/(CURRENCIES[activeCurrency].rate||1))}</div>`:''}
         </div>
       </div>`;
     }).join('')}`;
@@ -602,7 +631,7 @@ async function addVendor(){
   const gbpCost=rawCost/CURRENCIES[activeCurrency].rate; // always store in GBP
   const data={user_id:userId,icon:selectedIcon,
     category:document.getElementById('newVendorCategory').value.trim()||'Custom',
-    name,total_cost:gbpCost,
+    name,total_cost:gbpCost,total_cost_original:rawCost,currency:activeCurrency,
     notes:document.getElementById('newVendorNotes').value.trim(),
     due_date:null,due_amount:null,due_note:''};
   const r=await DB.post('vendors',data,accessToken);
@@ -626,23 +655,29 @@ function openEditModal(id){
   activeEditVendorId=id;
   document.getElementById('editVendorName').value=v.name||'';
   document.getElementById('editVendorCategory').value=v.category||'';
-  document.getElementById('editVendorTotal').value=v.total_cost?(v.total_cost*CURRENCIES[activeCurrency].rate).toFixed(2):'';
+  document.getElementById('editVendorTotal').value=v.total_cost?(v.currency===activeCurrency&&v.total_cost_original!=null?v.total_cost_original:(v.total_cost*CURRENCIES[activeCurrency].rate).toFixed(2)):'';
   document.getElementById('editVendorNotes').value=v.notes||'';
   document.getElementById('editDueDate').value=v.due_date||'';
-  document.getElementById('editDueAmount').value=v.due_amount?(v.due_amount*CURRENCIES[activeCurrency].rate).toFixed(2):'';
+  document.getElementById('editDueAmount').value=v.due_amount?(v.currency===activeCurrency&&v.due_amount_original!=null?v.due_amount_original:(v.due_amount*CURRENCIES[activeCurrency].rate).toFixed(2)):'';
   document.getElementById('editDueNote').value=v.due_note||'';
   document.getElementById('editModal').style.display='flex';
 }
 function closeEditModal(){document.getElementById('editModal').style.display='none';activeEditVendorId=null;}
 async function submitEdit(){
   const id=activeEditVendorId;const v=vendors.find(x=>x.id===id);if(!v) return;
+  const rawTotal=parseFloat(document.getElementById('editVendorTotal').value)||0;
+  const rawDueStr=document.getElementById('editDueAmount').value;
+  const rawDue=rawDueStr?(parseFloat(rawDueStr)||0):null;
   const data={
     name:document.getElementById('editVendorName').value.trim(),
     category:document.getElementById('editVendorCategory').value.trim(),
-    total_cost:(parseFloat(document.getElementById('editVendorTotal').value)||0)/CURRENCIES[activeCurrency].rate,
+    total_cost:rawTotal/CURRENCIES[activeCurrency].rate,
+    total_cost_original:rawTotal,
+    currency:activeCurrency,
     notes:document.getElementById('editVendorNotes').value.trim(),
     due_date:document.getElementById('editDueDate').value||null,
-    due_amount:document.getElementById('editDueAmount').value?(parseFloat(document.getElementById('editDueAmount').value)||0)/CURRENCIES[activeCurrency].rate:null,
+    due_amount:rawDue!==null?rawDue/CURRENCIES[activeCurrency].rate:null,
+    due_amount_original:rawDue,
     due_note:document.getElementById('editDueNote').value.trim()
   };
   await DB.patch('vendors',id,data,accessToken);
@@ -671,9 +706,9 @@ async function submitPayment(){
   const date=document.getElementById('pmtDate').value;
   if(!date){showToast('Select a date',true);return;}
   // Convert to GBP for storage
-  const lkrAmount=amount/CURRENCIES[activeCurrency].rate;
+  const gbpAmount=amount/CURRENCIES[activeCurrency].rate;
   const data={user_id:userId,vendor_id:activePaymentVendorId,
-    amount:lkrAmount,payment_date:date,
+    amount:gbpAmount,amount_original:amount,currency:activeCurrency,payment_date:date,
     method:document.getElementById('pmtMethod').value,
     note:document.getElementById('pmtNote').value.trim()};
   const r=await DB.post('payments',data,accessToken);
@@ -938,28 +973,31 @@ async function manualActivateCheck(){
 
 // ─── STATS ───────────────────────────────────────────────────────────────────
 function updateStats(){
-  let total=0,paid=0;
+  let total=0,paid=0,totalGBP=0,paidGBP=0;
   vendors.forEach(v=>{
-    total+=parseFloat(v.total_cost||0);
-    paid+=payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+    total+=vTotalA(v);
+    totalGBP+=parseFloat(v.total_cost||0);
+    const vp=payments.filter(p=>p.vendor_id===v.id);
+    paid+=vp.reduce((s,p)=>s+pAmtA(p),0);
+    paidGBP+=vp.reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
   });
-  const rem=total-paid,lim=spendLimit||0;
-  const avail=lim>0?lim-total:null;
-  const pct=lim>0?Math.min(100,Math.round((total/lim)*100)):0;
+  const rem=total-paid,remGBP=totalGBP-paidGBP,lim=spendLimit||0;
+  const avail=lim>0?lim-totalGBP:null;
+  const pct=lim>0?Math.min(100,Math.round((totalGBP/lim)*100)):0;
 
-  setText('stat-total',fmt(total));
-  setText('stat-paid',fmt(paid));
-  setText('stat-remaining',fmt(rem));
+  setText('stat-total',fmtActive(total));
+  setText('stat-paid',fmtActive(paid));
+  setText('stat-remaining',fmtActive(rem));
   setText('stat-count',vendors.filter(v=>v.name).length);
 
   const setGBP=(id,val)=>{const el=document.getElementById(id);if(!el)return;const g=fmtGBP(val);el.textContent=g||'';el.style.display=g?'block':'none';};
-  setGBP('stat-total-gbp',total);setGBP('stat-paid-gbp',paid);setGBP('stat-remaining-gbp',rem);
+  setGBP('stat-total-gbp',totalGBP);setGBP('stat-paid-gbp',paidGBP);setGBP('stat-remaining-gbp',remGBP);
 
   const fill=document.getElementById('progress-fill');
   if(fill){fill.style.width=pct+'%';fill.classList.toggle('danger',pct>=90);}
   setText('progress-pct',pct+'%');
-  setText('sum-total',fmt(total));setText('sum-paid',fmt(paid));
-  setText('sum-remaining',fmt(rem));setText('sum-limit',lim>0?fmt(lim):'Not set');
+  setText('sum-total',fmtActive(total));setText('sum-paid',fmtActive(paid));
+  setText('sum-remaining',fmtActive(rem));setText('sum-limit',lim>0?fmt(lim):'Not set');
   const av=document.getElementById('sum-available');
   if(av){if(avail!==null){av.textContent=fmt(avail);av.style.color=avail>=0?'var(--sage)':'var(--danger)';}
   else{av.textContent='Set limit above';av.style.color='var(--muted)';}}
@@ -1444,7 +1482,7 @@ function renderChart() {
   vendors.forEach(v => {
     if(!v.name || !v.total_cost) return;
     const cat = v.category || v.name;
-    catMap[cat] = (catMap[cat] || 0) + parseFloat(v.total_cost || 0);
+    catMap[cat] = (catMap[cat] || 0) + vTotalA(v);
   });
 
   const labels = Object.keys(catMap);
@@ -1459,7 +1497,7 @@ function renderChart() {
   if(empty) empty.style.display = 'none';
 
   // Convert to active currency for display
-  const displayData = data.map(v => parseFloat((v * CURRENCIES[activeCurrency].rate).toFixed(2)));
+  const displayData = data.map(v => parseFloat(v.toFixed(2))); // already in active currency
   const sym = CURRENCIES[activeCurrency].symbol;
 
   // Destroy existing chart

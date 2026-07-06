@@ -137,6 +137,7 @@ async function loadSharedData() {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
 
+    shareCur = detectShareCurrency(vendors, payments);
     renderVendors(vendors, payments);
     updateStats(vendors, payments, spendLimit);
   } catch(e) {
@@ -154,26 +155,27 @@ function renderVendors(vendors, payments) {
   grid.innerHTML = '';
   vendors.forEach((v, idx) => {
     const vPayments = payments.filter(p => p.vendor_id === v.id);
-    const totalPaid = vPayments.reduce((s,p) => s+parseFloat(p.amount||0), 0);
-    const remaining = Math.max(0, (v.total_cost||0) - totalPaid);
+    const vTotal = rowVal(v.total_cost, v.total_cost_original, v.currency);
+    const totalPaid = vPayments.reduce((s,p) => s+rowVal(p.amount, p.amount_original, p.currency), 0);
+    const remaining = Math.max(0, vTotal - totalPaid);
     let statusClass='status-pending', statusText='Not Paid';
-    if (v.total_cost>0 && totalPaid>=v.total_cost){statusClass='status-paid';statusText='Fully Paid';}
+    if (vTotal>0 && totalPaid>=vTotal-0.005){statusClass='status-paid';statusText='Fully Paid';}
     else if (totalPaid>0){statusClass='status-partial';statusText='Partially Paid';}
     let pmtRows = vPayments.length
-      ? vPayments.map(p=>`<div class="payment-item"><span class="payment-item-amount">LKR ${fmtNum(p.amount)}</span><span class="payment-item-date">${formatDate(p.payment_date)}</span><span class="payment-item-method">${escHtml(p.method||'')}</span><span class="payment-item-note">${escHtml(p.note||'')}</span></div>`).join('')
+      ? vPayments.map(p=>`<div class="payment-item"><span class="payment-item-amount">${fmt(rowVal(p.amount,p.amount_original,p.currency))}</span><span class="payment-item-date">${formatDate(p.payment_date)}</span><span class="payment-item-method">${escHtml(p.method||'')}</span><span class="payment-item-note">${escHtml(p.note||'')}</span></div>`).join('')
       : '<div class="no-payments">No payments yet.</div>';
 
     let duePanelHtml = '';
     if (v.due_date) {
-      const dueAmt = v.due_amount ? parseFloat(v.due_amount) : remaining;
-      if (dueAmt > 0 && totalPaid < (v.total_cost||0)) {
-        duePanelHtml = `<div style="background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;"><div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Due Payment</div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="font-family:'Fraunces',serif;font-size:18px;color:var(--ink);font-weight:600;">LKR ${fmtNum(dueAmt)}</div><div style="font-size:12px;color:var(--muted);">by ${formatDate(v.due_date)}</div></div></div>`;
+      const dueAmt = v.due_amount ? rowVal(v.due_amount, v.due_amount_original, v.currency) : remaining;
+      if (dueAmt > 0 && totalPaid < vTotal - 0.005) {
+        duePanelHtml = `<div style="background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:10px 12px;margin-top:8px;"><div style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Due Payment</div><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;"><div style="font-family:'Fraunces',serif;font-size:18px;color:var(--ink);font-weight:600;">${fmt(dueAmt)}</div><div style="font-size:12px;color:var(--muted);">by ${formatDate(v.due_date)}</div></div></div>`;
       }
     }
 
     const card = document.createElement('div');
     card.className='vendor-card'; card.style.animationDelay=(idx*0.03)+'s';
-    card.innerHTML=`<div class="vendor-card-header"><div class="vendor-icon">${v.icon||'💒'}</div><div class="vendor-name-wrap"><div class="vendor-category">${escHtml(v.category||'')}</div><div class="vendor-name-display">${v.name?escHtml(v.name):'<span style="color:var(--muted);font-style:italic;font-size:14px">TBD</span>'}</div></div></div><div class="vendor-card-body"><div class="vendor-amounts-row"><div class="amount-badge"><div class="amount-badge-label">Total Cost</div><div class="amount-badge-value">LKR ${fmtNum(v.total_cost)}</div></div><div class="amount-badge"><div class="amount-badge-label">Paid</div><div class="amount-badge-value paid-color">LKR ${fmtNum(totalPaid)}</div></div><div class="amount-badge"><div class="amount-badge-label">Remaining</div><div class="amount-badge-value remain-color">LKR ${fmtNum(remaining)}</div></div></div>${duePanelHtml}<div class="payments-section"><div class="payments-title">📜 Payment History (${vPayments.length})</div><div class="payments-list">${pmtRows}</div></div></div><div class="vendor-card-footer"><div class="vendor-status ${statusClass}"><div class="status-dot"></div>${statusText}</div></div>`;
+    card.innerHTML=`<div class="vendor-card-header"><div class="vendor-icon">${v.icon||'💒'}</div><div class="vendor-name-wrap"><div class="vendor-category">${escHtml(v.category||'')}</div><div class="vendor-name-display">${v.name?escHtml(v.name):'<span style="color:var(--muted);font-style:italic;font-size:14px">TBD</span>'}</div></div></div><div class="vendor-card-body"><div class="vendor-amounts-row"><div class="amount-badge"><div class="amount-badge-label">Total Cost</div><div class="amount-badge-value">${fmt(vTotal)}</div></div><div class="amount-badge"><div class="amount-badge-label">Paid</div><div class="amount-badge-value paid-color">${fmt(totalPaid)}</div></div><div class="amount-badge"><div class="amount-badge-label">Remaining</div><div class="amount-badge-value remain-color">${fmt(remaining)}</div></div></div>${duePanelHtml}<div class="payments-section"><div class="payments-title">📜 Payment History (${vPayments.length})</div><div class="payments-list">${pmtRows}</div></div></div><div class="vendor-card-footer"><div class="vendor-status ${statusClass}"><div class="status-dot"></div>${statusText}</div></div>`;
     grid.appendChild(card);
   });
 }
@@ -181,8 +183,8 @@ function renderVendors(vendors, payments) {
 function updateStats(vendors, payments, spendLimit) {
   let totalCost=0, totalPaid=0;
   vendors.forEach(v => {
-    totalCost+=parseFloat(v.total_cost||0);
-    totalPaid+=payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+    totalCost+=rowVal(v.total_cost, v.total_cost_original, v.currency);
+    totalPaid+=payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+rowVal(p.amount,p.amount_original,p.currency),0);
   });
   const remaining = totalCost - totalPaid;
   const pct = spendLimit>0?Math.min(100,Math.round((totalCost/spendLimit)*100)):0;
@@ -194,8 +196,23 @@ function updateStats(vendors, payments, spendLimit) {
   setText('progress-pct',pct+'%');
 }
 
-function fmt(n){return 'LKR '+fmtNum(n);}
-function fmtNum(n){return Number(n||0).toLocaleString('en-LK');}
+// Detect the couple's entry currency: if every stored amount has the same
+// original currency, display exact typed amounts in it; otherwise fall back to GBP.
+function detectShareCurrency(vendorRows, paymentRows){
+  const codes = new Set();
+  let allHaveOriginal = true;
+  vendorRows.forEach(v=>{ if(v.total_cost>0){ if(v.currency && v.total_cost_original!=null) codes.add(v.currency); else allHaveOriginal=false; } });
+  paymentRows.forEach(p=>{ if(p.currency && p.amount_original!=null) codes.add(p.currency); else allHaveOriginal=false; });
+  if(allHaveOriginal && codes.size===1) return [...codes][0];
+  return 'GBP';
+}
+let shareCur = 'GBP';
+function rowVal(gbp, original, curr){
+  if(shareCur!=='GBP' && curr===shareCur && original!=null) return parseFloat(original)||0;
+  return parseFloat(gbp)||0;
+}
+function fmt(n){return (shareCur==='GBP'?'£':shareCur+' ')+fmtNum(n);}
+function fmtNum(n){const d=shareCur==='GBP'?2:0;return Number(n||0).toLocaleString('en-GB',{minimumFractionDigits:d,maximumFractionDigits:d});}
 function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function formatDate(d){if(!d)return '';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
