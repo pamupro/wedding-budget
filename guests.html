@@ -1314,6 +1314,12 @@
         <div><label class="glabel">📍 Venue name</label><input class="ginput" id="icVenueName" placeholder="e.g. The Golden Hotel"></div>
         <div><label class="glabel">Venue address</label><input class="ginput" id="icVenueAddr" placeholder="Street, City"></div>
       </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <label class="glabel">📸 Invitation Photos <span class="glabel-opt" id="icPhotoCount">0 / 6</span></label>
+        <div id="icGallery" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0"></div>
+        <label for="icPhotoInput" style="display:block;text-align:center;border:1.5px dashed var(--border);border-radius:10px;padding:12px;font-size:12.5px;color:var(--muted);cursor:pointer">＋ Add photos (first photo becomes the hero image)</label>
+        <input type="file" id="icPhotoInput" accept="image/*" multiple style="display:none" onchange="uploadInvitePhotos(this)">
+      </div>
       <button class="btn-primary" onclick="saveInviteCfg()" style="width:100%;margin-top:18px;padding:12px">Save Invitation Details</button>
     </div>
   </div>
@@ -2044,7 +2050,77 @@ async function copyRsvpLink(gid) {
 }
 
 // ── INVITATION SETTINGS ─────────────────────────────────────────────────────
+let invitePhotos = [];
+
+async function loadInvitePhotos() {
+  try {
+    const p = await sbGet('profiles?user_id=eq.'+uid+'&select=gallery_photos');
+    const gp = p && p[0] && p[0].gallery_photos;
+    invitePhotos = Array.isArray(gp) ? gp : (gp ? JSON.parse(gp) : []);
+  } catch(e) { invitePhotos = []; }
+  renderInviteGallery();
+}
+function renderInviteGallery() {
+  const grid = document.getElementById('icGallery');
+  const cnt  = document.getElementById('icPhotoCount');
+  if(cnt) cnt.textContent = invitePhotos.length + ' / 6';
+  if(!grid) return;
+  grid.innerHTML = invitePhotos.map((p,i) => `
+    <div style="position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--bg2)">
+      <img src="${p.url}" loading="lazy" style="width:100%;height:100%;object-fit:cover">
+      ${i===0?'<span style="position:absolute;left:4px;top:4px;background:rgba(26,22,18,.7);color:#fff;font-size:8px;font-weight:700;letter-spacing:.1em;padding:2px 6px;border-radius:99px">HERO</span>':''}
+      <button onclick="deleteInvitePhoto(${i})" style="position:absolute;right:4px;top:4px;width:20px;height:20px;border:none;border-radius:50%;background:rgba(184,48,48,.9);color:#fff;font-size:11px;cursor:pointer;line-height:1">✕</button>
+    </div>`).join('');
+}
+async function persistInvitePhotos() {
+  await sbPatch('profiles?user_id=eq.'+uid, { gallery_photos: invitePhotos });
+}
+async function uploadInvitePhotos(input) {
+  const files = Array.from(input.files || []);
+  input.value = '';
+  if(!files.length) return;
+  const room = 6 - invitePhotos.length;
+  if(room <= 0) { toast('Maximum 6 photos — delete one first', true); return; }
+  const tok = await DB.getValidToken(getTok());
+  for(const file of files.slice(0, room)) {
+    if(file.size > 8*1024*1024) { toast(file.name+' is over 8MB — skipped', true); continue; }
+    try {
+      toast('Uploading '+file.name+'…');
+      const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      const path = uid + '/' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.' + ext;
+      const r = await fetch(SB + '/storage/v1/object/wedding-photos/' + path, {
+        method: 'POST',
+        headers: { 'apikey': SK, 'Authorization': 'Bearer ' + tok, 'Content-Type': file.type || 'image/jpeg' },
+        body: file
+      });
+      if(!r.ok) throw new Error('upload failed ' + r.status);
+      invitePhotos.push({ url: SB + '/storage/v1/object/public/wedding-photos/' + path, path });
+    } catch(e) { console.error(e); toast('Could not upload ' + file.name, true); }
+  }
+  await persistInvitePhotos();
+  renderInviteGallery();
+  toast('📸 Photos updated — live on your wedding page');
+}
+async function deleteInvitePhoto(i) {
+  const p = invitePhotos[i];
+  if(!p) return;
+  if(!confirm('Remove this photo from your invitation?')) return;
+  try {
+    if(p.path) {
+      const tok = await DB.getValidToken(getTok());
+      await fetch(SB + '/storage/v1/object/wedding-photos/' + p.path, {
+        method: 'DELETE', headers: { 'apikey': SK, 'Authorization': 'Bearer ' + tok }
+      });
+    }
+  } catch(e) { console.warn(e); }
+  invitePhotos.splice(i, 1);
+  await persistInvitePhotos();
+  renderInviteGallery();
+  toast('Photo removed');
+}
+
 function openInviteCfg() {
+  loadInvitePhotos();
   document.getElementById('icMsg').value       = inviteCfg.msg ?? '';
   document.getElementById('icCeremony').value  = inviteCfg.ceremony ?? '';
   document.getElementById('icReception').value = inviteCfg.reception ?? '';

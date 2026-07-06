@@ -1884,7 +1884,7 @@ at any point."</div>
     <div class="pcard pro vis" style="transition-delay:0s">
       <div class="p-badge">✦ Most popular</div>
       <div class="p-name">Monthly</div>
-      <div class="p-amount">£4.99</div>
+      <div class="p-amount" id="hpMonthly">£4.99</div>
       <div class="p-per">per month · cancel anytime</div>
       <div class="p-sep"></div>
       <ul class="p-feats">
@@ -1901,8 +1901,8 @@ at any point."</div>
     <div class="pcard bundle vis" style="transition-delay:.2s">
       <div class="p-badge">🎉 Best value</div>
       <div class="p-name">4-Month Bundle</div>
-      <div class="p-amount">£15</div>
-      <div class="p-per">one payment · save £4.96</div>
+      <div class="p-amount" id="hpBundle">£15</div>
+      <div class="p-per" id="hpBundlePer">one payment · save £4.96</div>
       <div class="p-sep"></div>
       <ul class="p-feats">
         <li>Everything in Monthly</li>
@@ -2017,4 +2017,25 @@ onVisibleAll('.pcard',el=>el.classList.add('vis'));
 </script>
 <script defer src="support-widget.js"></script>
 
-<button id="wl-fab" aria-label="Support">💬</button><div id="wl-panel"><div class="wl-head"><div class="wl-head-row"><div class="wl-logo">Wedding<em>Ledger</em></div><button class="wl-x" id="wl-close">✕</button></div><div class="wl-sub">Support — how can we help?</div><div class="wl-live"><span class="wl-dot"></span>Usually replies within a few hours</div></div><div class="wl-view wl-on" id="wlvHome"><div class="wl-home-body"><div class="wl-hi">Hi there <em>👋</em></div><div class="wl-home-sub">Got a question about WeddingLedger? We're here to help.</div><div class="wl-opts"><button class="wl-opt" id="wlBtnNew"><div class="wl-opt-ico">✉️</div><div><div class="wl-opt-t">Send us a message</div><div class="wl-opt-s">We'll reply to your email</div></div><span class="wl-arr">→</span></button><button class="wl-opt" id="wlBtnTix" style="display:none"><div class="wl-opt-ico">📋</div><div><div class="wl-opt-t">My support tickets</div><div class="wl-opt-s">View your previous messages</div></div><span class="wl-arr">→</span></button></div></div></div><div class="wl-view" id="wlvForm"><div class="wl-form-body"><button class="wl-back" id="wlBackForm">← Back</button><div class="wl-ftitle">Send a <em>message</em></div><div class="wl-row2"><div class="wl-field"><label class="wl-lbl">Name</label><input class="wl-inp" id="wlFName" placeholder="Your name"></div><div class="wl-field"><label class="wl-lbl">Email</label><input class="wl-inp" type="email" id="wlFEmail" placeholder="your@email.com"></div></div><div class="wl-field"><label class="wl-lbl">Subject</label><select class="wl-sel" id="wlFSubject"><option value="General Enquiry" selected="selected">General Enquiry</option><option value="Billing &amp; Payments">Billing &amp; Payments</option><option value="Technical Issue">Technical Issue</option><option value="Account Help">Account Help</option><option value="Feature Request">Feature Request</option><option value="Other">Other</option></select></div><div class="wl-field"><label class="wl-lbl">Message</label><textarea class="wl-ta" id="wlFMsg" placeholder="Tell us what's on your mind…"></textarea></div><div class="wl-err" id="wlFErr"></div><button class="wl-sub-btn" id="wlFSubmit">Send Message →</button></div></div><div class="wl-view" id="wlvOk"><div class="wl-ok-body"><div class="wl-ok-ico">💍</div><div class="wl-ok-t">Message <em>sent!</em></div><div class="wl-ok-s">Thank you! We'll get back to you soon.</div><div class="wl-ref" id="wlRef">Ticket #—</div><button class="wl-done" id="wlDone">Done</button></div></div><div class="wl-view" id="wlvTix"><div class="wl-tix-body" id="wlTixList"><button class="wl-back" id="wlBackTix">← Back</button><div class="wl-empty"><div class="wl-empty-ico">📭</div>Loading…</div></div></div></div></body></html>
+<button id="wl-fab" aria-label="Support">💬</button><div id="wl-panel"><div class="wl-head"><div class="wl-head-row"><div class="wl-logo">Wedding<em>Ledger</em></div><button class="wl-x" id="wl-close">✕</button></div><div class="wl-sub">Support — how can we help?</div><div class="wl-live"><span class="wl-dot"></span>Usually replies within a few hours</div></div><div class="wl-view wl-on" id="wlvHome"><div class="wl-home-body"><div class="wl-hi">Hi there <em>👋</em></div><div class="wl-home-sub">Got a question about WeddingLedger? We're here to help.</div><div class="wl-opts"><button class="wl-opt" id="wlBtnNew"><div class="wl-opt-ico">✉️</div><div><div class="wl-opt-t">Send us a message</div><div class="wl-opt-s">We'll reply to your email</div></div><span class="wl-arr">→</span></button><button class="wl-opt" id="wlBtnTix" style="display:none"><div class="wl-opt-ico">📋</div><div><div class="wl-opt-t">My support tickets</div><div class="wl-opt-s">View your previous messages</div></div><span class="wl-arr">→</span></button></div></div></div><div class="wl-view" id="wlvForm"><div class="wl-form-body"><button class="wl-back" id="wlBackForm">← Back</button><div class="wl-ftitle">Send a <em>message</em></div><div class="wl-row2"><div class="wl-field"><label class="wl-lbl">Name</label><input class="wl-inp" id="wlFName" placeholder="Your name"></div><div class="wl-field"><label class="wl-lbl">Email</label><input class="wl-inp" type="email" id="wlFEmail" placeholder="your@email.com"></div></div><div class="wl-field"><label class="wl-lbl">Subject</label><select class="wl-sel" id="wlFSubject"><option value="General Enquiry" selected="selected">General Enquiry</option><option value="Billing &amp; Payments">Billing &amp; Payments</option><option value="Technical Issue">Technical Issue</option><option value="Account Help">Account Help</option><option value="Feature Request">Feature Request</option><option value="Other">Other</option></select></div><div class="wl-field"><label class="wl-lbl">Message</label><textarea class="wl-ta" id="wlFMsg" placeholder="Tell us what's on your mind…"></textarea></div><div class="wl-err" id="wlFErr"></div><button class="wl-sub-btn" id="wlFSubmit">Send Message →</button></div></div><div class="wl-view" id="wlvOk"><div class="wl-ok-body"><div class="wl-ok-ico">💍</div><div class="wl-ok-t">Message <em>sent!</em></div><div class="wl-ok-s">Thank you! We'll get back to you soon.</div><div class="wl-ref" id="wlRef">Ticket #—</div><button class="wl-done" id="wlDone">Done</button></div></div><div class="wl-view" id="wlvTix"><div class="wl-tix-body" id="wlTixList"><button class="wl-back" id="wlBackTix">← Back</button><div class="wl-empty"><div class="wl-empty-ico">📭</div>Loading…</div></div></div></div><script>
+// Homepage prices sync with Admin -> Subscription Pricing (settings table)
+(function(){
+  var SB='https://bqggtyguhedlyfffjkkw.supabase.co';
+  var K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+  fetch(SB+'/rest/v1/settings?key=in.(sub_price_monthly,sub_price_bundle)&select=key,value',{headers:{apikey:K,Authorization:'Bearer '+K}})
+    .then(function(r){return r.json();})
+    .then(function(rows){
+      if(!Array.isArray(rows)) return;
+      var map={}; rows.forEach(function(r){map[r.key]=parseFloat(r.value);});
+      var m=map.sub_price_monthly, b=map.sub_price_bundle;
+      var fmt=function(v){return '\u00a3'+(v%1===0?v.toFixed(0):v.toFixed(2));};
+      if(m>0){var e=document.getElementById('hpMonthly'); if(e)e.textContent=fmt(m);}
+      if(b>0){
+        var e2=document.getElementById('hpBundle'); if(e2)e2.textContent=fmt(b);
+        if(m>0){var save=(m*4-b); var p=document.getElementById('hpBundlePer');
+          if(p&&save>0)p.textContent='one payment \u00b7 save \u00a3'+save.toFixed(2);}
+      }
+    }).catch(function(){});
+})();
+</script>
+</body></html>
