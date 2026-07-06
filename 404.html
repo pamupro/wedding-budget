@@ -54,17 +54,15 @@ a{color:#a07828;font-weight:600;text-decoration:none;border-bottom:1px solid rgb
   // Short codes are 4–12 letters/numbers — anything else is a real 404
   if(!/^[A-Za-z0-9]{4,12}$/.test(code)){ fail(); return; }
 
-  fetch(SB + '/rest/v1/guests?link_code=eq.' + encodeURIComponent(code) + '&select=id,user_id', { headers: H })
+  fetch(SB + '/rest/v1/rpc/rsvp_lookup', {
+      method: 'POST',
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: code })
+    })
     .then(function(r){ return r.json(); })
-    .then(function(g){
-      if(!g || !g[0]) { fail(); return; }
-      return fetch(SB + '/rest/v1/profiles?user_id=eq.' + g[0].user_id + '&select=page_slug', { headers: H })
-        .then(function(r){ return r.json(); })
-        .then(function(p){
-          var slug = p && p[0] && p[0].page_slug;
-          if(!slug) { fail(); return; }
-          location.replace(base + '/wedding.html?slug=' + encodeURIComponent(slug) + '&gid=' + encodeURIComponent(g[0].id));
-        });
+    .then(function(d){
+      if(!d || !d.gid || !d.slug) { fail(); return; }
+      location.replace(base + '/wedding.html?slug=' + encodeURIComponent(d.slug) + '&gid=' + encodeURIComponent(d.gid));
     })
     .catch(fail);
 })();

@@ -46,17 +46,15 @@
   const H    = { apikey: ANON, Authorization: 'Bearer '+ANON };
 
   try {
-    const r1   = await fetch(SB+'/rest/v1/guests?link_code=eq.'+encodeURIComponent(code)+'&select=id,user_id', { headers: H });
-    const rows = await r1.json();
-    if(!rows?.length) { showErr(); return; }
+    const r1 = await fetch(SB+'/rest/v1/rpc/rsvp_lookup', {
+      method: 'POST',
+      headers: { ...H, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: code })
+    });
+    const d = await r1.json();
+    if(!d || !d.gid || !d.slug) { showErr(); return; }
 
-    const { id, user_id } = rows[0];
-    const r2   = await fetch(SB+'/rest/v1/profiles?user_id=eq.'+user_id+'&select=page_slug', { headers: H });
-    const prof = await r2.json();
-    const slug = prof?.[0]?.page_slug;
-    if(!slug) { showErr(); return; }
-
-    window.location.replace(BASE+'/wedding.html?slug='+encodeURIComponent(slug)+'&gid='+id);
+    window.location.replace(BASE+'/wedding.html?slug='+encodeURIComponent(d.slug)+'&gid='+d.gid);
   } catch(e) { showErr(); }
 
   function showErr() {

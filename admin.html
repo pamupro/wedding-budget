@@ -26,7 +26,7 @@
   --r:12px; --R:16px; --nav:240px; --topbar:60px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:auto}
 body{
   font-family:'Instrument Sans',sans-serif;
   background:var(--bg); color:var(--ink);
@@ -1400,32 +1400,28 @@ function showPage(name) {
 async function loadAllData() {
   setRefreshing(true);
   try {
-    const [profiles, vendors, settings, tasks, authRes] = await Promise.all([
+    // Users come from profiles — the /auth/v1/admin endpoint needs the
+    // service key, which we deliberately no longer ship to the browser.
+    const [profiles, vendors, settings, tasks] = await Promise.all([
       dbGet('profiles?select=*&order=created_at.desc'),
       dbGet('vendors?select=*'),
       dbGet('settings?select=*'),
-      dbGet('tasks?select=*'),
-      fetch(`${ADMIN_URL}/auth/v1/admin/users?per_page=1000`,{headers:authH()})
+      dbGet('tasks?select=*')
     ]);
     allVendors=vendors; allSettings=settings; allTasks=tasks;
-    let authUsers=[];
-    if (authRes.ok) { const d=await authRes.json(); authUsers=d.users||[]; }
-    allUsers = authUsers.map(au => {
-      const p = profiles.find(x=>x.user_id===au.id)||{};
-      return {
-        id: p.id||au.id, user_id:au.id,
-        email:au.email||'',
-        name1:p.name1||'', name2:p.name2||'',
-        wedding_date:p.wedding_date||'',
-        is_pro:p.is_pro||false,
-        paypal_order_id:p.paypal_order_id||null,
-        created_at:au.created_at||p.created_at||'',
-        updated_at:p.updated_at||'',
-        _hasProfile:!!p.id,
-        _partnerLinked:!!(p.partner_id),
-        _referralCode:p.referral_code||null,
-      };
-    });
+    allUsers = profiles.map(p => ({
+      id: p.id||p.user_id, user_id:p.user_id,
+      email:p.email||'',
+      name1:p.name1||'', name2:p.name2||'',
+      wedding_date:p.wedding_date||'',
+      is_pro:p.is_pro||false,
+      paypal_order_id:p.paypal_order_id||null,
+      created_at:p.created_at||'',
+      updated_at:p.updated_at||'',
+      _hasProfile:true,
+      _partnerLinked:!!(p.partner_id),
+      _referralCode:p.referral_code||null,
+    }));
     allUsers.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 
     const t = document.getElementById('lastUpdatedTime');
@@ -2026,11 +2022,11 @@ async function renderHealthPage() {
 
   health.innerHTML=[
     {ok:true,label:'Supabase Connection',val:'Connected'},
-    {ok:allUsers.length>0,label:'Auth Users',val:allUsers.length+' users'},
+    {ok:allUsers.length>0,label:'User Profiles',val:allUsers.length+' users'},
     {ok:allVendors.length>=0,label:'Vendors Table',val:allVendors.length+' rows'},
     {ok:allSettings.length>=0,label:'Settings Table',val:allSettings.length+' rows'},
     {ok:allTasks.length>=0,label:'Tasks Table',val:allTasks.length+' rows'},
-    {ok:true,label:'Service Role Key',val:'Active'},
+    {ok:!!adminToken,label:'Admin Session',val:adminToken?'Authenticated':'Not signed in'},
   ].map(r=>`<div class="health-row">
     <div class="health-dot ${r.ok?'ok':'err'}"></div>
     <div class="health-label">${r.label}</div>

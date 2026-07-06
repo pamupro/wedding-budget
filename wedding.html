@@ -526,7 +526,7 @@ async function init() {
 
   if(!slug) { showBroken('This invitation link is invalid.'); return; }
 
-  const pr   = await fetch(SB+'/rest/v1/profiles?page_slug=eq.'+encodeURIComponent(slug)+'&select=*', {headers:H});
+  const pr   = await fetch(SB+'/rest/v1/public_profiles?page_slug=eq.'+encodeURIComponent(slug)+'&select=*', {headers:H});
   const rows = await pr.json();
   if(!rows || !rows.length) { showBroken("This wedding page doesn't exist."); return; }
 
@@ -647,10 +647,12 @@ function applyInviteCfg(cfg) {
 }
 
 async function loadGuest(gid) {
-  const r    = await fetch(SB+'/rest/v1/guests?id=eq.'+gid+'&select=*', {headers:H});
-  const rows = await r.json();
-  if(!rows || !rows.length) { guestId = null; return; }
-  const g = rows[0];
+  const r = await fetch(SB+'/rest/v1/rpc/rsvp_get_guest', {
+    method:'POST', headers:{...H,'Content-Type':'application/json'},
+    body: JSON.stringify({ p_gid: gid })
+  });
+  const g = await r.json();
+  if(!r.ok || !g) { guestId = null; return; }
 
   // Parse stored name into first / last
   const parts = (g.name||'').trim().split(/\s+/).filter(Boolean);
@@ -1083,25 +1085,15 @@ async function submitRsvp() {
     ...mealData
   };
 
-  let res;
-  if(guestId) {
-    // PATCH — update existing record, never create duplicate
-    res = await fetch(SB+'/rest/v1/guests?id=eq.'+guestId, {
-      method: 'PATCH',
-      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-      body: JSON.stringify(data)
-    });
-  } else {
-    // POST — genuinely new guest (no gid in link)
-    data.user_id = pageUserId;
-    res = await fetch(SB+'/rest/v1/guests', {
-      method: 'POST',
-      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-      body: JSON.stringify(data)
-    });
-  }
+  // Server-validated submit: updates the linked guest, or creates a
+  // new one under this wedding's owner — identity fields protected.
+  const res = await fetch(SB+'/rest/v1/rpc/rsvp_submit', {
+    method: 'POST',
+    headers: {...H, 'Content-Type':'application/json'},
+    body: JSON.stringify({ p_gid: guestId || null, p_slug: slug, p_data: data })
+  });
 
-  if(res.ok || res.status===201 || res.status===204) {
+  if(res.ok) {
     showSuccess(first);
   } else {
     btn.disabled = false; btn.textContent = 'Send RSVP 💌';
