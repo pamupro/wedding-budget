@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One moment…</title>
+<meta name="robots" content="noindex">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400&family=Instrument+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Instrument Sans',sans-serif;background:#faf7f2;color:#1a1612;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+.card{max-width:400px}
+.orn{color:#C9A84C;font-size:14px;letter-spacing:.5em;margin-bottom:18px;opacity:.75}
+h1{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:30px;margin-bottom:10px}
+p{font-size:14px;color:#665a49;line-height:1.6}
+.spinner{width:26px;height:26px;border:2.5px solid rgba(160,120,40,.2);border-top-color:#a07828;border-radius:50%;margin:22px auto 0;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+a{color:#a07828;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(160,120,40,.35)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="orn">✦ ✦ ✦</div>
+  <div id="loading">
+    <h1>One moment…</h1>
+    <p>Taking you to your invitation</p>
+    <div class="spinner"></div>
+  </div>
+  <div id="notfound" class="hide">
+    <h1>Page not found</h1>
+    <p>This link doesn't look right — it may have been typed incorrectly or is no longer active.<br><br><a id="homeLink" href="/">Go to the homepage</a></p>
+  </div>
+</div>
+<script>
+(function(){
+  var SB  = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+  var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+  var H   = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY };
+
+  // /r/?c=CODE — base is one directory up from /r/
+  var code = new URLSearchParams(location.search).get('c') || '';
+  var base = location.origin + location.pathname.replace(/\/r\/?(index\.html)?$/, '');
+
+  var home = document.getElementById('homeLink');
+  if(home) home.href = base + '/';
+
+  function fail(){
+    document.getElementById('loading').classList.add('hide');
+    document.getElementById('notfound').classList.remove('hide');
+  }
+
+  // Short codes are 4–12 letters/numbers — anything else is a real 404
+  if(!/^[A-Za-z0-9]{4,12}$/.test(code)){ fail(); return; }
+
+  fetch(SB + '/rest/v1/guests?link_code=eq.' + encodeURIComponent(code) + '&select=id,user_id', { headers: H })
+    .then(function(r){ return r.json(); })
+    .then(function(g){
+      if(!g || !g[0]) { fail(); return; }
+      return fetch(SB + '/rest/v1/profiles?user_id=eq.' + g[0].user_id + '&select=page_slug', { headers: H })
+        .then(function(r){ return r.json(); })
+        .then(function(p){
+          var slug = p && p[0] && p[0].page_slug;
+          if(!slug) { fail(); return; }
+          location.replace(base + '/wedding.html?slug=' + encodeURIComponent(slug) + '&gid=' + encodeURIComponent(g[0].id));
+        });
+    })
+    .catch(fail);
+})();
+</script>
+</body>
+</html>
