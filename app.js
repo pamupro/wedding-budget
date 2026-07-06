@@ -51,6 +51,9 @@ const CURRENCIES = {
 let vendors=[], payments=[], tasks=[];
 let notes='', spendLimit=0, spendLimitOriginal=null, spendLimitCurrency='';
 
+// Site base adapts to any domain — no changes needed after a custom-domain move
+const SITE_BASE = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
+
 // Spend limit is stored as JSON {gbp, original, currency} so the exact typed
 // amount survives. Legacy plain-number values are treated as GBP.
 function parseSpendLimitSetting(raw){
@@ -1224,7 +1227,7 @@ function copyReferralCode() {
 function shareReferral() {
   const code = document.getElementById('myReferralCode')?.textContent;
   if(!code || code==='—') return;
-  const url  = `https://pamupro.github.io/wedding-budget/index.html?ref=${code}`;
+  const url  = `${SITE_BASE}/index.html?ref=${code}`;
   const text = `Plan your wedding budget together! Use my referral code ${code} and we both get £2 off our first month 💍`;
   if(navigator.share) {
     navigator.share({ title:'WeddingLedger', text, url }).catch(()=>{});
@@ -1246,7 +1249,7 @@ function updateWeddingPageUrl() {
   const el = document.getElementById('weddingPageUrl');
   if(!el) return;
   if(slug) {
-    const url = `https://pamupro.github.io/wedding-budget/wedding.html?slug=${slug}`;
+    const url = `${SITE_BASE}/wedding.html?slug=${slug}`;
     el.textContent = url;
     el.dataset.url = url;
   } else {
@@ -1367,7 +1370,7 @@ async function sendPartnerInvite() {
     profile.partner_email = email;
 
     // Send invite email via Supabase Auth magic link (invites to the platform)
-    const inviteUrl = `https://pamupro.github.io/wedding-budget/accept-invite.html?token=${invite.token}`;
+    const inviteUrl = `${SITE_BASE}/accept-invite.html?token=${invite.token}`;
     await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY },
@@ -1400,7 +1403,7 @@ async function resendPartnerInvite() {
   const rows = await DB.query(`invites?from_user_id=eq.${userId}&status=eq.pending&order=created_at.desc&limit=1`, accessToken);
   if(!rows || !rows.length) { showToast('No pending invite found', true); return; }
 
-  const inviteUrl = `https://pamupro.github.io/wedding-budget/accept-invite.html?token=${rows[0].token}`;
+  const inviteUrl = `${SITE_BASE}/accept-invite.html?token=${rows[0].token}`;
   await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY },
@@ -1803,7 +1806,7 @@ async function exportPDF() {
     doc.setFontSize(7.5); doc.setTextColor(...MUTED); doc.setFont('helvetica','italic');
     doc.text('WeddingLedger', margin, 292.5);
     doc.setFont('helvetica','normal');
-    doc.text('pamupro.github.io/wedding-budget', pageW/2, 292.5, {align:'center'});
+    doc.text(SITE_BASE.replace(/^https?:\/\//,''), pageW/2, 292.5, {align:'center'});
     doc.text('Page ' + i + ' of ' + pageCount, pageW - margin, 292.5, {align:'right'});
   }
 

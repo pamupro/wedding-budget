@@ -42,7 +42,7 @@
 
   const SB   = 'https://bqggtyguhedlyfffjkkw.supabase.co';
   const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
-  const BASE = 'https://pamupro.github.io/wedding-budget';
+  const BASE = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
   const H    = { apikey: ANON, Authorization: 'Bearer '+ANON };
 
   try {
@@ -872,21 +872,21 @@ footer p{font-size:12px;color:var(--muted2)}
 
 <!-- ═══ DESKTOP NAV ═══ -->
 <style id="wl-sw-css">#wl-fab{position:fixed;bottom:24px;right:20px;z-index:2147483640;width:52px;height:52px;border-radius:50%;background:#1a1612;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.35);transition:transform .2s,background .2s;font-size:22px;line-height:1;}#wl-fab:hover{background:#a07828;transform:scale(1.08);}#wl-panel{position:fixed;bottom:84px;right:20px;z-index:2147483639;width:340px;max-height:560px;background:#faf7f2;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.22),0 0 0 1px rgba(26,22,18,.08);display:none;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;color:#1a1612;}#wl-panel.wl-open{display:flex;animation:wlUp .2s cubic-bezier(.32,.72,0,1);}@keyframes wlUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}.wl-head{background:#1a1612;padding:16px 18px 14px;flex-shrink:0;}.wl-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}.wl-logo{font-size:15px;font-weight:600;color:#faf7f2;}.wl-logo em{color:#c9a84c;font-style:italic;}.wl-x{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.15s;}.wl-x:hover{background:rgba(255,255,255,.2);color:#fff;}.wl-sub{font-size:11px;color:rgba(255,255,255,.38);margin-top:1px;}.wl-live{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(255,255,255,.38);margin-top:6px;}.wl-dot{width:6px;height:6px;border-radius:50%;background:#3ab450;animation:wlPulse 2s infinite;}@keyframes wlPulse{0%,100%{opacity:1}50%{opacity:.4}}.wl-view{display:none;flex-direction:column;flex:1;overflow-y:auto;}.wl-view.wl-on{display:flex;}.wl-home-body{padding:18px;flex:1;}.wl-hi{font-size:17px;font-weight:700;color:#1a1612;margin-bottom:5px;}.wl-hi em{color:#a07828;font-style:italic;}.wl-home-sub{font-size:12px;color:#7a6e5e;margin-bottom:16px;line-height:1.6;}.wl-opts{display:flex;flex-direction:column;gap:8px;}.wl-opt{display:flex;align-items:center;gap:11px;padding:12px 14px;background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:11px;cursor:pointer;transition:all .15s;text-align:left;font-family:inherit;width:100%;color:#1a1612;}.wl-opt:hover{border-color:#a07828;box-shadow:0 2px 10px rgba(160,120,40,.1);transform:translateY(-1px);}.wl-opt-ico{width:36px;height:36px;border-radius:9px;background:#fdf3dc;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}.wl-opt-t{font-size:13px;font-weight:600;color:#1a1612;}.wl-opt-s{font-size:11px;color:#7a6e5e;}.wl-arr{color:#b0a090;font-size:12px;margin-left:auto;}.wl-form-body{padding:14px 18px 18px;flex:1;overflow-y:auto;}.wl-back{display:flex;align-items:center;gap:5px;background:none;border:none;font-size:12px;font-weight:600;color:#7a6e5e;cursor:pointer;padding:0;margin-bottom:12px;font-family:inherit;transition:.15s;}.wl-back:hover{color:#1a1612;}.wl-ftitle{font-size:15px;font-weight:700;color:#1a1612;margin-bottom:14px;}.wl-ftitle em{color:#a07828;font-style:italic;}.wl-field{margin-bottom:10px;}.wl-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7a6e5e;margin-bottom:4px;display:block;}.wl-inp,.wl-sel,.wl-ta{width:100%;padding:9px 11px;border:1px solid rgba(26,22,18,.12);border-radius:8px;font-family:inherit;font-size:13px;color:#1a1612;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}.wl-inp:focus,.wl-sel:focus,.wl-ta:focus{border-color:#a07828;box-shadow:0 0 0 3px rgba(160,120,40,.08);}.wl-inp::placeholder,.wl-ta::placeholder{color:#b0a090;font-style:italic;}.wl-inp[readonly]{background:#f5f1ea;color:#7a6e5e;}.wl-ta{resize:none;min-height:88px;line-height:1.5;}.wl-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}.wl-err{font-size:11px;color:#b83030;margin-bottom:8px;display:none;background:#fef0f0;border-radius:7px;padding:7px 10px;}.wl-sub-btn{width:100%;padding:11px;background:#1a1612;border:none;border-radius:50px;font-family:inherit;font-size:13px;font-weight:600;color:#faf7f2;cursor:pointer;transition:background .15s;margin-top:4px;}.wl-sub-btn:hover{background:#a07828;}.wl-sub-btn:disabled{opacity:.55;cursor:not-allowed;}.wl-ok-body{padding:28px 18px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}.wl-ok-ico{font-size:44px;margin-bottom:12px;}.wl-ok-t{font-size:18px;font-weight:700;color:#1a1612;margin-bottom:6px;}.wl-ok-t em{color:#a07828;font-style:italic;}.wl-ok-s{font-size:12px;color:#7a6e5e;line-height:1.6;margin-bottom:16px;max-width:240px;}.wl-ref{background:#fdf3dc;border:1px solid rgba(160,120,40,.2);border-radius:7px;padding:7px 14px;font-size:11px;font-weight:700;color:#a07828;letter-spacing:.06em;margin-bottom:16px;display:inline-block;}.wl-done{padding:9px 24px;background:transparent;border:1.5px solid rgba(26,22,18,.15);border-radius:50px;font-family:inherit;font-size:13px;font-weight:600;color:#1a1612;cursor:pointer;transition:.15s;}.wl-done:hover{background:#1a1612;color:#faf7f2;}.wl-tix-body{padding:12px 14px;flex:1;overflow-y:auto;}.wl-tix-item{background:#fff;border:1px solid rgba(26,22,18,.09);border-radius:10px;padding:11px 13px;margin-bottom:8px;}.wl-tix-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:3px;}.wl-tix-subj{font-size:13px;font-weight:600;color:#1a1612;flex:1;}.wl-tix-st{font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.06em;text-transform:uppercase;flex-shrink:0;}.wl-st-open{background:#fdf3dc;color:#a07828;}.wl-st-in_progress{background:#e8f0ff;color:#2a5aaa;}.wl-st-resolved{background:#eef7f1;color:#2a6a3a;}.wl-st-closed{background:#f0f0f0;color:#7a6e5e;}.wl-tix-meta{font-size:11px;color:#b0a090;}.wl-reply{margin-top:9px;padding:9px 11px;background:#f0faf4;border-left:3px solid #2a6a3a;border-radius:0 7px 7px 0;font-size:12px;color:#1a1612;line-height:1.5;}.wl-reply-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2a6a3a;margin-bottom:3px;}.wl-empty{text-align:center;padding:28px 12px;color:#b0a090;font-size:13px;}.wl-empty-ico{font-size:32px;margin-bottom:8px;}@media(max-width:400px){#wl-panel{width:calc(100vw - 16px);right:8px;bottom:76px;}#wl-fab{right:12px;bottom:16px;}.wl-row2{grid-template-columns:1fr;}}</style></head><body><nav class="nav" id="mainNav">
-  <a href="https://pamupro.github.io/wedding-budget/index.html" class="nav-logo">Wedding<em>Ledger</em></a>
+  <a href="index.html" class="nav-logo">Wedding<em>Ledger</em></a>
   <div class="nav-mid">
     <a href="#features">Features</a>
     <a href="#how">How it works</a>
     <a href="#pricing">Pricing</a>
   </div>
   <div class="nav-end">
-    <a href="https://pamupro.github.io/wedding-budget/login.html" class="nav-in">Sign in</a>
-    <a href="https://pamupro.github.io/wedding-budget/login.html" class="nav-cta">Start free →</a>
+    <a href="login.html" class="nav-in">Sign in</a>
+    <a href="login.html" class="nav-cta">Start free →</a>
   </div>
 </nav>
 
 <!-- ═══ MOBILE NAV ═══ -->
 <nav class="mnav" id="mobileNav">
-  <a href="https://pamupro.github.io/wedding-budget/index.html" class="mnav-logo">Wedding<em>Ledger</em></a>
+  <a href="index.html" class="mnav-logo">Wedding<em>Ledger</em></a>
   <div class="mnav-btn" id="mnavBtn" onclick="toggleDrawer()">
     <span></span><span></span><span></span>
   </div>
@@ -897,13 +897,13 @@ footer p{font-size:12px;color:var(--muted2)}
   <a href="#features" onclick="toggleDrawer()">Features</a>
   <a href="#how" onclick="toggleDrawer()">How it works</a>
   <a href="#pricing" onclick="toggleDrawer()">Pricing</a>
-  <a href="https://pamupro.github.io/wedding-budget/login.html">Sign in</a>
-  <a href="https://pamupro.github.io/wedding-budget/login.html" class="mdrawer-cta">✨ Start planning free</a>
+  <a href="login.html">Sign in</a>
+  <a href="login.html" class="mdrawer-cta">✨ Start planning free</a>
 </div>
 
 <!-- Mobile bottom CTA bar -->
 <div class="mob-cta-bar">
-  <a href="https://pamupro.github.io/wedding-budget/login.html">✨ Start planning for free</a>
+  <a href="login.html">✨ Start planning for free</a>
 </div>
 
 <!-- ═══ HERO ═══ -->
@@ -923,7 +923,7 @@ footer p{font-size:12px;color:var(--muted2)}
  RSVPs and plan your seating — all in one elegant tool designed around 
 British weddings.</p>
       <div class="hero-acts">
-        <a href="https://pamupro.github.io/wedding-budget/login.html" class="btn-dark">✨ Start for free</a>
+        <a href="login.html" class="btn-dark">✨ Start for free</a>
         <a href="#how" class="btn-outline">See how it works →</a>
       </div>
       <p class="hero-note">
@@ -1363,7 +1363,7 @@ payments as you go. See your total budget vs actual spend update in real
             <li>Due date alerts so you never miss a payment</li>
             <li>Works for any budget, from £5k to £100k</li>
           </ul>
-          <a href="https://pamupro.github.io/wedding-budget/login.html" class="try-btn">Start for free →</a>
+          <a href="login.html" class="try-btn">Start for free →</a>
         </div>
         <div class="dpanel-screen">
           <div class="dmock">
@@ -1432,7 +1432,7 @@ formatted report at any time.</p>
             <li>Track dietary requirements per person</li>
             <li>One-click export sorted by family side</li>
           </ul>
-          <a href="https://pamupro.github.io/wedding-budget/login.html" class="try-btn">Start for free →</a>
+          <a href="login.html" class="try-btn">Start for free →</a>
         </div>
         <div class="dpanel-screen">
           <div class="dmock">
@@ -1491,7 +1491,7 @@ guest list updates the moment they respond.</p>
             <li>Share instantly via WhatsApp, email or text</li>
             <li>Dashboard updates live the moment they respond</li>
           </ul>
-          <a href="https://pamupro.github.io/wedding-budget/login.html" class="try-btn">Start for free →</a>
+          <a href="login.html" class="try-btn">Start for free →</a>
         </div>
         <div class="dpanel-screen">
           <div class="dmock">
@@ -1875,7 +1875,7 @@ at any point."</div>
         <li>RSVP links</li>
         <li>Wedding page</li>
       </ul>
-      <a href="https://pamupro.github.io/wedding-budget/login.html" class="pbtn pbtn-lt">Get started free</a>
+      <a href="login.html" class="pbtn pbtn-lt">Get started free</a>
     </div>
 
     <!-- MONTHLY — MOST POPULAR -->
@@ -1892,7 +1892,7 @@ at any point."</div>
         <li>Priority support</li>
         <li>New features every month</li>
       </ul>
-      <a href="https://pamupro.github.io/wedding-budget/login.html" class="pbtn pbtn-dk">Start planning →</a>
+      <a href="login.html" class="pbtn pbtn-dk">Start planning →</a>
     </div>
 
     <!-- 4-MONTH BUNDLE — BEST VALUE -->
@@ -1910,7 +1910,7 @@ at any point."</div>
         <li>Priority support</li>
         <li>New features included</li>
       </ul>
-      <a href="https://pamupro.github.io/wedding-budget/login.html" class="pbtn pbtn-gold">Get 4 months →</a>
+      <a href="login.html" class="pbtn pbtn-gold">Get 4 months →</a>
     </div>
 
   </div>
@@ -1922,18 +1922,18 @@ at any point."</div>
   <div class="cta-fin-inner">
     <h2>Your perfect day<br><em>starts here</em></h2>
     <p>Join thousands of UK couples planning their wedding with confidence.</p>
-    <a href="https://pamupro.github.io/wedding-budget/login.html" class="btn-dark" style="font-size:15px;padding:16px 44px;display:inline-flex">✨ Start planning for free</a>
+    <a href="login.html" class="btn-dark" style="font-size:15px;padding:16px 44px;display:inline-flex">✨ Start planning for free</a>
     <p class="cta-fin-note">No credit card · Free forever · 🇬🇧 Built for UK couples</p>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <a href="https://pamupro.github.io/wedding-budget/index.html" class="foot-logo">Wedding<em>Ledger</em></a>
+  <a href="index.html" class="foot-logo">Wedding<em>Ledger</em></a>
   <div class="flinks">
     <a href="#features">Features</a>
     <a href="#pricing">Pricing</a>
-    <a href="https://pamupro.github.io/wedding-budget/login.html">Log in</a>
+    <a href="login.html">Log in</a>
   </div>
   <p>© 2025 WeddingLedger · Made with 💍 for UK couples</p>
 </footer>
