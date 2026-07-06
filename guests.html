@@ -2206,13 +2206,13 @@ function doExport() {
   function getFamSafe(g){try{const f=g.family_members;return Array.isArray(f)?f:(f?JSON.parse(f):[]);}catch(e){return[];}}
   function personCount(g){ return 1 + getFamSafe(g).length; }
   const SIDES = [
-    { key:'Bride Side',    label:"Bride's Family",   emoji:'💐', color:'#e8b4c8' },
-    { key:"Bride's Friend",label:"Bride's Friends",  emoji:'🌸', color:'#f5c6d8' },
-    { key:'Groom Side',    label:"Groom's Family",   emoji:'🤵', color:'#b4c8e8' },
-    { key:"Groom's Friend",label:"Groom's Friends",  emoji:'🎩', color:'#c6d8f5' },
-    { key:'Both Sides',    label:'Both Families',    emoji:'💑', color:'#d4e8d4' },
-    { key:'Other',         label:'Other Guests',     emoji:'👥', color:'#e8e0d0' },
-    { key:'',              label:'Unassigned',       emoji:'❓', color:'#f0ece4' },
+    { key:'Bride Side',    label:"Bride's Family",   emoji:'💐' },
+    { key:"Bride's Friend",label:"Bride's Friends",  emoji:'🌸' },
+    { key:'Groom Side',    label:"Groom's Family",   emoji:'🤵' },
+    { key:"Groom's Friend",label:"Groom's Friends",  emoji:'🎩' },
+    { key:'Both Sides',    label:'Both Families',    emoji:'💑' },
+    { key:'Other',         label:'Other Guests',     emoji:'👥' },
+    { key:'',              label:'Unassigned',       emoji:'✦'  },
   ];
   const byGroup = {};
   SIDES.forEach(s => byGroup[s.key] = []);
@@ -2221,44 +2221,174 @@ function doExport() {
     if(byGroup[k] !== undefined) byGroup[k].push(g);
     else byGroup[''].push(g);
   });
-  const brideKeys = ['Bride Side', "Bride's Friend"];
-  const groomKeys = ['Groom Side', "Groom's Friend"];
-  const brideTotal = brideKeys.reduce((n,k)=> n + (byGroup[k]||[]).reduce((a,g)=>a+personCount(g),0), 0);
-  const groomTotal = groomKeys.reduce((n,k)=> n + (byGroup[k]||[]).reduce((a,g)=>a+personCount(g),0), 0);
-  const grandTotal = guests.reduce((a,g)=>a+personCount(g),0);
-  const confirmedTotal = guests.filter(g=>g.rsvp_status==='confirmed').reduce((a,g)=>a+personCount(g),0);
-  function rsvpBadge(status){
-    const map={confirmed:'#2a7a2a:#e8f5e8:✓ Confirmed',pending:'#8a6020:#fff8e8:⏳ Pending',declined:'#c04040:#ffeaea:✗ Declined'};
-    const v=map[status]||'#8a7a60:#f5f0e8:— Unknown';
-    const [col,bg,txt]=v.split(':');
-    return `<span style="font-size:10px;padding:2px 7px;border-radius:99px;background:${bg};color:${col};font-weight:600;border:1px solid ${col}33">${txt}</span>`;
+  // sort each group alphabetically
+  Object.keys(byGroup).forEach(k => byGroup[k].sort((a,b)=>(a.name||'').localeCompare(b.name||'')));
+
+  function statusOf(g){ const s=g.rsvp_status||'pending'; return s==='confirmed'?'yes':s==='declined'?'no':s; }
+  function countBy(fn){ return guests.reduce((a,g)=>a+(fn(g)?personCount(g):0),0); }
+  const grandTotal    = guests.reduce((a,g)=>a+personCount(g),0);
+  const attendTotal   = countBy(g=>statusOf(g)==='yes');
+  const pendingTotal  = countBy(g=>statusOf(g)==='pending');
+  const declinedTotal = countBy(g=>statusOf(g)==='no');
+  const familyTotal   = guests.filter(g=>getFamSafe(g).length>0).length;
+
+  function pill(status){
+    const map = {
+      yes:     ['#2a6a3a','Attending'],
+      confirmed:['#2a6a3a','Attending'],
+      no:      ['#b83030','Declined'],
+      declined:['#b83030','Declined'],
+      maybe:   ['#a07828','Maybe'],
+    };
+    const [col,txt] = map[status] || ['#7a6e5e','Pending'];
+    return `<span class="pill" style="color:${col};border-color:${col}44"><i style="background:${col}"></i>${txt}</span>`;
   }
+
   function buildSection(side, glist){
     if(!glist.length) return '';
-    const total = glist.reduce((a,g)=>a+personCount(g),0);
-    const confirmed = glist.filter(g=>g.rsvp_status==='confirmed').reduce((a,g)=>a+personCount(g),0);
-    let rows = '';
-    glist.forEach(g => {
+    const total  = glist.reduce((a,g)=>a+personCount(g),0);
+    const attend = glist.reduce((a,g)=>a+(statusOf(g)==='yes'?personCount(g):0),0);
+    let bodies = '';
+    glist.forEach((g,i) => {
       const fam = getFamSafe(g);
-      const contact = [g.email, g.phone].filter(Boolean).join(' · ') || '<span style="color:#aaa">No contact</span>';
-      const dietary = g.dietary ? `<br><span style="font-size:10px;color:#8a6020">🍽 ${g.dietary}</span>` : '';
-      const notes   = g.notes   ? `<br><span style="font-size:10px;color:#7a7060">📝 ${g.notes}</span>` : '';
-      rows += `<tr><td style="padding:8px 10px;font-weight:700;font-size:13px;color:#2a2010;vertical-align:top">${g.name}${dietary}${notes}</td><td style="padding:8px 10px;font-size:12px;color:#5a4a30;vertical-align:top">${contact}</td><td style="padding:8px 10px;vertical-align:top">${rsvpBadge(g.rsvp_status)}</td><td style="padding:8px 10px;font-size:12px;color:#8a7a60;vertical-align:top">${g.group_label||'—'}</td></tr>`;
+      const contact = [g.email, g.phone].filter(Boolean).map(esc).join('<br>') || '<span class="dim">—</span>';
+      let sub = '';
+      if(g.dietary) sub += `<div class="sub">🌿 ${esc(g.dietary)}</div>`;
+      if(g.notes)   sub += `<div class="sub">📝 ${esc(g.notes)}</div>`;
+      const cnt = fam.length ? `<span class="cnt">${1+fam.length}</span>` : '';
+      let rows = `<tr>
+        <td class="num">${i+1}</td>
+        <td class="name"><strong>${esc(g.name||'Unnamed guest')}</strong>${cnt}${sub}</td>
+        <td class="contact">${contact}</td>
+        <td class="rsvp">${pill(statusOf(g))}</td>
+        <td class="chk"><span class="box"></span></td>
+      </tr>`;
       fam.forEach(m => {
         const fname = ((m.first||'') + ' ' + (m.last||'')).trim() || 'Family member';
-        const fRsvp = m.rsvp || g.rsvp_status || 'pending';
-        rows += `<tr style="background:#faf8f4"><td style="padding:5px 10px 5px 28px;font-size:12px;color:#5a4a30;vertical-align:top"><span style="color:#C9A84C;margin-right:4px">↳</span>${fname}<span style="font-size:10px;color:#aaa;margin-left:4px">${m.type||'family'}</span></td><td style="padding:5px 10px;font-size:11px;color:#aaa"></td><td style="padding:5px 10px">${rsvpBadge(fRsvp)}</td><td></td></tr>`;
+        rows += `<tr class="fam-row">
+          <td class="num"></td>
+          <td class="name"><span class="arrow">↳</span>${esc(fname)}<span class="type">${esc(m.type||'family')}</span></td>
+          <td class="contact"></td>
+          <td class="rsvp">${pill(m.rsvp || statusOf(g))}</td>
+          <td class="chk"><span class="box"></span></td>
+        </tr>`;
       });
+      bodies += `<tbody class="unit">${rows}</tbody>`;
     });
-    return `<div style="margin-bottom:32px;break-inside:avoid"><div style="background:${side.color};border-radius:10px 10px 0 0;padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="font-size:22px">${side.emoji}</span><div><div style="font-size:16px;font-weight:700;color:#2a2010">${side.label}</div><div style="font-size:11px;color:#5a4a30;margin-top:1px">${total} people · ${confirmed} confirmed</div></div></div><table style="width:100%;border-collapse:collapse;border:1.5px solid #e8ddd0;border-top:none;border-radius:0 0 10px 10px;overflow:hidden"><thead><tr style="background:#f5f0e8"><th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:35%">Name</th><th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:30%">Contact</th><th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:15%">RSVP</th><th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a7a60;width:20%">Group</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return `<section>
+      <div class="sec-head">
+        <div class="sec-title"><span class="sec-emoji">${side.emoji}</span>${side.label}</div>
+        <div class="sec-meta">${total} ${total===1?'person':'people'} · ${attend} attending</div>
+      </div>
+      <table>
+        <thead><tr><th class="num">#</th><th>Guest</th><th>Contact</th><th class="rsvp">RSVP</th><th class="chk">✓</th></tr></thead>
+        ${bodies}
+      </table>
+    </section>`;
   }
+
   const sectionsHtml = SIDES.map(s => buildSection(s, byGroup[s.key]||[])).join('');
-  const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Guest List — WeddingLedger</title><style>@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=Instrument+Sans:wght@0,400;0,500;0,600&display=swap');*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Instrument Sans',sans-serif;background:white;color:#2a2010;padding:32px;max-width:900px;margin:0 auto}@media print{body{padding:16px}@page{margin:1.5cm}}tr:nth-child(even) td{background:#fdf9f5}</style></head><body><div style="text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #C9A84C"><div style="font-family:'Fraunces',serif;font-size:36px;font-weight:600;font-style:italic;color:#2a2010;margin-bottom:6px">Wedding<span style="color:#C9A84C">Ledger</span></div><div style="font-size:14px;color:#8a7a60">Guest List Export · ${today}</div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px"><div style="background:#faf8f4;border:1.5px solid #e8ddd0;border-radius:10px;padding:14px;text-align:center"><div style="font-size:28px;font-weight:700;color:#C9A84C">${grandTotal}</div><div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Total Guests</div></div><div style="background:#fdf5f8;border:1.5px solid #e8c8d8;border-radius:10px;padding:14px;text-align:center"><div style="font-size:28px;font-weight:700;color:#c8608a">${brideTotal}</div><div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Bride's Side</div></div><div style="background:#f5f8fd;border:1.5px solid #c8d8e8;border-radius:10px;padding:14px;text-align:center"><div style="font-size:28px;font-weight:700;color:#4a78b0">${groomTotal}</div><div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Groom's Side</div></div><div style="background:#f5fdf5;border:1.5px solid #c8e8c8;border-radius:10px;padding:14px;text-align:center"><div style="font-size:28px;font-weight:700;color:#2a7a2a">${confirmedTotal}</div><div style="font-size:11px;color:#8a7a60;margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.08em">Confirmed</div></div></div>${sectionsHtml}<div style="text-align:center;margin-top:24px;font-size:11px;color:#aaa;padding-top:16px;border-top:1px solid #e8ddd0">Generated by WeddingLedger · ${today}</div></body></html>`;
+  const today  = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const couple = [prof.name1, prof.name2].filter(Boolean);
+  const coupleHtml = couple.length
+    ? `${esc(couple[0])}${couple[1] ? ' <span class="amp">&</span> ' + esc(couple[1]) : ''}`
+    : 'Our Wedding';
+  const wDate = prof.wedding_date
+    ? new Date(prof.wedding_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    : '';
+
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guest List — ${couple.join(' & ') || 'WeddingLedger'}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#a07828;--gold2:#C9A84C;--ink:#1a1612;--muted:#7a6e5e;--cream:#faf7f2;--hair:rgba(26,22,18,.1);--hair2:rgba(26,22,18,.05)}
+body{font-family:'Instrument Sans',sans-serif;background:#fff;color:var(--ink);max-width:860px;margin:0 auto;padding:40px 36px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+/* toolbar (screen only) */
+.toolbar{position:fixed;top:16px;right:16px;z-index:10}
+.toolbar button{font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;background:var(--ink);color:#fff;border:none;border-radius:99px;padding:10px 20px;cursor:pointer;box-shadow:0 4px 18px rgba(26,22,18,.18)}
+.toolbar button:hover{background:var(--gold)}
+/* cover */
+header{text-align:center;margin-bottom:30px}
+.orn{color:var(--gold2);font-size:15px;letter-spacing:.5em;opacity:.7;margin-bottom:12px}
+.tag{font-size:10px;font-weight:700;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+h1{font-family:'Fraunces',serif;font-weight:200;font-style:italic;font-size:44px;letter-spacing:-.02em;line-height:1.05}
+.amp{color:var(--gold2);font-style:normal;font-size:.72em}
+.wdate{font-size:12.5px;color:var(--muted);letter-spacing:.12em;margin-top:10px;text-transform:uppercase}
+.gen{font-size:11px;color:#b0a090;margin-top:5px}
+/* stats */
+.stats{display:flex;justify-content:center;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:16px 0;margin-bottom:34px}
+.stat{flex:1;text-align:center;border-right:1px solid var(--hair2)}
+.stat:last-child{border-right:none}
+.stat b{display:block;font-family:'Fraunces',serif;font-weight:300;font-size:28px;line-height:1;letter-spacing:-.02em}
+.stat span{display:block;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.stat.gold b{color:var(--gold)} .stat.ok b{color:#2a6a3a} .stat.warn b{color:#b83030}
+/* sections */
+section{margin-bottom:30px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--gold2);padding-bottom:8px;margin-bottom:2px}
+.sec-title{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:20px}
+.sec-emoji{font-style:normal;font-size:16px;margin-right:8px}
+.sec-meta{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+/* table */
+table{width:100%;border-collapse:collapse}
+thead th{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 8px;border-bottom:1px solid var(--hair)}
+tbody.unit{break-inside:avoid;page-break-inside:avoid;border-bottom:1px solid var(--hair2)}
+td{padding:8px;vertical-align:top;font-size:12.5px}
+td.num,th.num{width:26px;color:#b0a090;font-size:11px;padding-left:2px}
+td.name strong{font-weight:600;font-size:13px}
+.cnt{display:inline-block;margin-left:7px;font-size:10px;font-weight:700;color:var(--gold);background:#fdf3dc;border:1px solid rgba(160,120,40,.25);border-radius:99px;padding:1px 7px;vertical-align:1px}
+.sub{font-size:10.5px;color:var(--muted);margin-top:3px}
+td.contact{width:220px;font-size:11.5px;color:#5a4a30;line-height:1.5}
+.dim{color:#c8beb0}
+th.rsvp,td.rsvp{width:96px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;border:1px solid;border-radius:99px;padding:2.5px 9px;white-space:nowrap}
+.pill i{width:5px;height:5px;border-radius:50%;display:inline-block}
+th.chk,td.chk{width:30px;text-align:center}
+.box{display:inline-block;width:13px;height:13px;border:1.5px solid rgba(26,22,18,.3);border-radius:3.5px;margin-top:2px}
+tr.fam-row td{padding-top:3px;padding-bottom:6px}
+tr.fam-row td.name{padding-left:24px;font-size:12px;color:#4a4034}
+.arrow{color:var(--gold2);margin-right:6px}
+.type{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b0a090;margin-left:7px}
+footer{text-align:center;margin-top:34px;padding-top:14px;border-top:1px solid var(--hair2);font-size:10.5px;color:#b0a090}
+footer .fl{font-family:'Fraunces',serif;font-style:italic;font-size:12px;color:var(--muted)}
+@media print{
+  body{padding:0;max-width:none}
+  .toolbar{display:none}
+  @page{margin:1.4cm 1.2cm}
+  thead{display:table-header-group}
+  section{break-inside:auto}
+}
+</style></head><body>
+<div class="toolbar"><button onclick="window.print()">🖨&nbsp; Print / Save as PDF</button></div>
+<header>
+  <div class="orn">✦ ✦ ✦</div>
+  <div class="tag">Guest List</div>
+  <h1>${coupleHtml}</h1>
+  ${wDate ? `<div class="wdate">${wDate}</div>` : ''}
+  <div class="gen">Exported ${today} · WeddingLedger</div>
+</header>
+<div class="stats">
+  <div class="stat gold"><b>${grandTotal}</b><span>Invited</span></div>
+  <div class="stat ok"><b>${attendTotal}</b><span>Attending</span></div>
+  <div class="stat"><b>${pendingTotal}</b><span>Pending</span></div>
+  <div class="stat warn"><b>${declinedTotal}</b><span>Declined</span></div>
+  <div class="stat"><b>${familyTotal}</b><span>Families</span></div>
+</div>
+${sectionsHtml}
+<footer><span class="fl">WeddingLedger</span><br>Generated ${today}</footer>
+<script>
+  // Print only after fonts are ready so Fraunces/Instrument Sans render correctly
+  var printed = false;
+  function go(){ if(printed) return; printed = true; setTimeout(function(){ window.print(); }, 200); }
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(go); }
+  setTimeout(go, 2500); // fallback if fonts hang
+<\/script>
+</body></html>`;
   const win = window.open('','_blank');
+  if(!win){ toast('Please allow pop-ups to export', true); return; }
   win.document.write(html);
   win.document.close();
-  setTimeout(()=>win.print(), 600);
 }
 
 // ── UTILS ──────────────────────────────────────────────────────────────────────
