@@ -1045,43 +1045,23 @@ textarea.modal-input{resize:vertical;min-height:80px}
     </div>
     <div class="modal-body" style="padding:24px">
 
-      <!-- Plan picker -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
-
-        <!-- Monthly plan -->
-        <div id="planMonthly" onclick="selectPlan('monthly')"
-          style="border:2px solid var(--gold);border-radius:16px;padding:20px;cursor:pointer;background:var(--gold-pale);transition:.2s;position:relative">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Monthly</div>
-          <div style="font-family:'Fraunces',serif;font-size:36px;font-weight:200;color:var(--gold);line-height:1">£4.99</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">per month · cancel anytime</div>
-          <ul style="list-style:none;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px">
-            <li>✓ Unlimited vendors &amp; guests</li>
-            <li>✓ Seating chart planner</li>
-            <li>✓ Partner collaboration</li>
-            <li>✓ All features included</li>
-          </ul>
-          <div id="planMonthlyCheck" style="position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:white;font-size:11px;display:flex;align-items:center;justify-content:center">✓</div>
-        </div>
-
-        <!-- Bundle plan -->
-        <div id="planBundle" onclick="selectPlan('bundle')"
-          style="border:2px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;background:white;transition:.2s;position:relative">
-          <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">4-Month Bundle 🎉</div>
-          <div style="font-family:'Fraunces',serif;font-size:36px;font-weight:200;color:var(--ink);line-height:1">£15</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">one payment · save £4.96</div>
-          <ul style="list-style:none;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px">
-            <li>✓ Everything in Monthly</li>
-            <li>✓ 4 months for price of 3</li>
-            <li>✓ No recurring charges</li>
-            <li>✓ Perfect for planning period</li>
-          </ul>
-          <div id="planBundleCheck" style="position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;background:var(--border);color:transparent;font-size:11px;display:flex;align-items:center;justify-content:center">✓</div>
-        </div>
-
+      <!-- Single lifetime plan -->
+      <div style="border:2px solid var(--gold);border-radius:16px;padding:24px;background:var(--gold-pale);text-align:center;margin-bottom:20px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">✨ WeddingLedger Pro</div>
+        <div style="font-family:'Fraunces',serif;font-size:52px;font-weight:200;color:var(--gold);line-height:1"><span id="upgradeAmount">£14.99</span></div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px;margin-bottom:20px" id="upgradePeriod">one payment · lifetime access · no subscription</div>
+        <ul style="list-style:none;font-size:13px;color:var(--ink2);display:inline-flex;flex-direction:column;gap:9px;text-align:left;margin:0 auto">
+          <li>✓ Unlimited vendors <span style="color:var(--muted)">(free plan: 5)</span></li>
+          <li>✓ Unlimited guests <span style="color:var(--muted)">(free plan: 50)</span></li>
+          <li>✓ Seating chart planner</li>
+          <li>✓ Partner collaboration</li>
+          <li>✓ Public wedding page &amp; RSVP</li>
+          <li>✓ PDF exports &amp; all features</li>
+        </ul>
       </div>
 
       <div style="font-size:11px;color:var(--muted2);text-align:center;margin-bottom:16px">
-        Secure payment via PayPal · Cancel anytime from your PayPal account
+        Secure one-time payment via PayPal · Instant lifetime access
       </div>
 
       <div id="paypalButtonContainer" style="margin-top:4px"></div>

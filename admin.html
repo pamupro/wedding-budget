@@ -1108,72 +1108,44 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
           <div class="sc-title">💳 Subscription <em>Pricing</em></div>
           <!-- Live preview -->
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border-radius:10px;border:1px solid var(--gold-bd)">
-            <div style="font-size:28px;font-family:'Fraunces',serif;font-weight:200;color:var(--gold)" id="adminPricePreview">£9.99</div>
+            <div style="font-size:28px;font-family:'Fraunces',serif;font-weight:200;color:var(--gold)"><span id="adminPricePreview">£14.99</span></div>
             <div>
-              <div style="font-size:11px;font-weight:700;color:var(--ink)" id="adminPriceModeLabel">per month · subscription</div>
-              <div style="font-size:10px;color:var(--muted2)">currently shown to users on upgrade modal</div>
+              <div style="font-size:11px;font-weight:700;color:var(--ink)">one-time · lifetime access</div>
+              <div style="font-size:10px;color:var(--muted2)">shown on the homepage and in-app upgrade</div>
             </div>
-            <div style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:99px;background:var(--sage-pale);color:var(--sage);font-weight:600" id="adminPriceModeTag">ACTIVE</div>
+            <div style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:99px;background:var(--sage-pale);color:var(--sage);font-weight:600">ACTIVE</div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-
-              <!-- MONTHLY PLAN -->
-              <div style="background:var(--bg2);border-radius:12px;padding:16px;border:1px solid var(--border)">
-                <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">📅 Monthly Plan</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                  <div>
-                    <label class="s-label">Price (£/month)</label>
-                    <input type="number" id="subPriceMonthly" class="s-input" placeholder="4.99" min="0.50" max="99.99" step="0.01" value="4.99">
-                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">Charged monthly</div>
-                  </div>
-                  <div>
-                    <label class="s-label">PayPal Plan ID</label>
-                    <input type="text" id="paypalPlanIdMonthly" class="s-input" placeholder="P-XXXXXXXXXXXX">
-                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">From PayPal dashboard</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- BUNDLE PLAN -->
-              <div style="background:var(--gold-pale);border-radius:12px;padding:16px;border:1px solid var(--gold-bd)">
-                <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">🎉 4-Month Bundle</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                  <div>
-                    <label class="s-label">Bundle Price (£)</label>
-                    <input type="number" id="subPriceBundle" class="s-input" placeholder="15.00" min="1" max="999" step="0.01" value="15.00">
-                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">One-time payment</div>
-                  </div>
-                  <div>
-                    <label class="s-label">PayPal Plan ID</label>
-                    <input type="text" id="paypalPlanIdBundle" class="s-input" placeholder="P-XXXXXXXXXXXX">
-                    <div style="font-size:10px;color:var(--muted2);margin-top:4px">Leave blank = one-time pay</div>
-                  </div>
-                </div>
-              </div>
-
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div>
+              <label class="s-label">Pro Price (£, one-time)</label>
+              <input type="number" id="subPrice" class="s-input" placeholder="14.99" min="0.50" max="999" step="0.01" value="14.99"
+                     oninput="var p=document.getElementById('adminPricePreview'); if(p)p.textContent='£'+(this.value||'0');">
+              <div style="font-size:10px;color:var(--muted2);margin-top:4px">Single lifetime unlock — no subscription</div>
             </div>
-            <div style="margin-bottom:16px">
+            <div>
               <label class="s-label">Free Vendor Limit</label>
-              <input type="number" id="freeVendorLimit" class="s-input" placeholder="5" min="1" max="20" style="max-width:120px">
-              <div style="font-size:10px;color:var(--muted2);margin-top:4px">Vendors allowed on free plan</div>
+              <input type="number" id="freeVendorLimit" class="s-input" placeholder="5" min="1" max="20" value="5">
+              <div style="font-size:10px;color:var(--muted2);margin-top:4px">Free plan also caps guests at 50</div>
             </div>
           </div>
+
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <button class="s-btn" onclick="savePlatformSettings()" style="margin-top:0">💾 Save Pricing Settings</button>
             <div id="platformSettingsStatus" style="font-size:12px;color:var(--muted)"></div>
           </div>
           <div style="margin-top:16px;padding:12px;background:var(--surface);border-radius:9px;border:1px solid var(--border2)">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px">HOW SUBSCRIPTIONS WORK</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px">HOW IT WORKS</div>
             <div style="font-size:12px;color:var(--muted);line-height:1.7">
-              <strong>Without Plan ID:</strong> One-time PayPal order at the price above.<br>
-              <strong>With Plan ID:</strong> Recurring monthly PayPal subscription. Create a billing plan at 
-              <a href="https://www.paypal.com/billing/plans" target="_blank" style="color:var(--gold)">paypal.com/billing/plans</a> 
-              → copy the Plan ID → paste above → save. Users will see "Subscribe" instead of "Pay".<br>
-              <strong>Price changes</strong> take effect for new subscribers immediately. Existing subscribers keep their PayPal agreement price.
+              Couples pay <strong>once</strong> for lifetime Pro — no recurring billing. Free accounts are capped at
+              the vendor limit above and 50 guests; hitting either prompts them to upgrade. Price changes apply to new
+              purchases immediately.
             </div>
           </div>
         </div>
+
+        <div class="settings-card">
+          <div class="sc-title">🔐 Change        </div>
 
         <div class="settings-card">
           <div class="sc-title">🔐 Change <em>Password</em></div>
@@ -2079,40 +2051,28 @@ async function loadPlatformSettings(){
     rows.forEach(r => map[r.key] = r.value);
 
     // New fields
-    if(map.sub_price_monthly)      { const el=document.getElementById('subPriceMonthly');      if(el) el.value=map.sub_price_monthly; }
-    if(map.sub_price_bundle)       { const el=document.getElementById('subPriceBundle');       if(el) el.value=map.sub_price_bundle; }
+    if(map.sub_price)              { const el=document.getElementById('subPrice'); if(el) el.value=map.sub_price; const pv=document.getElementById('adminPricePreview'); if(pv) pv.textContent='£'+map.sub_price; }
     if(map.paypal_plan_id_monthly) { const el=document.getElementById('paypalPlanIdMonthly'); if(el) el.value=map.paypal_plan_id_monthly; }
     if(map.paypal_plan_id_bundle)  { const el=document.getElementById('paypalPlanIdBundle');  if(el) el.value=map.paypal_plan_id_bundle; }
     // Legacy fallback
-    if(!map.sub_price_monthly && map.sub_price) { const el=document.getElementById('subPriceMonthly'); if(el) el.value=map.sub_price; }
+
     if(!map.paypal_plan_id_monthly && map.paypal_plan_id) { const el=document.getElementById('paypalPlanIdMonthly'); if(el) el.value=map.paypal_plan_id; }
     if(map.free_vendor_limit)      { const el=document.getElementById('freeVendorLimit');     if(el) el.value=map.free_vendor_limit; }
   } catch(e){ console.warn('loadPlatformSettings error:', e); }
 }
 
 async function savePlatformSettings(){
-  const monthlyPrice = document.getElementById('subPriceMonthly')?.value?.trim();
-  const bundlePrice  = document.getElementById('subPriceBundle')?.value?.trim();
-  const monthlyPlanId = document.getElementById('paypalPlanIdMonthly')?.value?.trim();
-  const bundlePlanId  = document.getElementById('paypalPlanIdBundle')?.value?.trim();
+  const price       = document.getElementById('subPrice')?.value?.trim();
   const vendorLimit  = document.getElementById('freeVendorLimit')?.value?.trim();
-
-  if(!monthlyPrice || isNaN(monthlyPrice)){
-    alert('Please enter a valid monthly price'); return;
-  }
-  if(!bundlePrice || isNaN(bundlePrice)){
-    alert('Please enter a valid bundle price'); return;
-  }
+  if(!price || isNaN(price)){ alert('Please enter a valid price'); return; }
 
   const btn = event?.target;
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
 
   try {
     const settings = [
-      { key:'sub_price_monthly',      value: parseFloat(monthlyPrice).toFixed(2) },
-      { key:'sub_price_bundle',       value: parseFloat(bundlePrice).toFixed(2) },
-      { key:'paypal_plan_id_monthly', value: monthlyPlanId || '' },
-      { key:'paypal_plan_id_bundle',  value: bundlePlanId  || '' },
+      { key:'sub_price',              value: parseFloat(price).toFixed(2) },
+      { key:'paypal_plan_id',         value: '' },
       // Legacy keys for backwards compat
       { key:'sub_price',              value: parseFloat(monthlyPrice).toFixed(2) },
       { key:'paypal_plan_id',         value: monthlyPlanId || '' },

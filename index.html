@@ -530,13 +530,16 @@ img{display:block;max-width:100%}
 ══════════════════════════════════════ */
 .pricing{padding:80px 24px;max-width:960px;margin:0 auto}
 
-/* Desktop: 3 cards side by side */
+/* Desktop: 2 cards side by side */
 .pgrid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(2,1fr);
   gap:16px;
   margin-top:48px;
   align-items:start;
+  max-width:720px;
+  margin-left:auto;
+  margin-right:auto;
 }
 
 .pcard{
@@ -1878,39 +1881,22 @@ at any point."</div>
       <a href="login.html" class="pbtn pbtn-lt">Get started free</a>
     </div>
 
-    <!-- MONTHLY — MOST POPULAR -->
+    <!-- PRO — ONE-TIME LIFETIME -->
     <div class="pcard pro vis" style="transition-delay:0s">
-      <div class="p-badge">✦ Most popular</div>
-      <div class="p-name">Monthly</div>
-      <div class="p-amount" id="hpMonthly">£4.99</div>
-      <div class="p-per">per month · cancel anytime</div>
+      <div class="p-badge">✦ Everything unlocked</div>
+      <div class="p-name">Pro</div>
+      <div class="p-amount" id="hpPro">£14.99</div>
+      <div class="p-per">one payment · lifetime access</div>
       <div class="p-sep"></div>
       <ul class="p-feats">
         <li>Unlimited vendors &amp; guests</li>
+        <li>Seating chart planner</li>
         <li>Partner collaboration</li>
-        <li>Export guest list PDF</li>
-        <li>Priority support</li>
-        <li>New features every month</li>
+        <li>Export guest list &amp; budget PDF</li>
+        <li>Public wedding page &amp; RSVP</li>
+        <li>No subscription, ever</li>
       </ul>
       <a href="login.html" class="pbtn pbtn-dk">Start planning →</a>
-    </div>
-
-    <!-- 4-MONTH BUNDLE — BEST VALUE -->
-    <div class="pcard bundle vis" style="transition-delay:.2s">
-      <div class="p-badge">🎉 Best value</div>
-      <div class="p-name">4-Month Bundle</div>
-      <div class="p-amount" id="hpBundle">£15</div>
-      <div class="p-per" id="hpBundlePer">one payment · save £4.96</div>
-      <div class="p-sep"></div>
-      <ul class="p-feats">
-        <li>Everything in Monthly</li>
-        <li>4 months for price of 3</li>
-        <li>No recurring charges</li>
-        <li>Perfect for your planning period</li>
-        <li>Priority support</li>
-        <li>New features included</li>
-      </ul>
-      <a href="login.html" class="pbtn pbtn-gold">Get 4 months →</a>
     </div>
 
   </div>
@@ -2020,19 +2006,14 @@ onVisibleAll('.pcard',el=>el.classList.add('vis'));
 (function(){
   var SB='https://bqggtyguhedlyfffjkkw.supabase.co';
   var K='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
-  fetch(SB+'/rest/v1/settings?key=in.(sub_price_monthly,sub_price_bundle)&select=key,value',{headers:{apikey:K,Authorization:'Bearer '+K}})
+  fetch(SB+'/rest/v1/settings?key=in.(sub_price)&select=key,value',{headers:{apikey:K,Authorization:'Bearer '+K}})
     .then(function(r){return r.json();})
     .then(function(rows){
       if(!Array.isArray(rows)) return;
       var map={}; rows.forEach(function(r){map[r.key]=parseFloat(r.value);});
-      var m=map.sub_price_monthly, b=map.sub_price_bundle;
+      var pr=map.sub_price;
       var fmt=function(v){return '\u00a3'+(v%1===0?v.toFixed(0):v.toFixed(2));};
-      if(m>0){var e=document.getElementById('hpMonthly'); if(e)e.textContent=fmt(m);}
-      if(b>0){
-        var e2=document.getElementById('hpBundle'); if(e2)e2.textContent=fmt(b);
-        if(m>0){var save=(m*4-b); var p=document.getElementById('hpBundlePer');
-          if(p&&save>0)p.textContent='one payment \u00b7 save \u00a3'+save.toFixed(2);}
-      }
+      if(pr>0){var e=document.getElementById('hpPro'); if(e)e.textContent=fmt(pr);}
     }).catch(function(){});
 })();
 </script>

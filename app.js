@@ -183,6 +183,10 @@ async function loadProfile() {
     if (!profile.name1 && !profile.name2) {
       setTimeout(()=>openWelcomeModal(), 500);
     }
+    // Deep-link from the guest page's "upgrade" prompt
+    if (!isPro && new URLSearchParams(location.search).get('upgrade') === '1') {
+      setTimeout(()=>openUpgradeModal(), 400);
+    }
   } else {
     // No profile row at all — create one then show welcome
     try {
@@ -283,12 +287,8 @@ async function loadTasks() {
 // ─── PLATFORM SETTINGS (admin-configured, loaded for all users) ──────────────
 async function loadPlatformSettings() {
   try {
-    const rows = await DB.query('settings?key=in.(sub_price_monthly,sub_price_bundle,paypal_plan_id_monthly,paypal_plan_id_bundle,sub_price,paypal_plan_id)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2&limit=10', accessToken);
+    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2&limit=10', accessToken);
     if(rows) rows.forEach(r => {
-      if(r.key === 'sub_price_monthly')      window.WL_SUB_PRICE_MONTHLY = r.value;
-      if(r.key === 'sub_price_bundle')       window.WL_SUB_PRICE_BUNDLE  = r.value;
-      if(r.key === 'paypal_plan_id_monthly') window.WL_PLAN_ID_MONTHLY   = r.value;
-      if(r.key === 'paypal_plan_id_bundle')  window.WL_PLAN_ID_BUNDLE    = r.value;
       if(r.key === 'sub_price')              window.WL_SUB_PRICE         = r.value;
       if(r.key === 'paypal_plan_id')         window.WL_PLAN_ID           = r.value;
     });
@@ -791,13 +791,10 @@ function openUpgradeModal(){
   const modal = document.getElementById('upgradeModal');
   if(!modal) return;
 
-  // Update price + period from platform settings loaded at init
-  const price  = parseFloat(window.WL_SUB_PRICE || '9.99').toFixed(2);
-  const planId = (window.WL_PLAN_ID || '').trim();
+  // One-time lifetime price (admin-configurable, defaults to £14.99)
+  const price  = parseFloat(window.WL_SUB_PRICE || '14.99').toFixed(2);
   const amountEl = document.getElementById('upgradeAmount') || modal.querySelector('.upgrade-amount');
-  const periodEl = document.getElementById('upgradePeriod') || modal.querySelector('.upgrade-period');
   if(amountEl) amountEl.textContent = '£' + price;
-  if(periodEl) periodEl.textContent  = planId ? 'per month · cancel anytime' : 'one-time · per couple';
 
   modal.style.display='flex';
   if(typeof paypal !== 'undefined' && !paypalRendered){
@@ -827,48 +824,25 @@ window.initPayPal = function(){
   const fb = document.getElementById('paypalFallback');
   if(fb) fb.style.display = 'none';
 
-  // Determine selected plan
-  const plan     = window._selectedPlan || 'monthly';
-  const isBundle = (plan === 'bundle');
-  const price    = isBundle
-    ? parseFloat(window.WL_SUB_PRICE_BUNDLE  || '15.00').toFixed(2)
-    : parseFloat(window.WL_SUB_PRICE_MONTHLY || '4.99').toFixed(2);
-  const planId   = isBundle
-    ? (window.WL_PLAN_ID_BUNDLE   || '').trim()
-    : (window.WL_PLAN_ID_MONTHLY  || '').trim();
-
-  // Update fallback link
+  // Single one-time lifetime unlock
+  const price = parseFloat(window.WL_SUB_PRICE || '14.99').toFixed(2);
   const dl = document.getElementById('paypalDirectLink');
-  if(dl) dl.href = planId
-    ? 'https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=' + planId
-    : 'https://www.paypal.com/';
+  if(dl) dl.href = 'https://www.paypal.com/';
 
   paypal.Buttons({
     style:{ layout:'vertical', color:'gold', shape:'pill', label:'pay', height:48 },
 
     createOrder: function(data, actions){
-      if(isBundle){
-        // One-time payment for bundle
-        return actions.order.create({
-          purchase_units:[{ amount:{ value: price, currency_code:'GBP' },
-            description:'WeddingLedger 4-Month Bundle' }]
-        });
-      } else if(planId){
-        // Subscription
-        return actions.subscription.create({ plan_id: planId });
-      } else {
-        // Fallback one-time if no plan ID set
-        return actions.order.create({
-          purchase_units:[{ amount:{ value: price, currency_code:'GBP' },
-            description:'WeddingLedger Monthly Pro' }]
-        });
-      }
+      return actions.order.create({
+        purchase_units:[{ amount:{ value: price, currency_code:'GBP' },
+          description:'WeddingLedger Pro — Lifetime Access' }]
+      });
     },
 
     onApprove: async function(data, actions){
       try{
         const paymentId = data.subscriptionID || data.orderID;
-        await activatePro(paymentId, !isBundle && !!planId);
+        await activatePro(paymentId, false);
         closeUpgradeModal();
         showToast("🎉 You're now Pro! All features unlocked.");
         renderVendors();

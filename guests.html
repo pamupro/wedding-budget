@@ -1420,6 +1420,15 @@
 const SB = 'https://bqggtyguhedlyfffjkkw.supabase.co';
 const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 const uid = localStorage.getItem('wl_uid');
+const FREE_GUEST_LIMIT = 50;
+let isPro = false;
+// A "party" counts the primary guest + any family members on the card
+function guestHeadcount(){ return guests.reduce((n,g)=>{ let f=g.family_members; try{ f=Array.isArray(f)?f:(f?JSON.parse(f):[]);}catch(e){f=[];} return n + 1 + (f?f.length:0); }, 0); }
+function atGuestLimit(){ return !isPro && guestHeadcount() >= FREE_GUEST_LIMIT; }
+function showGuestUpgrade(){
+  const url = (location.origin + location.pathname.replace(/\/[^\/]*$/, '')) + '/dashboard.html?upgrade=1';
+  if(confirm('You\'ve reached the free plan limit of '+FREE_GUEST_LIMIT+' guests.\n\nUpgrade to Pro (£14.99, one-time) for unlimited guests. Open the upgrade page now?')) location.href = url;
+}
 if(!uid || !localStorage.getItem('wl_token')) location.href = 'login.html';
 function getTok() { return localStorage.getItem('wl_token'); }
 
@@ -1470,12 +1479,13 @@ async function init() {
   try {
     const [g,p,s,ic] = await Promise.all([
       sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc'),
-      sbGet('profiles?user_id=eq.'+uid+'&select=name1,name2,wedding_date,page_slug'),
+      sbGet('profiles?user_id=eq.'+uid+'&select=name1,name2,wedding_date,page_slug,is_pro'),
       sbGet('settings?user_id=eq.'+uid+'&key=eq.menu_config'),
       sbGet('settings?user_id=eq.'+uid+'&key=eq.invitation_config')
     ]);
     guests = g || [];
     prof   = (p && p[0]) ? p[0] : {};
+    isPro  = prof.is_pro === true;
     if(s && s[0] && s[0].value) {
       try { menuCfg = JSON.parse(s[0].value); } catch(e) {}
     }
@@ -1895,6 +1905,8 @@ async function saveGuest() {
       renderFamilyList(); return;
     }
   }
+  // Free-plan gate — only blocks brand-new guests, never edits
+  if(!document.getElementById('fId').value && atGuestLimit()){ showGuestUpgrade(); return; }
   const name = [fFirst, fLast].filter(Boolean).join(' ');
   const btn = document.getElementById('saveBtn');
   btn.querySelector('span').textContent = 'Saving…'; btn.disabled = true;
@@ -2348,6 +2360,14 @@ function previewCSV(inp) {
 
 async function doImport() {
   if(!csvRows.length) return;
+  if(!isPro){
+    const room = FREE_GUEST_LIMIT - guestHeadcount();
+    if(room <= 0){ showGuestUpgrade(); return; }
+    if(csvRows.length > room){
+      if(!confirm('Free plan allows '+FREE_GUEST_LIMIT+' guests. Only the first '+room+' of '+csvRows.length+' will import.\n\nUpgrade to Pro (£14.99) for unlimited. Continue with '+room+'?')) return;
+      csvRows = csvRows.slice(0, room);
+    }
+  }
   const btn=document.getElementById('importBtn'); btn.textContent='Importing…'; btn.disabled=true;
   let n=0;
   for(const g of csvRows){ const r=await sbPost('guests',g); if(r){guests.push(r);n++;} }
