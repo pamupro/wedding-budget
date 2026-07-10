@@ -179,13 +179,20 @@ async function loadProfile() {
     profile=rows[0]; isPro=profile.is_pro===true;
     renderHero();
     updateProBadge();
-    // Auto-open welcome modal if no names set yet
-    if (!profile.name1 && !profile.name2) {
+    const params = new URLSearchParams(location.search);
+    const justSignedUp = params.get('welcome') === '1';
+    // Auto-open onboarding only for users who DIDN'T come through the new wizard
+    if (!profile.name1 && !profile.name2 && !justSignedUp) {
       setTimeout(()=>openWelcomeModal(), 500);
     }
-    // Deep-link from the guest page's "upgrade" prompt
-    if (!isPro && new URLSearchParams(location.search).get('upgrade') === '1') {
-      setTimeout(()=>openUpgradeModal(), 400);
+    if (justSignedUp) {
+      const nm = profile.name1 ? (', ' + profile.name1) : '';
+      setTimeout(()=>showToast(`Welcome to WeddingLedger${nm}! 🎉 Everything's ready — you can edit any detail anytime.`), 600);
+      history.replaceState(null,'',location.pathname);  // clean the URL
+    }
+    // Pro purchase path (from wizard or guest limit)
+    if (!isPro && params.get('upgrade') === '1') {
+      setTimeout(()=>openUpgradeModal(), 700);
     }
   } else {
     // No profile row at all — create one then show welcome
@@ -304,6 +311,7 @@ async function loadSettings() {
     if(r.key==='share_enabled') shareEnabled=r.value==='true';
     if(r.key==='share_permissions'){try{sharePermissions=JSON.parse(r.value);}catch(e){}}
     if(r.key==='currency'){activeCurrency=r.value||'GBP';setCurrencyUI(activeCurrency);}
+    if(r.key==='pref_currency' && r.value){ activeCurrency=r.value; setCurrencyUI(activeCurrency); }
     if(r.key==='vendor_limit'){
       // Admin-assigned custom vendor limit
       const lim=parseInt(r.value)||0;

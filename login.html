@@ -295,6 +295,41 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
   .field-row{grid-template-columns:1fr}
   .social-row{flex-direction:column}
 }
+
+/* ─── SIGNUP WIZARD ─── */
+.wiz-steps{display:flex;gap:6px;margin-bottom:22px}
+.wiz-dot{flex:1;height:4px;border-radius:2px;background:var(--bg2);transition:.3s}
+.wiz-dot.done{background:var(--gold2)}
+.wiz-dot.active{background:var(--gold)}
+.wiz-step{display:none;animation:wizIn .35s ease both}
+.wiz-step.active{display:block}
+@keyframes wizIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.wiz-eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.wiz-q{font-family:'Fraunces',serif;font-size:26px;font-weight:200;line-height:1.15;margin-bottom:6px}
+.wiz-q em{font-style:italic;color:var(--gold2)}
+.wiz-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.wiz-nav{display:flex;gap:10px;margin-top:22px}
+.wiz-back{background:none;border:1px solid var(--gold-dim);color:var(--muted);border-radius:8px;padding:13px 18px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:.2s}
+.wiz-back:hover{border-color:var(--gold);color:var(--ink)}
+.wiz-next{flex:1}
+.wiz-skip{display:block;text-align:center;margin-top:14px;font-size:12.5px;color:var(--muted);background:none;border:none;cursor:pointer;width:100%;font-family:'Instrument Sans',sans-serif}
+.wiz-skip:hover{color:var(--gold)}
+.budget-chips,.guest-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.wiz-chip{border:1.5px solid var(--gold-dim);border-radius:10px;padding:12px 10px;text-align:center;cursor:pointer;transition:.15s;background:var(--surface)}
+.wiz-chip:hover{border-color:var(--gold)}
+.wiz-chip.sel{border-color:var(--gold);background:var(--gold-pale)}
+.wiz-chip b{display:block;font-size:14px;color:var(--ink)}
+.wiz-chip span{font-size:10.5px;color:var(--muted)}
+.wiz-cur{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.wiz-cur select{border:1.5px solid var(--gold-dim);border-radius:8px;padding:12px;font-family:inherit;font-size:14px;background:var(--surface);cursor:pointer}
+/* pro upsell step */
+.wiz-pro{border:2px solid var(--gold);border-radius:16px;padding:22px;background:linear-gradient(135deg,var(--gold-pale),var(--surface));text-align:center;margin-bottom:16px}
+.wiz-pro-price{font-family:'Fraunces',serif;font-size:44px;font-weight:200;color:var(--gold);line-height:1}
+.wiz-pro-per{font-size:12px;color:var(--muted);margin-bottom:16px}
+.wiz-pro-feats{list-style:none;font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:8px;text-align:left;max-width:260px;margin:0 auto 4px}
+.wiz-pro-feats li::before{content:'✓ ';color:var(--gold);font-weight:700}
+.wiz-summary{background:var(--bg2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--muted);margin-bottom:16px;line-height:1.7}
+.wiz-summary b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -426,19 +461,19 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
           Sign up with Google
         </button>
       </div>
-      <div class="divider">or fill in your details</div>
-      <div class="form-body">
-        <div class="field-row">
-          <div class="field">
-            <label for="sN1">Your name</label>
-            <input type="text" class="fi" id="sN1" placeholder="Charlotte" autocomplete="given-name">
-          </div>
-          <div class="field">
-            <label for="sN2">Partner's name</label>
-            <input type="text" class="fi" id="sN2" placeholder="James" autocomplete="off">
-          </div>
-        </div>
-        <div class="field">
+      <div class="divider">or set up in a few steps</div>
+
+      <!-- progress -->
+      <div class="wiz-steps" id="wizDots">
+        <div class="wiz-dot active"></div><div class="wiz-dot"></div><div class="wiz-dot"></div><div class="wiz-dot"></div><div class="wiz-dot"></div><div class="wiz-dot"></div>
+      </div>
+
+      <!-- STEP 1: account -->
+      <div class="wiz-step active" id="wizStep0">
+        <div class="wiz-eyebrow">Step 1 of 6</div>
+        <div class="wiz-q">Create your <em>account</em></div>
+        <div class="wiz-sub">Free forever. No card needed to start.</div>
+        <div class="field" style="margin-bottom:12px">
           <label for="sEmail">Email address</label>
           <input type="email" class="fi" id="sEmail" placeholder="your@email.com" autocomplete="email">
         </div>
@@ -446,14 +481,105 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
           <label for="sPass">Password</label>
           <input type="password" class="fi" id="sPass" placeholder="At least 6 characters" autocomplete="new-password">
         </div>
-        <div class="field">
-          <label for="sDate">Wedding date <span class="fi-hint">(optional)</span></label>
-          <input type="date" class="fi" id="sDate">
+        <div class="msg err-msg" id="eSignup0" style="margin-top:12px"></div>
+        <button class="submit-btn wiz-next" onclick="wizNext(0)" style="margin-top:16px">Continue →</button>
+      </div>
+
+      <!-- STEP 2: names -->
+      <div class="wiz-step" id="wizStep1">
+        <div class="wiz-eyebrow">Step 2 of 6</div>
+        <div class="wiz-q">Who's getting <em>married?</em></div>
+        <div class="wiz-sub">We'll use these names across your dashboard and invitation.</div>
+        <div class="field-row">
+          <div class="field"><label for="sN1">Your name</label><input type="text" class="fi" id="sN1" placeholder="Charlotte" autocomplete="given-name"></div>
+          <div class="field"><label for="sN2">Partner's name</label><input type="text" class="fi" id="sN2" placeholder="James"></div>
+        </div>
+        <div class="wiz-nav">
+          <button class="wiz-back" onclick="wizGo(0)">←</button>
+          <button class="submit-btn wiz-next" onclick="wizNext(1)">Continue →</button>
+        </div>
+        <div class="msg err-msg" id="eSignup1" style="margin-top:10px"></div>
+      </div>
+
+      <!-- STEP 3: date -->
+      <div class="wiz-step" id="wizStep2">
+        <div class="wiz-eyebrow">Step 3 of 6</div>
+        <div class="wiz-q">When's the <em>big day?</em></div>
+        <div class="wiz-sub">We'll count down for you. You can change this anytime.</div>
+        <div class="field"><label for="sDate">Wedding date</label><input type="date" class="fi" id="sDate"></div>
+        <div class="wiz-nav">
+          <button class="wiz-back" onclick="wizGo(1)">←</button>
+          <button class="submit-btn wiz-next" onclick="wizNext(2)">Continue →</button>
+        </div>
+        <button class="wiz-skip" onclick="wizNext(2,true)">We haven't set a date yet →</button>
+      </div>
+
+      <!-- STEP 4: budget -->
+      <div class="wiz-step" id="wizStep3">
+        <div class="wiz-eyebrow">Step 4 of 6</div>
+        <div class="wiz-q">What's your <em>budget?</em></div>
+        <div class="wiz-sub">A rough figure is fine — it helps track spending. Tap a range or enter your own.</div>
+        <div class="budget-chips" id="budgetChips">
+          <div class="wiz-chip" data-v="10000" onclick="wizPickBudget(this,10000)"><b>£10k</b><span>Intimate</span></div>
+          <div class="wiz-chip" data-v="20000" onclick="wizPickBudget(this,20000)"><b>£20k</b><span>Average UK</span></div>
+          <div class="wiz-chip" data-v="35000" onclick="wizPickBudget(this,35000)"><b>£35k</b><span>Grand</span></div>
+          <div class="wiz-chip" data-v="50000" onclick="wizPickBudget(this,50000)"><b>£50k+</b><span>Luxury</span></div>
+        </div>
+        <div class="wiz-cur">
+          <select id="sCurrency">
+            <option value="GBP">£ GBP</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option><option value="LKR">Rs LKR</option><option value="AUD">$ AUD</option><option value="INR">₹ INR</option>
+          </select>
+          <input type="number" class="fi" id="sBudget" placeholder="Or enter exact amount" style="flex:1" oninput="wizClearChips()">
+        </div>
+        <div class="wiz-nav">
+          <button class="wiz-back" onclick="wizGo(2)">←</button>
+          <button class="submit-btn wiz-next" onclick="wizNext(3)">Continue →</button>
+        </div>
+        <button class="wiz-skip" onclick="wizNext(3,true)">I'll set this later →</button>
+      </div>
+
+      <!-- STEP 5: guests -->
+      <div class="wiz-step" id="wizStep4">
+        <div class="wiz-eyebrow">Step 5 of 6</div>
+        <div class="wiz-q">How many <em>guests?</em></div>
+        <div class="wiz-sub">Roughly how many people are you expecting?</div>
+        <div class="guest-chips" id="guestChips">
+          <div class="wiz-chip" data-v="30"  onclick="wizPickGuests(this,30)"><b>~30</b><span>Intimate</span></div>
+          <div class="wiz-chip" data-v="75"  onclick="wizPickGuests(this,75)"><b>~75</b><span>Medium</span></div>
+          <div class="wiz-chip" data-v="150" onclick="wizPickGuests(this,150)"><b>~150</b><span>Large</span></div>
+          <div class="wiz-chip" data-v="250" onclick="wizPickGuests(this,250)"><b>250+</b><span>Big celebration</span></div>
+        </div>
+        <input type="number" class="fi" id="sGuests" placeholder="Or enter a number" oninput="wizClearGuestChips()">
+        <div class="wiz-nav">
+          <button class="wiz-back" onclick="wizGo(3)">←</button>
+          <button class="submit-btn wiz-next" onclick="wizNext(4)">Continue →</button>
+        </div>
+        <button class="wiz-skip" onclick="wizNext(4,true)">Not sure yet →</button>
+      </div>
+
+      <!-- STEP 6: pro upsell -->
+      <div class="wiz-step" id="wizStep5">
+        <div class="wiz-eyebrow">Last step ✨</div>
+        <div class="wiz-q">Unlock <em>everything?</em></div>
+        <div class="wiz-summary" id="wizSummary"></div>
+        <div class="wiz-pro">
+          <div class="wiz-eyebrow" style="color:var(--gold)">WeddingLedger Pro</div>
+          <div class="wiz-pro-price">£<span id="wizProPrice">14.99</span></div>
+          <div class="wiz-pro-per">one payment · lifetime access · no subscription</div>
+          <ul class="wiz-pro-feats">
+            <li>Unlimited vendors &amp; guests</li>
+            <li>Seating chart planner</li>
+            <li>Partner collaboration</li>
+            <li>Public wedding page &amp; RSVP</li>
+            <li>PDF exports &amp; every feature</li>
+          </ul>
         </div>
         <div class="msg err-msg" id="eSignup"></div>
         <div class="msg ok-msg" id="okSignup"></div>
-        <button class="submit-btn" id="sBtn" onclick="doSignup()">Create My Account →</button>
+        <button class="submit-btn" id="sBtnPro" onclick="finishSignup(true)">Get Pro &amp; start planning →</button>
+        <button class="wiz-skip" onclick="finishSignup(false)" style="margin-top:16px;font-weight:600;color:var(--gold)">Start free — I'll upgrade later</button>
       </div>
+
       <div class="switch-prompt">
         Already have an account? <a href="#" onclick="sw('login');return false">Sign in</a>
       </div>
@@ -496,27 +622,163 @@ async function doLogin(){
   }catch(e){se('eLogin',e.message);btn.disabled=false;btn.textContent='Sign In →';}
 }
 
-async function doSignup(){
-  const n1=document.getElementById('sN1').value.trim();
-  const n2=document.getElementById('sN2').value.trim();
-  const email=document.getElementById('sEmail').value.trim();
-  const pw=document.getElementById('sPass').value;
-  const wd=document.getElementById('sDate').value;
-  if(!email||!pw){se('eSignup','Email and password are required');return;}
-  if(pw.length<6){se('eSignup','Password must be at least 6 characters');return;}
-  const btn=document.getElementById('sBtn');btn.disabled=true;btn.textContent='Creating account…';
+// Open the right tab based on how the user arrived from the homepage
+(function applyIntent(){
+  const intent = new URLSearchParams(location.search).get('intent');
+  if(intent === 'pro' || intent === 'signup'){
+    sw('signup');
+    if(intent === 'pro') window._wizProIntent = true;  // (upsell step highlights Pro)
+  }
+})();
+
+// ─────────────── SIGNUP WIZARD ───────────────
+const wizData = { budget:null, guests:null, currency:'GBP' };
+let wizStep = 0;
+const WIZ_LAST = 5;
+
+function wizGo(n){
+  document.querySelectorAll('.wiz-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('wizStep'+n).classList.add('active');
+  const dots = document.querySelectorAll('#wizDots .wiz-dot');
+  dots.forEach((d,i)=>{ d.className = 'wiz-dot' + (i<n?' done':i===n?' active':''); });
+  wizStep = n;
+  if(n === WIZ_LAST) renderWizSummary();
+  const first = document.querySelector('#wizStep'+n+' input');
+  if(first) setTimeout(()=>first.focus(), 100);
+}
+
+function wizNext(from, skip){
+  // validation per step
+  if(from === 0){
+    const email = document.getElementById('sEmail').value.trim();
+    const pw    = document.getElementById('sPass').value;
+    if(!email){ se('eSignup0','Please enter your email'); return; }
+    if(pw.length < 6){ se('eSignup0','Password must be at least 6 characters'); return; }
+  }
+  if(from === 1 && !skip){
+    if(!document.getElementById('sN1').value.trim()){ se('eSignup1','Please enter your name'); return; }
+  }
+  wizGo(from + 1);
+}
+
+function wizPickBudget(el, v){
+  document.querySelectorAll('#budgetChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  wizData.budget = v;
+  document.getElementById('sBudget').value = '';
+}
+function wizClearChips(){
+  document.querySelectorAll('#budgetChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  wizData.budget = null;
+}
+function wizPickGuests(el, v){
+  document.querySelectorAll('#guestChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  wizData.guests = v;
+  document.getElementById('sGuests').value = '';
+}
+function wizClearGuestChips(){
+  document.querySelectorAll('#guestChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  wizData.guests = null;
+}
+
+function collectWiz(){
+  wizData.currency = document.getElementById('sCurrency').value;
+  const bTyped = parseFloat(document.getElementById('sBudget').value);
+  if(!isNaN(bTyped) && bTyped > 0) wizData.budget = bTyped;
+  const gTyped = parseInt(document.getElementById('sGuests').value, 10);
+  if(!isNaN(gTyped) && gTyped > 0) wizData.guests = gTyped;
+}
+
+function renderWizSummary(){
+  collectWiz();
+  const n1 = document.getElementById('sN1').value.trim();
+  const n2 = document.getElementById('sN2').value.trim();
+  const wd = document.getElementById('sDate').value;
+  const parts = [];
+  if(n1||n2) parts.push('<b>'+[n1,n2].filter(Boolean).join(' & ')+'</b>');
+  if(wd){ const d=new Date(wd+'T00:00:00'); parts.push('📅 '+d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})); }
+  const sym = {GBP:'£',USD:'$',EUR:'€',LKR:'Rs ',AUD:'$',INR:'₹'}[wizData.currency]||'';
+  if(wizData.budget) parts.push('💰 '+sym+Number(wizData.budget).toLocaleString());
+  if(wizData.guests) parts.push('👥 ~'+wizData.guests+' guests');
+  const box = document.getElementById('wizSummary');
+  box.innerHTML = parts.length ? parts.join('<br>') : 'Your details are saved — you can edit everything anytime.';
+  const pp = document.getElementById('wizProPrice');
+  if(pp && window.WL_PRICE) pp.textContent = window.WL_PRICE;
+}
+
+// Pull the live Pro price for the upsell
+(function loadWizPrice(){
+  fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.sub_price&select=value`, { headers:{apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+SUPABASE_ANON_KEY} })
+    .then(r=>r.json()).then(rows=>{
+      if(rows && rows[0] && parseFloat(rows[0].value) > 0){
+        window.WL_PRICE = parseFloat(rows[0].value).toFixed(2);
+        const pp = document.getElementById('wizProPrice'); if(pp) pp.textContent = window.WL_PRICE;
+      }
+    }).catch(()=>{});
+})();
+
+// Create the account + profile, then route to dashboard (or payment)
+async function finishSignup(wantsPro){
+  collectWiz();
+  const email = document.getElementById('sEmail').value.trim();
+  const pw    = document.getElementById('sPass').value;
+  const n1    = document.getElementById('sN1').value.trim();
+  const n2    = document.getElementById('sN2').value.trim();
+  const wd    = document.getElementById('sDate').value;
+  if(!email || pw.length < 6){ wizGo(0); se('eSignup0','Please complete your email and password'); return; }
+
+  const btn = document.getElementById('sBtnPro');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Creating your account…';
+
   try{
-    const r=await fetch(`${SUPABASE_URL}/auth/v1/signup`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},body:JSON.stringify({email,password:pw,data:{name1:n1,name2:n2,wedding_date:wd}})});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error_description||d.msg||'Signup failed');
-    if(d.access_token){
-      localStorage.setItem('wl_token',d.access_token);
-      localStorage.setItem('wl_refresh',d.refresh_token||'');
-      localStorage.setItem('wl_uid',d.user.id);
-      await fetch(`${SUPABASE_URL}/rest/v1/profiles`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${d.access_token}`,'Prefer':'return=minimal'},body:JSON.stringify({user_id:d.user.id,name1:n1,name2:n2,wedding_date:wd||null,email})});
-      window.location.href='dashboard.html';
-    }else{so('okSignup','✅ Check your email to confirm your account, then sign in!');btn.textContent='Check your email!';}
-  }catch(e){se('eSignup',e.message);btn.disabled=false;btn.textContent='Create My Account →';}
+    // 1. Create auth user (email confirmation is OFF in Supabase, so we get a token straight away)
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+      body: JSON.stringify({ email, password:pw, data:{ name1:n1, name2:n2 } })
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error_description || d.msg || 'Signup failed');
+
+    // If confirmation is still on, there's no token — tell them clearly
+    if(!d.access_token){
+      so('okSignup','✅ Account created! Please check your email to confirm, then sign in.');
+      btn.disabled=false; btn.textContent=orig; return;
+    }
+
+    localStorage.setItem('wl_token',   d.access_token);
+    localStorage.setItem('wl_refresh', d.refresh_token || '');
+    localStorage.setItem('wl_uid',     d.user.id);
+    const uid = d.user.id;
+    const H = {'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+d.access_token};
+
+    // 2. Create the profile with everything collected
+    await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+      method:'POST', headers:{...H,'Prefer':'return=minimal'},
+      body: JSON.stringify({ user_id:uid, name1:n1, name2:n2, wedding_date: wd||null, email })
+    });
+
+    // 3. Save budget (spend_limit) + guest estimate as settings, in the chosen currency
+    const settingsRows = [];
+    if(wizData.budget){
+      settingsRows.push({ user_id:uid, key:'spend_limit',
+        value: JSON.stringify({ gbp: wizData.budget, original: wizData.budget, currency: wizData.currency }) });
+    }
+    if(wizData.guests) settingsRows.push({ user_id:uid, key:'expected_guests', value: String(wizData.guests) });
+    if(wizData.currency && wizData.currency!=='GBP') settingsRows.push({ user_id:uid, key:'pref_currency', value: wizData.currency });
+    if(settingsRows.length){
+      await fetch(`${SUPABASE_URL}/rest/v1/settings`, {
+        method:'POST', headers:{...H,'Prefer':'return=minimal'}, body: JSON.stringify(settingsRows)
+      });
+    }
+
+    // 4. Route: Pro path → dashboard with payment auto-open; free → dashboard
+    window.location.href = wantsPro ? 'dashboard.html?upgrade=1&welcome=1' : 'dashboard.html?welcome=1';
+  }catch(e){
+    se('eSignup', e.message);
+    btn.disabled=false; btn.textContent=orig;
+  }
 }
 
 async function doReset(){
