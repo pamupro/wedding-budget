@@ -526,28 +526,54 @@ async function doReset(){
   so('okLogin','✅ Password reset email sent!');
 }
 
-async function doGoogleAuth(){
-  try{
-    window.location.href=`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin+'/wedding-budget/dashboard.html')}`;
-  }catch(e){se('eLogin','Google sign-in failed: '+e.message);}
-}
-async function doFacebookAuth(){
-  try{
-    window.location.href=`${SUPABASE_URL}/auth/v1/authorize?provider=facebook&redirect_to=${encodeURIComponent(location.origin+'/wedding-budget/dashboard.html')}`;
-  }catch(e){se('eLogin','Facebook sign-in failed: '+e.message);}
-}
+// Works on any domain — no hardcoded paths
+const OAUTH_BASE = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
 
-// Handle OAuth redirect
-(function handleOAuthRedirect(){
-  const hash=window.location.hash;
+function oauthStart(provider){
+  // Return to THIS page: the handler below captures the tokens, then forwards
+  window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(OAUTH_BASE + '/login.html')}`;
+}
+async function doGoogleAuth(){   try{ oauthStart('google');   }catch(e){ se('eLogin','Google sign-in failed: '+e.message); } }
+async function doFacebookAuth(){ try{ oauthStart('facebook'); }catch(e){ se('eLogin','Facebook sign-in failed: '+e.message); } }
+
+// Handle OAuth redirect: store session, make sure a profile exists, then enter
+(async function handleOAuthRedirect(){
+  const hash = window.location.hash;
   if(!hash) return;
-  const params=new URLSearchParams(hash.replace('#',''));
-  const token=params.get('access_token');
-  if(token){
-    localStorage.setItem('wl_token',token);
-    try{const p=JSON.parse(atob(token.split('.')[1]));if(p.sub)localStorage.setItem('wl_uid',p.sub);}catch(e){}
-    window.location.href='dashboard.html';
-  }
+  const params = new URLSearchParams(hash.replace('#',''));
+  const token  = params.get('access_token');
+  if(!token) return;
+
+  localStorage.setItem('wl_token', token);
+  localStorage.setItem('wl_refresh', params.get('refresh_token') || '');
+
+  let uid = '', email = '', fullName = '';
+  try{
+    const p = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    uid = p.sub || '';
+    email = p.email || '';
+    fullName = (p.user_metadata && (p.user_metadata.full_name || p.user_metadata.name)) || '';
+  }catch(e){}
+  if(uid) localStorage.setItem('wl_uid', uid);
+
+  // First social sign-in has no profile row yet — create one so the
+  // dashboard onboarding can take over from there.
+  try{
+    if(uid){
+      const h = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token };
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=id`, { headers: h });
+      const rows = await r.json();
+      if(Array.isArray(rows) && rows.length === 0){
+        await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+          method: 'POST',
+          headers: { ...h, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ user_id: uid, email, name1: fullName.split(' ')[0] || '', name2: '' })
+        });
+      }
+    }
+  }catch(e){ console.warn('profile ensure', e); }
+
+  window.location.replace('dashboard.html');
 })();
 
 // Only redirect to dashboard if token is actually valid (not expired)
