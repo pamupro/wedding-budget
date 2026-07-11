@@ -305,7 +305,7 @@ async function loadTasks() {
 // ─── PLATFORM SETTINGS (admin-configured, loaded for all users) ──────────────
 async function loadPlatformSettings() {
   try {
-    const rows = await DB.query('settings?key=in.(sub_price,stripe_link)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2&limit=10', accessToken);
+    const rows = await DB.query('settings?key=in.(sub_price,stripe_link)&user_id=eq.ff1e6eb2-4d70-4253-b30a-2fc4e594edab&limit=10', accessToken);
     if(rows) rows.forEach(r => {
       if(r.key === 'sub_price')              window.WL_SUB_PRICE         = r.value;
       if(r.key === 'stripe_link')            window.WL_STRIPE_LINK       = r.value;

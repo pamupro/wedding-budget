@@ -2054,7 +2054,7 @@ function changeAdminPassword() {
 // ─── PLATFORM SETTINGS (subscription price etc) ──────────────────────────────
 async function loadPlatformSettings(){
   try {
-    const rows = await dbGet('settings?key=in.(sub_price,free_vendor_limit,stripe_link)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2');
+    const rows = await dbGet('settings?key=in.(sub_price,free_vendor_limit,stripe_link)&user_id=eq.ff1e6eb2-4d70-4253-b30a-2fc4e594edab');
     if(!rows) return;
     const map = {};
     rows.forEach(r => map[r.key] = r.value);
@@ -2084,7 +2084,7 @@ async function savePlatformSettings(){
     ];
     if(vendorLimit) settings.push({ key:'free_vendor_limit', value: vendorLimit });
 
-    const PLATFORM_UID = 'a151e7e9-25db-4d03-9a17-1ddcf8aa53a2'; // homepage + app read platform config from here
+    const PLATFORM_UID = 'ff1e6eb2-4d70-4253-b30a-2fc4e594edab'; // homepage + app read platform config from here
     for(const s of settings){
       const existing = await dbGet('settings?key=eq.'+s.key+'&user_id=eq.'+PLATFORM_UID+'&select=id');
       if(existing && existing.length){
