@@ -815,11 +815,11 @@ async function doReset(){
 }
 
 // Works on any domain — no hardcoded paths
-const OAUTH_BASE = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
+function oauthBase(){ return location.origin + location.pathname.replace(/\/[^\/]*$/, ''); }
 
 function oauthStart(provider){
   // Return to THIS page: the handler below captures the tokens, then forwards
-  window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(OAUTH_BASE + '/login.html')}`;
+  window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(oauthBase() + '/login.html')}`;
 }
 async function doGoogleAuth(){   try{ oauthStart('google');   }catch(e){ se('eLogin','Google sign-in failed: '+e.message); } }
 
