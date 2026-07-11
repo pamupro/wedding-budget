@@ -1252,6 +1252,7 @@ const ADMIN_URL  = 'https://bqggtyguhedlyfffjkkw.supabase.co';
 // RLS policies grant that account read/manage access — no service key in the client.
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 let adminToken = sessionStorage.getItem('wl_admin_jwt') || '';
+let adminUid   = sessionStorage.getItem('wl_admin_uid') || '';
 function authH() {
   return {
     'apikey': ANON_KEY,
@@ -1320,7 +1321,9 @@ async function adminLogin() {
     const prof = await pr.json();
     if(!prof || !prof[0] || prof[0].is_admin !== true) throw new Error('This account does not have admin access');
     adminToken = d.access_token;
+    adminUid   = d.user.id;
     sessionStorage.setItem('wl_admin_jwt', adminToken);
+    sessionStorage.setItem('wl_admin_uid', adminUid);
     enterAdmin();
   } catch(e) {
     err.textContent = '⚠ ' + (e.message || 'Sign-in failed');
@@ -1334,7 +1337,7 @@ function enterAdmin() {
   loadAllData();
 }
 function adminLogout() {
-  adminToken=''; sessionStorage.removeItem('wl_admin_jwt');
+  adminToken=''; adminUid=''; sessionStorage.removeItem('wl_admin_jwt'); sessionStorage.removeItem('wl_admin_uid');
   document.getElementById('loginGate').style.display='flex';
   document.getElementById('adminApp').style.display='none';
   document.getElementById('mobileTopbar').style.display='none';
@@ -1349,7 +1352,7 @@ function adminLogout() {
     const u = await r.json();
     const pr = await fetch(ADMIN_URL + '/rest/v1/profiles?user_id=eq.' + u.id + '&select=is_admin', { headers: { 'apikey': ANON_KEY, 'Authorization': 'Bearer ' + adminToken } });
     const prof = await pr.json();
-    if(prof && prof[0] && prof[0].is_admin === true) { window.addEventListener('DOMContentLoaded', enterAdmin); if(document.readyState!=='loading') enterAdmin(); }
+    if(prof && prof[0] && prof[0].is_admin === true) { adminUid = u.id; sessionStorage.setItem('wl_admin_uid', adminUid); window.addEventListener('DOMContentLoaded', enterAdmin); if(document.readyState!=='loading') enterAdmin(); }
     else throw 0;
   } catch(e) { adminToken=''; sessionStorage.removeItem('wl_admin_jwt'); }
 })();
@@ -2081,13 +2084,13 @@ async function savePlatformSettings(){
     ];
     if(vendorLimit) settings.push({ key:'free_vendor_limit', value: vendorLimit });
 
-    const ADMIN_UID = 'a151e7e9-25db-4d03-9a17-1ddcf8aa53a2';
+    const PLATFORM_UID = 'a151e7e9-25db-4d03-9a17-1ddcf8aa53a2'; // homepage + app read platform config from here
     for(const s of settings){
-      const existing = await dbGet('settings?key=eq.'+s.key+'&user_id=eq.'+ADMIN_UID+'&select=id');
+      const existing = await dbGet('settings?key=eq.'+s.key+'&user_id=eq.'+PLATFORM_UID+'&select=id');
       if(existing && existing.length){
-        await dbPatch('settings', 'key=eq.'+s.key+'&user_id=eq.'+ADMIN_UID, { value: s.value });
+        await dbPatch('settings', 'key=eq.'+s.key+'&user_id=eq.'+PLATFORM_UID, { value: s.value });
       } else {
-        await dbPost('settings', { key: s.key, value: s.value, user_id: ADMIN_UID });
+        await dbPost('settings', { key: s.key, value: s.value, user_id: PLATFORM_UID });
       }
     }
 
