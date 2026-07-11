@@ -732,11 +732,6 @@ textarea.modal-input{resize:vertical;min-height:80px}
 }
 </style>
 
-<!-- PayPal SDK — loaded after DOM ready so defer scripts are available -->
-<script>
-// PayPal SDK loads lazily only when upgrade modal opens (via initPayPal in app.js)
-// This avoids blocking page load and CSP issues on GitHub Pages
-</script>
 </head>
 <body>
 
@@ -1061,15 +1056,20 @@ textarea.modal-input{resize:vertical;min-height:80px}
       </div>
 
       <div style="font-size:11px;color:var(--muted2);text-align:center;margin-bottom:16px">
-        Secure one-time payment via PayPal · Instant lifetime access
+        🔒 Secure one-time payment · Instant lifetime access
       </div>
 
-      <div id="paypalButtonContainer" style="margin-top:4px"></div>
-      <div id="paypalFallback" style="margin-top:12px;display:none">
-        <a id="paypalDirectLink" href="#" target="_blank"
-          style="display:flex;align-items:center;justify-content:center;gap:10px;background:#FFC439;border:none;border-radius:99px;padding:13px 22px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:700;color:#003087;text-decoration:none">
-          <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" height="16"> Pay with PayPal
-        </a>
+      <button id="stripePayBtn" onclick="startStripeCheckout()"
+        style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;background:var(--gold);color:#fff;border:none;border-radius:99px;padding:15px 22px;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.2s"
+        onmouseover="this.style.background='var(--ink)'" onmouseout="this.style.background='var(--gold)'">
+        Unlock Pro — £<span id="stripePayPrice">14.99</span> →
+      </button>
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font-size:11px;color:var(--muted2)">
+        <span>Powered by</span><strong style="color:#635bff">Stripe</strong><span>· cards, Apple&nbsp;Pay &amp; Google&nbsp;Pay</span>
+      </div>
+
+      <div id="stripeReturnNotice" style="display:none;margin-top:14px;padding:12px;background:var(--gold-pale);border-radius:10px;font-size:12.5px;color:var(--ink);text-align:center;line-height:1.6">
+        Finished paying? <button onclick="manualActivateCheck()" style="background:none;border:none;color:var(--gold);font-weight:700;text-decoration:underline;cursor:pointer;font-size:12.5px">Tap here to unlock Pro</button>
       </div>
 
     </div>

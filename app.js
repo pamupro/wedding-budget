@@ -188,7 +188,18 @@ async function loadProfile() {
     if (justSignedUp) {
       const nm = profile.name1 ? (', ' + profile.name1) : '';
       setTimeout(()=>showToast(`Welcome to WeddingLedger${nm}! 🎉 Everything's ready — you can edit any detail anytime.`), 600);
-      history.replaceState(null,'',location.pathname);  // clean the URL
+    }
+    // Returning from Stripe checkout — activate Pro
+    if (params.get('paid') === '1') {
+      history.replaceState(null,'',location.pathname);
+      if(!isPro){
+        setTimeout(async ()=>{
+          await activatePro('stripe');
+          showToast('🎉 Payment complete — welcome to Pro! Everything is unlocked.');
+        }, 400);
+      }
+    } else if (justSignedUp) {
+      history.replaceState(null,'',location.pathname);
     }
     // Pro purchase path (from wizard or guest limit)
     if (!isPro && params.get('upgrade') === '1') {
@@ -294,10 +305,10 @@ async function loadTasks() {
 // ─── PLATFORM SETTINGS (admin-configured, loaded for all users) ──────────────
 async function loadPlatformSettings() {
   try {
-    const rows = await DB.query('settings?key=in.(sub_price,paypal_plan_id)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2&limit=10', accessToken);
+    const rows = await DB.query('settings?key=in.(sub_price,stripe_link)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2&limit=10', accessToken);
     if(rows) rows.forEach(r => {
       if(r.key === 'sub_price')              window.WL_SUB_PRICE         = r.value;
-      if(r.key === 'paypal_plan_id')         window.WL_PLAN_ID           = r.value;
+      if(r.key === 'stripe_link')            window.WL_STRIPE_LINK       = r.value;
     });
   } catch(e) { /* non-critical */ }
 }
@@ -319,7 +330,7 @@ async function loadSettings() {
     }
     // Platform-wide subscription price (set by admin, stored under a system user)
     if(r.key==='sub_price') window.WL_SUB_PRICE = r.value;
-    if(r.key==='paypal_plan_id') window.WL_PLAN_ID = r.value;
+    if(r.key==='stripe_link') window.WL_STRIPE_LINK = r.value;
   });
   updateStats();updateVendorLimitUI();
 }
@@ -793,7 +804,6 @@ function copyShareUrl(){navigator.clipboard.writeText(getShareUrl()).then(()=>sh
 
 
 
-let paypalRendered = false;
 
 function openUpgradeModal(){
   const modal = document.getElementById('upgradeModal');
@@ -803,121 +813,47 @@ function openUpgradeModal(){
   const price  = parseFloat(window.WL_SUB_PRICE || '14.99').toFixed(2);
   const amountEl = document.getElementById('upgradeAmount') || modal.querySelector('.upgrade-amount');
   if(amountEl) amountEl.textContent = '£' + price;
+  const sp = document.getElementById('stripePayPrice');
+  if(sp) sp.textContent = price;
 
   modal.style.display='flex';
-  if(typeof paypal !== 'undefined' && !paypalRendered){
-    initPayPal();
-  } else if(typeof paypal === 'undefined'){
-    showPayPalFallback();
-  }
 }
 
 function closeUpgradeModal(){
   document.getElementById('upgradeModal').style.display='none';
 }
 
-window.initPayPal = function(){
-  if(typeof paypal === 'undefined'){
-    showPayPalFallback();
+// ─── STRIPE PAYMENT LINK CHECKOUT ───────────────────────────────────────────
+// The admin sets a Stripe Payment Link (created in the Stripe dashboard, no code).
+// We append the user id + a return URL so we know who paid and can bring them back.
+window.startStripeCheckout = function(){
+  const link = (window.WL_STRIPE_LINK || '').trim();
+  if(!link){
+    showToast('Payment isn\'t configured yet — please contact support.', true);
     return;
   }
+  // Build the checkout URL: pass user id (client_reference_id) so payment maps
+  // to this account, and a success return URL back to the dashboard.
+  const ret = location.origin + location.pathname + '?paid=1';
+  let url = link;
+  url += (link.includes('?') ? '&' : '?')
+       + 'client_reference_id=' + encodeURIComponent(userId)
+       + '&prefilled_email=' + encodeURIComponent(profile.email || '')
+       + '&success_url=' + encodeURIComponent(ret);
 
-  const container = document.getElementById('paypalButtonContainer');
-  if(!container) return;
+  // Reveal the "finished paying?" helper for when they come back
+  const notice = document.getElementById('stripeReturnNotice');
+  if(notice) notice.style.display = 'block';
 
-  // Reset rendered state when plan changes
-  container.innerHTML = '';
-  paypalRendered = false;
-
-  const fb = document.getElementById('paypalFallback');
-  if(fb) fb.style.display = 'none';
-
-  // Single one-time lifetime unlock
-  const price = parseFloat(window.WL_SUB_PRICE || '14.99').toFixed(2);
-  const dl = document.getElementById('paypalDirectLink');
-  if(dl) dl.href = 'https://www.paypal.com/';
-
-  paypal.Buttons({
-    style:{ layout:'vertical', color:'gold', shape:'pill', label:'pay', height:48 },
-
-    createOrder: function(data, actions){
-      return actions.order.create({
-        purchase_units:[{ amount:{ value: price, currency_code:'GBP' },
-          description:'WeddingLedger Pro — Lifetime Access' }]
-      });
-    },
-
-    onApprove: async function(data, actions){
-      try{
-        const paymentId = data.subscriptionID || data.orderID;
-        await activatePro(paymentId, false);
-        closeUpgradeModal();
-        showToast("🎉 You're now Pro! All features unlocked.");
-        renderVendors();
-      } catch(e){
-        showToast('Payment received but activation failed. Contact support.', true);
-      }
-    },
-
-    onError: function(err){
-      console.error('PayPal error:', err);
-      showPayPalFallback();
-      showToast('PayPal error — try the button below.', true);
-    }
-
-  }).render('#paypalButtonContainer')
-    .then(()=>{ paypalRendered = true; })
-    .catch(err=>{ console.error('PayPal render failed:', err); showPayPalFallback(); });
+  // Open Stripe checkout
+  window.location.href = url;
 };
 
-function showPayPalFallback(){
-  const container = document.getElementById('paypalButtonContainer');
-  if(!container) return;
-  
-  // Show both retry AND direct payment link
-  container.innerHTML = `
-    <div style="text-align:center;padding:16px;border:1px solid #e0d0c0;border-radius:12px;background:#fdf9f3">
-      <p style="font-size:13px;color:#888;margin-bottom:12px">PayPal button failed to load</p>
-      <button onclick="retryPayPal()" style="background:var(--gold);color:white;border:none;
-        border-radius:99px;padding:11px 24px;font-family:'Instrument Sans',sans-serif;font-size:13px;
-        font-weight:600;cursor:pointer;display:block;width:100%;margin-bottom:10px;">🔄 Retry PayPal</button>
-      <div style="font-size:11px;color:#aaa;margin-bottom:10px">— or pay directly —</div>
-      <a href="https://www.paypal.com/ncp/payment/REPLACE_WITH_PAYMENT_LINK" target="_blank"
-        onclick="setTimeout(()=>{document.getElementById('manualActivationNotice').style.display='block'},3000)"
-        style="display:block;background:#003087;color:white;border-radius:99px;padding:12px 24px;
-        font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;text-decoration:none;text-align:center;">
-        💳 Pay via PayPal
-      </a>
-      <p style="font-size:11px;color:#aaa;margin-top:8px">You'll be redirected to PayPal secure checkout</p>
-    </div>`;
-}
-
-function retryPayPal(){
-  // Reset and try loading SDK again
-  const container = document.getElementById('paypalButtonContainer');
-  if(container) container.innerHTML = '<div style="text-align:center;padding:12px;color:#888;font-size:13px">Loading PayPal…</div>';
-  paypalRendered = false;
-  
-  // Remove old SDK script and reload
-  const oldScript = document.querySelector('script[src*="paypal.com/sdk"]');
-  if(oldScript) oldScript.remove();
-  
-  const s = document.createElement('script');
-  s.src = document.querySelector('script[data-paypal-src]')?.dataset.paypalSrc || 
-    'https://www.paypal.com/sdk/js?client-id=AcMxe9xGOHUIKBPp9c8yOL5XOc-eKbG3ydN4okrzXxnfICJQG3gk1598QcS2ERHQ9MDcQdmKiBo4IWX4&currency=GBP&intent=capture';
-  s.onload = function(){ initPayPal(); };
-  s.onerror = function(){ 
-    if(container) container.innerHTML = '<div style="text-align:center;padding:12px;color:#c04040;font-size:13px">⚠️ PayPal unavailable — please try again later</div>';
-  };
-  document.head.appendChild(s);
-}
-
-async function activatePro(paymentId, isSubscription=false){
+async function activatePro(paymentId){
   try{
     const patch = {
       is_pro: true,
-      paypal_order_id: paymentId,
-      subscription_id: isSubscription ? paymentId : null,
+      paypal_order_id: paymentId || 'stripe',
       subscription_status: 'active',
       subscription_start: new Date().toISOString()
     };
@@ -957,10 +893,10 @@ async function manualActivateCheck(){
     } else {
       const notice = document.getElementById('manualActivationNotice');
       if(notice){
-        notice.innerHTML = '<div style="font-size:14px;margin-bottom:8px">⏳ Payment not yet confirmed</div>' +
+        notice.innerHTML = '<div style="font-size:14px;margin-bottom:8px">⏳ Payment not confirmed yet</div>' +
             '<p style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.5">' +
-            'Email your PayPal receipt to:<br><strong>pamupvt@gmail.com</strong><br>' +
-            "We'll activate your Pro within a few hours.</p>" +
+            'If you just paid, give it a few seconds and tap again. Still stuck? ' +
+            'Email your Stripe receipt to <strong>support@wedding-ledger.com</strong> and we\'ll sort it fast.</p>' +
             '<button onclick="closeUpgradeModal()" style="background:var(--gold);color:white;border:none;' +
             'border-radius:99px;padding:9px 20px;font-family:sans-serif;font-size:13px;font-weight:600;cursor:pointer;">' +
             'Got it</button>';

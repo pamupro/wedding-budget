@@ -1130,6 +1130,12 @@ tbody tr:hover td{background:rgba(160,120,40,.025)}
             </div>
           </div>
 
+          <div style="margin-bottom:16px">
+            <label class="s-label">Stripe Payment Link</label>
+            <input type="url" id="stripeLink" class="s-input" placeholder="https://buy.stripe.com/xxxxxxxx" style="width:100%">
+            <div style="font-size:10px;color:var(--muted2);margin-top:4px">Create a Payment Link in your Stripe dashboard (Product £14.99, one-time) and paste it here. This is where couples pay.</div>
+          </div>
+
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <button class="s-btn" onclick="savePlatformSettings()" style="margin-top:0">💾 Save Pricing Settings</button>
             <div id="platformSettingsStatus" style="font-size:12px;color:var(--muted)"></div>
@@ -2045,18 +2051,16 @@ function changeAdminPassword() {
 // ─── PLATFORM SETTINGS (subscription price etc) ──────────────────────────────
 async function loadPlatformSettings(){
   try {
-    const rows = await apiFetch('settings?key=in.(sub_price_monthly,sub_price_bundle,paypal_plan_id_monthly,paypal_plan_id_bundle,free_vendor_limit,sub_price,paypal_plan_id)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2', 'GET');
+    const rows = await apiFetch('settings?key=in.(sub_price,free_vendor_limit,stripe_link)&user_id=eq.a151e7e9-25db-4d03-9a17-1ddcf8aa53a2', 'GET');
     if(!rows) return;
     const map = {};
     rows.forEach(r => map[r.key] = r.value);
 
     // New fields
     if(map.sub_price)              { const el=document.getElementById('subPrice'); if(el) el.value=map.sub_price; const pv=document.getElementById('adminPricePreview'); if(pv) pv.textContent='£'+map.sub_price; }
-    if(map.paypal_plan_id_monthly) { const el=document.getElementById('paypalPlanIdMonthly'); if(el) el.value=map.paypal_plan_id_monthly; }
-    if(map.paypal_plan_id_bundle)  { const el=document.getElementById('paypalPlanIdBundle');  if(el) el.value=map.paypal_plan_id_bundle; }
+    if(map.stripe_link)            { const el=document.getElementById('stripeLink'); if(el) el.value=map.stripe_link; }
     // Legacy fallback
 
-    if(!map.paypal_plan_id_monthly && map.paypal_plan_id) { const el=document.getElementById('paypalPlanIdMonthly'); if(el) el.value=map.paypal_plan_id; }
     if(map.free_vendor_limit)      { const el=document.getElementById('freeVendorLimit');     if(el) el.value=map.free_vendor_limit; }
   } catch(e){ console.warn('loadPlatformSettings error:', e); }
 }
@@ -2070,12 +2074,10 @@ async function savePlatformSettings(){
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
 
   try {
+    const stripeLink = document.getElementById('stripeLink')?.value?.trim() || '';
     const settings = [
-      { key:'sub_price',              value: parseFloat(price).toFixed(2) },
-      { key:'paypal_plan_id',         value: '' },
-      // Legacy keys for backwards compat
-      { key:'sub_price',              value: parseFloat(monthlyPrice).toFixed(2) },
-      { key:'paypal_plan_id',         value: monthlyPlanId || '' },
+      { key:'sub_price',   value: parseFloat(price).toFixed(2) },
+      { key:'stripe_link', value: stripeLink },
     ];
     if(vendorLimit) settings.push({ key:'free_vendor_limit', value: vendorLimit });
 
