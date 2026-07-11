@@ -487,8 +487,8 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
         <div class="wiz-q">Who's getting <em>married?</em></div>
         <div class="wiz-sub">We'll use these names across your dashboard and invitation.</div>
         <div class="field-row">
-          <div class="field"><label for="sN1">Your name</label><input type="text" class="fi" id="sN1" placeholder="Charlotte" autocomplete="given-name"></div>
-          <div class="field"><label for="sN2">Partner's name</label><input type="text" class="fi" id="sN2" placeholder="James"></div>
+          <div class="field"><label for="sN1">Your name <span style="color:var(--gold)">*</span></label><input type="text" class="fi" id="sN1" placeholder="Charlotte" autocomplete="given-name"></div>
+          <div class="field"><label for="sN2">Partner's name <span style="color:var(--gold)">*</span></label><input type="text" class="fi" id="sN2" placeholder="James"></div>
         </div>
         <div class="wiz-nav">
           <button class="wiz-back" onclick="wizGo(0)">←</button>
@@ -651,8 +651,10 @@ function wizNext(from, skip){
     if(!email){ se('eSignup0','Please enter your email'); return; }
     if(pw.length < 6){ se('eSignup0','Password must be at least 6 characters'); return; }
   }
-  if(from === 1 && !skip){
-    if(!document.getElementById('sN1').value.trim()){ se('eSignup1','Please enter your name'); return; }
+  if(from === 1){
+    const n1v = document.getElementById('sN1').value.trim();
+    const n2v = document.getElementById('sN2').value.trim();
+    if(!n1v || !n2v){ se('eSignup1','Please enter both names — this is a celebration for two! 💍'); return; }
   }
   wizGo(from + 1);
 }
@@ -723,6 +725,7 @@ async function finishSignup(wantsPro){
   const n2    = document.getElementById('sN2').value.trim();
   const wd    = document.getElementById('sDate').value;
   if(!email || pw.length < 6){ wizGo(0); se('eSignup0','Please complete your email and password'); return; }
+  if(!n1 || !n2){ wizGo(1); se('eSignup1','Please enter both partner names before continuing'); return; }
 
   const btn = document.getElementById('sBtnPro');
   const orig = btn.textContent;
