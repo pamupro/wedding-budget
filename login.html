@@ -719,62 +719,65 @@ function renderWizSummary(){
 // Create the account + profile, then route to dashboard (or payment)
 async function finishSignup(wantsPro){
   collectWiz();
-  const email = document.getElementById('sEmail').value.trim();
+  const google = window._googleSignup || null;
+  const email = google ? google.email : document.getElementById('sEmail').value.trim();
   const pw    = document.getElementById('sPass').value;
   const n1    = document.getElementById('sN1').value.trim();
   const n2    = document.getElementById('sN2').value.trim();
   const wd    = document.getElementById('sDate').value;
-  if(!email || pw.length < 6){ wizGo(0); se('eSignup0','Please complete your email and password'); return; }
+  if(!google && (!email || pw.length < 6)){ wizGo(0); se('eSignup0','Please complete your email and password'); return; }
   if(!n1 || !n2){ wizGo(1); se('eSignup1','Please enter both partner names before continuing'); return; }
 
   const btn = document.getElementById('sBtnPro');
   const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Creating your account…';
+  btn.disabled = true; btn.textContent = google ? 'Setting up…' : 'Creating your account…';
 
   try{
-    // 1. Create auth user (email confirmation is OFF in Supabase, so we get a token straight away)
-    const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-      method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
-      body: JSON.stringify({ email, password:pw, data:{ name1:n1, name2:n2 } })
-    });
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.error_description || d.msg || 'Signup failed');
+    let uid, token;
 
-    // If confirmation is still ON in Supabase, there's no session token.
-    // We STILL log them in via password grant so signup feels instant, then
-    // send the confirmation email quietly in the background.
-    if(!d.access_token){
-      try{
-        const lr = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-          method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
-          body: JSON.stringify({ email, password: pw })
-        });
-        const ld = await lr.json();
-        if(ld.access_token){ d.access_token = ld.access_token; d.refresh_token = ld.refresh_token; d.user = ld.user; }
-      }catch(e){}
+    if(google){
+      // Google user already has an account — reuse their session, just save details.
+      uid = google.uid; token = google.token;
+      localStorage.setItem('wl_token', token);
+      localStorage.setItem('wl_uid', uid);
+    } else {
+      // Regular email signup — create the auth user
+      const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+        method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+        body: JSON.stringify({ email, password:pw, data:{ name1:n1, name2:n2 } })
+      });
+      const d = await r.json();
+      if(!r.ok) throw new Error(d.error_description || d.msg || 'Signup failed');
+
+      if(!d.access_token){
+        try{
+          const lr = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+            method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+            body: JSON.stringify({ email, password: pw })
+          });
+          const ld = await lr.json();
+          if(ld.access_token){ d.access_token = ld.access_token; d.refresh_token = ld.refresh_token; d.user = ld.user; }
+        }catch(e){}
+      }
+      if(!d.access_token){
+        so('okSignup','✅ Account created! Please open the confirmation email we just sent, then sign in.');
+        btn.disabled=false; btn.textContent=orig; return;
+      }
+      fetch(`${SUPABASE_URL}/auth/v1/resend`, {
+        method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+        body: JSON.stringify({ type:'signup', email })
+      }).catch(()=>{});
+      localStorage.setItem('wl_token',   d.access_token);
+      localStorage.setItem('wl_refresh', d.refresh_token || '');
+      localStorage.setItem('wl_uid',     d.user.id);
+      uid = d.user.id; token = d.access_token;
     }
-    if(!d.access_token){
-      // Couldn't auto-login (confirmation strictly enforced) — clear guidance
-      so('okSignup','✅ Account created! Please open the confirmation email we just sent, then sign in.');
-      btn.disabled=false; btn.textContent=orig; return;
-    }
 
-    // Fire a friendly "confirm your email" in the background (verifies the
-    // address so Forgot Password works later). Non-blocking — we don't wait.
-    fetch(`${SUPABASE_URL}/auth/v1/resend`, {
-      method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
-      body: JSON.stringify({ type:'signup', email })
-    }).catch(()=>{});
+    const H = {'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+token};
 
-    localStorage.setItem('wl_token',   d.access_token);
-    localStorage.setItem('wl_refresh', d.refresh_token || '');
-    localStorage.setItem('wl_uid',     d.user.id);
-    const uid = d.user.id;
-    const H = {'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+d.access_token};
-
-    // 2. Create the profile with everything collected
-    await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
-      method:'POST', headers:{...H,'Prefer':'return=minimal'},
+    // Save profile — UPSERT so it works whether or not a row already exists (Google users have one)
+    await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=user_id`, {
+      method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},
       body: JSON.stringify({ user_id:uid, name1:n1, name2:n2, wedding_date: wd||null, email })
     });
 
@@ -824,12 +827,17 @@ function oauthStart(provider){
 async function doGoogleAuth(){   try{ oauthStart('google');   }catch(e){ se('eLogin','Google sign-in failed: '+e.message); } }
 
 // Handle OAuth redirect: store session, make sure a profile exists, then enter
+let oauthInProgress = false;   // suppress the auto-redirect block below during OAuth return
 (async function handleOAuthRedirect(){
   const hash = window.location.hash;
-  if(!hash) return;
+  if(!hash || hash.indexOf('access_token') === -1) return;
+  oauthInProgress = true;
   const params = new URLSearchParams(hash.replace('#',''));
   const token  = params.get('access_token');
-  if(!token) return;
+  if(!token){ oauthInProgress = false; return; }
+
+  // clean the token out of the address bar
+  history.replaceState(null, '', location.pathname + location.search);
 
   localStorage.setItem('wl_token', token);
   localStorage.setItem('wl_refresh', params.get('refresh_token') || '');
@@ -843,28 +851,38 @@ async function doGoogleAuth(){   try{ oauthStart('google');   }catch(e){ se('eLo
   }catch(e){}
   if(uid) localStorage.setItem('wl_uid', uid);
 
-  // First social sign-in has no profile row yet — create one so the
-  // dashboard onboarding can take over from there.
+  // Does this Google user already have a profile WITH couple names?
+  let hasNames = false;
   try{
-    if(uid){
-      const h = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token };
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=id`, { headers: h });
-      const rows = await r.json();
-      if(Array.isArray(rows) && rows.length === 0){
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
-          method: 'POST',
-          headers: { ...h, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ user_id: uid, email, name1: fullName.split(' ')[0] || '', name2: '' })
-        });
-      }
-    }
-  }catch(e){ console.warn('profile ensure', e); }
+    const h = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token };
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=name1,name2`, { headers: h });
+    const rows = await r.json();
+    if(Array.isArray(rows) && rows.length && rows[0].name1 && rows[0].name2) hasNames = true;
+  }catch(e){}
 
-  window.location.replace('dashboard.html');
+  // Returning user with a complete profile → straight to dashboard
+  if(hasNames){ window.location.replace('dashboard.html'); return; }
+
+  // NEW Google user → run the wizard to collect couple details.
+  // We already have their account, so skip step 0 (email/password) and
+  // pre-fill their name from Google. finishSignup() will save + route.
+  window._googleSignup = { uid, email, token };
+  sw('signup');
+  // hide the email/password step; wizard now starts at names
+  const s0 = document.getElementById('wizStep0'); if(s0) s0.style.display = 'none';
+  // pre-fill the first name from Google
+  const first = (fullName || '').split(' ')[0] || '';
+  const n1 = document.getElementById('sN1'); if(n1 && first) n1.value = first;
+  // pre-fill email into the hidden signup field so finishSignup has it
+  const se_ = document.getElementById('sEmail'); if(se_) se_.value = email;
+  wizGo(1);
+  oauthInProgress = false;
 })();
 
 // Only redirect to dashboard if token is actually valid (not expired)
 (function(){
+  if(oauthInProgress) return;   // a Google new-user is mid-wizard; don't yank them to dashboard
+  if(location.hash.indexOf('access_token') !== -1) return;
   const tok = localStorage.getItem('wl_token');
   const uid = localStorage.getItem('wl_uid');
   if(tok && uid){
