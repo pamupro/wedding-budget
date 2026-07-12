@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome — Let's set up your wedding | WeddingLedger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://bqggtyguhedlyfffjkkw.supabase.co">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;1,9..144,200;1,9..144,300&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf7f2;--bg2:#f5f0e8;--surface:#ffffff;--ink:#1a1710;--ink2:#2e2a20;
+  --muted:#7a7060;--muted2:#a89e8a;--gold:#b8862a;--gold2:#d4a840;--gold-pale:#fdf3e0;
+  --gold-dim:rgba(184,134,42,.1);--border:rgba(184,134,42,.22);--border2:rgba(26,23,16,.08);
+  --err:#c53030;--ok:#2a7a2a;--shadow2:0 12px 48px rgba(26,23,16,.12);--shadow3:0 24px 80px rgba(26,23,16,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.onb-card{background:var(--surface);border:1px solid var(--border2);border-radius:22px;box-shadow:var(--shadow3);width:100%;max-width:480px;padding:44px 40px;animation:rise .5s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.onb-logo{font-family:'Fraunces',serif;font-size:22px;font-weight:200;margin-bottom:4px}
+.onb-logo em{font-style:italic;color:var(--gold)}
+.onb-welcome{font-size:12px;color:var(--muted);margin-bottom:26px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field label{font-size:12px;font-weight:600;color:var(--ink2)}
+.fi{padding:13px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;background:var(--surface);width:100%}
+.fi:focus{outline:none;border-color:var(--gold)}
+.submit-btn{width:100%;padding:14px;border-radius:8px;border:none;background:var(--ink);color:#fdf9f4;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.submit-btn:hover:not(:disabled){background:var(--gold);transform:translateY(-1px)}
+.submit-btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.msg{font-size:13px;padding:10px 13px;border-radius:8px;margin-top:10px;display:none}
+.err-msg{background:#fff0f0;color:var(--err)}
+.ok-msg{background:#f0fff4;color:var(--ok)}
+/* wizard */
+.wiz-steps{display:flex;gap:6px;margin-bottom:24px}
+.wiz-dot{flex:1;height:4px;border-radius:2px;background:var(--bg2);transition:.3s}
+.wiz-dot.done{background:var(--gold2)}.wiz-dot.active{background:var(--gold)}
+.wiz-step{display:none;animation:wizIn .35s ease both}
+.wiz-step.active{display:block}
+@keyframes wizIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.wiz-eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.wiz-q{font-family:'Fraunces',serif;font-size:28px;font-weight:200;line-height:1.15;margin-bottom:6px}
+.wiz-q em{font-style:italic;color:var(--gold2)}
+.wiz-sub{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.5}
+.wiz-nav{display:flex;gap:10px;margin-top:24px}
+.wiz-back{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:14px 18px;font-family:inherit;font-size:14px;cursor:pointer;transition:.2s}
+.wiz-back:hover{border-color:var(--gold);color:var(--ink)}
+.wiz-next{flex:1}
+.wiz-skip{display:block;text-align:center;margin-top:16px;font-size:12.5px;color:var(--muted);background:none;border:none;cursor:pointer;width:100%;font-family:inherit}
+.wiz-skip:hover{color:var(--gold)}
+.budget-chips,.guest-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.wiz-chip{border:1.5px solid var(--border);border-radius:10px;padding:13px 10px;text-align:center;cursor:pointer;transition:.15s;background:var(--surface)}
+.wiz-chip:hover{border-color:var(--gold)}
+.wiz-chip.sel{border-color:var(--gold);background:var(--gold-pale)}
+.wiz-chip b{display:block;font-size:14px;color:var(--ink)}
+.wiz-chip span{font-size:10.5px;color:var(--muted)}
+.wiz-cur{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.wiz-cur select{border:1.5px solid var(--border);border-radius:8px;padding:12px;font-family:inherit;font-size:14px;background:var(--surface);cursor:pointer}
+.wiz-pro{border:2px solid var(--gold);border-radius:16px;padding:24px;background:linear-gradient(135deg,var(--gold-pale),var(--surface));text-align:center;margin-bottom:16px}
+.wiz-pro-price{font-family:'Fraunces',serif;font-size:46px;font-weight:200;color:var(--gold);line-height:1}
+.wiz-pro-per{font-size:12px;color:var(--muted);margin-bottom:18px}
+.wiz-pro-feats{list-style:none;font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:9px;text-align:left;max-width:270px;margin:0 auto}
+.wiz-pro-feats li::before{content:'✓ ';color:var(--gold);font-weight:700}
+.wiz-summary{background:var(--bg2);border-radius:10px;padding:13px 15px;font-size:12.5px;color:var(--muted);margin-bottom:16px;line-height:1.8}
+.wiz-summary b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="onb-card">
+  <div class="onb-logo">Wedding<em>Ledger</em></div>
+  <div class="onb-welcome" id="onbWelcome">You're signed in — let's set up your wedding ✨</div>
+
+  <div class="wiz-steps" id="wizDots">
+    <div class="wiz-dot active"></div><div class="wiz-dot"></div><div class="wiz-dot"></div><div class="wiz-dot"></div><div class="wiz-dot"></div>
+  </div>
+
+  <!-- STEP 1: names -->
+  <div class="wiz-step active" id="wizStep1">
+    <div class="wiz-eyebrow">Step 1 of 5</div>
+    <div class="wiz-q">Who's getting <em>married?</em></div>
+    <div class="wiz-sub">We'll use these names across your dashboard and invitation.</div>
+    <div class="field-row">
+      <div class="field"><label for="sN1">Your name <span style="color:var(--gold)">*</span></label><input type="text" class="fi" id="sN1" placeholder="Charlotte" autocomplete="given-name"></div>
+      <div class="field"><label for="sN2">Partner's name <span style="color:var(--gold)">*</span></label><input type="text" class="fi" id="sN2" placeholder="James"></div>
+    </div>
+    <button class="submit-btn" onclick="wizNext(1)" style="margin-top:22px">Continue →</button>
+    <div class="msg err-msg" id="eSignup1"></div>
+  </div>
+
+  <!-- STEP 2: date -->
+  <div class="wiz-step" id="wizStep2">
+    <div class="wiz-eyebrow">Step 2 of 5</div>
+    <div class="wiz-q">When's the <em>big day?</em></div>
+    <div class="wiz-sub">We'll count down for you. You can change this anytime.</div>
+    <div class="field"><label for="sDate">Wedding date</label><input type="date" class="fi" id="sDate"></div>
+    <div class="wiz-nav">
+      <button class="wiz-back" onclick="wizGo(1)">←</button>
+      <button class="submit-btn wiz-next" onclick="wizNext(2)">Continue →</button>
+    </div>
+    <button class="wiz-skip" onclick="wizNext(2,true)">We haven't set a date yet →</button>
+  </div>
+
+  <!-- STEP 3: budget -->
+  <div class="wiz-step" id="wizStep3">
+    <div class="wiz-eyebrow">Step 3 of 5</div>
+    <div class="wiz-q">What's your <em>budget?</em></div>
+    <div class="wiz-sub">A rough figure is fine — it helps track spending. Tap a range or enter your own.</div>
+    <div class="budget-chips" id="budgetChips">
+      <div class="wiz-chip" data-v="10000" onclick="wizPickBudget(this,10000)"><b>£10k</b><span>Intimate</span></div>
+      <div class="wiz-chip" data-v="20000" onclick="wizPickBudget(this,20000)"><b>£20k</b><span>Average UK</span></div>
+      <div class="wiz-chip" data-v="35000" onclick="wizPickBudget(this,35000)"><b>£35k</b><span>Grand</span></div>
+      <div class="wiz-chip" data-v="50000" onclick="wizPickBudget(this,50000)"><b>£50k+</b><span>Luxury</span></div>
+    </div>
+    <div class="wiz-cur">
+      <select id="sCurrency">
+        <option value="GBP">£ GBP</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option><option value="LKR">Rs LKR</option><option value="AUD">$ AUD</option><option value="INR">₹ INR</option>
+      </select>
+      <input type="number" class="fi" id="sBudget" placeholder="Or enter exact amount" style="flex:1" oninput="wizClearChips()">
+    </div>
+    <div class="wiz-nav">
+      <button class="wiz-back" onclick="wizGo(2)">←</button>
+      <button class="submit-btn wiz-next" onclick="wizNext(3)">Continue →</button>
+    </div>
+    <button class="wiz-skip" onclick="wizNext(3,true)">I'll set this later →</button>
+  </div>
+
+  <!-- STEP 4: guests -->
+  <div class="wiz-step" id="wizStep4">
+    <div class="wiz-eyebrow">Step 4 of 5</div>
+    <div class="wiz-q">How many <em>guests?</em></div>
+    <div class="wiz-sub">Roughly how many people are you expecting?</div>
+    <div class="guest-chips" id="guestChips">
+      <div class="wiz-chip" data-v="30"  onclick="wizPickGuests(this,30)"><b>~30</b><span>Intimate</span></div>
+      <div class="wiz-chip" data-v="75"  onclick="wizPickGuests(this,75)"><b>~75</b><span>Medium</span></div>
+      <div class="wiz-chip" data-v="150" onclick="wizPickGuests(this,150)"><b>~150</b><span>Large</span></div>
+      <div class="wiz-chip" data-v="250" onclick="wizPickGuests(this,250)"><b>250+</b><span>Big celebration</span></div>
+    </div>
+    <input type="number" class="fi" id="sGuests" placeholder="Or enter a number" oninput="wizClearGuestChips()">
+    <div class="wiz-nav">
+      <button class="wiz-back" onclick="wizGo(3)">←</button>
+      <button class="submit-btn wiz-next" onclick="wizNext(4)">Continue →</button>
+    </div>
+    <button class="wiz-skip" onclick="wizNext(4,true)">Not sure yet →</button>
+  </div>
+
+  <!-- STEP 5: pro upsell -->
+  <div class="wiz-step" id="wizStep5">
+    <div class="wiz-eyebrow">Last step ✨</div>
+    <div class="wiz-q">Unlock <em>everything?</em></div>
+    <div class="wiz-summary" id="wizSummary"></div>
+    <div class="wiz-pro">
+      <div class="wiz-eyebrow" style="color:var(--gold)">WeddingLedger Pro</div>
+      <div class="wiz-pro-price">£<span id="wizProPrice">14.99</span></div>
+      <div class="wiz-pro-per">one payment · lifetime access · no subscription</div>
+      <ul class="wiz-pro-feats">
+        <li>Unlimited vendors &amp; guests</li>
+        <li>Seating chart planner</li>
+        <li>Partner collaboration</li>
+        <li>Public wedding page &amp; RSVP</li>
+        <li>PDF exports &amp; every feature</li>
+      </ul>
+    </div>
+    <div class="msg err-msg" id="eSignup"></div>
+    <div class="msg ok-msg" id="okSignup"></div>
+    <button class="submit-btn" id="sBtnPro" onclick="finishOnboarding(true)">Get Pro &amp; start planning →</button>
+    <button class="wiz-skip" onclick="finishOnboarding(false)" style="margin-top:16px;font-weight:600;color:var(--gold)">Start free — I'll upgrade later</button>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL      = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+
+function se(id,m){var e=document.getElementById(id);if(!e)return;e.textContent=m;e.style.display='block';setTimeout(function(){e.style.display='none';},5000);}
+function so(id,m){var e=document.getElementById(id);if(!e)return;e.textContent=m;e.style.display='block';}
+
+// This page requires an authenticated session (arrived here from Google signup).
+var ONB_TOKEN = localStorage.getItem('wl_token') || '';
+var ONB_UID   = localStorage.getItem('wl_uid')   || '';
+if(!ONB_TOKEN || !ONB_UID){ location.replace('login.html'); }
+
+// ---- wizard core (shared logic; step numbering is 1..5 here) ----
+const wizData = { budget:null, guests:null, currency:'GBP' };
+let wizStep = 0;
+const WIZ_LAST = 5;
+
+function wizGo(n){
+  document.querySelectorAll('.wiz-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('wizStep'+n).classList.add('active');
+  const dots = document.querySelectorAll('#wizDots .wiz-dot');
+  dots.forEach((d,i)=>{ d.className = 'wiz-dot' + (i<n?' done':i===n?' active':''); });
+  wizStep = n;
+  if(n === WIZ_LAST) renderWizSummary();
+  const first = document.querySelector('#wizStep'+n+' input');
+  if(first) setTimeout(()=>first.focus(), 100);
+}
+
+function wizNext(from, skip){
+  // validation per step
+  if(from === 1){
+    const n1v = document.getElementById('sN1').value.trim();
+    const n2v = document.getElementById('sN2').value.trim();
+    if(!n1v || !n2v){ se('eSignup1','Please enter both names — this is a celebration for two! 💍'); return; }
+  }
+  wizGo(from + 1);
+}
+
+function wizPickBudget(el, v){
+  document.querySelectorAll('#budgetChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  wizData.budget = v;
+  document.getElementById('sBudget').value = '';
+}
+function wizClearChips(){
+  document.querySelectorAll('#budgetChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  wizData.budget = null;
+}
+function wizPickGuests(el, v){
+  document.querySelectorAll('#guestChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  wizData.guests = v;
+  document.getElementById('sGuests').value = '';
+}
+function wizClearGuestChips(){
+  document.querySelectorAll('#guestChips .wiz-chip').forEach(c=>c.classList.remove('sel'));
+  wizData.guests = null;
+}
+
+function collectWiz(){
+  wizData.currency = document.getElementById('sCurrency').value;
+  const bTyped = parseFloat(document.getElementById('sBudget').value);
+  if(!isNaN(bTyped) && bTyped > 0) wizData.budget = bTyped;
+  const gTyped = parseInt(document.getElementById('sGuests').value, 10);
+  if(!isNaN(gTyped) && gTyped > 0) wizData.guests = gTyped;
+}
+
+function renderWizSummary(){
+  collectWiz();
+  const n1 = document.getElementById('sN1').value.trim();
+  const n2 = document.getElementById('sN2').value.trim();
+  const wd = document.getElementById('sDate').value;
+  const parts = [];
+  if(n1||n2) parts.push('<b>'+[n1,n2].filter(Boolean).join(' & ')+'</b>');
+  if(wd){ const d=new Date(wd+'T00:00:00'); parts.push('📅 '+d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})); }
+  const sym = {GBP:'£',USD:'$',EUR:'€',LKR:'Rs ',AUD:'$',INR:'₹'}[wizData.currency]||'';
+  if(wizData.budget) parts.push('💰 '+sym+Number(wizData.budget).toLocaleString());
+  if(wizData.guests) parts.push('👥 ~'+wizData.guests+' guests');
+  const box = document.getElementById('wizSummary');
+  box.innerHTML = parts.length ? parts.join('<br>') : 'Your details are saved — you can edit everything anytime.';
+  const pp = document.getElementById('wizProPrice');
+  if(pp && window.WL_PRICE) pp.textContent = window.WL_PRICE;
+}
+
+
+
+// Renders the summary before the Pro step (uses names/date/budget/guests)
+// Guest page's WIZ_LAST is 5, but here the last step id is 5 too — align:
+// (the extracted core already treats WIZ_LAST=5 → matches wizStep5)
+
+// Save the collected details onto the already-created Google account
+async function finishOnboarding(wantsPro){
+  collectWiz();
+  var n1 = document.getElementById('sN1').value.trim();
+  var n2 = document.getElementById('sN2').value.trim();
+  var wd = document.getElementById('sDate').value;
+  if(!n1 || !n2){ wizGo(1); se('eSignup1','Please enter both names — this is a celebration for two! 💍'); return; }
+
+  var btn = document.getElementById('sBtnPro');
+  var orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Setting up…';
+
+  try{
+    var H = {'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+ONB_TOKEN};
+
+    // Upsert profile (Google may have created an empty one already)
+    await fetch(SUPABASE_URL+'/rest/v1/profiles?on_conflict=user_id', {
+      method:'POST', headers:Object.assign({},H,{'Prefer':'resolution=merge-duplicates,return=minimal'}),
+      body: JSON.stringify({ user_id:ONB_UID, name1:n1, name2:n2, wedding_date: wd||null })
+    });
+
+    // Save budget + guest estimate + currency
+    var rows = [];
+    if(wizData.budget) rows.push({ user_id:ONB_UID, key:'spend_limit',
+      value: JSON.stringify({ gbp: wizData.budget, original: wizData.budget, currency: wizData.currency }) });
+    if(wizData.guests) rows.push({ user_id:ONB_UID, key:'expected_guests', value:String(wizData.guests) });
+    if(wizData.currency && wizData.currency!=='GBP') rows.push({ user_id:ONB_UID, key:'pref_currency', value:wizData.currency });
+    if(rows.length){
+      await fetch(SUPABASE_URL+'/rest/v1/settings', {
+        method:'POST', headers:Object.assign({},H,{'Prefer':'return=minimal'}), body:JSON.stringify(rows)
+      });
+    }
+
+    location.href = wantsPro ? 'dashboard.html?upgrade=1&welcome=1' : 'dashboard.html?welcome=1';
+  }catch(e){
+    se('eSignup', e.message || 'Something went wrong — please try again');
+    btn.disabled=false; btn.textContent=orig;
+  }
+}
+
+// Pull the live Pro price for the upsell
+(function loadPrice(){
+  fetch(SUPABASE_URL+'/rest/v1/settings?key=eq.sub_price&select=value', { headers:{apikey:SUPABASE_ANON_KEY, Authorization:'Bearer '+SUPABASE_ANON_KEY} })
+    .then(function(r){return r.json();}).then(function(rows){
+      if(rows && rows[0] && parseFloat(rows[0].value)>0){
+        var p=document.getElementById('wizProPrice'); if(p) p.textContent=parseFloat(rows[0].value).toFixed(2);
+      }
+    }).catch(function(){});
+})();
+
+// focus first field
+setTimeout(function(){ var n=document.getElementById('sN1'); if(n) n.focus(); }, 200);
+</script>
+</body>
+</html>

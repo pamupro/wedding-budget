@@ -916,7 +916,8 @@ async function handleOAuthRedirect(){
   }catch(e){ /* network/timeout — treat as new user, show the wizard */ }
 
   if(hasNames){ window.location.replace('dashboard.html'); return; }
-  launchGoogleWizard(uid, email, fullName, token);
+  // NEW Google user → dedicated full-page onboarding (cleaner than inline wizard)
+  window.location.replace('onboarding.html');
 }
 
 // Run the handler once the DOM (and sw/wizGo) are ready, so it can never
