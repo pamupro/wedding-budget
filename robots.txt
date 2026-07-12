@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /settings.html
+Disallow: /guests.html
+Disallow: /seating.html
+Disallow: /timeline.html
+Disallow: /onboarding.html
+Disallow: /reset-password.html
+Disallow: /accept-invite.html
+
+Sitemap: https://wedding-ledger.com/sitemap.xml
