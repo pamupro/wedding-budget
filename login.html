@@ -747,7 +747,18 @@ async function finishSignup(wantsPro){
         body: JSON.stringify({ email, password:pw, data:{ name1:n1, name2:n2 } })
       });
       const d = await r.json();
-      if(!r.ok) throw new Error(d.error_description || d.msg || 'Signup failed');
+      if(!r.ok){
+        const m = (d.error_description || d.msg || d.message || '').toLowerCase();
+        if(m.includes('already') || m.includes('registered') || m.includes('exists') || r.status === 422){
+          btn.disabled=false; btn.textContent=orig;
+          if(confirm('You already have an account with that email. Would you like to sign in instead?')){
+            sw('login');
+            const le=document.getElementById('lEmail'); if(le) le.value=email;
+          }
+          return;
+        }
+        throw new Error(d.error_description || d.msg || 'Signup failed');
+      }
 
       if(!d.access_token){
         try{
@@ -826,12 +837,13 @@ function oauthStart(provider){
 }
 async function doGoogleAuth(){   try{ oauthStart('google');   }catch(e){ se('eLogin','Google sign-in failed: '+e.message); } }
 
-// Handle OAuth redirect: store session, make sure a profile exists, then enter
-let oauthInProgress = false;   // suppress the auto-redirect block below during OAuth return
+// Detect an OAuth return SYNCHRONOUSLY at load, before any other block runs.
+const IS_OAUTH_RETURN = (window.location.hash || '').indexOf('access_token') !== -1;
+let oauthInProgress = IS_OAUTH_RETURN;
+// Handle OAuth redirect: store session, route new users into the wizard
 (async function handleOAuthRedirect(){
+  if(!IS_OAUTH_RETURN) return;
   const hash = window.location.hash;
-  if(!hash || hash.indexOf('access_token') === -1) return;
-  oauthInProgress = true;
   const params = new URLSearchParams(hash.replace('#',''));
   const token  = params.get('access_token');
   if(!token){ oauthInProgress = false; return; }
@@ -881,8 +893,7 @@ let oauthInProgress = false;   // suppress the auto-redirect block below during 
 
 // Only redirect to dashboard if token is actually valid (not expired)
 (function(){
-  if(oauthInProgress) return;   // a Google new-user is mid-wizard; don't yank them to dashboard
-  if(location.hash.indexOf('access_token') !== -1) return;
+  if(IS_OAUTH_RETURN) return;   // OAuth handler owns this load — don't auto-redirect
   const tok = localStorage.getItem('wl_token');
   const uid = localStorage.getItem('wl_uid');
   if(tok && uid){
