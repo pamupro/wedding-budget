@@ -585,7 +585,14 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
 </div>
 
 <script>
-// Supabase constants loaded from db.js
+// Supabase constants — defined HERE so the script never depends on db.js load
+// order. db.js (loaded at the bottom) also declares these with `var`; using
+// `var` here too means the later db.js declaration merely reassigns the same
+// value instead of throwing a redeclaration error. This missing definition was
+// the ReferenceError that killed the OAuth handler.
+var SUPABASE_URL      = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+
 function sw(t){
   document.getElementById('fLogin').style.display=t==='login'?'block':'none';
   document.getElementById('fSignup').style.display=t==='signup'?'block':'none';
