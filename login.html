@@ -841,10 +841,20 @@ async function doGoogleAuth(){   try{ oauthStart('google');   }catch(e){ se('eLo
 const IS_OAUTH_RETURN = (window.location.hash || '').indexOf('access_token') !== -1;
 let oauthInProgress = IS_OAUTH_RETURN;
 // Handle OAuth redirect: store session, route new users into the wizard
-(async function handleOAuthRedirect(){
+function launchGoogleWizard(uid, email, fullName, token){
+  window._googleSignup = { uid, email, token };
+  sw('signup');
+  const s0 = document.getElementById('wizStep0'); if(s0) s0.style.display = 'none';
+  const first = (fullName || '').split(' ')[0] || '';
+  const n1 = document.getElementById('sN1'); if(n1 && first) n1.value = first;
+  const se_ = document.getElementById('sEmail'); if(se_) se_.value = email;
+  wizGo(1);
+  oauthInProgress = false;
+}
+
+async function handleOAuthRedirect(){
   if(!IS_OAUTH_RETURN) return;
-  const hash = window.location.hash;
-  const params = new URLSearchParams(hash.replace('#',''));
+  const params = new URLSearchParams((window.location.hash||'').replace('#',''));
   const token  = params.get('access_token');
   if(!token){ oauthInProgress = false; return; }
 
@@ -863,33 +873,32 @@ let oauthInProgress = IS_OAUTH_RETURN;
   }catch(e){}
   if(uid) localStorage.setItem('wl_uid', uid);
 
-  // Does this Google user already have a profile WITH couple names?
+  // Check for an existing profile WITH couple names — with a timeout so a slow
+  // or failed request can never leave the user stuck on this screen.
   let hasNames = false;
   try{
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 6000);
     const h = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token };
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=name1,name2`, { headers: h });
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=name1,name2`, { headers: h, signal: ctrl.signal });
+    clearTimeout(t);
     const rows = await r.json();
     if(Array.isArray(rows) && rows.length && rows[0].name1 && rows[0].name2) hasNames = true;
-  }catch(e){}
+  }catch(e){ /* network/timeout — treat as new user, show the wizard */ }
 
-  // Returning user with a complete profile → straight to dashboard
   if(hasNames){ window.location.replace('dashboard.html'); return; }
+  launchGoogleWizard(uid, email, fullName, token);
+}
 
-  // NEW Google user → run the wizard to collect couple details.
-  // We already have their account, so skip step 0 (email/password) and
-  // pre-fill their name from Google. finishSignup() will save + route.
-  window._googleSignup = { uid, email, token };
-  sw('signup');
-  // hide the email/password step; wizard now starts at names
-  const s0 = document.getElementById('wizStep0'); if(s0) s0.style.display = 'none';
-  // pre-fill the first name from Google
-  const first = (fullName || '').split(' ')[0] || '';
-  const n1 = document.getElementById('sN1'); if(n1 && first) n1.value = first;
-  // pre-fill email into the hidden signup field so finishSignup has it
-  const se_ = document.getElementById('sEmail'); if(se_) se_.value = email;
-  wizGo(1);
-  oauthInProgress = false;
-})();
+// Run the handler once the DOM (and sw/wizGo) are ready, so it can never
+// fire before the wizard elements exist.
+if(IS_OAUTH_RETURN){
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', handleOAuthRedirect);
+  } else {
+    handleOAuthRedirect();
+  }
+}
 
 // Only redirect to dashboard if token is actually valid (not expired)
 (function(){
