@@ -838,7 +838,8 @@ function oauthStart(provider){
 async function doGoogleAuth(){   try{ oauthStart('google');   }catch(e){ se('eLogin','Google sign-in failed: '+e.message); } }
 
 // Detect an OAuth return SYNCHRONOUSLY at load, before any other block runs.
-const IS_OAUTH_RETURN = (window.location.hash || '').indexOf('access_token') !== -1;
+const IS_OAUTH_RETURN = (window.location.hash || '').indexOf('access_token') !== -1
+                     || new URLSearchParams(window.location.search).has('code');
 let oauthInProgress = IS_OAUTH_RETURN;
 // Handle OAuth redirect: store session, route new users into the wizard
 function launchGoogleWizard(uid, email, fullName, token){
@@ -854,15 +855,36 @@ function launchGoogleWizard(uid, email, fullName, token){
 
 async function handleOAuthRedirect(){
   if(!IS_OAUTH_RETURN) return;
-  const params = new URLSearchParams((window.location.hash||'').replace('#',''));
-  const token  = params.get('access_token');
+
+  let token = '', refresh = '';
+
+  // Flow A — implicit/hash: #access_token=...&refresh_token=...
+  const hp = new URLSearchParams((window.location.hash||'').replace('#',''));
+  if(hp.get('access_token')){
+    token   = hp.get('access_token');
+    refresh = hp.get('refresh_token') || '';
+  } else {
+    // Flow B — PKCE: ?code=... must be exchanged for a session
+    const code = new URLSearchParams(window.location.search).get('code');
+    if(code){
+      try{
+        const er = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
+          method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+          body: JSON.stringify({ auth_code: code, code_verifier: localStorage.getItem('wl_pkce_verifier') || '' })
+        });
+        const ed = await er.json();
+        if(ed.access_token){ token = ed.access_token; refresh = ed.refresh_token || ''; }
+      }catch(e){}
+    }
+  }
+
   if(!token){ oauthInProgress = false; return; }
 
-  // clean the token out of the address bar
-  history.replaceState(null, '', location.pathname + location.search);
+  // clean the auth params out of the address bar
+  history.replaceState(null, '', location.pathname);
 
   localStorage.setItem('wl_token', token);
-  localStorage.setItem('wl_refresh', params.get('refresh_token') || '');
+  localStorage.setItem('wl_refresh', refresh);
 
   let uid = '', email = '', fullName = '';
   try{
