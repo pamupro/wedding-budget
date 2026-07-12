@@ -67,6 +67,62 @@
   "logo": "https://wedding-ledger.com/icon-512.png"
 }
 </script>
+
+<!-- ─── Site navigation (helps Google form sitelinks) ─── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    { "@type": "SiteNavigationElement", "position": 1, "name": "Features",      "url": "https://wedding-ledger.com/#features" },
+    { "@type": "SiteNavigationElement", "position": 2, "name": "How It Works",  "url": "https://wedding-ledger.com/#how" },
+    { "@type": "SiteNavigationElement", "position": 3, "name": "Pricing",       "url": "https://wedding-ledger.com/#pricing" },
+    { "@type": "SiteNavigationElement", "position": 4, "name": "Sign In",       "url": "https://wedding-ledger.com/login.html" },
+    { "@type": "SiteNavigationElement", "position": 5, "name": "Create Account","url": "https://wedding-ledger.com/login.html?intent=signup" }
+  ]
+}
+</script>
+
+<!-- ─── WebSite schema with search + name (helps brand sitelinks) ─── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "WeddingLedger",
+  "alternateName": "Wedding Ledger",
+  "url": "https://wedding-ledger.com/"
+}
+</script>
+
+<!-- ─── FAQ (can earn its own rich result in Google) ─── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much does WeddingLedger cost?",
+      "acceptedAnswer": { "@type": "Answer", "text": "WeddingLedger is free to start. Pro unlocks unlimited vendors and guests, the seating planner and every feature for a one-time payment of £14.99 — lifetime access, no subscription." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is WeddingLedger a subscription?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. WeddingLedger Pro is a single one-time payment for lifetime access. There are no recurring charges." }
+    },
+    {
+      "@type": "Question",
+      "name": "What can I plan with WeddingLedger?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Track your wedding budget and payments, manage your vendor list, build your guest list with RSVPs, design your seating chart, and share a wedding page with guests — all in one place." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is WeddingLedger made for UK weddings?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. WeddingLedger is built for UK couples, with pricing in pounds and budgeting designed around typical UK wedding costs, though it works for weddings anywhere with multi-currency support." }
+    }
+  ]
+}
+</script>
 <script>
 // ── Short RSVP link redirect — runs before anything else renders ──────────────
 (async function() {
