@@ -14,7 +14,18 @@ window.onerror = function(msg, src, line, col, err) {
  * clean due date badges, notification bell, currency, upgrade
  */
 
-const ICONS = ['💒','🌸','📸','🎥','💐','🎵','💎','💄','💇','👗','🥂','🍰','🚗','✈️','🏨','📋','📝','💌','🎪','🎭','🕯️','🌹','👰','🤵'];
+const ICONS = [
+  '💒','⛪','🏰','🏨','🎪','🏡','🏛️','⛱️',
+  '💐','🌸','🌹','🌷','🌺','🌻','🍃','🎀',
+  '📸','🎥','📷','🎬','🖼️','📹',
+  '🎵','🎶','🎸','🎹','🎤','🥁','🎻','🎷',
+  '💄','💇','💅','👰','🤵','👗','👠','💍','💎','👑','🧖',
+  '🥂','🍾','🍰','🎂','🧁','🍽️','🍴','🍫','☕','🍹',
+  '🚗','🚙','🏎️','✈️','🛥️','🐴','🎠',
+  '📋','📝','💌','✉️','📅','🗂️','🖊️',
+  '🎆','🎇','✨','🕯️','🎈','🎊','🎉','🪩',
+  '🤍','❤️','💕','💞','🕊️','🔔','🎗️','⭐','🌟'
+];
 const FREE_VENDOR_LIMIT = 5;
 
 const DEFAULT_VENDORS = [
@@ -73,7 +84,8 @@ async function persistSpendLimit(typed){
 }
 let shareToken=null, shareEnabled=false;
 let sharePermissions={vendors:true,dueDates:true,budget:true,checklist:false,notes:false};
-let selectedIcon='💒', activeCurrency='GBP', isPro=false;
+let selectedIcon='💒', selectedEditIcon='💒', activeCurrency='GBP', isPro=false;
+let vendorSort='default';
 
 // When partners are linked, all data is stored under one userId (alphabetically first)
 // This ensures both partners see the same data
@@ -451,12 +463,38 @@ function updateVendorLimitUI(){
 }
 
 // ─── RENDER VENDORS ───────────────────────────────────────────────────────────
+function setVendorSort(mode){ vendorSort = mode || 'default'; renderVendors(); }
+
+// Return a sorted COPY of vendors for display (never mutates the real array,
+// so payment links by index/id stay intact).
+function sortedVendors(){
+  const list = vendors.slice();
+  const lastPayTime = (v)=>{
+    const ps = payments.filter(p=>p.vendor_id===v.id && p.payment_date);
+    if(!ps.length) return 0;
+    return Math.max(...ps.map(p=>new Date(p.payment_date).getTime()||0));
+  };
+  const totalOf = (v)=> vTotalA(v) || 0;
+  switch(vendorSort){
+    case 'budget_high': list.sort((a,b)=> totalOf(b)-totalOf(a)); break;
+    case 'budget_low':  list.sort((a,b)=> totalOf(a)-totalOf(b)); break;
+    case 'name':        list.sort((a,b)=> (a.name||'').localeCompare(b.name||'')); break;
+    case 'due_soon':    list.sort((a,b)=>{
+                          const ad=a.due_date?new Date(a.due_date).getTime():Infinity;
+                          const bd=b.due_date?new Date(b.due_date).getTime():Infinity;
+                          return ad-bd; }); break;
+    case 'last_payment':list.sort((a,b)=> lastPayTime(b)-lastPayTime(a)); break;
+    default: break; // keep natural (creation) order
+  }
+  return list;
+}
+
 function renderVendors() {
   const grid=document.getElementById('vendorsGrid'); if(!grid) return;
   grid.innerHTML='';
   const upcoming=[];
 
-  vendors.forEach((v,idx)=>{
+  sortedVendors().forEach((v,idx)=>{
     const vPmts=payments.filter(p=>p.vendor_id===v.id);
     // Work in the ACTIVE currency using exact entered amounts (no drift)
     const EPS=0.005;
@@ -700,6 +738,8 @@ function openEditModal(id){
   document.getElementById('editDueDate').value=v.due_date||'';
   document.getElementById('editDueAmount').value=v.due_amount?(v.currency===activeCurrency&&v.due_amount_original!=null?v.due_amount_original:(v.due_amount*CURRENCIES[activeCurrency].rate).toFixed(2)):'';
   document.getElementById('editDueNote').value=v.due_note||'';
+  selectedEditIcon = v.icon || '💒';
+  renderEditIconSelector();
   document.getElementById('editModal').style.display='flex';
 }
 function closeEditModal(){document.getElementById('editModal').style.display='none';activeEditVendorId=null;}
@@ -709,6 +749,7 @@ async function submitEdit(){
   const rawDueStr=document.getElementById('editDueAmount').value;
   const rawDue=rawDueStr?(parseFloat(rawDueStr)||0):null;
   const data={
+    icon:selectedEditIcon,
     name:document.getElementById('editVendorName').value.trim(),
     category:document.getElementById('editVendorCategory').value.trim(),
     total_cost:rawTotal/CURRENCIES[activeCurrency].rate,
@@ -976,6 +1017,11 @@ async function deleteTask(id){await DB.del('tasks',id,accessToken);tasks=tasks.f
 async function addTask(){const inp=document.getElementById('newTaskInput');const text=inp.value.trim();if(!text)return;const r=await DB.post('tasks',{user_id:userId,text,done:false},accessToken);tasks.push(r[0]);inp.value='';renderTasks();}
 
 // ─── ICON SELECTOR ───────────────────────────────────────────────────────────
+function renderEditIconSelector(){
+  const wrap=document.getElementById('editIconSelector');if(!wrap)return;
+  wrap.innerHTML='';
+  ICONS.forEach(ic=>{const btn=document.createElement('button');btn.type='button';btn.className='icon-btn'+(ic===selectedEditIcon?' active':'');btn.textContent=ic;btn.onclick=()=>{selectedEditIcon=ic;renderEditIconSelector();};wrap.appendChild(btn);});
+}
 function renderIconSelector(){
   const wrap=document.getElementById('iconSelector');if(!wrap)return;
   wrap.innerHTML='';

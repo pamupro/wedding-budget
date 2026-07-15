@@ -852,6 +852,14 @@ textarea.modal-input{resize:vertical;min-height:80px}
   <div class="section-head">
     <h2 class="section-title">💒 <em>Vendors</em></h2>
     <div class="section-acts">
+      <select id="vendorSort" onchange="setVendorSort(this.value)" class="btn btn-ghost btn-sm" style="cursor:pointer;padding:7px 12px">
+        <option value="default">Sort: Default</option>
+        <option value="budget_high">Budget: High → Low</option>
+        <option value="budget_low">Budget: Low → High</option>
+        <option value="due_soon">Due date: Soonest</option>
+        <option value="last_payment">Last payment: Recent</option>
+        <option value="name">Name: A → Z</option>
+      </select>
       <button class="btn btn-primary" onclick="document.getElementById('addVendorForm').classList.toggle('open')">＋ Add Vendor</button>
     </div>
   </div>
@@ -987,6 +995,8 @@ textarea.modal-input{resize:vertical;min-height:80px}
       <button class="modal-close" onclick="closeEditModal()">✕</button>
     </div>
     <div class="modal-body">
+      <label class="field-label">Icon</label>
+      <div class="icon-selector" id="editIconSelector" style="margin-bottom:14px"></div>
       <label class="field-label">Vendor Name</label>
       <input id="editVendorName" class="modal-input" placeholder="e.g. Silva Studios">
       <label class="field-label">Category</label>
