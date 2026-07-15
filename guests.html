@@ -2265,8 +2265,29 @@ function makeCode() {
   return c;
 }
 
+// Make sure the couple has a page_slug (needed for the public invitation page).
+// Auto-creates one from their names the first time an RSVP link is generated.
+async function ensureSlug(){
+  // The RSVP resolver joins guests.user_id (= ownerId) to profiles, so the slug
+  // must live on the OWNER's profile.
+  const ownerRows = await sbGet('profiles?user_id=eq.'+ownerId+'&select=page_slug,name1,name2');
+  const ownerProf = (ownerRows && ownerRows[0]) ? ownerRows[0] : {};
+  if(ownerProf.page_slug){ prof.page_slug = ownerProf.page_slug; return ownerProf.page_slug; }
+  const base = [ownerProf.name1, ownerProf.name2].filter(Boolean).join('-')
+    .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'wedding';
+  const suffix = Math.random().toString(36).slice(2,7);
+  const slug = base + '-' + suffix;
+  const ok = await sbPatch('profiles?user_id=eq.'+ownerId, { page_slug: slug });
+  if(ok){ prof.page_slug = slug; return slug; }
+  return null;
+}
+
 async function ensureShortLink(g) {
-  if(!g || g.link_code) return g ? g.link_code : null;
+  if(!g) return null;
+  // Guarantee the couple has a public page slug first — without it the RSVP
+  // link resolves to nothing ("page not found").
+  await ensureSlug();
+  if(g.link_code) return g.link_code;
   for(let attempt = 0; attempt < 3; attempt++) {   // retry on rare code collision
     const code = makeCode();
     // Only trust the code if the DB actually saved it (sbPatch returns ok=false on RLS/errors)
