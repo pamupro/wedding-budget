@@ -1500,6 +1500,135 @@ function renderChart() {
 
 // ─── PDF EXPORT ───────────────────────────────────────────────────────────────
 
+// ═══════════════════════════════════════════════════════════════════════════
+// VENDOR BACKUP & RESTORE
+// Download a complete JSON backup of all vendors + their payments, so the user
+// can re-upload everything to a new account if anything ever happens. JSON keeps
+// every field (currency, due dates, notes, payment history) intact — unlike a
+// flat CSV — so a restore rebuilds the data faithfully.
+// ═══════════════════════════════════════════════════════════════════════════
+function backupVendors(){
+  try{
+    if(!vendors || !vendors.length){ showToast('No vendors to back up yet', true); return; }
+
+    // Strip DB-specific ids so the file can be restored into ANY account,
+    // but keep a local ref so we can re-link payments to their vendor.
+    const vendorExport = vendors.map(v => ({
+      _ref: v.id,                       // temporary link key (not a DB id)
+      category: v.category || '',
+      icon: v.icon || '',
+      name: v.name || '',
+      total_cost: v.total_cost ?? 0,
+      total_cost_original: v.total_cost_original ?? null,
+      currency: v.currency || 'GBP',
+      notes: v.notes || '',
+      due_date: v.due_date || null,
+      due_amount: v.due_amount ?? null,
+      due_amount_original: v.due_amount_original ?? null,
+      due_note: v.due_note || ''
+    }));
+
+    const paymentExport = (payments || []).map(p => ({
+      vendor_ref: p.vendor_id,          // matches a vendor's _ref above
+      amount: p.amount ?? 0,
+      amount_original: p.amount_original ?? null,
+      currency: p.currency || 'GBP',
+      payment_date: p.payment_date || null,
+      note: p.note || ''
+    }));
+
+    const backup = {
+      _type: 'weddingledger-vendor-backup',
+      _version: 1,
+      exported_at: new Date().toISOString(),
+      couple: (profile ? [profile.name1, profile.name2].filter(Boolean).join(' & ') : '') || '',
+      vendor_count: vendorExport.length,
+      payment_count: paymentExport.length,
+      vendors: vendorExport,
+      payments: paymentExport
+    };
+
+    const stamp = new Date().toISOString().slice(0,10);
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `weddingledger-vendors-backup-${stamp}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showToast(`💾 Backed up ${vendorExport.length} vendors & ${paymentExport.length} payments`);
+  }catch(e){
+    showToast('Backup failed: ' + e.message, true);
+  }
+}
+
+async function restoreVendors(input){
+  const file = input.files && input.files[0];
+  input.value = '';                     // reset so the same file can be re-picked
+  if(!file) return;
+
+  let backup;
+  try{
+    backup = JSON.parse(await file.text());
+  }catch(e){ showToast('That file is not a valid backup', true); return; }
+
+  if(!backup || backup._type !== 'weddingledger-vendor-backup' || !Array.isArray(backup.vendors)){
+    showToast('This does not look like a WeddingLedger vendor backup', true); return;
+  }
+
+  const vCount = backup.vendors.length;
+  const pCount = (backup.payments || []).length;
+  const when = backup.exported_at ? new Date(backup.exported_at).toLocaleDateString('en-GB') : 'unknown date';
+  if(!confirm(`Restore ${vCount} vendors and ${pCount} payments from your backup (${when})?\n\nThis ADDS them to your current list — it won't delete what's already here.`)) return;
+
+  try{
+    showToast('Restoring your vendors…');
+    const refMap = {};                  // old _ref  →  new DB id
+
+    for(const v of backup.vendors){
+      const row = {
+        user_id: userId,
+        category: v.category || 'Vendor',
+        icon: v.icon || '💒',
+        name: v.name || '',
+        total_cost: v.total_cost ?? 0,
+        total_cost_original: v.total_cost_original ?? null,
+        currency: v.currency || 'GBP',
+        notes: v.notes || '',
+        due_date: v.due_date || null,
+        due_amount: v.due_amount ?? null,
+        due_amount_original: v.due_amount_original ?? null,
+        due_note: v.due_note || ''
+      };
+      const created = await DB.post('vendors', row, accessToken);
+      const newId = Array.isArray(created) ? created[0]?.id : created?.id;
+      if(newId && v._ref) refMap[v._ref] = newId;
+    }
+
+    for(const p of (backup.payments || [])){
+      const vid = refMap[p.vendor_ref];
+      if(!vid) continue;                // skip payments whose vendor didn't restore
+      await DB.post('payments', {
+        user_id: userId,
+        vendor_id: vid,
+        amount: p.amount ?? 0,
+        amount_original: p.amount_original ?? null,
+        currency: p.currency || 'GBP',
+        payment_date: p.payment_date || null,
+        note: p.note || ''
+      }, accessToken);
+    }
+
+    // Reload fresh from the server so everything renders correctly
+    vendors  = await DB.query(`vendors?user_id=eq.${userId}&order=created_at.asc`, accessToken);
+    payments = await DB.query(`payments?user_id=eq.${userId}&order=payment_date.asc`, accessToken);
+    renderVendors(); updateStats(); renderChart(); updateVendorLimitUI();
+    showToast(`✅ Restored ${vCount} vendors & ${pCount} payments`);
+  }catch(e){
+    showToast('Restore failed: ' + e.message, true);
+  }
+}
+
 async function exportPDF() {
   // Lazy-load jsPDF on first use (saves ~300kb on initial page load)
   if(typeof window.jspdf === 'undefined'){

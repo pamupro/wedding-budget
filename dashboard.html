@@ -875,6 +875,9 @@ textarea.modal-input{resize:vertical;min-height:80px}
     <h2 class="section-title">📊 <em>Overview</em></h2>
     <div class="section-acts">
       <button onclick="exportPDF()" class="btn btn-ghost btn-sm">📄 Export PDF</button>
+      <button onclick="backupVendors()" class="btn btn-ghost btn-sm" title="Download a backup file of all your vendors and payments">💾 Backup</button>
+      <button onclick="document.getElementById('restoreFile').click()" class="btn btn-ghost btn-sm" title="Restore vendors from a backup file">♻️ Restore</button>
+      <input type="file" id="restoreFile" accept="application/json,.json" style="display:none" onchange="restoreVendors(this)">
     </div>
   </div>
 
