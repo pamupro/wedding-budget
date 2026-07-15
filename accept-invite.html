@@ -27,6 +27,8 @@
       font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:all 0.2s}
     .btn-gold{background:linear-gradient(135deg,#9a7535,#C9A84C);color:white;box-shadow:0 4px 14px rgba(154,117,53,0.3)}
     .btn-ghost{background:transparent;color:#8a7a60;border:1.5px solid #e8e0d0}
+    .btn-google{background:#fff;color:#3c4043;border:1.5px solid #e0e0e0;font-weight:600}
+    .btn-google:hover{background:#f8f8f8;box-shadow:0 2px 8px rgba(0,0,0,.08)}
     .input{width:100%;padding:12px 16px;border:1.5px solid #e8e0d0;border-radius:10px;font-family:'Instrument Sans',sans-serif;
       font-size:14px;outline:none;margin-bottom:12px}
     .input:focus{border-color:#C9A84C}
@@ -71,6 +73,7 @@
       <input type="password" id="loginPassword" class="input" placeholder="Your password">
       <div id="loginError" class="status error" style="display:none"></div>
       <button class="btn btn-gold" onclick="doLogin()">Sign In & Accept Invite 💍</button>
+      <button class="btn btn-google" onclick="googleAccept()"><img src="https://www.google.com/favicon.ico" width="16" height="16" style="vertical-align:-3px;margin-right:8px">Continue with Google</button>
       <button class="btn btn-ghost" onclick="showSignup()">Create New Account Instead</button>
     </div>
     <div id="step-signup-form" style="display:none">
@@ -82,6 +85,7 @@
       <input type="password" id="signupPass" class="input" placeholder="Choose a password">
       <div id="signupError" class="status error" style="display:none"></div>
       <button class="btn btn-gold" onclick="doSignup()">Create Account & Accept 💍</button>
+      <button class="btn btn-google" onclick="googleAccept()"><img src="https://www.google.com/favicon.ico" width="16" height="16" style="vertical-align:-3px;margin-right:8px">Continue with Google</button>
       <button class="btn btn-ghost" onclick="showLogin()">Sign In to Existing Account</button>
     </div>
   </div>
@@ -117,6 +121,9 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   inviteToken = params.get('token');
   if(!inviteToken){ show('step-invalid'); return; }
+
+  // If returning from Google, finish accepting right away.
+  if(await handleGoogleReturn()) return;
 
   // Fetch invite
   const r = await fetch(`${SUPABASE_URL}/rest/v1/invites?token=eq.${inviteToken}&select=*`, {
@@ -195,38 +202,67 @@ async function doSignup() {
 }
 
 async function acceptInvite(userId, token) {
-  // Get partner's profile id
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${inviteData.from_user_id}&select=id`, {
-    headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`}
-  });
-  const rows = await r.json();
-  if(!rows||!rows.length){ alert('Could not find partner profile'); return; }
-  const partnerProfileId = rows[0].id;
+  // One server-side call does everything (looks up both profiles, links them,
+  // shares Pro, marks invite accepted). SECURITY DEFINER, so it isn't blocked
+  // by row-level security the way client-side cross-profile reads were.
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/accept_invite`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`},
+      body: JSON.stringify({ p_token: inviteToken })
+    });
+    const res = await r.json();
+    if(!r.ok || !res || res.ok !== true){
+      const msg = (res && res.error) ? res.error.replace(/_/g,' ') : 'could not link accounts';
+      alert('Sorry — ' + msg + '. Please ask your partner for a fresh invite.');
+      return;
+    }
+    show('step-success');
+    setTimeout(()=>{ location.href='dashboard.html'; }, 2500);
+  }catch(e){
+    alert('Something went wrong linking your accounts. Please try again.');
+  }
+}
 
-  // Get own profile id
-  const r2 = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}&select=id`, {
-    headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`}
-  });
-  const rows2 = await r2.json();
-  if(!rows2||!rows2.length){ alert('Profile not found'); return; }
-  const myProfileId = rows2[0].id;
+// ── Google sign-in: bounce to Google, come back to THIS page with the token kept ──
+function googleAccept(){
+  const base = location.origin + location.pathname; // keeps ?token via state below
+  const back = base + '?token=' + encodeURIComponent(inviteToken || '');
+  window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(back)}`;
+}
 
-  // Call link_partners function
-  await fetch(`${SUPABASE_URL}/rest/v1/rpc/link_partners`, {
-    method:'POST',
-    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`},
-    body: JSON.stringify({user_a: myProfileId, user_b: partnerProfileId})
-  });
+// If we're returning FROM Google (hash has access_token), finish the accept.
+async function handleGoogleReturn(){
+  const hash = window.location.hash || '';
+  if(hash.indexOf('access_token') === -1) return false;
+  const params = new URLSearchParams(hash.replace('#',''));
+  const token = params.get('access_token');
+  if(!token) return false;
 
-  // Mark invite as accepted
-  await fetch(`${SUPABASE_URL}/rest/v1/invites?token=eq.${inviteToken}`, {
-    method:'PATCH',
-    headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`,'Prefer':'return=minimal'},
-    body: JSON.stringify({status:'accepted', accepted_at: new Date().toISOString()})
-  });
+  // token id
+  let uid = '';
+  try{ uid = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub || ''; }catch(e){}
+  localStorage.setItem('wl_token', token);
+  localStorage.setItem('wl_refresh', params.get('refresh_token')||'');
+  if(uid) localStorage.setItem('wl_uid', uid);
 
-  show('step-success');
-  setTimeout(()=>{ location.href='dashboard.html'; }, 3000);
+  // Make sure the Google user has a profile row (so linking has something to point at)
+  try{
+    const h = {'apikey':SUPABASE_ANON_KEY,'Authorization':`Bearer ${token}`};
+    const pr = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${uid}&select=id`, {headers:h});
+    const rows = await pr.json();
+    if(Array.isArray(rows) && rows.length === 0){
+      await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+        method:'POST', headers:{...h,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify({ user_id: uid, name1:'', name2:'' })
+      });
+    }
+  }catch(e){}
+
+  // clean hash, then accept
+  history.replaceState(null,'',location.pathname + location.search);
+  await acceptInvite(uid, token);
+  return true;
 }
 
 init();

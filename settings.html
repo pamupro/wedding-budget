@@ -554,15 +554,23 @@ body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--i
         <div class="srow-ico">🔑</div>
         <div class="srow-body">
           <div class="srow-title">Password</div>
-          <div class="srow-sub">Send a reset link to your email address</div>
+          <div class="srow-sub">Set or change your password — lets you sign in with email too</div>
         </div>
-        <div class="srow-action"><span class="btn btn-ghost btn-sm">Reset</span></div>
+        <div class="srow-action"><span class="btn btn-ghost btn-sm">Manage</span></div>
         <div class="srow-panel">
           <div class="msg msg-ok" id="pwOk"></div>
-          <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
-            We'll send a password reset link to your account email. You'll stay logged in until you use it.
+          <div class="msg msg-err" id="pwErr"></div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+            Set a password to sign in with your email and password. If you joined with Google, you'll still be able to use Google <em>and</em> your new password.
           </div>
-          <button class="btn btn-primary" onclick="sendPasswordReset()">Send Reset Email</button>
+          <label class="field-label" style="font-size:12px;font-weight:600;color:var(--ink2)">New password</label>
+          <input type="password" id="newPw" class="modal-input" placeholder="At least 6 characters" style="margin:6px 0 12px">
+          <label class="field-label" style="font-size:12px;font-weight:600;color:var(--ink2)">Confirm password</label>
+          <input type="password" id="newPw2" class="modal-input" placeholder="Re-enter password" style="margin:6px 0 14px">
+          <button class="btn btn-primary" onclick="setNewPassword()">Save password</button>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border2);font-size:12.5px;color:var(--muted)">
+            Prefer email? <a href="#" onclick="sendPasswordReset();return false" style="color:var(--gold);font-weight:600">Send a reset link instead</a>
+          </div>
         </div>
       </div>
 
@@ -1081,6 +1089,29 @@ function copyShareUrl(){
 }
 
 /* ── SECURITY ── */
+async function setNewPassword(){
+  const pw  = document.getElementById('newPw').value;
+  const pw2 = document.getElementById('newPw2').value;
+  if(pw.length < 6){ showMsg('pwErr','Password must be at least 6 characters', false); return; }
+  if(pw !== pw2){ showMsg('pwErr','Passwords do not match', false); return; }
+  const btn = event.target; btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const tok = await DB.getValidToken(localStorage.getItem('wl_token'));
+    const r = await fetch(`${SUPA}/auth/v1/user`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+tok},
+      body: JSON.stringify({ password: pw })
+    });
+    const d = await r.json();
+    if(!r.ok){ throw new Error(d.msg || d.error_description || 'Could not set password'); }
+    document.getElementById('newPw').value=''; document.getElementById('newPw2').value='';
+    showMsg('pwOk','✅ Password saved — you can now sign in with your email and password', true);
+    toast('Password saved ✓');
+  }catch(e){
+    showMsg('pwErr', e.message || 'Could not set password', false);
+  }finally{ btn.disabled=false; btn.textContent='Save password'; }
+}
+
 async function sendPasswordReset(){
   const btn=event.target;btn.disabled=true;btn.textContent='Sending…';
   try{
