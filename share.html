@@ -145,15 +145,18 @@ body{
 .vname .tbd{color:var(--faint);font-style:italic;font-size:16px}
 
 .vmoney{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
-  padding:15px 10px;background:var(--paper);border-radius:12px;margin-bottom:14px;
+  display:grid;grid-template-columns:1fr 1fr;
+  background:var(--paper);border-radius:12px;margin-bottom:14px;overflow:hidden;
 }
-.vm{text-align:center}
-.vm-label{font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.vm-value{font-family:'Fraunces',serif;font-size:15px;font-weight:400;color:var(--ink);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums}
+.vm{padding:15px 16px;position:relative;min-width:0}
+.vm + .vm::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:1px;background:var(--line2)}
+.vm-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.vm-value{font-family:'Fraunces',serif;font-size:19px;font-weight:400;color:var(--ink);line-height:1.15;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 .vm-value.paid{color:var(--green)}
 .vm-value.remain{color:var(--rose)}
-.vm-gbp{font-size:10px;color:var(--faint);margin-top:2px}
+.vm-gbp{font-size:11px;color:var(--faint);margin-top:4px}
+.vm-paidline{font-size:11.5px;color:var(--muted);margin-top:5px}
+.vm-paidline b{color:var(--green);font-weight:600}
 
 .vdue{
   display:flex;justify-content:space-between;align-items:center;
@@ -385,8 +388,9 @@ function renderVendors(vendors, payments){
         '</div>'+
       '</div>'+
       '<div class="vmoney">'+
-        '<div class="vm"><div class="vm-label">Total</div><div class="vm-value">'+fmt(total)+'</div>'+gbpLine(total)+'</div>'+
-        '<div class="vm"><div class="vm-label">Paid</div><div class="vm-value paid">'+fmt(paid)+'</div>'+gbpLine(paid)+'</div>'+
+        '<div class="vm"><div class="vm-label">Total</div><div class="vm-value">'+fmt(total)+'</div>'+gbpLine(total)+
+          '<div class="vm-paidline">Paid <b>'+fmt(paid)+'</b></div>'+
+        '</div>'+
         '<div class="vm"><div class="vm-label">Remaining</div><div class="vm-value remain">'+fmt(remaining)+'</div>'+gbpLine(remaining)+'</div>'+
       '</div>'+
       dueHtml+
