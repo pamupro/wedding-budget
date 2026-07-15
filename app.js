@@ -464,6 +464,7 @@ function updateVendorLimitUI(){
 
 // ─── RENDER VENDORS ───────────────────────────────────────────────────────────
 function setVendorSort(mode){ vendorSort = mode || 'default'; renderVendors(); }
+window.setVendorSort = setVendorSort;
 
 // Return a sorted COPY of vendors for display (never mutates the real array,
 // so payment links by index/id stay intact).
