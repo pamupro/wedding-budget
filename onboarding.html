@@ -281,9 +281,12 @@ async function finishOnboarding(wantsPro){
     var H = {'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+ONB_TOKEN};
 
     // Upsert profile (Google may have created an empty one already)
+    // Pull the signed-in user's email from their token so it's stored on the profile
+    var onbEmail = '';
+    try{ onbEmail = JSON.parse(atob(ONB_TOKEN.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).email || ''; }catch(e){}
     await fetch(SUPABASE_URL+'/rest/v1/profiles?on_conflict=user_id', {
       method:'POST', headers:Object.assign({},H,{'Prefer':'resolution=merge-duplicates,return=minimal'}),
-      body: JSON.stringify({ user_id:ONB_UID, name1:n1, name2:n2, wedding_date: wd||null })
+      body: JSON.stringify({ user_id:ONB_UID, name1:n1, name2:n2, wedding_date: wd||null, email: onbEmail })
     });
 
     // Save budget + guest estimate + currency

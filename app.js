@@ -89,13 +89,21 @@ let vendorSort='default';
 
 // When partners are linked, all data is stored under one userId (alphabetically first)
 // This ensures both partners see the same data
+// The account whose data both partners share. Resolved once at init via RPC.
+let sharedOwnerId = null;
 function getDataUserId() {
-  if(!profile?.partner_id) return userId;
-  // Get the partner's actual user_id from their profile
-  // Use the one that was created first (stored in partnerProfile)
-  // Simple approach: always use current user's data, partner reads/writes same data
-  // via RLS policies that allow partner access
-  return userId; // both partners write to their own userId but can read each other's
+  return sharedOwnerId || userId;
+}
+async function resolveSharedOwner(){
+  try{
+    const r = await fetch(`${DB.SUPABASE_URL}/rest/v1/rpc/data_owner_for`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':DB.SUPABASE_ANON_KEY,'Authorization':'Bearer '+accessToken},
+      body: JSON.stringify({ p_user: userId })
+    });
+    const owner = await r.json();
+    sharedOwnerId = (typeof owner === 'string' && owner) ? owner : userId;
+  }catch(e){ sharedOwnerId = userId; }
 }
 let activePaymentVendorId=null, activeEditVendorId=null;
 let userId=null, accessToken=null, profile=null;
@@ -133,6 +141,7 @@ async function init() {
 
   try {
     await loadProfile();
+    await resolveSharedOwner();
     await loadPartnerData();
     loadReferralCode();
     updateWeddingPageUrl();
@@ -269,26 +278,13 @@ function updateProBadge() {
 
 // ─── LOAD DATA ───────────────────────────────────────────────────────────────
 async function loadVendors() {
-  // If linked to partner, use the primary account's data (lower UUID = primary)
-  const dataUserId = getDataUserId();
-  let ownVendors = await DB.query(`vendors?user_id=eq.${userId}&order=created_at.asc`,accessToken);
-  // If partner linked, also load their vendors and merge
-  if(profile?.partner_id) {
-    try {
-      // Get partner's user_id from their profile
-      const pRows = await DB.query(`profiles?id=eq.${profile.partner_id}&select=user_id`, accessToken);
-      if(pRows && pRows[0]) {
-        const partnerUserId = pRows[0].user_id;
-        const partnerVendors = await DB.query(`vendors?user_id=eq.${partnerUserId}&order=created_at.asc`, accessToken);
-        ownVendors = [...ownVendors, ...partnerVendors];
-      }
-    } catch(e) { console.log('Could not load partner vendors:', e); }
-  }
-  vendors = ownVendors;
-  if (!vendors.length) {
+  const owner = getDataUserId();
+  vendors = await DB.query(`vendors?user_id=eq.${owner}&order=created_at.asc`,accessToken);
+  // Seed starter vendors ONLY for a brand-new solo account (never when partner-linked)
+  if (!vendors.length && !profile?.partner_id) {
     const list=isPro?DEFAULT_VENDORS:DEFAULT_VENDORS.slice(0,FREE_VENDOR_LIMIT);
     for (const v of list) {
-      const r=await DB.post('vendors',{user_id:userId,category:v.category,icon:v.icon,name:'',total_cost:0,notes:'',due_date:null,due_amount:null,due_note:''},accessToken);
+      const r=await DB.post('vendors',{user_id:owner,category:v.category,icon:v.icon,name:'',total_cost:0,notes:'',due_date:null,due_amount:null,due_note:''},accessToken);
       vendors.push(r[0]);
     }
   }
@@ -306,7 +302,7 @@ async function loadTasks() {
   tasks=await DB.query(`tasks?user_id=eq.${dataUserId3}&order=created_at.asc`,accessToken);
   if (!tasks.length) {
     for (const text of DEFAULT_TASKS) {
-      const r=await DB.post('tasks',{user_id:userId,text,done:false},accessToken);
+      const r=await DB.post('tasks',{user_id:getDataUserId(),text,done:false},accessToken);
       tasks.push(r[0]);
     }
   }
@@ -326,7 +322,7 @@ async function loadPlatformSettings() {
 }
 
 async function loadSettings() {
-  const rows=await DB.query(`settings?user_id=eq.${userId}`,accessToken);
+  const rows=await DB.query(`settings?user_id=eq.${getDataUserId()}`,accessToken);
   rows.forEach(r=>{
     if(r.key==='spend_limit'){const sl=parseSpendLimitSetting(r.value);spendLimit=sl.gbp;spendLimitOriginal=sl.original;spendLimitCurrency=sl.currency;const fv=spendLimitFieldValue();const el=document.getElementById('spendLimit');if(el)el.value=fv;const el2=document.getElementById('settingsSpendLimit');if(el2)el2.value=fv;}
     if(r.key==='wedding_notes'){notes=r.value;const el=document.getElementById('weddingNotes');if(el)el.value=notes;}
@@ -708,7 +704,7 @@ async function addVendor(){
   if(!name){showToast('Please enter a vendor name',true);return;}
   const rawCost=parseFloat(document.getElementById('newVendorTotal').value)||0;
   const gbpCost=rawCost/CURRENCIES[activeCurrency].rate; // always store in GBP
-  const data={user_id:userId,icon:selectedIcon,
+  const data={user_id:getDataUserId(),icon:selectedIcon,
     category:document.getElementById('newVendorCategory').value.trim()||'Custom',
     name,total_cost:gbpCost,total_cost_original:rawCost,currency:activeCurrency,
     notes:document.getElementById('newVendorNotes').value.trim(),
@@ -789,7 +785,7 @@ async function submitPayment(){
   if(!date){showToast('Select a date',true);return;}
   // Convert to GBP for storage
   const gbpAmount=amount/CURRENCIES[activeCurrency].rate;
-  const data={user_id:userId,vendor_id:activePaymentVendorId,
+  const data={user_id:getDataUserId(),vendor_id:activePaymentVendorId,
     amount:gbpAmount,amount_original:amount,currency:activeCurrency,payment_date:date,
     method:document.getElementById('pmtMethod').value,
     note:document.getElementById('pmtNote').value.trim()};
@@ -1015,7 +1011,7 @@ function renderTasks(){
 }
 async function toggleTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.done=!t.done;await DB.patch('tasks',id,{done:t.done},accessToken);renderTasks();}
 async function deleteTask(id){await DB.del('tasks',id,accessToken);tasks=tasks.filter(t=>t.id!==id);renderTasks();}
-async function addTask(){const inp=document.getElementById('newTaskInput');const text=inp.value.trim();if(!text)return;const r=await DB.post('tasks',{user_id:userId,text,done:false},accessToken);tasks.push(r[0]);inp.value='';renderTasks();}
+async function addTask(){const inp=document.getElementById('newTaskInput');const text=inp.value.trim();if(!text)return;const r=await DB.post('tasks',{user_id:getDataUserId(),text,done:false},accessToken);tasks.push(r[0]);inp.value='';renderTasks();}
 
 // ─── ICON SELECTOR ───────────────────────────────────────────────────────────
 function renderEditIconSelector(){
@@ -1634,7 +1630,7 @@ async function restoreVendors(input){
 
     for(const v of backup.vendors){
       const row = {
-        user_id: userId,
+        user_id: getDataUserId(),
         category: v.category || 'Vendor',
         icon: v.icon || '💒',
         name: v.name || '',
@@ -1656,7 +1652,7 @@ async function restoreVendors(input){
       const vid = refMap[p.vendor_ref];
       if(!vid) continue;                // skip payments whose vendor didn't restore
       await DB.post('payments', {
-        user_id: userId,
+        user_id: getDataUserId(),
         vendor_id: vid,
         amount: p.amount ?? 0,
         amount_original: p.amount_original ?? null,
@@ -1667,8 +1663,8 @@ async function restoreVendors(input){
     }
 
     // Reload fresh from the server so everything renders correctly
-    vendors  = await DB.query(`vendors?user_id=eq.${userId}&order=created_at.asc`, accessToken);
-    payments = await DB.query(`payments?user_id=eq.${userId}&order=payment_date.asc`, accessToken);
+    vendors  = await DB.query(`vendors?user_id=eq.${getDataUserId()}&order=created_at.asc`, accessToken);
+    payments = await DB.query(`payments?user_id=eq.${getDataUserId()}&order=payment_date.asc`, accessToken);
     renderVendors(); updateStats(); renderChart(); updateVendorLimitUI();
     showToast(`✅ Restored ${vCount} vendors & ${pCount} payments`);
   }catch(e){

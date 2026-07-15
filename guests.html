@@ -1428,6 +1428,19 @@
 const SB = 'https://bqggtyguhedlyfffjkkw.supabase.co';
 const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 const uid = localStorage.getItem('wl_uid');
+let ownerId = uid;  // shared data owner (self, unless linked to a partner)
+async function resolveOwner(){
+  try{
+    const tok = await DB.getValidToken(getTok());
+    const r = await fetch(SB+'/rest/v1/rpc/data_owner_for', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+tok},
+      body: JSON.stringify({ p_user: uid })
+    });
+    const o = await r.json();
+    if(typeof o === 'string' && o) ownerId = o;
+  }catch(e){ ownerId = uid; }
+}
 const FREE_GUEST_LIMIT = 50;
 let isPro = false;
 // A "party" counts the primary guest + any family members on the card
@@ -1485,11 +1498,12 @@ let inviteCfg = Object.assign({}, INVITE_DEFAULTS);
 
 async function init() {
   try {
+    await resolveOwner();
     const [g,p,s,ic] = await Promise.all([
-      sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc'),
+      sbGet('guests?user_id=eq.'+ownerId+'&order=created_at.asc'),
       sbGet('profiles?user_id=eq.'+uid+'&select=name1,name2,wedding_date,page_slug,is_pro'),
-      sbGet('settings?user_id=eq.'+uid+'&key=eq.menu_config'),
-      sbGet('settings?user_id=eq.'+uid+'&key=eq.invitation_config')
+      sbGet('settings?user_id=eq.'+ownerId+'&key=eq.menu_config'),
+      sbGet('settings?user_id=eq.'+ownerId+'&key=eq.invitation_config')
     ]);
     guests = g || [];
     prof   = (p && p[0]) ? p[0] : {};
@@ -1534,7 +1548,7 @@ function startRealtime() {
 
 async function refreshGuests() {
   try {
-    const fresh = await sbGet('guests?user_id=eq.'+uid+'&order=created_at.asc');
+    const fresh = await sbGet('guests?user_id=eq.'+ownerId+'&order=created_at.asc');
     if(!fresh || !Array.isArray(fresh) || fresh.length === 0 && guests.length > 0) return;
     fresh.forEach(newG => {
       const old = guests.find(g => g.id === newG.id);
@@ -1928,7 +1942,7 @@ async function saveGuest() {
   });
 
   const data = {
-    user_id:       uid,
+    user_id:       ownerId,
     name,
     email:         document.getElementById('fEmail').value.trim() || null,
     phone:         num ? '+'+code+num : null,
@@ -2027,7 +2041,7 @@ async function resetAllGuests() {
   if((typed || '').trim().toUpperCase() !== 'DELETE'){ toast('Reset cancelled — you did not type DELETE', true); return; }
 
   try{
-    const ok = await sbDel('guests?user_id=eq.' + uid);
+    const ok = await sbDel('guests?user_id=eq.' + ownerId);
     if(!ok) throw new Error('server refused the delete');
     guests = []; selIds.clear();
     renderList(); updateStats(); updateBulkBar();
@@ -2403,7 +2417,7 @@ function previewCSV(inp) {
       .filter(r => r.join('').trim())
       .map(row => {
         const o = {}; hdr.forEach((h,i) => o[h] = row[i]||'');
-        return {user_id:uid, name:o.name, email:o.email||null, phone:o.phone||null,
+        return {user_id:ownerId, name:o.name, email:o.email||null, phone:o.phone||null,
           group_label:o.group||null, rsvp_status:o.rsvp||'pending',
           dietary:o.dietary||null, notes:o.notes||null};
       })
