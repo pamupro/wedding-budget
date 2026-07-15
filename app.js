@@ -1330,19 +1330,26 @@ async function sendPartnerInvite() {
     });
     profile.partner_email = email;
 
-    // Send invite email via Supabase Auth magic link (invites to the platform)
+    // Send invite email via Supabase Auth magic link (invites to the platform).
+    // NOTE: the REST endpoint takes redirect_to as a TOP-LEVEL field — the
+    // options:{emailRedirectTo} form is SDK-only and is silently ignored here,
+    // which made Supabase fall back to the Site URL (the index page).
     const inviteUrl = `${SITE_BASE}/accept-invite.html?token=${invite.token}`;
-    await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
+    const mlRes = await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY },
       body: JSON.stringify({
         email,
-        options: {
-          emailRedirectTo: inviteUrl,
-          data: { invite_token: invite.token, invite_url: inviteUrl }
-        }
+        redirect_to: inviteUrl,
+        data: { invite_token: invite.token, invite_url: inviteUrl }
       })
     });
+    if(!mlRes.ok){
+      // Surface a clear reason instead of a silent success
+      let msg = 'email could not be sent';
+      try{ const e = await mlRes.json(); msg = e.msg || e.error_description || e.error || msg; }catch(_){}
+      console.warn('magiclink send failed:', msg);
+    }
 
     // Fallback: also send a plain email with the invite link via Supabase
     // (The magic link above will include the redirect)
@@ -1365,11 +1372,12 @@ async function resendPartnerInvite() {
   if(!rows || !rows.length) { showToast('No pending invite found', true); return; }
 
   const inviteUrl = `${SITE_BASE}/accept-invite.html?token=${rows[0].token}`;
-  await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
+  const rr = await fetch(`${DB.SUPABASE_URL}/auth/v1/magiclink`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'apikey': DB.ANON_KEY },
-    body: JSON.stringify({ email, options: { emailRedirectTo: inviteUrl } })
+    body: JSON.stringify({ email, redirect_to: inviteUrl })
   });
+  if(!rr.ok){ showToast('Could not resend invite — please try again', true); return; }
   showToast(`💌 Invite resent to ${email}!`);
 }
 
