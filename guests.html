@@ -929,6 +929,9 @@
     <button onclick="openMenuModal()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu</button>
     <button onclick="openImport()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import</button>
     <button onclick="doExport()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
+    <button onclick="backupGuests()" class="topbar-btn desktop-only" style="color:var(--muted)" title="Download a full backup file of all guests">💾 Backup</button>
+    <button onclick="document.getElementById('guestRestoreFile').click()" class="topbar-btn desktop-only" style="color:var(--muted)" title="Restore guests from a backup file">♻️ Restore</button>
+    <input type="file" id="guestRestoreFile" accept="application/json,.json" style="display:none" onchange="restoreGuests(this)">
     <button onclick="resetAllGuests()" class="topbar-btn desktop-only" style="color:var(--err, #c53030)">🗑 Reset all</button>
     <a href="dashboard.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">← Dashboard</a>
     <button class="btn-primary" onclick="openAdd()" style="padding:8px 18px;font-size:13px">+ Add Guest</button>
@@ -947,6 +950,8 @@
     <button class="mobile-nav-item" onclick="openMenuModal();closeMobileNav()">🍽 Menu Settings</button>
     <button class="mobile-nav-item" onclick="openImport();closeMobileNav()">📥 Import CSV</button>
     <button class="mobile-nav-item" onclick="doExport();closeMobileNav()">📤 Export CSV</button>
+    <button class="mobile-nav-item" onclick="backupGuests();closeMobileNav()">💾 Backup guests</button>
+    <button class="mobile-nav-item" onclick="document.getElementById('guestRestoreFile').click();closeMobileNav()">♻️ Restore guests</button>
     <button class="mobile-nav-item" onclick="resetAllGuests();closeMobileNav()" style="color:#c53030">🗑 Reset all guests</button>
     <button class="mobile-nav-item" onclick="openInviteCfg();closeMobileNav()">💌 Invitation Settings</button>
     <button class="mobile-nav-item" onclick="location.href='seating.html'">🪑 Seating Chart</button>
@@ -2122,7 +2127,8 @@ const EM_BODY = 'Hi {name},\n\nWe would love for you to join us to celebrate our
 async function copyRsvpLink(gid) {
   const g = guests.find(x => x.id === gid);
   if(!g) return;
-  await ensureShortLink(g);
+  const code = await ensureShortLink(g);
+  if(!code){ return; }   // ensureShortLink already told the user why
   const url = rsvpUrl(g);
   if(navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(() => {
@@ -2242,7 +2248,7 @@ async function saveInviteCfg() {
 const SITE_BASE = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
 
 function rsvpUrl(g) {
-  if(g && g.link_code) return SITE_BASE + '/' + g.link_code;   // e.g. domain.com/HXc554
+  if(g && g.link_code) return SITE_BASE + '/r/?c=' + g.link_code;   // resolves via r/index.html → wedding.html
   const sl = prof?.page_slug;
   if(!sl) return SITE_BASE + '/';
   const base = SITE_BASE + '/wedding.html?slug=' + sl;
@@ -2263,12 +2269,18 @@ async function ensureShortLink(g) {
   if(!g || g.link_code) return g ? g.link_code : null;
   for(let attempt = 0; attempt < 3; attempt++) {   // retry on rare code collision
     const code = makeCode();
-    try {
-      await sbPatch('guests?id=eq.'+g.id, { link_code: code });
-      g.link_code = code;
-      return code;
-    } catch(e) { console.warn('link code retry', e); }
+    // Only trust the code if the DB actually saved it (sbPatch returns ok=false on RLS/errors)
+    const ok = await sbPatch('guests?id=eq.'+g.id, { link_code: code });
+    if(ok) {
+      // Read back to be certain it persisted (guards against silent policy issues)
+      const check = await sbGet('guests?id=eq.'+g.id+'&select=link_code');
+      if(check && check[0] && check[0].link_code === code) {
+        g.link_code = code;
+        return code;
+      }
+    }
   }
+  toast('Could not create the RSVP link — please try again', true);
   return null;
 }
 
@@ -2457,6 +2469,88 @@ function dlTemplate() {
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(rows.join('\n'));
   a.download='guests_template.csv'; a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GUEST LIST BACKUP & RESTORE  (full JSON — restores every field faithfully)
+// Same idea as the vendor backup: download a complete file now, re-upload it
+// to a fresh account later if anything ever happens to the data.
+// ═══════════════════════════════════════════════════════════════════════════
+function backupGuests(){
+  try{
+    if(!guests || !guests.length){ toast('No guests to back up yet', true); return; }
+    const guestExport = guests.map(g => ({
+      name: g.name || '',
+      email: g.email || null,
+      phone: g.phone || null,
+      rsvp_status: g.rsvp_status || 'pending',
+      group_label: g.group_label || null,
+      dietary: g.dietary || null,
+      notes: g.notes || null,
+      family_members: Array.isArray(g.family_members) ? g.family_members
+                      : (g.family_members ? (function(){try{return JSON.parse(g.family_members)}catch(e){return[]}})() : []),
+      plus_one: !!g.plus_one,
+      plus_one_name: g.plus_one_name || null,
+      link_code: g.link_code || null
+    }));
+    const backup = {
+      _type: 'weddingledger-guest-backup',
+      _version: 1,
+      exported_at: new Date().toISOString(),
+      guest_count: guestExport.length,
+      guests: guestExport
+    };
+    const stamp = new Date().toISOString().slice(0,10);
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `weddingledger-guests-backup-${stamp}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast(`💾 Backed up ${guestExport.length} guests`);
+  }catch(e){ toast('Backup failed: ' + e.message, true); }
+}
+
+async function restoreGuests(input){
+  const file = input.files && input.files[0];
+  input.value = '';
+  if(!file) return;
+  let backup;
+  try{ backup = JSON.parse(await file.text()); }
+  catch(e){ toast('That file is not a valid backup', true); return; }
+
+  if(!backup || backup._type !== 'weddingledger-guest-backup' || !Array.isArray(backup.guests)){
+    toast('This does not look like a WeddingLedger guest backup', true); return;
+  }
+  const n = backup.guests.length;
+  const when = backup.exported_at ? new Date(backup.exported_at).toLocaleDateString('en-GB') : 'unknown date';
+  if(!confirm(`Restore ${n} guests from your backup (${when})?\n\nThis ADDS them to your current list — it won't delete anyone already here.`)) return;
+
+  try{
+    toast('Restoring your guests…');
+    let added = 0;
+    for(const gb of backup.guests){
+      const row = {
+        user_id: ownerId,
+        name: gb.name || '',
+        email: gb.email || null,
+        phone: gb.phone || null,
+        rsvp_status: gb.rsvp_status || 'pending',
+        group_label: gb.group_label || null,
+        dietary: gb.dietary || null,
+        notes: gb.notes || null,
+        family_members: Array.isArray(gb.family_members) ? gb.family_members : [],
+        plus_one: !!gb.plus_one,
+        plus_one_name: gb.plus_one_name || null
+        // link_code intentionally NOT restored — codes are per-live-list and
+        // re-generated on demand, so old ones could collide.
+      };
+      const created = await sbPost('guests', row);
+      if(created){ guests.push(created); added++; }
+    }
+    rebuildGroupSel(); renderList(); updateStats();
+    toast(`✅ Restored ${added} guests`);
+  }catch(e){ toast('Restore failed: ' + e.message, true); }
 }
 
 function doExport() {
