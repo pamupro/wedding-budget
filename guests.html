@@ -929,6 +929,7 @@
     <button onclick="openMenuModal()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu</button>
     <button onclick="openImport()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import</button>
     <button onclick="doExport()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
+    <button onclick="resetAllGuests()" class="topbar-btn desktop-only" style="color:var(--err, #c53030)">🗑 Reset all</button>
     <a href="dashboard.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">← Dashboard</a>
     <button class="btn-primary" onclick="openAdd()" style="padding:8px 18px;font-size:13px">+ Add Guest</button>
     <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileNav()">☰</button>
@@ -946,6 +947,7 @@
     <button class="mobile-nav-item" onclick="openMenuModal();closeMobileNav()">🍽 Menu Settings</button>
     <button class="mobile-nav-item" onclick="openImport();closeMobileNav()">📥 Import CSV</button>
     <button class="mobile-nav-item" onclick="doExport();closeMobileNav()">📤 Export CSV</button>
+    <button class="mobile-nav-item" onclick="resetAllGuests();closeMobileNav()" style="color:#c53030">🗑 Reset all guests</button>
     <button class="mobile-nav-item" onclick="openInviteCfg();closeMobileNav()">💌 Invitation Settings</button>
     <button class="mobile-nav-item" onclick="location.href='seating.html'">🪑 Seating Chart</button>
     <button class="mobile-nav-item" onclick="location.href='timeline.html'">📅 Day-of Timeline</button>
@@ -1055,7 +1057,8 @@
     <select id="grpSel" style="display:none"></select>
     <select id="sortSel" style="display:none"><option value="name" selected></option></select>
 
-    <span id="cntLbl" style="font-size:12px;color:var(--muted);white-space:nowrap;margin-left:auto"></span>
+    <button id="selectAllBtn" onclick="toggleSelectAll()" class="topbar-btn" style="margin-left:auto;font-size:12px;color:var(--gold);white-space:nowrap;border:1px solid var(--gold-dim);border-radius:8px;padding:6px 12px;background:none;cursor:pointer">Select all</button>
+    <span id="cntLbl" style="font-size:12px;color:var(--muted);white-space:nowrap"></span>
   </div>
   <div class="grid" id="guestGrid"></div>
 
@@ -1983,10 +1986,62 @@ function toggleSel(id, cb) {
   if(card) card.classList.toggle('sel', cb.checked);
   updateBulkBar();
 }
+// The guests currently visible under the active search + side + RSVP filters
+function currentlyVisibleGuests() {
+  const q  = (document.getElementById('searchQ').value || '').toLowerCase();
+  return guests.filter(g => {
+    const st = g.rsvp_status || 'pending';
+    if(filt === 'yes'     && st !== 'yes')     return false;
+    if(filt === 'no'      && st !== 'no')      return false;
+    if(filt === 'pending' && st !== 'pending') return false;
+    if(filt === 'maybe'   && st !== 'maybe')   return false;
+    if(grpFilter && g.group_label !== grpFilter) return false;
+    if(q && !(g.name||'').toLowerCase().includes(q) &&
+            !(g.email||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+// Select / deselect every guest currently shown
+function toggleSelectAll() {
+  const shown = currentlyVisibleGuests();
+  const allSelected = shown.length > 0 && shown.every(g => selIds.has(g.id));
+  if(allSelected){ selIds.clear(); }
+  else { shown.forEach(g => selIds.add(g.id)); }
+  renderList(); updateBulkBar();
+  const btn = document.getElementById('selectAllBtn');
+  if(btn) btn.textContent = allSelected ? 'Select all' : 'Deselect all';
+}
+
+// Permanently wipe the ENTIRE guest list from the database — double confirmed.
+async function resetAllGuests() {
+  const total = guests.length;
+  if(total === 0){ toast('There are no guests to reset'); return; }
+
+  // First confirmation
+  if(!confirm('⚠️ Reset the ENTIRE guest list?\n\nThis permanently deletes all ' + total + ' guests from your account. This cannot be undone.')) return;
+
+  // Second confirmation — type DELETE to proceed
+  const typed = prompt('This is permanent. To confirm, type DELETE to wipe all ' + total + ' guests:');
+  if(typed === null) return;
+  if((typed || '').trim().toUpperCase() !== 'DELETE'){ toast('Reset cancelled — you did not type DELETE', true); return; }
+
+  try{
+    const ok = await sbDel('guests?user_id=eq.' + uid);
+    if(!ok) throw new Error('server refused the delete');
+    guests = []; selIds.clear();
+    renderList(); updateStats(); updateBulkBar();
+    toast('✅ All ' + total + ' guests permanently deleted');
+  }catch(e){
+    toast('Could not reset guest list: ' + e.message, true);
+  }
+}
+
 function clearSel() {
   selIds.clear();
   document.querySelectorAll('.gcheck').forEach(c=>c.checked=false);
   document.querySelectorAll('.gcard').forEach(c=>c.classList.remove('sel'));
+  const sab = document.getElementById('selectAllBtn'); if(sab) sab.textContent = 'Select all';
   updateBulkBar();
 }
 function updateBulkBar() {
