@@ -320,7 +320,10 @@
     .toolbar { padding: 10px 14px; }
     .grid { padding: 12px; grid-template-columns: 1fr; }
     .stats-strip { top: 56px; }
-    .hamburger-btn { display: flex; align-items: center; }
+    /* style.css hides .hamburger-btn on mobile (the dashboard uses .mnav-btn
+       instead), but this page needs it for navigation — override with the same
+       !important weight, and load it AFTER style.css so this wins. */
+    .hamburger-btn { display: flex !important; align-items: center; }
     .desktop-only { display: none !important; }
   }
 
