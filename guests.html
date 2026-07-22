@@ -927,6 +927,7 @@
   <div class="topbar-right">
     <button onclick="openInviteCfg()" class="topbar-btn desktop-only" style="color:var(--muted)">💌 Invitation</button>
     <button onclick="openMenuModal()" class="topbar-btn desktop-only" style="color:var(--muted)">🍽 Menu</button>
+    <a href="liquor.html" class="topbar-btn desktop-only" style="color:var(--muted);text-decoration:none">🥂 Liquor</a>
     <button onclick="openImport()" class="topbar-btn desktop-only" style="color:var(--muted)">📥 Import</button>
     <button onclick="doExport()" class="topbar-btn desktop-only" style="color:var(--muted)">📤 Export</button>
     <button onclick="backupGuests()" class="topbar-btn desktop-only" style="color:var(--muted)" title="Download a full backup file of all guests">💾 Backup</button>
@@ -948,6 +949,7 @@
   <div class="mobile-nav-items">
     <button class="mobile-nav-item" onclick="openAdd();closeMobileNav()">+ Add Guest</button>
     <button class="mobile-nav-item" onclick="openMenuModal();closeMobileNav()">🍽 Menu Settings</button>
+    <a href="liquor.html" class="mobile-nav-item" style="text-decoration:none;display:block">🥂 Liquor List</a>
     <button class="mobile-nav-item" onclick="openImport();closeMobileNav()">📥 Import CSV</button>
     <button class="mobile-nav-item" onclick="doExport();closeMobileNav()">📤 Export CSV</button>
     <button class="mobile-nav-item" onclick="backupGuests();closeMobileNav()">💾 Backup guests</button>
@@ -1619,8 +1621,16 @@ function renderList() {
     if(filt === 'pending' && st !== 'pending') return false;
     if(filt === 'maybe'   && st !== 'maybe')  return false;
     if(gr && g.group_label !== gr)            return false;
-    if(q  && !(g.name||'').toLowerCase().includes(q) &&
-             !(g.email||'').toLowerCase().includes(q)) return false;
+    if(q) {
+      // Match the primary guest OR any of their family members (spouse/child/other),
+      // so searching a sub-guest's name surfaces the card they belong to.
+      const famMatch = getFam(g).some(m =>
+        [m.first, m.last].filter(Boolean).join(' ').toLowerCase().includes(q));
+      if(!(g.name||'').toLowerCase().includes(q) &&
+         !(g.email||'').toLowerCase().includes(q) &&
+         !(g.phone||'').toLowerCase().includes(q) &&
+         !famMatch) return false;
+    }
     return true;
   });
 

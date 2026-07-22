@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquor List — WeddingLedger</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#b8862a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf7f2; --bg2:#f5f0e8; --surface:#fffdf9; --ink:#1a1710; --ink2:#2e2a20;
+  --muted:#7a7060; --faint:#a89e8a; --gold:#b8862a; --gold2:#d4a840; --gold-pale:#fdf3e0;
+  --border:rgba(184,134,42,.22); --border2:rgba(26,23,16,.08);
+  --green:#4b7a4b; --green-pale:#eaf3ea; --rose:#a8536a; --rose-pale:#fdeef1;
+  --shadow:0 1px 2px rgba(26,23,16,.04), 0 8px 24px rgba(26,23,16,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Instrument Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding-bottom:90px}
+
+/* topbar */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border2);padding:14px 22px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:40;flex-wrap:wrap}
+.logo{font-family:'Fraunces',serif;font-size:19px;font-weight:300}
+.logo em{font-style:italic;color:var(--gold)}
+.crumb{font-family:'Fraunces',serif;font-style:italic;font-size:17px;color:var(--muted)}
+.divider{color:var(--faint)}
+.tb-acts{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tb-btn{background:none;border:none;font-family:inherit;font-size:13px;color:var(--muted);cursor:pointer;padding:7px 11px;border-radius:8px;text-decoration:none;white-space:nowrap}
+.tb-btn:hover{background:var(--bg2);color:var(--ink)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border2);background:var(--surface)}
+.stat{padding:20px 18px;text-align:center;border-right:1px solid var(--border2);cursor:pointer;transition:.15s}
+.stat:last-child{border-right:none}
+.stat:hover{background:var(--bg2)}
+.stat.on{background:var(--gold-pale)}
+.stat-n{font-family:'Fraunces',serif;font-size:32px;font-weight:300;line-height:1}
+.stat-n.drink{color:var(--gold)}
+.stat-n.no{color:var(--muted)}
+.stat-n.und{color:var(--faint)}
+.stat-l{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:7px}
+
+/* controls */
+.controls{max-width:1180px;margin:0 auto;padding:20px 22px 8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search{flex:1;min-width:220px;position:relative}
+.search input{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--surface)}
+.search input:focus{outline:none;border-color:var(--gold)}
+.search::before{content:'🔍';position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;opacity:.5}
+select.filter{padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:13.5px;background:var(--surface);cursor:pointer;color:var(--ink)}
+.bulk{display:flex;gap:6px}
+.bulk button{padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap}
+.bulk button:hover{border-color:var(--gold);color:var(--ink)}
+
+/* list */
+.wrap{max-width:1180px;margin:0 auto;padding:10px 22px 40px}
+.grp-head{display:flex;align-items:center;gap:12px;padding:22px 0 10px}
+.grp-head span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap}
+.grp-head hr{flex:1;border:none;border-top:1px solid var(--border)}
+
+.prow{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:12px 15px;margin-bottom:8px;display:flex;align-items:center;gap:13px;box-shadow:var(--shadow);transition:.15s}
+.prow.sub{margin-left:28px;background:var(--bg2);border-style:dashed}
+.prow.yes{border-left:3px solid var(--gold)}
+.avat{width:36px;height:36px;border-radius:50%;background:var(--gold-pale);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:var(--gold);flex-shrink:0}
+.prow.sub .avat{width:30px;height:30px;font-size:11px;background:var(--surface)}
+.pinfo{flex:1;min-width:0}
+.pname{font-weight:600;font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow.sub .pname{font-size:13.5px;font-weight:500}
+.pmeta{font-size:11.5px;color:var(--faint);margin-top:1px}
+.ptag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);background:var(--gold-pale);padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:1px}
+
+/* toggle */
+.seg{display:flex;border:1.5px solid var(--border);border-radius:9px;overflow:hidden;flex-shrink:0}
+.seg button{border:none;background:var(--surface);font-family:inherit;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;color:var(--muted);transition:.12s;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button:hover{background:var(--bg2)}
+.seg button.on-yes{background:var(--gold);color:#fff}
+.seg button.on-no{background:var(--ink2);color:#fff}
+
+/* summary bar */
+.sumbar{position:fixed;bottom:0;left:0;right:0;background:var(--ink);color:#fdf9f4;padding:14px 22px;display:flex;align-items:center;gap:22px;z-index:50;box-shadow:0 -4px 20px rgba(26,23,16,.15);flex-wrap:wrap}
+.sum-item{display:flex;flex-direction:column;gap:1px}
+.sum-n{font-family:'Fraunces',serif;font-size:22px;font-weight:300;line-height:1}
+.sum-n.g{color:var(--gold2)}
+.sum-l{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+.sum-note{margin-left:auto;font-size:12px;opacity:.7;max-width:420px}
+
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty .ei{font-size:38px;margin-bottom:14px}
+.empty h3{font-family:'Fraunces',serif;font-weight:400;font-size:21px;margin-bottom:7px;color:var(--ink)}
+
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fdf9f4;padding:12px 20px;border-radius:10px;font-size:13.5px;z-index:60;transition:transform .25s;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:#8a2a2a}
+
+.loading{text-align:center;padding:80px 20px;color:var(--muted)}
+.spin{width:30px;height:30px;border:2.5px solid var(--border);border-top-color:var(--gold);border-radius:50%;margin:0 auto 16px;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+@media(max-width:720px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2){border-right:none}
+  .stat:nth-child(1),.stat:nth-child(2){border-bottom:1px solid var(--border2)}
+  .topbar{padding:12px 16px}
+  .crumb,.divider{display:none}
+  .controls,.wrap{padding-left:16px;padding-right:16px}
+  .prow.sub{margin-left:14px}
+  .sum-note{display:none}
+  .tb-btn{font-size:12px;padding:6px 8px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">Wedding<em>Ledger</em></span>
+  <span class="divider">|</span>
+  <span class="crumb">Liquor List</span>
+  <div class="tb-acts">
+    <button onclick="markAll('yes')" class="tb-btn">🥂 All drinking</button>
+    <button onclick="markAll('no')" class="tb-btn">🚫 All not</button>
+    <button onclick="exportLiquor()" class="tb-btn">📤 Export CSV</button>
+    <a href="guests.html" class="tb-btn">← Guest List</a>
+    <a href="dashboard.html" class="tb-btn">Dashboard</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat" id="st-all"  onclick="setFilter('all')">
+    <div class="stat-n" id="n-all">—</div><div class="stat-l">👥 Total People</div>
+  </div>
+  <div class="stat" id="st-yes"  onclick="setFilter('yes')">
+    <div class="stat-n drink" id="n-yes">—</div><div class="stat-l">🥂 Drinking</div>
+  </div>
+  <div class="stat" id="st-no"   onclick="setFilter('no')">
+    <div class="stat-n no" id="n-no">—</div><div class="stat-l">🚫 Not Drinking</div>
+  </div>
+  <div class="stat" id="st-und"  onclick="setFilter('und')">
+    <div class="stat-n und" id="n-und">—</div><div class="stat-l">❔ Not Set</div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search"><input id="q" placeholder="Search any name…" oninput="onSearch()" autocomplete="off"></div>
+  <select class="filter" id="grpF" onchange="render()"><option value="">All groups</option></select>
+  <select class="filter" id="sortF" onchange="render()">
+    <option value="group">Sort: Group</option>
+    <option value="name">Sort: Name A–Z</option>
+    <option value="status">Sort: Drinking first</option>
+  </select>
+</div>
+
+<div class="wrap">
+  <div id="loading" class="loading"><div class="spin"></div><p>Loading your guest list…</p></div>
+  <div id="list"></div>
+</div>
+
+<div class="sumbar" id="sumbar" style="display:none">
+  <div class="sum-item"><span class="sum-n g" id="s-yes">0</span><span class="sum-l">Drinking</span></div>
+  <div class="sum-item"><span class="sum-n" id="s-no">0</span><span class="sum-l">Not drinking</span></div>
+  <div class="sum-item"><span class="sum-n" id="s-und">0</span><span class="sum-l">Not set</span></div>
+  <div class="sum-item"><span class="sum-n" id="s-all">0</span><span class="sum-l">Total people</span></div>
+  <div class="sum-note">Counts every person including family members. Separate from RSVP — a guest can be attending and not drinking.</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="db.js"></script>
+<script>
+var SUPABASE_URL      = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+const SB = SUPABASE_URL, SK = SUPABASE_ANON_KEY;
+
+const uid = localStorage.getItem('wl_uid');
+if(!uid || !localStorage.getItem('wl_token')) location.href = 'login.html';
+function getTok(){ return localStorage.getItem('wl_token'); }
+
+let ownerId = uid;
+let guests  = [];
+let drinks  = {};          // { "<personKey>": "yes" | "no" }
+let filt    = 'all';
+let saveTimer = null;
+let searchTimer = null;
+
+async function h(){ const t = await DB.getValidToken(getTok()); return DB._h(t); }
+async function sbGet(p){ const r = await fetch(SB+'/rest/v1/'+p,{headers:await h()}); if(!r.ok){console.error('GET',p,r.status);return null;} return r.json(); }
+async function sbPost(t,d){ const hd=await h(); hd['Prefer']='return=representation';
+  const r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:hd,body:JSON.stringify(d)});
+  if(!r.ok){console.error('POST',t,r.status);return null;} const rows=await r.json(); return Array.isArray(rows)?rows[0]:null; }
+async function sbPatch(q,d){ const hd=await h(); hd['Prefer']='return=minimal';
+  const r=await fetch(SB+'/rest/v1/'+q,{method:'PATCH',headers:hd,body:JSON.stringify(d)});
+  if(!r.ok)console.error('PATCH',q,r.status); return r.ok; }
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(m,err){ const t=document.getElementById('toast'); t.textContent=m; t.className='toast show'+(err?' err':''); setTimeout(()=>t.className='toast'+(err?' err':''),2600); }
+function tryJSON(v){ try{ return JSON.parse(v); }catch(e){ return []; } }
+function getFam(g){ return Array.isArray(g.family_members)?g.family_members:(g.family_members?tryJSON(g.family_members):[]); }
+
+// Stable key per person: primary = guest id, family member = guest id + index
+function keyOf(gid, idx){ return idx==null ? gid : gid+'::'+idx; }
+
+async function resolveOwner(){
+  try{
+    const tok = await DB.getValidToken(getTok());
+    const r = await fetch(SB+'/rest/v1/rpc/data_owner_for',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+tok},
+      body: JSON.stringify({ p_user: uid })
+    });
+    const o = await r.json();
+    if(typeof o === 'string' && o) ownerId = o;
+  }catch(e){ ownerId = uid; }
+}
+
+// ── Flatten guests into one row per PERSON ──
+function people(){
+  const out = [];
+  guests.forEach(g => {
+    out.push({ key: keyOf(g.id), gid: g.id, name: g.name || 'Unnamed',
+               group: g.group_label || '', sub: false, tag: '' });
+    getFam(g).forEach((m, i) => {
+      const nm = [m.first, m.last].filter(Boolean).join(' ');
+      if(!nm) return;
+      const tag = m.type === 'spouse' ? 'Spouse' : m.type === 'child' ? 'Child' : 'Guest';
+      out.push({ key: keyOf(g.id, i), gid: g.id, name: nm,
+                 group: g.group_label || '', sub: true, tag, parent: g.name || '' });
+    });
+  });
+  return out;
+}
+
+function statusOf(k){ return drinks[k] || 'und'; }
+
+// ── Persist (debounced) into settings.liquor_list ──
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDrinks, 600);
+}
+async function saveDrinks(){
+  try{
+    const value = JSON.stringify(drinks);
+    const existing = await sbGet('settings?user_id=eq.'+ownerId+'&key=eq.liquor_list&select=id');
+    if(existing && existing.length){
+      await sbPatch('settings?user_id=eq.'+ownerId+'&key=eq.liquor_list', { value });
+    } else {
+      await sbPost('settings', { user_id: ownerId, key: 'liquor_list', value });
+    }
+  }catch(e){ toast('Could not save — check your connection', true); }
+}
+
+// ── Actions ──
+function setDrink(key, val){
+  if(drinks[key] === val) delete drinks[key];   // tapping the active one clears it
+  else drinks[key] = val;
+  queueSave();
+  render();
+}
+function markAll(val){
+  const list = visible();
+  if(!list.length){ toast('Nothing to mark here'); return; }
+  const label = val==='yes' ? 'drinking' : 'not drinking';
+  if(!confirm('Mark all '+list.length+' people currently shown as '+label+'?')) return;
+  list.forEach(p => { drinks[p.key] = val; });
+  queueSave();
+  render();
+  toast('Marked '+list.length+' as '+label);
+}
+function setFilter(f){ filt = f; render(); }
+function onSearch(){ clearTimeout(searchTimer); searchTimer = setTimeout(render, 180); }
+
+// ── Filtering ──
+function visible(){
+  const q  = (document.getElementById('q').value||'').toLowerCase().trim();
+  const gr = document.getElementById('grpF').value;
+  const so = document.getElementById('sortF').value;
+  let list = people().filter(p => {
+    const st = statusOf(p.key);
+    if(filt !== 'all' && st !== filt) return false;
+    if(gr && p.group !== gr) return false;
+    if(q && !p.name.toLowerCase().includes(q) &&
+            !(p.parent||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(so === 'name')   list.sort((a,b)=>a.name.localeCompare(b.name));
+  if(so === 'status') list.sort((a,b)=>{
+    const r={yes:0,no:1,und:2};
+    return (r[statusOf(a.key)]-r[statusOf(b.key)]) || a.name.localeCompare(b.name);
+  });
+  return list;
+}
+
+// ── Render ──
+function render(){
+  const list = visible();
+  const all  = people();
+
+  // headline stats always reflect EVERYONE, not the filtered view
+  let y=0,n=0,u=0;
+  all.forEach(p=>{ const s=statusOf(p.key); if(s==='yes')y++; else if(s==='no')n++; else u++; });
+  document.getElementById('n-all').textContent = all.length;
+  document.getElementById('n-yes').textContent = y;
+  document.getElementById('n-no').textContent  = n;
+  document.getElementById('n-und').textContent = u;
+  document.getElementById('s-yes').textContent = y;
+  document.getElementById('s-no').textContent  = n;
+  document.getElementById('s-und').textContent = u;
+  document.getElementById('s-all').textContent = all.length;
+  document.getElementById('sumbar').style.display = 'flex';
+
+  ['all','yes','no','und'].forEach(f=>{
+    document.getElementById('st-'+f).classList.toggle('on', filt===f);
+  });
+
+  const host = document.getElementById('list');
+  if(!list.length){
+    host.innerHTML = '<div class="empty"><div class="ei">🥂</div><h3>Nobody here</h3><p>Try a different search or filter.</p></div>';
+    return;
+  }
+
+  const so = document.getElementById('sortF').value;
+  let html = '';
+  if(so === 'group'){
+    const grouped = {};
+    list.forEach(p => { const k = p.group || 'Ungrouped'; (grouped[k] = grouped[k] || []).push(p); });
+    Object.keys(grouped).sort().forEach(k => {
+      const gs = grouped[k];
+      let gy=0; gs.forEach(p=>{ if(statusOf(p.key)==='yes') gy++; });
+      html += '<div class="grp-head"><span>'+esc(k)+' — '+gs.length+' people · '+gy+' drinking</span><hr></div>';
+      gs.forEach(p => html += row(p));
+    });
+  } else {
+    list.forEach(p => html += row(p));
+  }
+  host.innerHTML = html;
+}
+
+function row(p){
+  const st  = statusOf(p.key);
+  const ini = p.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const meta = p.sub ? 'with '+esc(p.parent) : (p.group ? esc(p.group) : '');
+  return '<div class="prow'+(p.sub?' sub':'')+(st==='yes'?' yes':'')+'">'+
+    '<div class="avat">'+esc(ini||'?')+'</div>'+
+    '<div class="pinfo">'+
+      '<div class="pname">'+esc(p.name)+(p.tag?'<span class="ptag">'+esc(p.tag)+'</span>':'')+'</div>'+
+      (meta?'<div class="pmeta">'+meta+'</div>':'')+
+    '</div>'+
+    '<div class="seg">'+
+      '<button class="'+(st==='yes'?'on-yes':'')+'" onclick="setDrink(\''+p.key+'\',\'yes\')">🥂 Drinks</button>'+
+      '<button class="'+(st==='no'?'on-no':'')+'" onclick="setDrink(\''+p.key+'\',\'no\')">🚫 No</button>'+
+    '</div>'+
+  '</div>';
+}
+
+// ── Export ──
+function exportLiquor(){
+  const rows = [['name','type','group','with','drinking']];
+  people().forEach(p=>{
+    const st = statusOf(p.key);
+    rows.push([
+      (p.name||'').replace(/,/g,' '),
+      p.sub ? (p.tag||'Guest') : 'Primary',
+      (p.group||'').replace(/,/g,' '),
+      (p.parent||'').replace(/,/g,' '),
+      st==='yes'?'Yes':st==='no'?'No':'Not set'
+    ]);
+  });
+  let y=0,n=0,u=0;
+  people().forEach(p=>{ const s=statusOf(p.key); if(s==='yes')y++; else if(s==='no')n++; else u++; });
+  rows.push([]); rows.push(['TOTAL DRINKING',y]); rows.push(['TOTAL NOT DRINKING',n]);
+  rows.push(['NOT SET',u]); rows.push(['TOTAL PEOPLE',people().length]);
+
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'liquor-list-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('📤 Liquor list exported');
+}
+
+// ── Init ──
+(async function init(){
+  try{
+    await resolveOwner();
+    const [g, s] = await Promise.all([
+      sbGet('guests?user_id=eq.'+ownerId+'&order=created_at.asc'),
+      sbGet('settings?user_id=eq.'+ownerId+'&key=eq.liquor_list&select=value')
+    ]);
+    guests = g || [];
+    if(s && s[0] && s[0].value){ try{ drinks = JSON.parse(s[0].value) || {}; }catch(e){ drinks = {}; } }
+
+    // group dropdown
+    const groups = [...new Set(guests.map(x=>x.group_label).filter(Boolean))].sort();
+    const sel = document.getElementById('grpF');
+    groups.forEach(gr=>{ const o=document.createElement('option'); o.value=gr; o.textContent=gr; sel.appendChild(o); });
+
+    document.getElementById('loading').style.display='none';
+    render();
+  }catch(e){
+    document.getElementById('loading').innerHTML =
+      '<p>Could not load your guest list. Please refresh, or open the Guest List page first.</p>';
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
