@@ -915,7 +915,7 @@
   }
 
   /* ── Topbar must sit above sticky strips ── */
-  .topbar { z-index: 400 !important; }
+  .topbar { z-index: 600 !important; }
 
   /* ── Manage dropdown ─────────────────────────────────────────── */
   .tb-menu { position: relative; display: inline-block; }
@@ -929,7 +929,7 @@
     position: absolute; top: calc(100% + 8px); right: 0; min-width: 262px;
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 14px; box-shadow: var(--shadow3);
-    padding: 7px; z-index: 500;
+    padding: 7px; z-index: 700;
     opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98);
     transform-origin: top right; transition: opacity .16s ease, transform .16s ease, visibility .16s;
   }
