@@ -975,7 +975,7 @@
         <circle cx="7" cy="7" r="5.5" stroke="#1a1612" stroke-width="1.5"/>
         <path d="M11 11l3 3" stroke="#1a1612" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
-      <input id="searchQ" placeholder="Search guests…" oninput="renderList()">
+      <input id="searchQ" placeholder="Search guests…" oninput="onSearchInput()" autocomplete="off">
     </div>
 
     <!-- Custom dropdown: Side filter -->
@@ -1566,8 +1566,10 @@ async function refreshGuests() {
       }
     });
     guests = fresh;
-    renderList();
     updateStats();
+    // Don't rebuild the list while the user is mid-search — it steals focus
+    // and makes the results visibly jump. The next keystroke re-renders anyway.
+    if(!isTyping) renderList();
   } catch(e) { console.warn('Poll error:', e); }
 }
 
@@ -1653,11 +1655,30 @@ function renderList() {
   for(const [k,gs] of Object.entries(grouped)) {
     if(k) {
       const grpIcon = {'Bride Side':'💐','Groom Side':'🤵','Both Sides':'💑',"Bride's Friend":'🌸',"Groom's Friend":'🙌','Other':'👥'}[k] || '👥';
-      html += '<div class="grp-head"><span>'+grpIcon+' '+esc(k)+' — '+gs.length+'</span><hr></div>';
+      // Count every PERSON in this group: each card's primary guest + their family members
+      const people = gs.reduce((sum, g) => sum + 1 + familyCount(g), 0);
+      const label  = people === gs.length
+        ? people                                   // no family members — one number is clearest
+        : people + ' <span style="opacity:.6;font-weight:600">(' + gs.length + ' groups)</span>';
+      html += '<div class="grp-head"><span>'+grpIcon+' '+esc(k)+' — '+label+'</span><hr></div>';
     }
     gs.forEach(g => { html += buildCard(g); });
   }
   grid.innerHTML = html;
+}
+
+// ── Search: debounce so a 281-guest list isn't rebuilt on every keystroke.
+// Also marks the user as "actively typing" so background refreshes don't
+// yank the DOM out from under them mid-search (that caused the shaking).
+let searchTimer = null;
+let isTyping    = false;
+function onSearchInput() {
+  isTyping = true;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    isTyping = false;
+    renderList();
+  }, 180);
 }
 
 function tryParseJSON(v) { try { return JSON.parse(v); } catch(e) { return []; } }
