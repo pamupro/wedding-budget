@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Wedding Invitation — WeddingLedger</title>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="theme-color" content="#b8862a">
 
   <!-- Open Graph / WhatsApp thumbnail -->
   <meta property="og:type"         content="website">
@@ -21,8 +17,6 @@
   <meta name="twitter:description" id="twDesc"        content="Please join us to celebrate our wedding day">
   <meta name="twitter:image"       id="twImage"       content="https://bqggtyguhedlyfffjkkw.supabase.co/storage/v1/object/public/wedding-photos/og-default.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://bqggtyguhedlyfffjkkw.supabase.co">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -210,6 +204,49 @@
     .detail-label{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
     .detail-val{font-size:13px;font-weight:600;color:var(--dark);line-height:1.5}
 
+    /* ── Modern details redesign ── */
+    .det-eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);
+      font-weight:600;margin-bottom:14px}
+    .det-list{max-width:560px;margin:0 auto 26px;display:flex;flex-direction:column;gap:2px}
+    .det-row{display:flex;align-items:center;gap:18px;padding:20px 22px;background:white;
+      border:1px solid rgba(201,168,76,.18);position:relative;text-align:left}
+    .det-row:first-child{border-radius:18px 18px 0 0}
+    .det-row:last-child{border-radius:0 0 18px 18px}
+    .det-row:only-child{border-radius:18px}
+    .det-row + .det-row{border-top:none}
+    .det-ic{width:52px;height:52px;flex-shrink:0;border-radius:50%;
+      background:linear-gradient(135deg,#fdf6e3,#f3e6c0);
+      display:flex;align-items:center;justify-content:center;font-size:23px;
+      box-shadow:inset 0 0 0 1px rgba(201,168,76,.25)}
+    .det-body{flex:1;min-width:0}
+    .det-k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+    .det-v{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--dark);line-height:1.15}
+
+    /* ── Venue + map ── */
+    .venue-card{max-width:560px;margin:0 auto;background:white;border-radius:20px;overflow:hidden;
+      border:1px solid rgba(201,168,76,.22);box-shadow:0 8px 40px rgba(61,46,26,.08)}
+    .venue-head{display:flex;align-items:center;gap:14px;padding:20px 22px}
+    .venue-pin{width:46px;height:46px;flex-shrink:0;border-radius:50%;
+      background:linear-gradient(135deg,#fdf6e3,#f3e6c0);display:flex;align-items:center;
+      justify-content:center;font-size:22px;box-shadow:inset 0 0 0 1px rgba(201,168,76,.25)}
+    .venue-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--dark);line-height:1.2}
+    .venue-addr{font-size:13px;color:var(--muted);margin-top:2px}
+    .map-frame{display:block;position:relative;cursor:pointer;text-decoration:none}
+    .map-frame::after{content:'';position:absolute;inset:0;background:transparent;transition:background .2s}
+    .map-frame:hover::after{background:rgba(201,168,76,.08)}
+    .map-cta{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:2;
+      background:var(--dark);color:#fdf9f0;padding:11px 22px;border-radius:99px;
+      font-family:'Jost',sans-serif;font-size:13px;font-weight:600;white-space:nowrap;
+      box-shadow:0 6px 24px rgba(61,46,26,.35);display:flex;align-items:center;gap:7px;
+      transition:transform .2s}
+    .map-frame:hover .map-cta{transform:translateX(-50%) translateY(-2px)}
+
+    @media(max-width:520px){
+      .det-row{padding:16px 16px;gap:14px}
+      .det-ic{width:46px;height:46px;font-size:20px}
+      .det-v{font-size:19px}
+    }
+
     /* ── RSVP card ── */
     .rsvp-wrap{max-width:480px;margin:0 auto;background:white;border-radius:24px;padding:36px;
       box-shadow:0 8px 40px rgba(0,0,0,.08);border:1px solid rgba(201,168,76,.2);
@@ -391,16 +428,27 @@
 </div>
 
 <!-- ── DETAILS ── -->
-<div style="background:white">
+<div style="background:linear-gradient(180deg,#fff,var(--cream))">
   <div class="section">
+    <div class="det-eyebrow">The Celebration</div>
     <h2 class="section-title">Wedding Details</h2>
     <p class="section-sub" id="pageMsg">We are so excited to celebrate this special day with you!</p>
-    <div class="details-grid">
-      <div class="detail-card"><div class="detail-icon">📅</div><div class="detail-label">Date</div><div class="detail-val" id="dDate">—</div></div>
-      <div class="detail-card" id="cardCeremony"><div class="detail-icon">🕐</div><div class="detail-label">Ceremony</div><div class="detail-val" id="dCeremony">1:30 PM</div></div>
-      <div class="detail-card" id="cardReception"><div class="detail-icon">🥂</div><div class="detail-label">Reception</div><div class="detail-val" id="dReception">From 3:30 PM</div></div>
-      <div class="detail-card" id="cardDress"><div class="detail-icon">👗</div><div class="detail-label">Dress Code</div><div class="detail-val" id="dDress">Smart / Formal</div></div>
-      <div class="detail-card" id="cardVenue" style="display:none"><div class="detail-icon">📍</div><div class="detail-label">Venue</div><div class="detail-val" id="dVenue"></div><div id="dVenueAddr" style="font-size:12px;color:#8a7a60;margin-top:4px"></div></div>
+
+    <div class="det-list" id="detList"><!-- rows injected by renderDetails() --></div>
+
+    <!-- Venue + map -->
+    <div class="venue-card" id="venueCard" style="display:none">
+      <div class="venue-head">
+        <div class="venue-pin">📍</div>
+        <div>
+          <div class="venue-name" id="venueName">—</div>
+          <div class="venue-addr" id="venueAddr"></div>
+        </div>
+      </div>
+      <a class="map-frame" id="mapLink" href="#" target="_blank" rel="noopener">
+        <iframe id="mapFrame" width="100%" height="230" style="border:0;display:block;pointer-events:none" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <div class="map-cta"><span>🧭 Get Directions</span></div>
+      </a>
     </div>
   </div>
 </div>
@@ -506,7 +554,7 @@
   </div>
 </div>
 
-<footer>Made with 💍 <a href="index.html" target="_blank">WeddingLedger</a></footer>
+<footer>Made with 💍 <a href="https://pamupro.github.io/wedding-budget/" target="_blank">WeddingLedger</a></footer>
 
 <script>
 const SB  = 'https://bqggtyguhedlyfffjkkw.supabase.co';
@@ -523,6 +571,62 @@ let knownFirst = '', knownLast = '', knownPhone = '', knownEmail = '';
 let needFirst  = false, needLast = false;
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// Build a Google Maps EMBED url from a pasted Maps link or a plain address.
+function mapEmbedUrl(q){
+  if(!q) return '';
+  q = q.trim();
+  const at = q.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  const ll = q.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/) || q.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+  let query = at ? at[1]+','+at[2] : ll ? ll[1]+','+ll[2] : q;
+  return 'https://www.google.com/maps?q=' + encodeURIComponent(query) + '&output=embed';
+}
+function mapDirectionsUrl(q){
+  if(!q) return '#';
+  return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q.trim());
+}
+
+// Render the Wedding Details rows dynamically — skip any the couple left empty.
+function renderDetails(cfg, p){
+  const dateStr = p.wedding_date
+    ? new Date(p.wedding_date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    : '';
+  const rows = [
+    { ic:'📅', k:'Date',       v: dateStr },
+    { ic:'🕐', k:'Ceremony',   v: cfg.ceremony },
+    { ic:'🥂', k:'Reception',  v: cfg.reception },
+    { ic:'👗', k:'Dress Code', v: cfg.dress },
+  ].filter(r => r.v && String(r.v).trim());
+
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const host = document.getElementById('detList');
+  if(host){
+    host.innerHTML = rows.map(r =>
+      '<div class="det-row"><div class="det-ic">'+r.ic+'</div>'+
+      '<div class="det-body"><div class="det-k">'+esc(r.k)+'</div>'+
+      '<div class="det-v">'+esc(r.v)+'</div></div></div>').join('');
+  }
+  if(cfg.msg && document.getElementById('pageMsg')) document.getElementById('pageMsg').textContent = cfg.msg;
+
+  // Venue + map
+  const vName = (cfg.venueName||'').trim();
+  const vAddr = (cfg.venueAddr||'').trim();
+  const mapQ  = (cfg.mapQuery||'').trim() || [vName, vAddr].filter(Boolean).join(', ');
+  const card = document.getElementById('venueCard');
+  if(card && (vName || vAddr || mapQ)){
+    if(vName){ document.getElementById('venueName').textContent = vName; }
+    else { document.getElementById('venueName').textContent = 'Venue'; }
+    document.getElementById('venueAddr').textContent = vAddr;
+    if(mapQ){
+      document.getElementById('mapFrame').src = mapEmbedUrl(mapQ);
+      document.getElementById('mapLink').href = mapDirectionsUrl(mapQ);
+    } else {
+      // no map info — hide the map area but keep venue text
+      const mf = document.getElementById('mapLink'); if(mf) mf.style.display='none';
+    }
+    card.style.display = 'block';
+  }
+}
+
 async function init() {
   const params = new URLSearchParams(window.location.search);
   const slug   = params.get('slug');
@@ -530,7 +634,7 @@ async function init() {
 
   if(!slug) { showBroken('This invitation link is invalid.'); return; }
 
-  const pr   = await fetch(SB+'/rest/v1/public_profiles?page_slug=eq.'+encodeURIComponent(slug)+'&select=*', {headers:H});
+  const pr   = await fetch(SB+'/rest/v1/profiles?page_slug=eq.'+encodeURIComponent(slug)+'&select=*', {headers:H});
   const rows = await pr.json();
   if(!rows || !rows.length) { showBroken("This wedding page doesn't exist."); return; }
 
@@ -597,13 +701,6 @@ async function init() {
     startCountdown(d);
   }
 
-  // Load invitation details (customised from Guest List → Invitation Settings)
-  try {
-    const is_   = await fetch(SB+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.invitation_config', {headers:H});
-    const irows = await is_.json();
-    if(irows && irows[0] && irows[0].value) applyInviteCfg(JSON.parse(irows[0].value));
-  } catch(e) { console.warn('invitation config', e); }
-
   // Load menu config
   try {
     const ms    = await fetch(SB+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.menu_config', {headers:H});
@@ -613,6 +710,15 @@ async function init() {
       if(menuCfg.courses && menuCfg.courses.length) buildMenuChoices();
     }
   } catch(e) {}
+
+  // Load invitation config (ceremony/reception/dress/venue/map) and render details
+  try {
+    const cs    = await fetch(SB+'/rest/v1/settings?user_id=eq.'+p.user_id+'&key=eq.invitation_config', {headers:H});
+    const crows = await cs.json();
+    let cfg = {};
+    if(crows && crows[0] && crows[0].value) cfg = JSON.parse(crows[0].value);
+    renderDetails(cfg, p);
+  } catch(e) { renderDetails({}, p); }
 
   // Load guest record if gid provided
   if(gid) {
@@ -628,35 +734,11 @@ async function init() {
 }
 
 // ── LOAD GUEST RECORD ─────────────────────────────────────────────────────────
-function applyInviteCfg(cfg) {
-  if(!cfg) return;
-  const setCard = (cardId, valId, text) => {
-    const card = document.getElementById(cardId), val = document.getElementById(valId);
-    if(!card || !val) return;
-    if(text) { val.textContent = text; card.style.display = ''; }
-    else card.style.display = 'none';
-  };
-  if(cfg.msg !== undefined) {
-    const m = document.getElementById('pageMsg');
-    if(m && cfg.msg) m.textContent = cfg.msg;
-  }
-  if(cfg.ceremony  !== undefined) setCard('cardCeremony','dCeremony',cfg.ceremony);
-  if(cfg.reception !== undefined) setCard('cardReception','dReception',cfg.reception);
-  if(cfg.dress     !== undefined) setCard('cardDress','dDress',cfg.dress);
-  if(cfg.venueName) {
-    setCard('cardVenue','dVenue',cfg.venueName);
-    const a = document.getElementById('dVenueAddr');
-    if(a) a.textContent = cfg.venueAddr || '';
-  }
-}
-
 async function loadGuest(gid) {
-  const r = await fetch(SB+'/rest/v1/rpc/rsvp_get_guest', {
-    method:'POST', headers:{...H,'Content-Type':'application/json'},
-    body: JSON.stringify({ p_gid: gid })
-  });
-  const g = await r.json();
-  if(!r.ok || !g) { guestId = null; return; }
+  const r    = await fetch(SB+'/rest/v1/guests?id=eq.'+gid+'&select=*', {headers:H});
+  const rows = await r.json();
+  if(!rows || !rows.length) { guestId = null; return; }
+  const g = rows[0];
 
   // Parse stored name into first / last
   const parts = (g.name||'').trim().split(/\s+/).filter(Boolean);
@@ -1089,15 +1171,25 @@ async function submitRsvp() {
     ...mealData
   };
 
-  // Server-validated submit: updates the linked guest, or creates a
-  // new one under this wedding's owner — identity fields protected.
-  const res = await fetch(SB+'/rest/v1/rpc/rsvp_submit', {
-    method: 'POST',
-    headers: {...H, 'Content-Type':'application/json'},
-    body: JSON.stringify({ p_gid: guestId || null, p_slug: slug, p_data: data })
-  });
+  let res;
+  if(guestId) {
+    // PATCH — update existing record, never create duplicate
+    res = await fetch(SB+'/rest/v1/guests?id=eq.'+guestId, {
+      method: 'PATCH',
+      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
+      body: JSON.stringify(data)
+    });
+  } else {
+    // POST — genuinely new guest (no gid in link)
+    data.user_id = pageUserId;
+    res = await fetch(SB+'/rest/v1/guests', {
+      method: 'POST',
+      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
+      body: JSON.stringify(data)
+    });
+  }
 
-  if(res.ok) {
+  if(res.ok || res.status===201 || res.status===204) {
     showSuccess(first);
   } else {
     btn.disabled = false; btn.textContent = 'Send RSVP 💌';
@@ -1365,6 +1457,6 @@ window.addEventListener('scroll', () => {
 }, {passive:true});
 </script>
 
-<script defer src="support-widget.js"></script>
+<script src="support-widget.js"></script>
 </body>
 </html>
