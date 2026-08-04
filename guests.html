@@ -202,6 +202,8 @@
   .gbtn.em:hover { background: #d0e4f8; }
   .gbtn.rsvp-btn { background: var(--gold-pale); color: var(--gold); }
   .gbtn.rsvp-btn:hover { background: #f5e4b0; }
+  .gbtn.invite-btn { background: #e6f9ee; color: #128c4a; font-weight:600; }
+  .gbtn.invite-btn:hover { background: #c8f0d8; }
   .gbtn.share-btn { background: #fdf6e3; color: #8a6a10; }
   .gbtn.dl       { background: var(--rose-pale); color: var(--rose); }
   .gbtn.dl:hover { background: #fcd0d0; }
@@ -1609,6 +1611,34 @@
 </div>
 
 <!-- IMPORT MODAL -->
+<!-- ══ WhatsApp Invitation Generator (couple's account only) ══ -->
+<div class="modal-overlay" id="inviteGenModal" style="display:none" onclick="if(event.target===this)closeInviteGen()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 class="modal-title">✉️ WhatsApp Invitation</h3>
+      <button class="modal-close" onclick="closeInviteGen()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--bg2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Pick how to address them, choose who's included, then copy the full message — ready to paste straight into WhatsApp.
+      </div>
+
+      <label class="glabel">How to address them</label>
+      <div id="igTitleOpts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0 4px"></div>
+
+      <div id="igNamesWrap" style="margin-top:16px">
+        <label class="glabel">Include these names</label>
+        <div id="igNames" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+      </div>
+
+      <label class="glabel" style="margin-top:18px;display:block">Message preview</label>
+      <textarea id="igPreview" class="ginput" rows="12" style="resize:vertical;min-height:220px;font-size:12.5px;line-height:1.6;white-space:pre-wrap"></textarea>
+
+      <button class="btn-primary" id="igCopyBtn" onclick="copyInviteMessage()" style="width:100%;margin-top:14px;padding:13px;font-size:14px">📋 Copy Message</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="importModal" style="display:none" onclick="if(event.target===this)closeImport()">
   <div class="modal" style="max-width:440px">
     <div class="modal-header">
@@ -1651,6 +1681,9 @@ const SB = 'https://bqggtyguhedlyfffjkkw.supabase.co';
 const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
 const uid = localStorage.getItem('wl_uid');
 let ownerId = uid;  // shared data owner (self, unless linked to a partner)
+// WhatsApp invite generator is enabled only for the couple's own accounts for now.
+const INVITE_GEN_UIDS = ['5ffa1c4d-bc28-43be-ae51-4285555bc1d8','31067079-02d3-48e9-bc53-1a333eb1b02a'];
+const inviteGenEnabled = INVITE_GEN_UIDS.includes(uid) || INVITE_GEN_UIDS.includes(ownerId);
 async function resolveOwner(){
   try{
     const tok = await DB.getValidToken(getTok());
@@ -1955,6 +1988,7 @@ function buildCard(g) {
   if(hasEm) actions += '<button class="gbtn em" onclick="sendEM(\''+gid+'\')">Email</button>';
   actions += '<button class="gbtn rsvp-btn" onclick="cycleRsvp(\''+gid+'\')" title="Cycle RSVP">RSVP</button>';
   actions += '<button class="gbtn share-btn" id="sb-'+gid+'" onclick="copyRsvpLink(\''+gid+'\')" title="Copy RSVP link">Link</button>';
+  if(inviteGenEnabled) actions += '<button class="gbtn invite-btn" onclick="openInviteGen(\''+gid+'\')" title="Create WhatsApp invitation message">✉️ Invite</button>';
   actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">Delete</button>';
 
   const noContact = !hasPh && !hasEm;
@@ -2369,6 +2403,135 @@ function bkEmail() {
 const WA_TPL  = 'Hi {name}! 🎊\n\nYou are warmly invited to our wedding!\n\n📅 {date}\n💑 {couple}\n\nPlease RSVP here: {rsvp_url}\n\nWith love 💍';
 const EM_SUBJ = '{couple} Wedding Invitation 💍';
 const EM_BODY = 'Hi {name},\n\nWe would love for you to join us to celebrate our wedding!\n\n📅 {date}\n\nPlease RSVP here:\n{rsvp_url}\n\nWith so much love,\n{couple}';
+
+// ══════════════════════════════════════════════════════════════════════════
+// WhatsApp Invitation Generator (couple's account only)
+// ══════════════════════════════════════════════════════════════════════════
+let igGuest = null;
+let igTitle = 'family';        // family | mr_mrs | mr | mrs | names
+let igSelected = {};           // which names are checked
+
+// Gather every person on this guest card (primary + family members)
+function igPeople(g){
+  const list = [{ key:'primary', name: g.name || '' }];
+  getFam(g).forEach((m,i)=>{
+    const nm = [m.first, m.last].filter(Boolean).join(' ');
+    if(nm) list.push({ key:'fam'+i, name: nm });
+  });
+  return list;
+}
+
+// Last name guess from the primary guest (for "The X Family" / "Mr & Mrs X")
+function igSurname(g){
+  const parts = (g.name||'').trim().split(/\s+/).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length-1] : (parts[0]||'');
+}
+
+async function openInviteGen(gid){
+  const g = guests.find(x=>x.id===gid);
+  if(!g) return;
+  igGuest = g;
+  igTitle = 'family';
+  // default: all names selected
+  igSelected = {};
+  igPeople(g).forEach(p => igSelected[p.key] = true);
+  renderInviteTitleOpts();
+  renderInviteNames();
+  updateInvitePreview();
+  document.getElementById('inviteGenModal').style.display = 'flex';
+}
+function closeInviteGen(){ document.getElementById('inviteGenModal').style.display='none'; igGuest=null; }
+
+function renderInviteTitleOpts(){
+  const opts = [
+    ['family', '👨‍👩‍👧 The Family',   'The '+ (igSurname(igGuest)||'') +' Family'],
+    ['mr_mrs', '💑 Mr & Mrs',       'Mr & Mrs '+ (igSurname(igGuest)||'')],
+    ['mr',     '🤵 Mr',             'Mr '+ (igSurname(igGuest)||'')],
+    ['mrs',    '👰 Mrs',            'Mrs '+ (igSurname(igGuest)||'')],
+    ['names',  '📝 Just names',     'Use the selected names as-is'],
+  ];
+  document.getElementById('igTitleOpts').innerHTML = opts.map(([v,label,hint])=>
+    '<button type="button" class="ig-topt'+(igTitle===v?' on':'')+'" onclick="setInviteTitle(\''+v+'\')" '+
+    'style="text-align:left;border:1.5px solid '+(igTitle===v?'var(--gold)':'var(--border)')+';'+
+    'background:'+(igTitle===v?'var(--gold-pale)':'var(--surface)')+';border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit">'+
+    '<div style="font-size:13px;font-weight:600;color:var(--ink)">'+label+'</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(hint)+'</div></button>'
+  ).join('');
+  // When "family / mr&mrs / mr / mrs" is chosen the title REPLACES the greeting,
+  // so the individual-name picker is only relevant for "Just names".
+  document.getElementById('igNamesWrap').style.display = (igTitle==='names') ? 'block' : 'none';
+}
+function setInviteTitle(v){ igTitle=v; renderInviteTitleOpts(); updateInvitePreview(); }
+
+function renderInviteNames(){
+  const host = document.getElementById('igNames');
+  host.innerHTML = igPeople(igGuest).map(p =>
+    '<label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);cursor:pointer">'+
+    '<input type="checkbox" '+(igSelected[p.key]?'checked':'')+' onchange="toggleInviteName(\''+p.key+'\',this.checked)" style="width:16px;height:16px;accent-color:var(--gold)">'+
+    esc(p.name)+'</label>'
+  ).join('');
+}
+function toggleInviteName(key, on){ igSelected[key]=on; updateInvitePreview(); }
+
+// Build the greeting line based on the chosen title
+function igGreeting(){
+  const surname = igSurname(igGuest);
+  if(igTitle==='family') return 'The '+surname+' Family';
+  if(igTitle==='mr_mrs') return 'Mr & Mrs '+surname;
+  if(igTitle==='mr')     return 'Mr '+surname;
+  if(igTitle==='mrs')    return 'Mrs '+surname;
+  // names: join the selected people
+  const chosen = igPeople(igGuest).filter(p=>igSelected[p.key]).map(p=>p.name);
+  if(!chosen.length) return igGuest.name || '';
+  if(chosen.length===1) return chosen[0];
+  if(chosen.length===2) return chosen[0]+' & '+chosen[1];
+  return chosen.slice(0,-1).join(', ')+' & '+chosen[chosen.length-1];
+}
+
+// The full WhatsApp message. Only the greeting + RSVP link change per guest;
+// everything else is fixed text from the couple's template.
+function igMessage(link){
+  const greet = igGreeting();
+  return (
+'💍 *Wedding Invitation*\n\n'+
+'Dear '+greet+',\n\n'+
+'With great joy, we would be honoured to have you celebrate one of the most special days of our lives as we begin our journey together as husband and wife.\n\n'+
+'━━━━━━━━━━━━━━━━━━\n'+
+'📅 Thursday, 11 February 2027\n\n'+
+'🕐 *Poruwa Ceremony*\n4:20 PM\n\n'+
+'🥂 *Reception*\nFrom 5:00 PM\n\n'+
+'📍 *Golden Crown Hotel*\nKandy, Sri Lanka\n'+
+'━━━━━━━━━━━━━━━━━━\n\n'+
+'🔗 Please RSVP here:\n'+link+'\n\n'+
+'As many of our family and friends will be travelling from overseas, we kindly ask if you could confirm your attendance by *31 October 2026*. This will greatly help everyone plan their holidays and travel arrangements.\n\n'+
+"We truly hope you'll be there to celebrate this unforgettable day with us.\n\n"+
+'With love,\n'+
+'Chamo & Pamu ❤️'
+  );
+}
+
+async function updateInvitePreview(){
+  const ta = document.getElementById('igPreview');
+  ta.value = igMessage('…generating your RSVP link…');
+  // Ensure the guest has a working short link (creates one if needed)
+  try{
+    const code = await ensureShortLink(igGuest);
+    const link = code ? (SITE_BASE + '/r/?c=' + code) : rsvpUrl(igGuest);
+    ta.value = igMessage(link);
+  }catch(e){
+    ta.value = igMessage(rsvpUrl(igGuest));
+  }
+}
+
+function copyInviteMessage(){
+  const ta = document.getElementById('igPreview');
+  const text = ta.value;
+  const btn = document.getElementById('igCopyBtn');
+  const done = ()=>{ btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent='📋 Copy Message',2000); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{ ta.select(); document.execCommand('copy'); done(); });
+  } else { ta.select(); document.execCommand('copy'); done(); }
+}
 
 async function copyRsvpLink(gid) {
   const g = guests.find(x => x.id === gid);
