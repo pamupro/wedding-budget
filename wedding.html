@@ -398,7 +398,7 @@
   </div>
   <div class="date-main" id="heroDate">—</div>
   <div class="cd-row" id="cd"></div>
-  <button class="btn-gold" onclick="document.getElementById('rsvpSec').scrollIntoView({behavior:'smooth'})">
+  <button class="btn-gold" onclick="scrollToRsvp()">
     RSVP Now 💌
   </button>
   <div class="scroll-hint">↓ scroll</div>
@@ -571,6 +571,30 @@ let knownFirst = '', knownLast = '', knownPhone = '', knownEmail = '';
 let needFirst  = false, needLast = false;
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// Gently scroll all the way down to the RSVP form so guests glide past the
+// details and map on the way — a slow, eased journey rather than a jump.
+function scrollToRsvp(){
+  const target = document.getElementById('rsvpSec');
+  if(!target) return;
+  const startY = window.scrollY;
+  const endY   = target.getBoundingClientRect().top + window.scrollY - 20;
+  const dist   = endY - startY;
+  if(Math.abs(dist) < 4) return;
+  // Longer distance → longer duration (capped), for a calm, readable glide.
+  const duration = Math.min(2600, Math.max(1400, Math.abs(dist) * 0.9));
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ target.scrollIntoView({behavior:'auto'}); return; }
+  const easeInOut = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+  let startT = null;
+  function step(ts){
+    if(startT === null) startT = ts;
+    const p = Math.min(1, (ts - startT) / duration);
+    window.scrollTo(0, startY + dist * easeInOut(p));
+    if(p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 // Build a Google Maps EMBED url from a pasted Maps link or a plain address.
 function mapEmbedUrl(q){
   if(!q) return '';
@@ -631,6 +655,7 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   const slug   = params.get('slug');
   const gid    = params.get('gid');
+  window.pageSlug = slug;
 
   if(!slug) { showBroken('This invitation link is invalid.'); return; }
 
@@ -735,10 +760,30 @@ async function init() {
 
 // ── LOAD GUEST RECORD ─────────────────────────────────────────────────────────
 async function loadGuest(gid) {
-  const r    = await fetch(SB+'/rest/v1/guests?id=eq.'+gid+'&select=*', {headers:H});
-  const rows = await r.json();
-  if(!rows || !rows.length) { guestId = null; return; }
-  const g = rows[0];
+  // Guests viewing the invitation aren't logged in, and the guests table is
+  // (correctly) not readable by anonymous users. Use the SECURITY DEFINER RPC
+  // that safely returns just this one guest's RSVP fields.
+  let g = null;
+  try {
+    const r = await fetch(SB+'/rest/v1/rpc/rsvp_get_guest', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', ...H},
+      body: JSON.stringify({ p_gid: gid })
+    });
+    if(r.ok){
+      const data = await r.json();
+      if(data && data.id) g = data;
+    }
+  } catch(e) {}
+  // Fallback: direct read (works if the table is still public on this project)
+  if(!g){
+    try {
+      const r2 = await fetch(SB+'/rest/v1/guests?id=eq.'+gid+'&select=*', {headers:H});
+      const rows = await r2.json();
+      if(rows && rows.length) g = rows[0];
+    } catch(e) {}
+  }
+  if(!g) { guestId = null; return; }
 
   // Parse stored name into first / last
   const parts = (g.name||'').trim().split(/\s+/).filter(Boolean);
@@ -1171,25 +1216,39 @@ async function submitRsvp() {
     ...mealData
   };
 
-  let res;
-  if(guestId) {
-    // PATCH — update existing record, never create duplicate
-    res = await fetch(SB+'/rest/v1/guests?id=eq.'+guestId, {
-      method: 'PATCH',
-      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-      body: JSON.stringify(data)
+  // Guests aren't logged in — write through the SECURITY DEFINER RPC.
+  let ok = false;
+  try {
+    const r = await fetch(SB+'/rest/v1/rpc/rsvp_submit', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', ...H},
+      body: JSON.stringify({ p_gid: guestId || null, p_slug: window.pageSlug || null, p_data: data })
     });
-  } else {
-    // POST — genuinely new guest (no gid in link)
-    data.user_id = pageUserId;
-    res = await fetch(SB+'/rest/v1/guests', {
-      method: 'POST',
-      headers: {...H, 'Content-Type':'application/json', 'Prefer':'return=minimal'},
-      body: JSON.stringify(data)
-    });
+    if(r.ok){
+      const out = await r.json();
+      ok = out && out.ok === true;
+    }
+  } catch(e) {}
+
+  // Fallback: direct write (works if the table is still public on this project)
+  if(!ok){
+    let res;
+    if(guestId) {
+      res = await fetch(SB+'/rest/v1/guests?id=eq.'+guestId, {
+        method:'PATCH', headers:{...H,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify(data)
+      });
+    } else {
+      data.user_id = pageUserId;
+      res = await fetch(SB+'/rest/v1/guests', {
+        method:'POST', headers:{...H,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify(data)
+      });
+    }
+    ok = res.ok || res.status===201 || res.status===204;
   }
 
-  if(res.ok || res.status===201 || res.status===204) {
+  if(ok) {
     showSuccess(first);
   } else {
     btn.disabled = false; btn.textContent = 'Send RSVP 💌';
@@ -1457,6 +1516,6 @@ window.addEventListener('scroll', () => {
 }, {passive:true});
 </script>
 
-<script src="support-widget.js"></script>
+<!-- support widget intentionally removed from guest-facing invitation page -->
 </body>
 </html>
