@@ -581,7 +581,7 @@ function scrollToRsvp(){
   const dist   = endY - startY;
   if(Math.abs(dist) < 4) return;
   // Longer distance → longer duration (capped), for a calm, readable glide.
-  const duration = Math.min(2600, Math.max(1400, Math.abs(dist) * 0.9));
+  const duration = Math.min(8000, Math.max(4000, Math.abs(dist) * 2.2));
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduce){ target.scrollIntoView({behavior:'auto'}); return; }
   const easeInOut = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
