@@ -1623,13 +1623,12 @@
         Pick how to address them, choose who's included, then copy the full message — ready to paste straight into WhatsApp.
       </div>
 
-      <label class="glabel">How to address them</label>
-      <div id="igTitleOpts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0 4px"></div>
-
-      <div id="igNamesWrap" style="margin-top:16px">
-        <label class="glabel">Include these names</label>
-        <div id="igNames" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
-      </div>
+      <label class="glabel">Who's invited &amp; how to address them</label>
+      <div id="igRows" style="display:flex;flex-direction:column;gap:7px;margin:8px 0 12px"></div>
+      <label style="display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink);cursor:pointer;padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:var(--bg2)">
+        <input type="checkbox" id="igFamilyToggle" onchange="setIgFamily(this.checked)" style="width:17px;height:17px;accent-color:var(--gold)">
+        <span>Add <strong>&amp; Family</strong> at the end</span>
+      </label>
 
       <label class="glabel" style="margin-top:18px;display:block">Message preview</label>
       <textarea id="igPreview" class="ginput" rows="12" style="resize:vertical;min-height:220px;font-size:12.5px;line-height:1.6;white-space:pre-wrap"></textarea>
@@ -1683,7 +1682,13 @@ const uid = localStorage.getItem('wl_uid');
 let ownerId = uid;  // shared data owner (self, unless linked to a partner)
 // WhatsApp invite generator is enabled only for the couple's own accounts for now.
 const INVITE_GEN_UIDS = ['5ffa1c4d-bc28-43be-ae51-4285555bc1d8','31067079-02d3-48e9-bc53-1a333eb1b02a'];
-const inviteGenEnabled = INVITE_GEN_UIDS.includes(uid) || INVITE_GEN_UIDS.includes(ownerId);
+// Enabled for the couple's own account. Checks UID OR the couple names on the
+// profile (Chamo & Pamu), so it works whichever of their logins is used.
+function isInviteGenEnabled(){
+  if(INVITE_GEN_UIDS.includes(uid) || INVITE_GEN_UIDS.includes(ownerId)) return true;
+  const names = [(prof&&prof.name1)||'', (prof&&prof.name2)||''].map(s=>s.toLowerCase().trim());
+  return names.includes('chamo') && names.includes('pamu');
+}
 async function resolveOwner(){
   try{
     const tok = await DB.getValidToken(getTok());
@@ -1988,7 +1993,7 @@ function buildCard(g) {
   if(hasEm) actions += '<button class="gbtn em" onclick="sendEM(\''+gid+'\')">Email</button>';
   actions += '<button class="gbtn rsvp-btn" onclick="cycleRsvp(\''+gid+'\')" title="Cycle RSVP">RSVP</button>';
   actions += '<button class="gbtn share-btn" id="sb-'+gid+'" onclick="copyRsvpLink(\''+gid+'\')" title="Copy RSVP link">Link</button>';
-  if(inviteGenEnabled) actions += '<button class="gbtn invite-btn" onclick="openInviteGen(\''+gid+'\')" title="Create WhatsApp invitation message">✉️ Invite</button>';
+  if(isInviteGenEnabled()) actions += '<button class="gbtn invite-btn" onclick="openInviteGen(\''+gid+'\')" title="Create WhatsApp invitation message">✉️ Invite</button>';
   actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">Delete</button>';
 
   const noContact = !hasPh && !hasEm;
@@ -2406,22 +2411,24 @@ const EM_BODY = 'Hi {name},\n\nWe would love for you to join us to celebrate our
 
 // ══════════════════════════════════════════════════════════════════════════
 // WhatsApp Invitation Generator (couple's account only)
+// Per-name titles (Mr / Mrs / Miss / Dr…), pick who's included, optional
+// "& Family" at the end. The greeting + RSVP link are the only things that
+// change per guest; the rest of the message is fixed template text.
 // ══════════════════════════════════════════════════════════════════════════
 let igGuest = null;
-let igTitle = 'family';        // family | mr_mrs | mr | mrs | names
-let igSelected = {};           // which names are checked
+const IG_TITLES = ['', 'Mr', 'Mrs', 'Miss', 'Ms', 'Dr', 'Rev', 'Prof'];
+let igRows = [];        // [{ name, on:true, title:'Mr' }]
+let igFamily = false;   // append "& Family"
 
-// Gather every person on this guest card (primary + family members)
+// Every person on the card: primary first, then family members
 function igPeople(g){
-  const list = [{ key:'primary', name: g.name || '' }];
-  getFam(g).forEach((m,i)=>{
+  const list = [{ name: g.name || '' }];
+  getFam(g).forEach(m => {
     const nm = [m.first, m.last].filter(Boolean).join(' ');
-    if(nm) list.push({ key:'fam'+i, name: nm });
+    if(nm) list.push({ name: nm });
   });
   return list;
 }
-
-// Last name guess from the primary guest (for "The X Family" / "Mr & Mrs X")
 function igSurname(g){
   const parts = (g.name||'').trim().split(/\s+/).filter(Boolean);
   return parts.length > 1 ? parts[parts.length-1] : (parts[0]||'');
@@ -2431,65 +2438,52 @@ async function openInviteGen(gid){
   const g = guests.find(x=>x.id===gid);
   if(!g) return;
   igGuest = g;
-  igTitle = 'family';
-  // default: all names selected
-  igSelected = {};
-  igPeople(g).forEach(p => igSelected[p.key] = true);
-  renderInviteTitleOpts();
-  renderInviteNames();
+  // Sensible defaults: first person "Mr", second "Mrs", rest blank; all on.
+  igRows = igPeople(g).map((p,i) => ({
+    name: p.name,
+    on: true,
+    title: i===0 ? 'Mr' : i===1 ? 'Mrs' : ''
+  }));
+  igFamily = igRows.length > 2;   // pre-tick "& Family" for larger groups
+  renderInviteRows();
+  document.getElementById('igFamilyToggle').checked = igFamily;
   updateInvitePreview();
   document.getElementById('inviteGenModal').style.display = 'flex';
 }
 function closeInviteGen(){ document.getElementById('inviteGenModal').style.display='none'; igGuest=null; }
 
-function renderInviteTitleOpts(){
-  const opts = [
-    ['family', '👨‍👩‍👧 The Family',   'The '+ (igSurname(igGuest)||'') +' Family'],
-    ['mr_mrs', '💑 Mr & Mrs',       'Mr & Mrs '+ (igSurname(igGuest)||'')],
-    ['mr',     '🤵 Mr',             'Mr '+ (igSurname(igGuest)||'')],
-    ['mrs',    '👰 Mrs',            'Mrs '+ (igSurname(igGuest)||'')],
-    ['names',  '📝 Just names',     'Use the selected names as-is'],
-  ];
-  document.getElementById('igTitleOpts').innerHTML = opts.map(([v,label,hint])=>
-    '<button type="button" class="ig-topt'+(igTitle===v?' on':'')+'" onclick="setInviteTitle(\''+v+'\')" '+
-    'style="text-align:left;border:1.5px solid '+(igTitle===v?'var(--gold)':'var(--border)')+';'+
-    'background:'+(igTitle===v?'var(--gold-pale)':'var(--surface)')+';border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit">'+
-    '<div style="font-size:13px;font-weight:600;color:var(--ink)">'+label+'</div>'+
-    '<div style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(hint)+'</div></button>'
-  ).join('');
-  // When "family / mr&mrs / mr / mrs" is chosen the title REPLACES the greeting,
-  // so the individual-name picker is only relevant for "Just names".
-  document.getElementById('igNamesWrap').style.display = (igTitle==='names') ? 'block' : 'none';
+function renderInviteRows(){
+  const host = document.getElementById('igRows');
+  host.innerHTML = igRows.map((r,i) => {
+    const titleSel = '<select onchange="setIgTitle('+i+',this.value)" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 6px;font-family:inherit;font-size:13px;background:var(--surface);cursor:pointer;flex-shrink:0;width:74px">'+
+      IG_TITLES.map(t => '<option value="'+t+'"'+(r.title===t?' selected':'')+'>'+(t||'—')+'</option>').join('')+'</select>';
+    return '<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid '+(r.on?'var(--gold-bd)':'var(--border)')+';border-radius:10px;background:'+(r.on?'var(--gold-pale)':'var(--surface)')+'">'+
+      '<input type="checkbox" '+(r.on?'checked':'')+' onchange="toggleIgRow('+i+',this.checked)" style="width:17px;height:17px;accent-color:var(--gold);flex-shrink:0">'+
+      titleSel +
+      '<input type="text" value="'+esc(r.name).replace(/"/g,'&quot;')+'" oninput="setIgName('+i+',this.value)" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13.5px;background:var(--surface);color:var(--ink)">'+
+    '</div>';
+  }).join('');
 }
-function setInviteTitle(v){ igTitle=v; renderInviteTitleOpts(); updateInvitePreview(); }
+function setIgTitle(i,v){ igRows[i].title=v; updateInvitePreview(); }
+function toggleIgRow(i,on){ igRows[i].on=on; renderInviteRows(); updateInvitePreview(); }
+function setIgName(i,v){ igRows[i].name=v; updateInvitePreview(); }
+function setIgFamily(on){ igFamily=on; updateInvitePreview(); }
 
-function renderInviteNames(){
-  const host = document.getElementById('igNames');
-  host.innerHTML = igPeople(igGuest).map(p =>
-    '<label style="display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink);cursor:pointer">'+
-    '<input type="checkbox" '+(igSelected[p.key]?'checked':'')+' onchange="toggleInviteName(\''+p.key+'\',this.checked)" style="width:16px;height:16px;accent-color:var(--gold)">'+
-    esc(p.name)+'</label>'
-  ).join('');
-}
-function toggleInviteName(key, on){ igSelected[key]=on; updateInvitePreview(); }
-
-// Build the greeting line based on the chosen title
+// Build the greeting from the ticked rows, each with its own title, and an
+// optional "& Family" tail.
 function igGreeting(){
-  const surname = igSurname(igGuest);
-  if(igTitle==='family') return 'The '+surname+' Family';
-  if(igTitle==='mr_mrs') return 'Mr & Mrs '+surname;
-  if(igTitle==='mr')     return 'Mr '+surname;
-  if(igTitle==='mrs')    return 'Mrs '+surname;
-  // names: join the selected people
-  const chosen = igPeople(igGuest).filter(p=>igSelected[p.key]).map(p=>p.name);
-  if(!chosen.length) return igGuest.name || '';
-  if(chosen.length===1) return chosen[0];
-  if(chosen.length===2) return chosen[0]+' & '+chosen[1];
-  return chosen.slice(0,-1).join(', ')+' & '+chosen[chosen.length-1];
+  const chosen = igRows.filter(r => r.on && r.name.trim())
+    .map(r => (r.title ? r.title+' ' : '') + r.name.trim());
+  let greet;
+  if(!chosen.length)      greet = igGuest.name || '';
+  else if(chosen.length===1) greet = chosen[0];
+  else if(chosen.length===2) greet = chosen[0]+' & '+chosen[1];
+  else greet = chosen.slice(0,-1).join(', ')+' & '+chosen[chosen.length-1];
+  if(igFamily) greet += ' & Family';
+  return greet;
 }
 
-// The full WhatsApp message. Only the greeting + RSVP link change per guest;
-// everything else is fixed text from the couple's template.
+// Full WhatsApp message — greeting + link are the only per-guest parts.
 function igMessage(link){
   const greet = igGreeting();
   return (
@@ -2513,7 +2507,6 @@ function igMessage(link){
 async function updateInvitePreview(){
   const ta = document.getElementById('igPreview');
   ta.value = igMessage('…generating your RSVP link…');
-  // Ensure the guest has a working short link (creates one if needed)
   try{
     const code = await ensureShortLink(igGuest);
     const link = code ? (SITE_BASE + '/r/?c=' + code) : rsvpUrl(igGuest);
@@ -2525,11 +2518,10 @@ async function updateInvitePreview(){
 
 function copyInviteMessage(){
   const ta = document.getElementById('igPreview');
-  const text = ta.value;
   const btn = document.getElementById('igCopyBtn');
   const done = ()=>{ btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent='📋 Copy Message',2000); };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(done).catch(()=>{ ta.select(); document.execCommand('copy'); done(); });
+    navigator.clipboard.writeText(ta.value).then(done).catch(()=>{ ta.select(); document.execCommand('copy'); done(); });
   } else { ta.select(); document.execCommand('copy'); done(); }
 }
 
