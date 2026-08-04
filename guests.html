@@ -2472,10 +2472,12 @@ function setIgFamily(on){ igFamily=on; updateInvitePreview(); }
 // Build the greeting from the ticked rows, each with its own title, and an
 // optional "& Family" tail.
 function igGreeting(){
+  // Each person: title stays plain, the NAME is wrapped in *…* so WhatsApp
+  // renders it bold. e.g. "Mr *Achintha Ishen*".
   const chosen = igRows.filter(r => r.on && r.name.trim())
-    .map(r => (r.title ? r.title+' ' : '') + r.name.trim());
+    .map(r => (r.title ? r.title+' ' : '') + '*' + r.name.trim() + '*');
   let greet;
-  if(!chosen.length)      greet = igGuest.name || '';
+  if(!chosen.length)      greet = igGuest.name ? '*'+igGuest.name+'*' : '';
   else if(chosen.length===1) greet = chosen[0];
   else if(chosen.length===2) greet = chosen[0]+' & '+chosen[1];
   else greet = chosen.slice(0,-1).join(', ')+' & '+chosen[chosen.length-1];
