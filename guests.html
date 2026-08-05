@@ -203,6 +203,7 @@
   .gbtn.rsvp-btn { background: var(--gold-pale); color: var(--gold); }
   .gbtn.rsvp-btn:hover { background: #f5e4b0; }
   .gbtn.invite-btn { background: #e6f9ee; color: #128c4a; font-weight:600; }
+  .gbtn.invite-btn.invited { background: #d6f0e0; color: #1a6e3a; }
   .gbtn.invite-btn:hover { background: #c8f0d8; }
   .gbtn.share-btn { background: #fdf6e3; color: #8a6a10; }
   .gbtn.dl       { background: var(--rose-pale); color: var(--rose); }
@@ -989,6 +990,12 @@
           <span><b>Export PDF</b><em>Printable guest list</em></span>
         </button>
         <div class="tb-drop-sep"></div>
+        <div class="tb-drop-label" id="invMgmtLabel" style="display:none">Invitations</div>
+        <button class="tb-drop-item" id="invMgmtBtn" style="display:none" onclick="runManage(markSentBatchAsInvited)">
+          <span class="tb-ic">✉️</span>
+          <span><b>Catch up already-sent</b><em>Mark guests you've already messaged as invited</em></span>
+        </button>
+        <div class="tb-drop-sep"></div>
         <div class="tb-drop-label">Safety</div>
         <button class="tb-drop-item" onclick="runManage(backupGuests)">
           <span class="tb-ic">💾</span>
@@ -1043,6 +1050,8 @@
     <div class="stat-pill" id="pill-no"           onclick="setF('no',this)"><span class="stat-num" id="sNo" style="color:#c04040">0</span><span class="stat-lbl">❌ Declined</span></div>
     <div class="stat-pill" id="pill-pending"      onclick="setF('pending',this)"><span class="stat-num" id="sPend" style="color:#8a6020">0</span><span class="stat-lbl">⏳ Pending</span></div>
     <div class="stat-pill" id="pill-maybe"        onclick="setF('maybe',this)"><span class="stat-num" id="sMaybe">0</span><span class="stat-lbl">🤔 Maybe</span></div>
+    <div class="stat-pill" id="pill-invited"      onclick="setF('invited',this)"><span class="stat-num" id="sInvited" style="color:#2a7a3a">0</span><span class="stat-lbl">✉️ Invited</span></div>
+    <div class="stat-pill" id="pill-notinvited"   onclick="setF('notinvited',this)"><span class="stat-num" id="sNotInvited" style="color:#b06a20">0</span><span class="stat-lbl">📭 Not Invited</span></div>
     <div class="stat-pill" style="cursor:default"><span class="stat-num" id="sPlus" style="color:var(--gold)">0</span><span class="stat-lbl">Family</span></div>
   </div>
   <div class="toolbar">
@@ -1634,6 +1643,7 @@
       <textarea id="igPreview" class="ginput" rows="12" style="resize:vertical;min-height:220px;font-size:12.5px;line-height:1.6;white-space:pre-wrap"></textarea>
 
       <button class="btn-primary" id="igCopyBtn" onclick="copyInviteMessage()" style="width:100%;margin-top:14px;padding:13px;font-size:14px">📋 Copy Message</button>
+      <button id="igMarkBtn" onclick="toggleInvitedFromModal()" style="width:100%;margin-top:9px;padding:12px;font-size:13.5px;font-weight:600;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;font-family:inherit">✓ Mark invitation as sent</button>
     </div>
   </div>
 </div>
@@ -1714,6 +1724,7 @@ if(!uid || !localStorage.getItem('wl_token')) location.href = 'login.html';
 function getTok() { return localStorage.getItem('wl_token'); }
 
 let guests=[], prof={}, menuCfg={courses:[]};
+let invitedMap = {};   // { guestId: true } — who has been sent their WhatsApp invitation
 let filt='all', grpFilter='', sortFilter='name', selIds=new Set(), csvRows=[];
 let msgKind='', msgPeeps=[];
 
@@ -1759,11 +1770,12 @@ let inviteCfg = Object.assign({}, INVITE_DEFAULTS);
 async function init() {
   try {
     await resolveOwner();
-    const [g,p,s,ic] = await Promise.all([
+    const [g,p,s,ic,il] = await Promise.all([
       sbGet('guests?user_id=eq.'+ownerId+'&order=created_at.asc'),
       sbGet('profiles?user_id=eq.'+uid+'&select=name1,name2,wedding_date,page_slug,is_pro'),
       sbGet('settings?user_id=eq.'+ownerId+'&key=eq.menu_config'),
-      sbGet('settings?user_id=eq.'+ownerId+'&key=eq.invitation_config')
+      sbGet('settings?user_id=eq.'+ownerId+'&key=eq.invitation_config'),
+      sbGet('settings?user_id=eq.'+ownerId+'&key=eq.invited_list')
     ]);
     guests = g || [];
     prof   = (p && p[0]) ? p[0] : {};
@@ -1774,9 +1786,17 @@ async function init() {
     if(ic && ic[0] && ic[0].value) {
       try { inviteCfg = Object.assign({}, INVITE_DEFAULTS, JSON.parse(ic[0].value)); } catch(e) {}
     }
+    if(il && il[0] && il[0].value) {
+      try { invitedMap = JSON.parse(il[0].value) || {}; } catch(e) { invitedMap = {}; }
+    }
     rebuildGroupSel();
     renderList();
     updateStats();
+    if(isInviteGenEnabled()){
+      const lbl=document.getElementById('invMgmtLabel'), btn=document.getElementById('invMgmtBtn');
+      if(lbl) lbl.style.display='block';
+      if(btn) btn.style.display='flex';
+    }
     startRealtime();
   } catch(e) {
     console.error('init failed', e);
@@ -1873,6 +1893,8 @@ function renderList() {
     if(filt === 'no'      && st !== 'no')     return false;
     if(filt === 'pending' && st !== 'pending') return false;
     if(filt === 'maybe'   && st !== 'maybe')  return false;
+    if(filt === 'invited'    && !isInvited(g.id)) return false;
+    if(filt === 'notinvited' &&  isInvited(g.id)) return false;
     if(gr && g.group_label !== gr)            return false;
     if(q) {
       // Match the primary guest OR any of their family members (spouse/child/other),
@@ -1971,7 +1993,13 @@ function buildCard(g) {
   const selCls  = selIds.has(g.id) ? ' sel' : '';
   const gid = g.id;
 
-  let badges = '<span class="badge '+sc[st]+'">'+sl[st]+'</span>';
+  let badges = '';
+  if(hasResponded(g)) {
+    badges += '<span class="badge" style="background:#e8f5e8;color:#1a6e1a;border:1px solid #c0e0c0">✅ RSVP done</span>';
+  } else if(isInvited(gid)) {
+    badges += '<span class="badge" style="background:#eef7f1;color:#2a7a3a;border:1px solid #cfe8d6">✉️ Invited</span>';
+  }
+  badges += '<span class="badge '+sc[st]+'">'+sl[st]+'</span>';
   const fam = getFam(g);
   if(fam && fam.length) {
     fam.forEach(m => {
@@ -1993,7 +2021,10 @@ function buildCard(g) {
   if(hasEm) actions += '<button class="gbtn em" onclick="sendEM(\''+gid+'\')">Email</button>';
   actions += '<button class="gbtn rsvp-btn" onclick="cycleRsvp(\''+gid+'\')" title="Cycle RSVP">RSVP</button>';
   actions += '<button class="gbtn share-btn" id="sb-'+gid+'" onclick="copyRsvpLink(\''+gid+'\')" title="Copy RSVP link">Link</button>';
-  if(isInviteGenEnabled()) actions += '<button class="gbtn invite-btn" onclick="openInviteGen(\''+gid+'\')" title="Create WhatsApp invitation message">✉️ Invite</button>';
+  if(isInviteGenEnabled()){
+    const inv = isInvited(gid);
+    actions += '<button class="gbtn invite-btn'+(inv?' invited':'')+'" onclick="openInviteGen(\''+gid+'\')" title="Create WhatsApp invitation message">'+(inv?'✓ Invited':'✉️ Invite')+'</button>';
+  }
   actions += '<button class="gbtn dl" onclick="delGuest(\''+gid+'\')">Delete</button>';
 
   const noContact = !hasPh && !hasEm;
@@ -2029,6 +2060,11 @@ function updateStats() {
   document.getElementById('sNo').textContent    = countAll('no');
   document.getElementById('sPend').textContent  = countAll('pending');
   document.getElementById('sMaybe').textContent = countAll('maybe');
+  const invCount = guests.filter(g=>isInvited(g.id)).length;
+  const invEl = document.getElementById('sInvited');
+  const notEl = document.getElementById('sNotInvited');
+  if(invEl) invEl.textContent = invCount;
+  if(notEl) notEl.textContent = guests.length - invCount;
   document.getElementById('sPlus').textContent  = guests.filter(g=>familyCount(g)>0).length;
 }
 
@@ -2449,6 +2485,7 @@ async function openInviteGen(gid){
   document.getElementById('igFamilyToggle').checked = igFamily;
   updateInvitePreview();
   document.getElementById('inviteGenModal').style.display = 'flex';
+  refreshInviteMarkBtn();
 }
 function closeInviteGen(){ document.getElementById('inviteGenModal').style.display='none'; igGuest=null; }
 
@@ -2520,13 +2557,109 @@ async function updateInvitePreview(){
   }
 }
 
+async function saveInvitedMap(){
+  try{
+    const value = JSON.stringify(invitedMap);
+    const existing = await sbGet('settings?user_id=eq.'+ownerId+'&key=eq.invited_list&select=id');
+    if(existing && existing.length){
+      await sbPatch('settings?user_id=eq.'+ownerId+'&key=eq.invited_list', { value });
+    } else {
+      await sbPost('settings', { user_id: ownerId, key: 'invited_list', value });
+    }
+  }catch(e){ console.warn('could not save invited list', e); }
+}
+
+// Catch-up tool: mark everyone who already has a generated RSVP link (i.e.
+// people you've already sent invitations to) as invited, in one go.
+async function markSentBatchAsInvited(){
+  const withLinks = guests.filter(g => g.link_code && !invitedMap[g.id] && !hasResponded(g));
+  if(!withLinks.length){
+    toast('No un-marked guests with links found');
+    return;
+  }
+  if(!confirm('Mark '+withLinks.length+' guest'+(withLinks.length!==1?'s':'')+' who already have RSVP links as "invited"?\n\nUse this once to catch up the invitations you sent before this feature existed.')) return;
+  withLinks.forEach(g => { invitedMap[g.id] = true; });
+  await saveInvitedMap();
+  renderList(); updateStats();
+  toast('✅ Marked '+withLinks.length+' as invited');
+}
+
+function isInvited(gid){
+  if(invitedMap[gid]) return true;              // manually marked as sent
+  const g = guests.find(x => x.id === gid);
+  if(!g) return false;
+  // Auto-invited: anyone who has RESPONDED to the RSVP form was clearly invited,
+  // so a completed RSVP always counts as invited (even if never manually marked,
+  // and even if they open the link again later).
+  return hasResponded(g);
+}
+// A guest whose RSVP is complete (they filled the form)
+function hasResponded(g){
+  const st = g.rsvp_status || 'pending';
+  return st === 'yes' || st === 'no' || st === 'maybe' || !!g.responded_at;
+}
+
+async function markInvited(gid, on){
+  if(on) invitedMap[gid] = true; else delete invitedMap[gid];
+  await saveInvitedMap();
+  renderList(); updateStats();
+}
+
+// Toggle from the copy-modal button
+async function toggleInvitedFromModal(){
+  if(!igGuest) return;
+  const now = !isInvited(igGuest.id);
+  await markInvited(igGuest.id, now);
+  const btn = document.getElementById('igMarkBtn');
+  if(btn) refreshInviteMarkBtn();
+  toast(now ? '✅ Marked as invited' : 'Removed invited mark');
+}
+function refreshInviteMarkBtn(){
+  const btn = document.getElementById('igMarkBtn');
+  if(!btn || !igGuest) return;
+  if(hasResponded(igGuest)){
+    // They've completed the RSVP — invited status is automatic and can't be undone.
+    btn.textContent = '✅ RSVP completed — already invited';
+    btn.style.background = '#eef7f1';
+    btn.style.color = '#2a7a3a';
+    btn.style.borderColor = '#bfe0c8';
+    btn.style.cursor = 'default';
+    btn.disabled = true;
+  } else if(invitedMap[igGuest.id]){
+    btn.textContent = '✓ Invitation sent — tap to undo';
+    btn.style.background = '#eef7f1';
+    btn.style.color = '#2a7a3a';
+    btn.style.borderColor = '#bfe0c8';
+    btn.style.cursor = 'pointer';
+    btn.disabled = false;
+  } else {
+    btn.textContent = '✓ Mark invitation as sent';
+    btn.style.background = 'var(--surface)';
+    btn.style.color = 'var(--ink)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.cursor = 'pointer';
+    btn.disabled = false;
+  }
+}
+
 function copyInviteMessage(){
   const ta = document.getElementById('igPreview');
   const btn = document.getElementById('igCopyBtn');
   const done = ()=>{ btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent='📋 Copy Message',2000); };
+  const after = ()=>{
+    done();
+    // Offer to mark as sent right after copying (only if not already marked)
+    if(igGuest && !isInvited(igGuest.id) && !hasResponded(igGuest)){
+      setTimeout(()=>{
+        if(confirm('Message copied! Mark this guest as invited?')){
+          markInvited(igGuest.id, true).then(refreshInviteMarkBtn);
+        }
+      }, 250);
+    }
+  };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(ta.value).then(done).catch(()=>{ ta.select(); document.execCommand('copy'); done(); });
-  } else { ta.select(); document.execCommand('copy'); done(); }
+    navigator.clipboard.writeText(ta.value).then(after).catch(()=>{ ta.select(); document.execCommand('copy'); after(); });
+  } else { ta.select(); document.execCommand('copy'); after(); }
 }
 
 async function copyRsvpLink(gid) {
