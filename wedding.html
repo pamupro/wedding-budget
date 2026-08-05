@@ -756,6 +756,9 @@ async function init() {
 
   document.getElementById('formLoading').style.display = 'none';
   document.getElementById('formContent').style.display = 'block';
+
+  // If this guest already RSVP'd, show the completed screen now (form is built).
+  if(window.__respondedGuest) showAlreadyResponded(window.__respondedGuest);
 }
 
 // ── LOAD GUEST RECORD ─────────────────────────────────────────────────────────
@@ -817,6 +820,10 @@ async function loadGuest(gid) {
   }
   if(g.rsvp_status && g.rsvp_status !== 'pending') {
     pickAtt(g.rsvp_status === 'yes' ? 'yes' : 'no');
+    // Flag it — we show the "already responded" screen at the END of init,
+    // once the form is fully built (otherwise buildNameFields would rebuild
+    // over our completed screen).
+    window.__respondedGuest = g;
   }
 
   // Greeting banner
@@ -1253,6 +1260,39 @@ async function submitRsvp() {
   } else {
     btn.disabled = false; btn.textContent = 'Send RSVP 💌';
     showErr('Something went wrong — please try again.');
+  }
+}
+
+
+// Shown when a guest opens their link but has ALREADY submitted their RSVP.
+let rsvpFormHtmlBackup = null;
+function showAlreadyResponded(g){
+  const yes  = (g.rsvp_status === 'yes');
+  const nm   = (g.name || '').trim();
+  const wrap = document.getElementById('rsvpWrap');
+  if(!wrap) return;
+  // Keep the real form so the guest can re-open it if they truly need to change.
+  rsvpFormHtmlBackup = wrap.innerHTML;
+  const line = (nm ? '<strong>'+esc(nm)+'</strong>, we\'ve' : 'We\'ve')
+    + " already received your RSVP — <strong>"
+    + (yes ? "you're attending 🎉" : "you can't make it 🤍") + "</strong>. "
+    + (yes ? "We can't wait to celebrate with you!" : "Thank you for letting us know.");
+  wrap.innerHTML =
+    '<div class="success-screen">'+
+      '<div class="s-ring '+(yes?'yes':'no')+'">'+(yes?'✅':'💌')+'</div>'+
+      '<div class="s-h">'+(yes ? "You're all set!" : 'Response received')+'</div>'+
+      '<p class="s-p">'+line+'</p>'+
+      '<button onclick="reopenRsvpForm()" style="margin-top:22px;background:none;'+
+        'border:1.5px solid var(--gold);color:var(--gold-d,#a5842f);border-radius:99px;'+
+        "padding:11px 22px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;cursor:pointer\">"+
+        'Need to change your response?'+
+      '</button>'+
+    '</div>';
+}
+// Re-open the editable form (their previous answers are still filled in).
+function reopenRsvpForm(){
+  if(rsvpFormHtmlBackup !== null){
+    document.getElementById('rsvpWrap').innerHTML = rsvpFormHtmlBackup;
   }
 }
 
