@@ -912,12 +912,12 @@
 
   /* ── Toolbar mobile fix ── */
   @media (max-width: 680px) {
-    .toolbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 8px; padding: 10px 14px; }
-    .toolbar::-webkit-scrollbar { display: none; }
-    .search-wrap { min-width: 0; flex: 1; }
-    .csel-btn { padding: 8px 12px; font-size: 12px; }
+    /* Search gets its own full-width row; filters wrap onto the next line. */
+    .toolbar { flex-wrap: wrap; overflow: visible; gap: 8px; padding: 10px 14px; }
+    .search-wrap { flex: 1 1 100%; min-width: 0; order: -1; }
+    .csel-wrap { flex: 1 1 auto; }
+    .csel-btn { padding: 9px 12px; font-size: 12.5px; width: 100%; justify-content: space-between; }
     #cntLbl { display: none; }
-
   }
 
   /* ── Topbar must sit above sticky strips ── */
@@ -1840,11 +1840,16 @@ async function refreshGuests() {
         toast(emoji+' '+(newG.name||'Guest')+' — '+label);
       }
     });
+    // Skip the whole refresh visual update if the guest data is identical —
+    // avoids the list rebuilding (and "shaking") when nothing actually changed.
+    const freshSig = JSON.stringify(fresh.map(g=>[g.id,g.rsvp_status,g.name,g.link_code]));
+    const changed = freshSig !== JSON.stringify(guests.map(g=>[g.id,g.rsvp_status,g.name,g.link_code]));
     guests = fresh;
     updateStats();
-    // Don't rebuild the list while the user is mid-search — it steals focus
-    // and makes the results visibly jump. The next keystroke re-renders anyway.
-    if(!isTyping) renderList();
+    // Only rebuild the list when data changed AND the user isn't typing or
+    // actively searching — rebuilding under the cursor causes shake/missed clicks.
+    const searching = (document.getElementById('searchQ').value||'').trim() !== '';
+    if(changed && !isTyping && !searching) renderList();
   } catch(e) { console.warn('Poll error:', e); }
 }
 
@@ -1957,6 +1962,7 @@ function renderList() {
 // yank the DOM out from under them mid-search (that caused the shaking).
 let searchTimer = null;
 let isTyping    = false;
+let lastRenderSig = '';   // fingerprint of last render — skip if nothing changed
 function onSearchInput() {
   isTyping = true;
   clearTimeout(searchTimer);
@@ -3557,11 +3563,14 @@ function pinToolbar() {
   const top = strip.offsetTop + strip.offsetHeight;
   bar.style.top = top + 'px';
 }
-// Run after fonts and layout settle
+// Run after fonts and layout settle, and keep it correct on resize.
 pinToolbar();
 requestAnimationFrame(pinToolbar);
 document.fonts.ready.then(pinToolbar);
 setTimeout(pinToolbar, 200);
+setTimeout(pinToolbar, 600);
+window.addEventListener('resize', pinToolbar);
+window.addEventListener('orientationchange', ()=>setTimeout(pinToolbar,100));
 window.addEventListener('resize', pinToolbar);
 
 init();
