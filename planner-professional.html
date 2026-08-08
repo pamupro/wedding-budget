@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Weddings — WeddingLedger for Planners</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="theme-color" content="#b8862a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Instrument+Sans:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{
+  --bg:#f8f6f3; --bg2:#f1ede6; --surface:#fdfcfb; --ink:#1a1612; --ink2:#2e2820;
+  --muted:#7a6e5e; --muted2:#b0a090; --gold:#a07828; --gold2:#c49a3a; --gold-pale:#fdf3dc;
+  --gold-bd:rgba(160,120,40,.22); --border:rgba(26,22,18,.09); --border2:rgba(26,22,18,.05);
+  --sage:#2a6a3a; --rose:#b83030; --success:#10b981; --warning:#f59e0b;
+  --shadow:0 1px 3px rgba(26,22,18,.05), 0 10px 34px rgba(26,22,18,.06);
+  --shadow2:0 24px 60px rgba(26,22,18,.12); --shadow3:0 8px 24px rgba(26,22,18,.1);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:'Instrument Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh}
+
+/* Professional Topbar */
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border2);padding:14px 28px;
+  display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:100;
+  box-shadow:var(--shadow);
+}
+.logo{font-family:'Fraunces',serif;font-size:18px;font-weight:400;letter-spacing:.02em}
+.logo em{font-style:italic;color:var(--gold);font-weight:500}
+.logo-text{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-left:12px;padding-left:12px;border-left:1px solid var(--border2)}
+
+.topbar-left{display:flex;align-items:center;gap:0}
+.topbar-center{flex:1;display:flex;align-items:center;gap:20px}
+
+/* Wedding Selector Dropdown */
+.wedding-selector{position:relative}
+.ws-btn{
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:10px 14px;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink);
+  cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s;
+}
+.ws-btn:hover{background:var(--border);border-color:var(--gold)}
+.ws-btn i{font-size:14px}
+.ws-dropdown{
+  position:absolute;top:100%;left:0;margin-top:8px;background:var(--surface);
+  border:1px solid var(--border2);border-radius:14px;box-shadow:var(--shadow2);
+  min-width:280px;max-height:420px;overflow-y:auto;display:none;z-index:200;
+  animation:slideDown .2s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.ws-dropdown.show{display:block}
+.ws-header{padding:14px 16px;border-bottom:1px solid var(--border2);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.ws-item{
+  padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;
+  border-bottom:1px solid var(--border2);transition:.15s;
+}
+.ws-item:last-child{border-bottom:none}
+.ws-item:hover{background:var(--bg2)}
+.ws-item.active{background:var(--gold-pale);border-left:3px solid var(--gold);padding-left:13px}
+.ws-emoji{font-size:18px}
+.ws-name{flex:1}
+.ws-name-main{font-weight:600;font-size:13.5px;color:var(--ink)}
+.ws-name-date{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Back Button & Breadcrumb */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.breadcrumb a{color:var(--gold);text-decoration:none;font-weight:600;cursor:pointer}
+.breadcrumb a:hover{color:var(--gold2)}
+.breadcrumb i{font-size:11px}
+
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.plan-chip{
+  font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--gold);
+  background:var(--gold-pale);padding:6px 14px;border-radius:99px;
+  border:1.5px solid var(--gold-bd);display:flex;align-items:center;gap:6px;
+}
+.plan-chip i{font-size:11px}
+
+.tb-btn{
+  background:none;border:none;font-family:inherit;font-size:13.5px;color:var(--muted);
+  cursor:pointer;padding:8px 12px;border-radius:9px;text-decoration:none;transition:.2s;
+}
+.tb-btn:hover{background:var(--bg2);color:var(--ink)}
+.tb-btn i{margin-right:6px;font-size:14px}
+
+/* Main Content */
+.main-container{max-width:1280px;margin:0 auto;padding:40px 28px}
+
+/* Hero Section */
+.hero{margin-bottom:40px}
+.hero-eyebrow{
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gold);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.hero-eyebrow i{font-size:12px}
+.hero h1{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:clamp(32px,5vw,48px);
+  line-height:1.1;color:var(--ink);margin-bottom:12px;
+}
+.hero p{color:var(--muted);font-size:15px;max-width:620px;line-height:1.7}
+
+/* Quota Card */
+.quota-section{margin-bottom:32px}
+.quota-card{
+  background:linear-gradient(135deg,#fdf3dc 0%,#fff 100%);border:1px solid var(--gold-bd);
+  border-radius:18px;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:28px;
+  align-items:center;box-shadow:var(--shadow);
+}
+.quota-left h3{
+  font-family:'Fraunces',serif;font-size:28px;font-weight:400;color:var(--ink);
+  margin-bottom:4px;
+}
+.quota-left p{font-size:13.5px;color:var(--muted);margin-bottom:12px}
+.quota-bar{
+  height:8px;background:rgba(160,120,40,.1);border-radius:99px;overflow:hidden;
+}
+.quota-fill{
+  height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  border-radius:99px;transition:width .8s cubic-bezier(.4,0,.1,1);
+}
+.quota-status{
+  font-size:12px;color:var(--muted);margin-top:8px;
+}
+.quota-status b{color:var(--ink);font-weight:600}
+
+.quota-right{text-align:right}
+.quota-price{font-family:'Fraunces',serif;font-size:34px;font-weight:400;color:var(--gold);margin-bottom:8px}
+.quota-desc{font-size:13px;color:var(--muted);margin-bottom:14px}
+.upgrade-btn{
+  background:var(--gold);color:#fff;border:none;border-radius:10px;
+  padding:12px 24px;font-weight:600;font-size:13.5px;cursor:pointer;
+  transition:.2s;display:inline-flex;align-items:center;gap:8px;
+}
+.upgrade-btn:hover{background:var(--gold2)}
+.upgrade-btn i{font-size:13px}
+
+/* Weddings Grid */
+.section-title{
+  font-family:'Fraunces',serif;font-weight:400;font-size:22px;color:var(--ink);
+  margin-bottom:20px;display:flex;align-items:center;gap:8px;
+}
+.section-title i{color:var(--gold);font-size:20px}
+
+.wgrid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:24px;margin-bottom:40px;
+}
+
+.wcard{
+  background:var(--surface);border:1px solid var(--border2);border-radius:16px;
+  overflow:hidden;box-shadow:var(--shadow);cursor:pointer;
+  transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s;
+  display:flex;flex-direction:column;animation:rise .5s cubic-bezier(.2,.7,.3,1) both;
+}
+.wcard:hover{
+  transform:translateY(-6px);box-shadow:var(--shadow2);border-color:var(--gold-bd);
+}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+.wcard-header{
+  background:linear-gradient(135deg,var(--gold-pale),#fff);padding:28px 24px 24px;
+  text-align:center;border-bottom:1px solid var(--border2);position:relative;
+}
+.wcard-emoji{font-size:44px;line-height:1;margin-bottom:12px}
+.wcard-names{
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:700;
+  color:var(--ink);margin:8px 0 6px;line-height:1.2;
+}
+.wcard-date{
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);font-weight:600;
+}
+
+.wcard-body{padding:18px 22px;display:flex;flex-direction:column;gap:12px;flex:1}
+.wcard-item{
+  display:flex;align-items:center;gap:12px;font-size:13.5px;color:var(--ink2);
+}
+.wcard-icon{
+  width:32px;height:32px;border-radius:9px;background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
+}
+.wcard-item.muted .wcard-text{color:var(--muted)}
+
+.wcard-footer{
+  padding:14px 22px;border-top:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;background:var(--bg2);
+}
+.wcard-action{
+  font-size:13px;font-weight:600;color:var(--gold);
+  display:flex;align-items:center;gap:6px;transition:.2s;
+}
+.wcard:hover .wcard-action{gap:10px;color:var(--gold2)}
+.wcard-action i{font-size:12px}
+
+.wcard-menu{
+  background:none;border:none;color:var(--muted2);cursor:pointer;font-size:16px;
+  padding:6px 10px;border-radius:8px;line-height:1;transition:.2s;
+}
+.wcard-menu:hover{background:var(--border);color:var(--ink)}
+
+/* Add Card */
+.add-card{
+  border:2px dashed var(--gold-bd);border-radius:16px;background:transparent;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:44px 24px;cursor:pointer;transition:.2s;min-height:320px;
+  color:var(--gold);
+}
+.add-card:hover{
+  background:var(--gold-pale);border-color:var(--gold);box-shadow:var(--shadow);
+}
+.add-icon{
+  width:60px;height:60px;border-radius:50%;background:var(--gold-pale);
+  border:2px solid var(--gold-bd);display:flex;align-items:center;justify-content:center;
+  font-size:28px;transition:.2s;
+}
+.add-card:hover .add-icon{background:var(--gold);color:#fff}
+.add-card b{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+  font-size:20px;color:var(--ink);
+}
+.add-card span{font-size:13px;color:var(--muted)}
+
+/* Empty State */
+.empty-state{
+  text-align:center;padding:80px 24px;color:var(--muted);
+}
+.empty-state .em{font-size:48px;margin-bottom:20px}
+.empty-state h2{
+  font-family:'Fraunces',serif;font-weight:400;font-size:28px;
+  color:var(--ink);margin-bottom:10px;
+}
+
+/* Loading */
+.spinner{
+  width:40px;height:40px;border:3px solid var(--border);
+  border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;
+  margin:0 auto 20px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Modal */
+.overlay{
+  position:fixed;inset:0;background:rgba(26,22,18,.6);
+  display:none;align-items:center;justify-content:center;padding:20px;
+  z-index:300;backdrop-filter:blur(4px);animation:fadeIn .2s;
+}
+.overlay.show{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.modal{
+  background:var(--surface);border-radius:20px;width:100%;max-width:500px;
+  box-shadow:var(--shadow2);max-height:90vh;overflow-y:auto;
+  animation:slideUp .3s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+.modal-header{
+  padding:24px;border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-header h3{
+  font-family:'Fraunces',serif;font-weight:400;font-style:italic;font-size:22px;
+  color:var(--ink);
+}
+.modal-close{
+  background:none;border:none;font-size:20px;color:var(--muted);
+  cursor:pointer;padding:4px 8px;border-radius:8px;transition:.2s;
+}
+.modal-close:hover{background:var(--bg2);color:var(--ink)}
+
+.modal-body{padding:24px}
+.form-group{margin-bottom:18px}
+.form-label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px;
+}
+.form-input,.form-select{
+  width:100%;padding:12px 14px;border:1.5px solid var(--border);
+  border-radius:11px;font-family:inherit;font-size:14px;
+  background:var(--surface);color:var(--ink);transition:.2s;
+}
+.form-input:focus,.form-select:focus{
+  outline:none;border-color:var(--gold);background:var(--surface);
+}
+.emoji-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.emoji-btn{
+  width:48px;height:48px;border:1.5px solid var(--border);border-radius:12px;
+  background:var(--surface);font-size:20px;cursor:pointer;transition:.15s;
+  font-weight:400;
+}
+.emoji-btn:hover{border-color:var(--gold);background:var(--gold-pale)}
+.emoji-btn.active{border-color:var(--gold);background:var(--gold-pale);box-shadow:0 0 0 3px rgba(160,120,40,.1)}
+
+.btn-primary{
+  width:100%;background:var(--ink);color:#fff;border:none;border-radius:12px;
+  padding:14px;font-family:inherit;font-size:14.5px;font-weight:600;
+  cursor:pointer;margin-top:8px;transition:.2s;
+}
+.btn-primary:hover{background:#000}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+
+/* Upgrade Section */
+.upgrade-section{
+  background:linear-gradient(135deg,#fdf3dc,#fff);border:1.5px solid var(--gold-bd);
+  border-radius:16px;padding:22px;margin-top:16px;text-align:center;
+}
+.upgrade-section h4{
+  font-family:'Fraunces',serif;font-weight:400;font-size:20px;
+  color:var(--ink);margin-bottom:8px;
+}
+.upgrade-section p{font-size:13.5px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.upgrade-price{
+  font-family:'Fraunces',serif;font-size:28px;color:var(--gold);
+  font-weight:400;margin-bottom:12px;
+}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(100px);
+  background:var(--ink);color:#fdf9f4;padding:14px 24px;border-radius:11px;
+  font-size:13.5px;z-index:400;transition:transform .3s cubic-bezier(.2,.8,.2,1);
+  box-shadow:var(--shadow2);display:flex;align-items:center;gap:10px;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast i{font-size:16px}
+
+/* Responsive */
+@media(max-width:768px){
+  .topbar{padding:12px 18px;gap:12px}
+  .topbar-center{gap:12px}
+  .breadcrumb{display:none}
+  .quota-card{grid-template-columns:1fr;gap:16px;padding:18px}
+  .quota-right{text-align:left}
+  .main-container{padding:24px 16px}
+  .wgrid{grid-template-columns:1fr;gap:16px}
+  .hero{margin-bottom:28px}
+  .hero h1{font-size:28px}
+  .logo-text{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Wedding<em>Ledger</em></div>
+    <div class="logo-text">Professional Planner</div>
+  </div>
+  
+  <div class="topbar-center" style="display:none" id="navCenter">
+    <div class="breadcrumb">
+      <a href="planner-professional.html"><i class="fas fa-home"></i> Studio</a>
+      <i class="fas fa-chevron-right"></i>
+      <span id="currentWeddingName">Wedding</span>
+    </div>
+  </div>
+
+  <div style="flex:1"></div>
+
+  <div class="wedding-selector" id="weddingSelector" style="display:none">
+    <button class="ws-btn" onclick="toggleWeddingDropdown()">
+      <i class="fas fa-ring"></i>
+      <span id="wsLabel">Select Wedding</span>
+      <i class="fas fa-chevron-down"></i>
+    </button>
+    <div class="ws-dropdown" id="weddingDropdown">
+      <div class="ws-header">Your Weddings</div>
+      <div id="weddingList"></div>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <span class="plan-chip" id="planChip">
+      <i class="fas fa-star"></i>
+      <span id="planText">Planner</span>
+    </span>
+    <a href="settings.html" class="tb-btn" title="Settings">
+      <i class="fas fa-gear"></i> Settings
+    </a>
+    <button class="tb-btn" onclick="logout()" title="Sign out">
+      <i class="fas fa-sign-out-alt"></i> Sign out
+    </button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-container">
+  <!-- Loading State -->
+  <div id="loadingState" style="text-align:center;padding:60px 20px">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);margin-top:16px">Loading your weddings...</p>
+  </div>
+
+  <!-- Content -->
+  <div id="content" style="display:none">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">
+        <i class="fas fa-sparkles"></i> Planner Studio
+      </div>
+      <h1>Manage Your Weddings</h1>
+      <p>Effortlessly coordinate every wedding project. Switch between clients, manage budgets, vendors, guests, and invitations all in one unified platform.</p>
+    </div>
+
+    <!-- Quota Card -->
+    <div class="quota-section" id="quotaSection">
+      <div class="quota-card">
+        <div class="quota-left">
+          <h3 id="quotaNum">0 / 3</h3>
+          <p id="quotaTxt">Weddings in your plan</p>
+          <div class="quota-bar">
+            <div class="quota-fill" id="quotaFill" style="width:0%"></div>
+          </div>
+          <div class="quota-status" id="quotaStatus"><b>3 weddings</b> included</div>
+        </div>
+        <div class="quota-right">
+          <div class="quota-price" id="priceDisplay">£40</div>
+          <div class="quota-desc">Lifetime access • All pro features</div>
+          <button class="upgrade-btn" id="upgradeBtn" onclick="openUpgradeModal()" style="display:none">
+            <i class="fas fa-plus"></i> Add More Weddings
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weddings Grid -->
+    <div>
+      <div class="section-title">
+        <i class="fas fa-heart"></i> Your Weddings
+      </div>
+      <div class="wgrid" id="wgrid"></div>
+      
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state" style="display:none">
+        <div class="em">💍</div>
+        <h2>No weddings yet</h2>
+        <p style="margin:12px 0 20px">Create your first wedding to get started with budget management and vendor coordination.</p>
+        <button class="btn-primary" onclick="openNewWeddingModal()" style="max-width:200px;margin:0 auto">
+          <i class="fas fa-plus"></i> Add Your First Wedding
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+
+<!-- New Wedding Modal -->
+<div class="overlay" id="newWeddingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-plus"></i> Create New Wedding</h3>
+      <button class="modal-close" onclick="closeNewWeddingModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Couple's Name</label>
+        <input type="text" class="form-input" id="coupleName" placeholder="e.g., Sarah & James">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wedding Date</label>
+        <input type="date" class="form-input" id="weddingDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Venue</label>
+        <input type="text" class="form-input" id="venueName" placeholder="e.g., The Grand Hotel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="currency">
+          <option value="GBP">🇬🇧 British Pound (£)</option>
+          <option value="USD">🇺🇸 US Dollar ($)</option>
+          <option value="EUR">🇪🇺 Euro (€)</option>
+          <option value="AUD">🇦🇺 Australian Dollar (A$)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Cover Emoji</label>
+        <div class="emoji-row" id="emojiRow"></div>
+      </div>
+      <button class="btn-primary" id="createBtn" onclick="createWedding()">
+        Create Wedding
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="overlay" id="upgradeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-arrow-up"></i> Upgrade Your Plan</h3>
+      <button class="modal-close" onclick="closeUpgradeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="upgrade-section">
+        <h4>Add More Weddings</h4>
+        <p>You've reached your plan limit. Add more weddings to manage additional clients.</p>
+        <div class="upgrade-price">£12 per wedding</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px">One-time payment • Lifetime access • All pro features</p>
+        <button class="btn-primary" onclick="openStripePayment('add_wedding')">
+          <i class="fas fa-credit-card"></i> Add Wedding for £12
+        </button>
+        <p style="font-size:12px;color:var(--muted);margin-top:12px">💳 Secure payment via Stripe</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+  <i class="fas fa-check-circle"></i>
+  <span id="toastMsg">Success!</span>
+</div>
+
+<script>
+const EMOJIS = ['💍', '💒', '👰', '🤵', '💐', '🎊', '🍾', '💝', '✨', '💕'];
+let selectedEmoji = '💍';
+let weddings = [];
+let allowance = 3;
+let userPlan = 'starter';
+
+// Stripe Keys - Replace with your actual keys
+const STRIPE_PUBLIC_KEY = 'pk_test_YOUR_STRIPE_KEY'; // Replace with your Stripe public key
+const PAYMENT_ENDPOINT = '/api/create-payment-intent'; // Your backend endpoint
+
+async function init(){
+  try {
+    const tok = await DB.getValidToken(getTok());
+    const r = await fetch(SB+'/rest/v1/weddings?archived=eq.false&order=created_at.desc', {
+      headers:{...(await h()),'apikey':SK}
+    });
+    weddings = await r.json();
+    
+    // Get user's plan info
+    const planR = await fetch(SB+'/rest/v1/user_plans?select=*', {
+      headers:{...(await h()),'apikey':SK}
+    });
+    const planData = await planR.json();
+    if(planData.length > 0){
+      const plan = planData[0];
+      userPlan = plan.plan_type || 'starter';
+      allowance = plan.wedding_allowance || 3;
+    }
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    renderUI();
+  }catch(e){
+    console.error(e);
+    toast('Error loading weddings');
+  }
+}
+
+function renderUI(){
+  renderQuota();
+  renderWeddings();
+  renderWeddingSelector();
+  buildEmojiRow();
+}
+
+function renderQuota(){
+  const used = weddings.length;
+  document.getElementById('quotaNum').textContent = used + ' / ' + allowance;
+  document.getElementById('quotaFill').style.width = Math.min(100, (used/allowance)*100) + '%';
+  
+  if(used >= allowance){
+    document.getElementById('quotaTxt').textContent = 'Maximum weddings reached';
+    document.getElementById('quotaStatus').innerHTML = '<b>All slots used</b> • Add more to continue';
+    document.getElementById('upgradeBtn').style.display = 'inline-flex';
+  } else {
+    document.getElementById('quotaTxt').textContent = 'Weddings in your plan';
+    document.getElementById('quotaStatus').innerHTML = '<b>' + (allowance - used) + ' ' + (allowance - used === 1 ? 'wedding' : 'weddings') + '</b> remaining';
+  }
+}
+
+function renderWeddings(){
+  const grid = document.getElementById('wgrid');
+  const empty = document.getElementById('emptyState');
+  
+  if(weddings.length === 0){
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  
+  empty.style.display = 'none';
+  let html = '';
+  
+  weddings.forEach(w => {
+    const date = w.wedding_date ? new Date(w.wedding_date).toLocaleDateString('en-GB', {year:'numeric',month:'short',day:'numeric'}) : 'TBD';
+    html += `
+      <div class="wcard" onclick="openWedding('${w.id}')">
+        <div class="wcard-header">
+          <div class="wcard-emoji">${w.cover_emoji || '💍'}</div>
+          <div class="wcard-names">${esc(w.couple_name || 'Wedding')}</div>
+          <div class="wcard-date">${date}</div>
+        </div>
+        <div class="wcard-body">
+          <div class="wcard-item ${w.venue ? '' : 'muted'}">
+            <div class="wcard-icon">📍</div>
+            <div class="wcard-text">${esc(w.venue || 'Venue not set')}</div>
+          </div>
+          <div class="wcard-item">
+            <div class="wcard-icon">💷</div>
+            <div class="wcard-text">${esc(w.currency || 'GBP')}</div>
+          </div>
+        </div>
+        <div class="wcard-footer">
+          <div class="wcard-action">
+            Open Dashboard <i class="fas fa-arrow-right"></i>
+          </div>
+          <button class="wcard-menu" onclick="event.stopPropagation();deleteWedding('${w.id}','${esc(w.couple_name)}')" title="Remove">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  // Add new wedding card
+  html += `
+    <div class="add-card" onclick="openNewWeddingModal()">
+      <div class="add-icon"><i class="fas fa-plus"></i></div>
+      <b>Add a Wedding</b>
+      <span>${weddings.length < allowance ? (allowance - weddings.length) + ' remaining' : 'Upgrade to add'}</span>
+    </div>
+  `;
+  
+  grid.innerHTML = html;
+}
+
+function renderWeddingSelector(){
+  const selector = document.getElementById('weddingSelector');
+  const list = document.getElementById('weddingList');
+  
+  if(weddings.length === 0){
+    selector.style.display = 'none';
+    return;
+  }
+  
+  selector.style.display = 'block';
+  let html = '';
+  
+  weddings.forEach(w => {
+    const date = w.wedding_date ? new Date(w.wedding_date).toLocaleDateString('en-GB', {year:'numeric',month:'short',day:'numeric'}) : 'TBD';
+    html += `
+      <div class="ws-item" onclick="selectWedding('${w.id}','${esc(w.couple_name)}')">
+        <div class="ws-emoji">${w.cover_emoji || '💍'}</div>
+        <div class="ws-name">
+          <div class="ws-name-main">${esc(w.couple_name || 'Wedding')}</div>
+          <div class="ws-name-date">${date}</div>
+        </div>
+      </div>
+    `;
+  });
+  
+  list.innerHTML = html;
+}
+
+function buildEmojiRow(){
+  const row = document.getElementById('emojiRow');
+  row.innerHTML = EMOJIS.map(e => 
+    `<button type="button" class="emoji-btn${e === selectedEmoji ? ' active' : ''}" onclick="pickEmoji('${e}',this)">${e}</button>`
+  ).join('');
+}
+
+function pickEmoji(e, el){
+  selectedEmoji = e;
+  document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleWeddingDropdown(){
+  const dropdown = document.getElementById('weddingDropdown');
+  dropdown.classList.toggle('show');
+}
+
+function selectWedding(id, name){
+  localStorage.setItem('wl_wedding_id', id);
+  document.getElementById('wsLabel').textContent = name;
+  document.getElementById('weddingDropdown').classList.remove('show');
+  toast('Switched to ' + name);
+}
+
+function openWedding(id){
+  localStorage.setItem('wl_wedding_id', id);
+  location.href = 'dashboard-professional.html';
+}
+
+function openNewWeddingModal(){
+  if(weddings.length >= allowance){
+    toast('Plan limit reached. Upgrade to add more.');
+    openUpgradeModal();
+    return;
+  }
+  document.getElementById('newWeddingModal').classList.add('show');
+}
+
+function closeNewWeddingModal(){
+  document.getElementById('newWeddingModal').classList.remove('show');
+  document.getElementById('coupleName').value = '';
+  document.getElementById('weddingDate').value = '';
+  document.getElementById('venueName').value = '';
+  document.getElementById('currency').value = 'GBP';
+  selectedEmoji = '💍';
+  buildEmojiRow();
+}
+
+function openUpgradeModal(){
+  document.getElementById('upgradeModal').classList.add('show');
+}
+
+function closeUpgradeModal(){
+  document.getElementById('upgradeModal').classList.remove('show');
+}
+
+async function createWedding(){
+  const couple = document.getElementById('coupleName').value.trim();
+  if(!couple){
+    toast('Please enter the couple\'s name');
+    return;
+  }
+  
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+  
+  try{
+    const tok = await DB.getValidToken(getTok());
+    const r = await fetch(SB+'/rest/v1/rpc/create_wedding', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+tok},
+      body: JSON.stringify({
+        p_couple: couple,
+        p_partner: null,
+        p_date: document.getElementById('weddingDate').value || null,
+        p_venue: document.getElementById('venueName').value.trim() || null,
+        p_currency: document.getElementById('currency').value
+      })
+    });
+    const res = await r.json();
+    
+    if(!res || res.ok !== true){
+      toast('Could not create wedding: ' + (res?.error || 'Unknown error'));
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      return;
+    }
+    
+    // Set emoji and reload
+    await fetch(SB+'/rest/v1/weddings?id=eq.'+res.id, {
+      method:'PATCH',
+      headers:{...(await h()),'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({ cover_emoji: selectedEmoji })
+    });
+    
+    toast('✅ Wedding created! Opening...');
+    closeNewWeddingModal();
+    setTimeout(() => openWedding(res.id), 800);
+  }catch(e){
+    console.error(e);
+    toast('Error creating wedding');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+async function deleteWedding(id, name){
+  if(!confirm(`Remove "${name}" from your studio?\n\nThis hides the wedding but keeps its data.`)) return;
+  
+  try{
+    await fetch(SB+'/rest/v1/weddings?id=eq.'+id, {
+      method:'PATCH',
+      headers:{...(await h()),'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({ archived: true })
+    });
+    weddings = weddings.filter(w => w.id !== id);
+    renderUI();
+    toast('Wedding removed');
+  }catch(e){
+    toast('Could not remove wedding');
+  }
+}
+
+async function openStripePayment(product){
+  // Initialize Stripe
+  const stripe = Stripe(STRIPE_PUBLIC_KEY);
+  
+  try{
+    // Create payment intent on your backend
+    const response = await fetch(PAYMENT_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + getTok()
+      },
+      body: JSON.stringify({
+        product: product,
+        amount: product === 'add_wedding' ? 1200 : 4000 // amounts in pence
+      })
+    });
+    
+    const session = await response.json();
+    if(session.sessionId){
+      // Redirect to Stripe Checkout
+      const result = await stripe.redirectToCheckout({sessionId: session.sessionId});
+      if(result.error){
+        toast('Payment error: ' + result.error.message);
+      }
+    }
+  }catch(e){
+    toast('Could not process payment. Please try again.');
+  }
+}
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function logout(){
+  if(confirm('Sign out of WeddingLedger?')){
+    localStorage.clear();
+    location.href = 'login.html';
+  }
+}
+
+function esc(s){
+  return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function getTok(){
+  return localStorage.getItem('wl_auth_token') || '';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e){
+  const dropdown = document.getElementById('weddingDropdown');
+  const selector = document.getElementById('weddingSelector');
+  if(selector && !selector.contains(e.target)){
+    dropdown.classList.remove('show');
+  }
+});
+
+init();
+</script>
+
+<!-- Stripe SDK -->
+<script src="https://js.stripe.com/v3/"></script>
+</body>
+</html>
