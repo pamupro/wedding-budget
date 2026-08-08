@@ -305,6 +305,14 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
 
 /* ─── SIGNUP WIZARD ─── */
 .wiz-steps{display:flex;gap:6px;margin-bottom:22px}
+.acct-type{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.acct-opt{display:flex;align-items:center;gap:10px;padding:13px 14px;border:1.5px solid var(--border,rgba(26,22,18,.12));border-radius:12px;background:var(--surface,#fff);cursor:pointer;font-family:inherit;text-align:left;transition:.15s}
+.acct-opt:hover{border-color:var(--gold,#a07828)}
+.acct-opt.active{border-color:var(--gold,#a07828);background:var(--gold-pale,#fdf3dc)}
+.acct-ic{font-size:22px;flex-shrink:0}
+.acct-txt b{display:block;font-size:13px;font-weight:600;color:var(--ink,#1a1612);line-height:1.3}
+.acct-txt em{display:block;font-style:normal;font-size:11px;color:var(--muted,#7a6e5e);margin-top:1px;line-height:1.3}
+@media(max-width:480px){.acct-type{grid-template-columns:1fr}}
 .wiz-dot{flex:1;height:4px;border-radius:2px;background:var(--bg2);transition:.3s}
 .wiz-dot.done{background:var(--gold2)}
 .wiz-dot.active{background:var(--gold)}
@@ -473,9 +481,23 @@ label{font-size:12px;font-weight:600;color:var(--ink2);letter-spacing:.01em}
 
       <!-- STEP 1: account -->
       <div class="wiz-step active" id="wizStep0">
-        <div class="wiz-eyebrow">Step 1 of 6</div>
+        <div class="wiz-eyebrow">Step 1</div>
         <div class="wiz-q">Create your <em>account</em></div>
         <div class="wiz-sub">Free forever. No card needed to start.</div>
+        <div class="acct-type">
+          <button type="button" class="acct-opt active" id="acctCouple" onclick="setAcct('couple')">
+            <span class="acct-ic">💍</span>
+            <span class="acct-txt"><b>I'm a couple</b><em>Planning our own wedding</em></span>
+          </button>
+          <button type="button" class="acct-opt" id="acctPlanner" onclick="setAcct('planner')">
+            <span class="acct-ic">📋</span>
+            <span class="acct-txt"><b>I'm a planner</b><em>Managing weddings for clients</em></span>
+          </button>
+        </div>
+        <div class="field" id="plannerNameField" style="display:none;margin-bottom:12px">
+          <label for="sPName">Your name or business</label>
+          <input type="text" class="fi" id="sPName" placeholder="e.g. Evergreen Events" autocomplete="off">
+        </div>
         <div class="field" style="margin-bottom:12px">
           <label for="sEmail">Email address</label>
           <input type="email" class="fi" id="sEmail" placeholder="your@email.com" autocomplete="email">
@@ -616,6 +638,21 @@ function sw(t){
 function se(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',5000);}
 function so(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
 
+// Route planners to their studio, couples to the dashboard.
+async function routeAfterLogin(token, userId){
+  try{
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}&select=is_planner`, {
+      headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+token}
+    });
+    const rows = await r.json();
+    if(rows && rows[0] && rows[0].is_planner){
+      localStorage.removeItem('wl_wedding_id');
+      window.location.href = 'planner.html'; return;
+    }
+  }catch(e){}
+  window.location.href = 'dashboard.html';
+}
+
 async function doLogin(){
   const email=document.getElementById('lEmail').value.trim();
   const pw=document.getElementById('lPass').value;
@@ -628,7 +665,7 @@ async function doLogin(){
     localStorage.setItem('wl_token',d.access_token);
     localStorage.setItem('wl_refresh',d.refresh_token||'');
     localStorage.setItem('wl_uid',d.user.id);
-    window.location.href='dashboard.html';
+    await routeAfterLogin(d.access_token, d.user.id);
   }catch(e){se('eLogin',e.message);btn.disabled=false;btn.textContent='Sign In →';}
 }
 
@@ -657,8 +694,28 @@ function wizGo(n){
   if(first) setTimeout(()=>first.focus(), 100);
 }
 
+let acctType = 'couple';
+function setAcct(t){
+  acctType = t;
+  document.getElementById('acctCouple').className  = 'acct-opt'+(t==='couple'?' active':'');
+  document.getElementById('acctPlanner').className = 'acct-opt'+(t==='planner'?' active':'');
+  const pnf = document.getElementById('plannerNameField');
+  if(pnf) pnf.style.display = (t==='planner') ? 'block' : 'none';
+}
+
 function wizNext(from, skip){
-  // validation per step
+  // Planners skip the couple-only steps — create the account right after email.
+  if(from === 0 && acctType === 'planner'){
+    const email = document.getElementById('sEmail').value.trim();
+    const pw    = document.getElementById('sPass').value;
+    const pname = document.getElementById('sPName').value.trim();
+    if(!pname){ se('eSignup0','Please enter your name or business'); return; }
+    if(!email){ se('eSignup0','Please enter your email'); return; }
+    if(pw.length < 6){ se('eSignup0','Password must be at least 6 characters'); return; }
+    finishPlannerSignup();
+    return;
+  }
+  // validation per step (couple flow)
   if(from === 0){
     const email = document.getElementById('sEmail').value.trim();
     const pw    = document.getElementById('sPass').value;
@@ -825,6 +882,67 @@ async function finishSignup(wantsPro){
   }catch(e){
     se('eSignup', e.message);
     btn.disabled=false; btn.textContent=orig;
+  }
+}
+
+// ── Planner signup — creates a planner account and lands in the Planner Studio ──
+async function finishPlannerSignup(){
+  const email = document.getElementById('sEmail').value.trim();
+  const pw    = document.getElementById('sPass').value;
+  const pname = document.getElementById('sPName').value.trim();
+  const btn = document.querySelector('#wizStep0 .wiz-next');
+  const orig = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = 'Creating your studio…'; }
+  try{
+    // 1. Create the auth user
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+      body: JSON.stringify({ email, password:pw, data:{ name1:pname } })
+    });
+    const d = await r.json();
+    if(!r.ok){
+      const m = (d.error_description || d.msg || d.message || '').toLowerCase();
+      if(m.includes('already') || m.includes('registered') || m.includes('exists') || r.status === 422){
+        if(btn){ btn.disabled=false; btn.textContent=orig; }
+        if(confirm('You already have an account with that email. Sign in instead?')){
+          sw('login'); const le=document.getElementById('lEmail'); if(le) le.value=email;
+        }
+        return;
+      }
+      throw new Error(d.error_description || d.msg || 'Signup failed');
+    }
+    // Get a token (some projects don't return one on signup)
+    let token = d.access_token, uid = d.user && d.user.id;
+    if(!token){
+      const lr = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method:'POST', headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY},
+        body: JSON.stringify({ email, password: pw })
+      });
+      const ld = await lr.json();
+      if(ld.access_token){ token = ld.access_token; uid = ld.user.id; d.refresh_token = ld.refresh_token; }
+    }
+    if(!token){
+      so('okSignup','✅ Account created! Please confirm via the email we sent, then sign in.');
+      if(btn){ btn.disabled=false; btn.textContent=orig; }
+      return;
+    }
+    localStorage.setItem('wl_token', token);
+    localStorage.setItem('wl_refresh', d.refresh_token || '');
+    localStorage.setItem('wl_uid', uid);
+    localStorage.removeItem('wl_wedding_id');
+
+    // 2. Save the planner profile
+    const H = {'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+token};
+    await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=user_id`, {
+      method:'POST', headers:{...H,'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body: JSON.stringify({ user_id:uid, name1:pname, email, is_planner:true })
+    });
+
+    // 3. Into the Planner Studio
+    window.location.href = 'planner.html';
+  }catch(e){
+    se('eSignup0', e.message);
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
   }
 }
 
