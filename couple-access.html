@@ -125,6 +125,23 @@ body{
   font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;color:var(--charcoal);transition:.15s;white-space:nowrap;
 }
 .mini-btn:hover{border-color:var(--gold);background:var(--gold-pale)}
+.fpill{
+  border:1px solid var(--border);background:var(--surface);border-radius:99px;padding:7px 14px;
+  font-family:'Instrument Sans',sans-serif;font-size:11.5px;font-weight:600;color:var(--muted);
+  cursor:pointer;transition:.15s;
+}
+.fpill:hover{border-color:var(--gold)}
+.fpill.on{background:var(--gold-pale);border-color:var(--gold-bd);color:var(--gold)}
+.group-h{
+  font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);
+  padding:16px 0 6px;border-bottom:1px solid var(--border);
+}
+.inv-chip{
+  border:none;border-radius:99px;padding:5px 11px;font-size:10.5px;font-weight:700;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:.15s;white-space:nowrap;letter-spacing:.03em;
+}
+.inv-chip.on{background:#eaf2fb;color:#2a5a9a}
+.inv-chip.off{background:var(--bg2);color:var(--muted)}
 .row-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:6px 8px;border-radius:7px;transition:.15s;opacity:.55}
 .row-del:hover{background:#fbeaea;color:var(--rose);opacity:1}
 .empty-mini{padding:24px 0;text-align:center;color:var(--muted);font-size:13px}
@@ -195,12 +212,25 @@ body{
     </div>
 
     <div class="card">
+      <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input class="fi" id="searchBox" placeholder="🔍 Search guests…" style="flex:1;min-width:170px" oninput="renderGuests()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="fpill on" data-f="all" onclick="setFilter('all',this)">All</button>
+          <button class="fpill" data-f="yes" onclick="setFilter('yes',this)">Attending</button>
+          <button class="fpill" data-f="pending" onclick="setFilter('pending',this)">Pending</button>
+          <button class="fpill" data-f="no" onclick="setFilter('no',this)">Declined</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-head"><span class="card-title">Add a guest</span></div>
       <div class="card-body">
         <div class="form-grid" style="margin-bottom:12px">
           <div class="fg"><label class="fl">Name *</label><input class="fi" id="aName" placeholder="e.g., Aunt Mary"></div>
           <div class="fg"><label class="fl">Email</label><input class="fi" id="aEmail" type="email" placeholder="name@email.com"></div>
-          <div class="fg"><label class="fl">Phone</label><input class="fi" id="aPhone" placeholder="+44…"></div>
+          <div class="fg"><label class="fl">Phone (for WhatsApp)</label><input class="fi" id="aPhone" placeholder="+44…"></div>
+          <div class="fg"><label class="fl">Group / side</label><input class="fi" id="aGroup" placeholder="e.g., Bride's family" list="groupList"><datalist id="groupList"></datalist></div>
           <div class="fg"><label class="fl">Dietary needs</label><input class="fi" id="aDietary" placeholder="e.g., vegetarian"></div>
         </div>
         <div class="check-row" style="margin-bottom:14px">
@@ -231,9 +261,15 @@ body{
       <div class="fg"><label class="fl">Name</label><input class="fi" id="eName"></div>
       <div class="fg"><label class="fl">Email</label><input class="fi" id="eEmail" type="email"></div>
       <div class="fg"><label class="fl">Phone</label><input class="fi" id="ePhone"></div>
+      <div class="fg"><label class="fl">Group / side</label><input class="fi" id="eGroup" placeholder="e.g., Groom's friends"></div>
       <div class="fg"><label class="fl">Dietary needs</label><input class="fi" id="eDietary"></div>
       <div class="check-row"><input type="checkbox" id="ePlus"><label for="ePlus">Allowed a plus one</label></div>
       <div class="fg"><label class="fl">Plus one's name</label><input class="fi" id="ePlusName"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="fg"><label class="fl">Starter</label><input class="fi" id="eStarter" placeholder="—"></div>
+        <div class="fg"><label class="fl">Main</label><input class="fi" id="eMain" placeholder="—"></div>
+        <div class="fg"><label class="fl">Dessert</label><input class="fi" id="eDessert" placeholder="—"></div>
+      </div>
       <div class="fg"><label class="fl">Notes</label><input class="fi" id="eNotes"></div>
     </div>
     <div class="modal-footer">
@@ -323,6 +359,14 @@ async function loadGuests(){
   renderGuests();
 }
 
+let filterMode = 'all';
+function setFilter(f, el){
+  filterMode = f;
+  document.querySelectorAll('.fpill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  renderGuests();
+}
+
 function renderGuests(){
   const yes = guests.filter(g=>g.rsvp_status==='yes').length;
   const no  = guests.filter(g=>g.rsvp_status==='no').length;
@@ -331,23 +375,78 @@ function renderGuests(){
   document.getElementById('stNo').textContent = no;
   document.getElementById('stPending').textContent = guests.length - yes - no;
 
-  document.getElementById('guestList').innerHTML = guests.length ? guests.map(g=>{
-    const st = g.rsvp_status==='yes'?'yes':(g.rsvp_status==='no'?'no':'pending');
-    const label = st==='yes'?'✓ Attending':(st==='no'?'✗ Declined':'⋯ Pending');
-    const sub = [g.email, g.phone, g.plus_one ? ('+1' + (g.plus_one_name ? ': '+g.plus_one_name : '')) : null, g.dietary]
-      .filter(Boolean).join(' · ');
-    return `<div class="row-item">
-      <span class="row-ic">👤</span>
-      <div class="row-main">
-        <div class="row-name">${esc(g.name)}</div>
-        <div class="row-sub">${esc(sub || '—')}</div>
-      </div>
-      <button class="rsvp-pill ${st}" onclick="cycleRsvp('${g.id}')">${label}</button>
-      <button class="mini-btn" onclick="copyLink('${g.id}')">🔗 Invite link</button>
-      <button class="mini-btn" onclick="openEdit('${g.id}')">✎ Edit</button>
-      <button class="row-del" onclick="delGuest('${g.id}','${esc(g.name).replace(/'/g,"\\'")}')">🗑</button>
-    </div>`;
-  }).join('') : `<div class="empty-mini">No guests yet — add your first guest above. 💌</div>`;
+  // group suggestions for the add form
+  const groupsSeen = [...new Set(guests.map(g=>g.group_label).filter(Boolean))];
+  document.getElementById('groupList').innerHTML = groupsSeen.map(g=>`<option value="${esc(g)}">`).join('');
+
+  const q = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+  let list = guests.filter(g=>{
+    if(filterMode !== 'all'){
+      const st = g.rsvp_status==='yes'?'yes':(g.rsvp_status==='no'?'no':'pending');
+      if(st !== filterMode) return false;
+    }
+    if(q && !((g.name||'')+' '+(g.email||'')+' '+(g.group_label||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if(!list.length){
+    document.getElementById('guestList').innerHTML =
+      `<div class="empty-mini">${guests.length ? 'No guests match your search.' : 'No guests yet — add your first guest above. 💌'}</div>`;
+    return;
+  }
+
+  // group by group_label (ungrouped last)
+  const byGroup = {};
+  list.forEach(g=>{ const k = g.group_label || ''; (byGroup[k] = byGroup[k] || []).push(g); });
+  const keys = Object.keys(byGroup).sort((a,b)=>(a===''?1:b===''?-1:a.localeCompare(b)));
+
+  document.getElementById('guestList').innerHTML = keys.map(k=>{
+    const head = keys.length > 1 || k
+      ? `<div class="group-h">${k ? esc(k) : 'Other guests'} — ${byGroup[k].length}</div>` : '';
+    return head + byGroup[k].map(g=>guestRow(g)).join('');
+  }).join('');
+}
+
+function guestRow(g){
+  const st = g.rsvp_status==='yes'?'yes':(g.rsvp_status==='no'?'no':'pending');
+  const label = st==='yes'?'✓ Attending':(st==='no'?'✗ Declined':'⋯ Pending');
+  const meals = [g.starter,g.main,g.dessert].filter(Boolean).join(', ');
+  const sub = [g.email, g.phone,
+      g.plus_one ? ('+1' + (g.plus_one_name ? ': '+g.plus_one_name : '')) : null,
+      g.dietary ? '⚠ '+g.dietary : null,
+      meals ? '🍽 '+meals : null]
+    .filter(Boolean).join(' · ');
+  const inv = g.invited_at;
+  const wa = g.phone ? `<button class="mini-btn" onclick="whatsApp('${g.id}')">💬</button>` : '';
+  return `<div class="row-item">
+    <span class="row-ic">👤</span>
+    <div class="row-main">
+      <div class="row-name">${esc(g.name)}</div>
+      <div class="row-sub">${esc(sub || '—')}</div>
+    </div>
+    <button class="inv-chip ${inv?'on':'off'}" onclick="toggleInvited('${g.id}')">${inv?'✉ Invited':'Not invited'}</button>
+    <button class="rsvp-pill ${st}" onclick="cycleRsvp('${g.id}')">${label}</button>
+    ${wa}
+    <button class="mini-btn" onclick="copyLink('${g.id}')">🔗 Link</button>
+    <button class="mini-btn" onclick="openEdit('${g.id}')">✎</button>
+    <button class="row-del" onclick="delGuest('${g.id}','${esc(g.name).replace(/'/g,"\\'")}')">🗑</button>
+  </div>`;
+}
+
+async function toggleInvited(id){
+  const g = guests.find(x=>x.id===id); if(!g) return;
+  const res = await rpc('couple_guest_update', { p_code: code, p_pass: pass, p_gid: id, p_patch: { invited: !g.invited_at } });
+  if(res && res.ok){ g.invited_at = g.invited_at ? null : new Date().toISOString(); renderGuests(); }
+  else toast('Could not update', true);
+}
+
+async function whatsApp(id){
+  const g = guests.find(x=>x.id===id); if(!g || !g.phone) return;
+  const link = g.link_code ? (location.origin + '/rsvp.html?c=' + g.link_code) : '';
+  const d = wedding.wedding_date
+    ? ' on ' + new Date(wedding.wedding_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '';
+  const msg = `Hi ${g.name}! 💍 You're invited to our wedding${d}.` + (link ? ` Please RSVP here: ${link}` : '');
+  window.open('https://wa.me/' + g.phone.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(msg), '_blank');
 }
 
 async function addGuest(){
@@ -358,11 +457,12 @@ async function addGuest(){
     p_email: document.getElementById('aEmail').value.trim() || null,
     p_phone: document.getElementById('aPhone').value.trim() || null,
     p_plus_one: document.getElementById('aPlus').checked,
-    p_dietary: document.getElementById('aDietary').value.trim() || null
+    p_dietary: document.getElementById('aDietary').value.trim() || null,
+    p_group: document.getElementById('aGroup').value.trim() || null
   });
   if(!res || res.ok !== true){ toast('Could not add guest', true); return; }
   guests.unshift(res.guest);
-  ['aName','aEmail','aPhone','aDietary'].forEach(id=>document.getElementById(id).value='');
+  ['aName','aEmail','aPhone','aDietary','aGroup'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('aPlus').checked = false;
   renderGuests();
   toast('Guest added ✓');
@@ -389,9 +489,13 @@ function openEdit(id){
   document.getElementById('eName').value = editing.name || '';
   document.getElementById('eEmail').value = editing.email || '';
   document.getElementById('ePhone').value = editing.phone || '';
+  document.getElementById('eGroup').value = editing.group_label || '';
   document.getElementById('eDietary').value = editing.dietary || '';
   document.getElementById('ePlus').checked = !!editing.plus_one;
   document.getElementById('ePlusName').value = editing.plus_one_name || '';
+  document.getElementById('eStarter').value = editing.starter || '';
+  document.getElementById('eMain').value = editing.main || '';
+  document.getElementById('eDessert').value = editing.dessert || '';
   document.getElementById('eNotes').value = editing.notes || '';
   document.getElementById('editModal').classList.add('show');
 }
@@ -403,16 +507,22 @@ async function saveEdit(){
     name: document.getElementById('eName').value.trim(),
     email: document.getElementById('eEmail').value.trim(),
     phone: document.getElementById('ePhone').value.trim(),
+    group_label: document.getElementById('eGroup').value.trim(),
     dietary: document.getElementById('eDietary').value.trim(),
     plus_one: document.getElementById('ePlus').checked,
     plus_one_name: document.getElementById('ePlusName').value.trim(),
+    starter: document.getElementById('eStarter').value.trim(),
+    main: document.getElementById('eMain').value.trim(),
+    dessert: document.getElementById('eDessert').value.trim(),
     notes: document.getElementById('eNotes').value.trim()
   };
   const res = await rpc('couple_guest_update', { p_code: code, p_pass: pass, p_gid: editing.id, p_patch: patch });
   if(!res || res.ok !== true){ toast('Could not save', true); return; }
   Object.assign(editing, patch, {
-    email: patch.email || null, phone: patch.phone || null,
-    dietary: patch.dietary || null, plus_one_name: patch.plus_one_name || null, notes: patch.notes || null
+    email: patch.email || null, phone: patch.phone || null, group_label: patch.group_label || null,
+    dietary: patch.dietary || null, plus_one_name: patch.plus_one_name || null,
+    starter: patch.starter || null, main: patch.main || null, dessert: patch.dessert || null,
+    notes: patch.notes || null
   });
   closeEdit(); renderGuests(); toast('Saved ✓');
 }

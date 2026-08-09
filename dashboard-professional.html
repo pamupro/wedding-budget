@@ -9,16 +9,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-
 <style>
 :root {
-  --bg: #faf7f2; --bg2: #f4efe6; --surface: #ffffff;
-  --ink: #1a1612; --muted: #665a49;
-  --gold: #a07828; --gold2: #c49a3a; --gold-pale: #fdf3dc;
-  --gold-bd: rgba(160,120,40,.22); --border: rgba(26,22,18,.14);
-  --charcoal: #1a1612; --sage: #2a6a3a; --rose: #b83030;
-  --shadow: 0 1px 4px rgba(26,22,18,.06), 0 4px 24px rgba(26,22,18,.07);
-  --shadow-lg: 0 8px 40px rgba(26,22,18,.11);
+  --bg:#faf7f2; --bg2:#f4efe6; --surface:#ffffff; --ink:#1a1612; --muted:#665a49;
+  --gold:#a07828; --gold2:#c49a3a; --gold-pale:#fdf3dc; --gold-bd:rgba(160,120,40,.22);
+  --border:rgba(26,22,18,.14); --charcoal:#1a1612; --sage:#2a6a3a; --rose:#b83030;
+  --shadow:0 1px 4px rgba(26,22,18,.06),0 4px 24px rgba(26,22,18,.07);
+  --shadow-lg:0 8px 40px rgba(26,22,18,.11);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-font-smoothing:antialiased}
@@ -30,32 +27,27 @@ body{
 
 /* Topbar */
 .topbar{
-  position:sticky;top:0;z-index:200;
+  position:sticky;top:0;z-index:200;height:62px;padding:0 18px;
+  display:flex;align-items:center;gap:12px;
   background:rgba(250,247,242,.94);backdrop-filter:blur(24px) saturate(1.8);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:14px;padding:0 20px;height:62px;
 }
 .back-btn{
   display:flex;align-items:center;gap:7px;background:none;border:1px solid var(--border);
-  border-radius:9px;padding:8px 13px;cursor:pointer;font-family:'Instrument Sans',sans-serif;
+  border-radius:9px;padding:8px 13px;cursor:pointer;font-family:inherit;
   font-size:12px;font-weight:600;color:var(--charcoal);transition:.17s;white-space:nowrap;
 }
 .back-btn:hover{border-color:var(--gold);background:var(--gold-pale);color:var(--gold)}
 .tb-wedding{display:flex;align-items:center;gap:11px;min-width:0}
 .tb-emoji{font-size:22px}
-.tb-names{font-family:'Fraunces',serif;font-size:17px;font-weight:400;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-names{font-family:'Fraunces',serif;font-size:17px;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-date{font-size:11px;color:var(--muted);white-space:nowrap}
 .tb-spacer{flex:1}
-.days-pill{
-  background:var(--gold-pale);border:1px solid var(--gold-bd);border-radius:99px;
-  padding:6px 14px;font-size:11.5px;font-weight:600;color:var(--gold);white-space:nowrap;
-}
-
-/* Wedding switcher */
+.days-pill{background:var(--gold-pale);border:1px solid var(--gold-bd);border-radius:99px;padding:6px 14px;font-size:11.5px;font-weight:600;color:var(--gold);white-space:nowrap}
 .switcher{position:relative}
 .switch-btn{
   display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);
-  border-radius:9px;padding:8px 13px;cursor:pointer;font-family:'Instrument Sans',sans-serif;
+  border-radius:9px;padding:8px 13px;cursor:pointer;font-family:inherit;
   font-size:12px;font-weight:600;color:var(--charcoal);transition:.17s;white-space:nowrap;
 }
 .switch-btn:hover{border-color:var(--gold)}
@@ -64,103 +56,135 @@ body{
   background:var(--surface);border:1px solid var(--border);border-radius:13px;box-shadow:var(--shadow-lg);z-index:300;
 }
 .switch-menu.show{display:block}
-.sm-item{
-  display:flex;align-items:center;gap:11px;padding:11px 14px;cursor:pointer;transition:.13s;
-  border-bottom:1px solid var(--border);
-}
+.sm-item{display:flex;align-items:center;gap:11px;padding:11px 14px;cursor:pointer;transition:.13s;border-bottom:1px solid var(--border)}
 .sm-item:last-child{border-bottom:none}
 .sm-item:hover{background:var(--bg2)}
 .sm-item.active{background:var(--gold-pale)}
 .sm-emoji{font-size:18px}
 .sm-name{font-size:13px;font-weight:600;color:var(--charcoal)}
 .sm-date{font-size:11px;color:var(--muted)}
-.tb-btn{
-  padding:8px 12px;border-radius:8px;border:none;background:none;cursor:pointer;
-  font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:500;color:var(--muted);transition:.17s;white-space:nowrap;
-}
+.tb-btn{padding:8px 12px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--muted);transition:.17s;white-space:nowrap}
 .tb-btn:hover{background:var(--bg2);color:var(--charcoal)}
 
 /* Layout */
-.layout{display:flex;max-width:1240px;margin:0 auto;gap:0}
-.sidebar{
-  width:210px;flex-shrink:0;padding:26px 14px;position:sticky;top:62px;
-  height:calc(100vh - 62px);overflow-y:auto;
-}
-.side-link{
-  display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:10px;cursor:pointer;
-  font-size:13px;font-weight:500;color:var(--muted);transition:.15s;margin-bottom:3px;
-}
+.layout{display:flex;max-width:1280px;margin:0 auto}
+.sidebar{width:212px;flex-shrink:0;padding:26px 14px;position:sticky;top:62px;height:calc(100vh - 62px);overflow-y:auto}
+.side-link{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:.15s;margin-bottom:3px}
 .side-link:hover{background:var(--bg2);color:var(--charcoal)}
 .side-link.active{background:var(--gold-pale);color:var(--gold);font-weight:600}
 .side-ic{width:20px;text-align:center;font-size:15px}
-.main{flex:1;min-width:0;padding:30px 26px 70px}
+.main{flex:1;min-width:0;padding:28px 26px 70px}
+.section-h{font-family:'Fraunces',serif;font-size:26px;font-weight:300;color:var(--charcoal);margin-bottom:20px;font-style:italic}
 
-/* Cards & stats */
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:26px}
-.stat{
-  background:var(--surface);border:1px solid var(--border);border-radius:14px;
-  padding:17px 18px;box-shadow:var(--shadow);
-}
+/* Countdown */
+.countdown{display:flex;justify-content:center;gap:clamp(14px,4vw,34px);padding:8px 0 26px}
+.cd-unit{text-align:center}
+.cd-num{font-family:'Fraunces',serif;font-weight:200;font-size:clamp(34px,6vw,52px);color:var(--charcoal);line-height:1}
+.cd-lbl{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:6px;font-weight:700}
+.cd-sep{font-family:'Fraunces',serif;font-weight:200;font-size:clamp(28px,5vw,42px);color:var(--gold);opacity:.5;align-self:flex-start;line-height:1.15}
+
+/* Stats & budget bar */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:17px 19px;box-shadow:var(--shadow)}
 .stat-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.stat-value{font-family:'Fraunces',serif;font-size:24px;font-weight:300;color:var(--charcoal)}
-.stat-value.sage{color:var(--sage)}
-.stat-value.gold{color:var(--gold)}
+.stat-value{font-family:'Fraunces',serif;font-size:24px;font-weight:300;color:var(--charcoal);white-space:nowrap}
+.stat-value.sage{color:var(--sage)} .stat-value.rose{color:var(--rose)} .stat-value.gold{color:var(--gold)}
 .stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.budget-bar-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:15px 19px;box-shadow:var(--shadow);margin-bottom:24px}
+.bb-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:9px}
+.bb-row b{color:var(--charcoal)}
+.bb-track{height:7px;border-radius:99px;background:var(--bg2);overflow:hidden}
+.bb-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sage),#4a9a5a);width:0%;transition:width .6s ease}
+.bb-fill.warn{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.bb-fill.over{background:linear-gradient(90deg,var(--rose),#d85050)}
 
-.card{
-  background:var(--surface);border:1px solid var(--border);border-radius:15px;
-  box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;
+/* Toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.toolbar-title{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:21px;color:var(--charcoal)}
+.toolbar-right{display:flex;gap:10px;align-items:center}
+.sort-sel{
+  padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);
+  font-family:inherit;font-size:12px;color:var(--charcoal);outline:none;cursor:pointer;
 }
-.card-head{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:17px 22px;border-bottom:1px solid var(--border);
-}
-.card-title{font-family:'Fraunces',serif;font-size:18px;font-weight:300;font-style:italic;color:var(--charcoal)}
-.card-body{padding:20px 22px}
-.section-h{font-family:'Fraunces',serif;font-size:26px;font-weight:300;color:var(--charcoal);margin-bottom:20px}
+.btn{padding:11px 18px;border:none;border-radius:9px;cursor:pointer;transition:.17s;font-family:inherit;font-size:12.5px;font-weight:600;white-space:nowrap}
+.btn.dark{background:var(--charcoal);color:#fdf9f4}
+.btn.dark:hover{background:#2e2820}
+.btn.primary{background:var(--gold);color:#fff}
+.btn.primary:hover{background:var(--gold2)}
+.btn.ghost{background:var(--bg2);color:var(--charcoal);border:1px solid var(--border)}
+.btn.ghost:hover{background:var(--gold-pale)}
+.btn.danger{background:#fbeaea;color:var(--rose)}
+.btn.danger:hover{background:#f5d5d5}
 
-/* Lists */
-.row-item{
-  display:flex;align-items:center;gap:13px;padding:12px 0;border-bottom:1px solid var(--border);
+/* Vendor cards — mirrors the couples dashboard */
+.vendor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px}
+.vcard{background:var(--surface);border:1px solid var(--border);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;transition:.2s}
+.vcard:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.vc-head{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 14px}
+.vc-ic{width:42px;height:42px;border-radius:11px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.vc-cat{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.vc-name{font-size:15px;font-weight:600;color:var(--charcoal);margin-top:2px}
+.vc-actions{margin-left:auto;display:flex;gap:2px}
+.vc-abtn{background:none;border:none;cursor:pointer;font-size:13px;padding:6px 7px;border-radius:7px;color:var(--muted);opacity:.6;transition:.15s}
+.vc-abtn:hover{background:var(--bg2);opacity:1}
+.vc-abtn.del:hover{background:#fbeaea;color:var(--rose)}
+.vc-nums{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg)}
+.vc-cell{padding:12px 18px}
+.vc-cell + .vc-cell{border-left:1px solid var(--border)}
+.vc-cell-lbl{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.vc-cell-val{font-family:'Fraunces',serif;font-size:17px;font-weight:300;color:var(--charcoal);white-space:nowrap}
+.vc-cell-val.due{color:var(--rose)}
+.vc-cell-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
+.vc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:5px 12px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.chip.paid{background:#eaf6ec;color:var(--sage)}
+.chip.partial{background:var(--gold-pale);color:var(--gold)}
+.chip.unpaid{background:var(--bg2);color:var(--muted)}
+.vc-pay{background:var(--charcoal);color:#fdf9f4;border:none;border-radius:9px;padding:9px 14px;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;transition:.17s}
+.vc-pay:hover{background:#2e2820}
+.vc-history{border-top:1px solid var(--border)}
+.vc-htoggle{
+  width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;
+  padding:11px 18px;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:600;color:var(--muted);transition:.15s;
 }
+.vc-htoggle:hover{background:var(--bg2);color:var(--charcoal)}
+.vc-hlist{display:none;padding:2px 18px 12px}
+.vc-hlist.open{display:block}
+.vc-hrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:12px}
+.vc-hrow:last-child{border-bottom:none}
+.vc-hdate{color:var(--muted);width:86px;flex-shrink:0}
+.vc-hnote{flex:1;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vc-hamt{font-weight:600;color:var(--charcoal);white-space:nowrap}
+.vc-hdel{background:none;border:none;cursor:pointer;color:var(--muted);opacity:.5;font-size:12px;padding:3px 5px;border-radius:5px}
+.vc-hdel:hover{background:#fbeaea;color:var(--rose);opacity:1}
+.vc-due{padding:0 18px 13px;font-size:11.5px;color:var(--rose)}
+
+/* Cards generic */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:15px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.card-title{font-family:'Fraunces',serif;font-size:17.5px;font-weight:300;font-style:italic;color:var(--charcoal)}
+.card-body{padding:18px 20px}
+.row-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .row-item:last-child{border-bottom:none}
-.row-ic{
-  width:36px;height:36px;border-radius:10px;background:var(--bg2);
-  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
-}
-.row-main{flex:1;min-width:0}
+.row-ic{width:36px;height:36px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.row-main{flex:1;min-width:140px}
 .row-name{font-size:13.5px;font-weight:600;color:var(--charcoal)}
 .row-sub{font-size:11.5px;color:var(--muted)}
 .row-amount{font-family:'Fraunces',serif;font-size:15px;color:var(--charcoal);white-space:nowrap}
-.mini-btn{
-  background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;
-  font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;color:var(--charcoal);
-  transition:.15s;white-space:nowrap;flex-shrink:0;
-}
+.mini-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:var(--charcoal);transition:.15s;white-space:nowrap;flex-shrink:0}
 .mini-btn:hover{border-color:var(--gold);background:var(--gold-pale)}
-.row-del{
-  background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;
-  padding:6px 8px;border-radius:7px;transition:.15s;opacity:.55;flex-shrink:0;
-}
+.row-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:6px 8px;border-radius:7px;transition:.15s;opacity:.55;flex-shrink:0}
 .row-del:hover{background:#fbeaea;color:var(--rose);opacity:1}
-.empty-mini{padding:24px 0;text-align:center;color:var(--muted);font-size:13px}
-
-/* RSVP pills */
-.rsvp-pill{
-  border:none;border-radius:99px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;
-  font-family:'Instrument Sans',sans-serif;transition:.15s;white-space:nowrap;
-}
+.rsvp-pill{border:none;border-radius:99px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
 .rsvp-pill.yes{background:#eaf6ec;color:var(--sage)}
 .rsvp-pill.no{background:#fbeaea;color:var(--rose)}
 .rsvp-pill.pending{background:var(--bg2);color:var(--muted)}
+.empty-mini{padding:26px 0;text-align:center;color:var(--muted);font-size:13px}
 
 /* Checklist */
 .task-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
 .task-row:last-child{border-bottom:none}
-.task-check{
-  width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);
-  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;transition:.15s;flex-shrink:0;
-}
+.task-check{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;transition:.15s;flex-shrink:0}
 .task-check.done{background:var(--sage);border-color:var(--sage)}
 .task-text{flex:1;font-size:13.5px;color:var(--charcoal)}
 .task-text.done{color:var(--muted);text-decoration:line-through}
@@ -170,46 +194,37 @@ body{
 .fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px}
 .fg.small{flex:0 1 130px}
 .fl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.fi,.fs{
-  padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);
-  font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--charcoal);outline:none;transition:.17s;width:100%;
-}
+.fi,.fs{padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);font-family:inherit;font-size:13px;color:var(--charcoal);outline:none;transition:.17s;width:100%}
 .fi:focus,.fs:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(160,120,40,.1)}
-.btn{
-  padding:10px 18px;border:none;border-radius:9px;cursor:pointer;transition:.17s;
-  font-family:'Instrument Sans',sans-serif;font-size:12.5px;font-weight:600;white-space:nowrap;
-}
-.btn.primary{background:var(--gold);color:#fff}
-.btn.primary:hover{background:var(--gold2)}
-.btn.danger{background:#fbeaea;color:var(--rose)}
-.btn.danger:hover{background:#f5d5d5}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 @media(max-width:560px){.form-grid{grid-template-columns:1fr}}
 
-.tab{display:none}
-.tab.active{display:block}
-.loading{padding:90px 20px;text-align:center;color:var(--muted);font-size:13.5px}
+/* Modals */
+.overlay{position:fixed;inset:0;background:rgba(20,16,10,.46);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:18px;box-shadow:var(--shadow-lg);max-width:440px;width:100%;max-height:92vh;overflow-y:auto;animation:mIn .26s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Fraunces',serif;font-size:19px;font-weight:300;font-style:italic}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:2px 8px;border-radius:7px}
+.modal-close:hover{background:var(--bg2)}
+.modal-body{padding:20px 22px;display:grid;gap:13px}
+.modal-footer{padding:15px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
 
-/* Toast */
-.toast{
-  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--charcoal);color:#fff;padding:11px 22px;border-radius:99px;
-  font-size:13px;font-weight:500;z-index:999;box-shadow:var(--shadow-lg);transition:transform .3s ease;
-}
+.tab{display:none}.tab.active{display:block}
+.loading{padding:90px 20px;text-align:center;color:var(--muted);font-size:13.5px}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--charcoal);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:500;z-index:999;box-shadow:var(--shadow-lg);transition:transform .3s ease;max-width:calc(100vw - 40px);text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--rose)}
 
-/* Mobile */
-@media (max-width:860px){
+@media (max-width:880px){
   .layout{flex-direction:column}
-  .sidebar{
-    width:100%;height:auto;position:static;display:flex;overflow-x:auto;gap:6px;
-    padding:12px 14px;border-bottom:1px solid var(--border);
-  }
+  .sidebar{width:100%;height:auto;position:sticky;top:62px;z-index:150;display:flex;overflow-x:auto;gap:6px;padding:10px 14px;background:rgba(250,247,242,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
   .side-link{flex-shrink:0;margin-bottom:0;padding:8px 13px}
   .main{padding:22px 14px 60px}
   .tb-date,.days-pill{display:none}
   .topbar{gap:9px;padding:0 12px}
+  .vendor-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -237,26 +252,38 @@ body{
 
 <div class="layout" id="layout" style="display:none">
   <nav class="sidebar">
-    <div class="side-link active" data-tab="overview" onclick="switchTab('overview',this)"><span class="side-ic">🏠</span> Overview</div>
-    <div class="side-link" data-tab="budget" onclick="switchTab('budget',this)"><span class="side-ic">💷</span> Budget</div>
-    <div class="side-link" data-tab="vendors" onclick="switchTab('vendors',this)"><span class="side-ic">🤝</span> Vendors</div>
-    <div class="side-link" data-tab="guests" onclick="switchTab('guests',this)"><span class="side-ic">💌</span> Guests</div>
-    <div class="side-link" data-tab="checklist" onclick="switchTab('checklist',this)"><span class="side-ic">✅</span> Checklist</div>
-    <div class="side-link" data-tab="details" onclick="switchTab('details',this)"><span class="side-ic">⚙️</span> Details</div>
+    <div class="side-link active" onclick="switchTab('overview',this)"><span class="side-ic">🏠</span> Overview</div>
+    <div class="side-link" onclick="switchTab('budget',this)"><span class="side-ic">💷</span> Budget &amp; Vendors</div>
+    <div class="side-link" onclick="switchTab('guests',this)"><span class="side-ic">💌</span> Guests</div>
+    <div class="side-link" onclick="switchTab('checklist',this)"><span class="side-ic">✅</span> Checklist</div>
+    <div class="side-link" onclick="switchTab('details',this)"><span class="side-ic">⚙️</span> Details</div>
   </nav>
 
   <main class="main">
 
     <!-- OVERVIEW -->
     <section class="tab active" id="tab-overview">
-      <h2 class="section-h" id="ovTitle">Overview</h2>
+      <div class="countdown" id="countdown" style="display:none">
+        <div class="cd-unit"><div class="cd-num" id="cdD">0</div><div class="cd-lbl">Days</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="cdH">00</div><div class="cd-lbl">Hours</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="cdM">00</div><div class="cd-lbl">Mins</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-num" id="cdS">00</div><div class="cd-lbl">Secs</div></div>
+      </div>
+
       <div class="stats-row">
-        <div class="stat"><div class="stat-label">Total budget</div><div class="stat-value" id="stBudget">—</div><div class="stat-sub">across all vendors</div></div>
-        <div class="stat"><div class="stat-label">Paid so far</div><div class="stat-value sage" id="stPaid">—</div><div class="stat-sub" id="stPaidSub"></div></div>
-        <div class="stat"><div class="stat-label">Still to pay</div><div class="stat-value gold" id="stLeft">—</div><div class="stat-sub">remaining balance</div></div>
-        <div class="stat"><div class="stat-label">Vendors</div><div class="stat-value" id="stVendors">0</div><div class="stat-sub">booked</div></div>
-        <div class="stat"><div class="stat-label">Guests</div><div class="stat-value" id="stGuests">0</div><div class="stat-sub" id="stGuestsSub">0 confirmed</div></div>
+        <div class="stat"><div class="stat-label">Total budget</div><div class="stat-value" id="stBudget">—</div><div class="stat-sub" id="stVendorsSub">across 0 vendors</div></div>
+        <div class="stat"><div class="stat-label">Total paid</div><div class="stat-value sage" id="stPaid">—</div><div class="stat-sub" id="stPaidSub"></div></div>
+        <div class="stat"><div class="stat-label">Remaining</div><div class="stat-value rose" id="stLeft">—</div><div class="stat-sub">still to pay</div></div>
+        <div class="stat"><div class="stat-label">Guests</div><div class="stat-value" id="stGuests">0</div><div class="stat-sub" id="stGuestsSub">0 attending</div></div>
         <div class="stat"><div class="stat-label">Checklist</div><div class="stat-value" id="stTasks">0/0</div><div class="stat-sub">tasks done</div></div>
+      </div>
+
+      <div class="budget-bar-card">
+        <div class="bb-row"><span>Budget used</span><b id="bbPct">0%</b></div>
+        <div class="bb-track"><div class="bb-fill" id="bbFill"></div></div>
       </div>
 
       <div class="card">
@@ -265,63 +292,33 @@ body{
       </div>
     </section>
 
-    <!-- BUDGET -->
+    <!-- BUDGET & VENDORS -->
     <section class="tab" id="tab-budget">
-      <h2 class="section-h">Budget &amp; payments</h2>
       <div class="stats-row">
         <div class="stat"><div class="stat-label">Total budget</div><div class="stat-value" id="bgTotal">—</div></div>
-        <div class="stat"><div class="stat-label">Paid</div><div class="stat-value sage" id="bgPaid">—</div></div>
-        <div class="stat"><div class="stat-label">Remaining</div><div class="stat-value gold" id="bgLeft">—</div></div>
+        <div class="stat"><div class="stat-label">Total paid</div><div class="stat-value sage" id="bgPaid">—</div></div>
+        <div class="stat"><div class="stat-label">Remaining</div><div class="stat-value rose" id="bgLeft">—</div></div>
+        <div class="stat"><div class="stat-label">Vendors</div><div class="stat-value" id="bgVendors">0</div></div>
       </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">Record a payment</span></div>
-        <div class="card-body">
-          <div class="inline-form">
-            <div class="fg"><label class="fl">Vendor</label><select class="fs" id="payVendor"></select></div>
-            <div class="fg small"><label class="fl">Amount</label><input class="fi" id="payAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
-            <div class="fg small"><label class="fl">Date</label><input class="fi" id="payDate" type="date"></div>
-            <button class="btn primary" onclick="addPayment()">Add payment</button>
-          </div>
-        </div>
+      <div class="budget-bar-card">
+        <div class="bb-row"><span>Budget used</span><b id="bbPct2">0%</b></div>
+        <div class="bb-track"><div class="bb-fill" id="bbFill2"></div></div>
       </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">Payment history</span></div>
-        <div class="card-body" id="payList"></div>
-      </div>
-    </section>
 
-    <!-- VENDORS -->
-    <section class="tab" id="tab-vendors">
-      <h2 class="section-h">Vendors</h2>
-      <div class="card">
-        <div class="card-head"><span class="card-title">Add a vendor</span></div>
-        <div class="card-body">
-          <div class="inline-form">
-            <div class="fg"><label class="fl">Name</label><input class="fi" id="venName" placeholder="e.g., Bloom &amp; Bay"></div>
-            <div class="fg"><label class="fl">Category</label>
-              <select class="fs" id="venCat">
-                <option value="Hotel / Venue">🏨 Hotel / Venue</option>
-                <option value="Catering">🍽️ Catering</option>
-                <option value="Photographer">📷 Photographer</option>
-                <option value="Videographer">🎬 Videographer</option>
-                <option value="Florist">💐 Florist</option>
-                <option value="Music / DJ">🎵 Music / DJ</option>
-                <option value="Attire">👗 Attire</option>
-                <option value="Cake">🎂 Cake</option>
-                <option value="Transport">🚗 Transport</option>
-                <option value="Decor">🎀 Decor</option>
-                <option value="Other">📦 Other</option>
-              </select>
-            </div>
-            <div class="fg small"><label class="fl">Total cost</label><input class="fi" id="venCost" type="number" min="0" step="0.01" placeholder="0.00"></div>
-            <button class="btn primary" onclick="addVendor()">Add vendor</button>
-          </div>
+      <div class="toolbar">
+        <span class="toolbar-title">🏛️ Vendors</span>
+        <div class="toolbar-right">
+          <select class="sort-sel" id="sortSel" onchange="renderVendors()">
+            <option value="default">Sort: Newest</option>
+            <option value="name">Sort: Name A–Z</option>
+            <option value="cost">Sort: Highest cost</option>
+            <option value="remaining">Sort: Most remaining</option>
+          </select>
+          <button class="btn dark" onclick="openVendorModal()">+ Add Vendor</button>
         </div>
       </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">All vendors</span></div>
-        <div class="card-body" id="vendorList"></div>
-      </div>
+
+      <div class="vendor-grid" id="vendorGrid"></div>
     </section>
 
     <!-- GUESTS -->
@@ -329,10 +326,11 @@ body{
       <h2 class="section-h">Guests</h2>
       <div class="stats-row">
         <div class="stat"><div class="stat-label">Invited</div><div class="stat-value" id="guTotal">0</div></div>
-        <div class="stat"><div class="stat-label">Confirmed</div><div class="stat-value sage" id="guYes">0</div></div>
-        <div class="stat"><div class="stat-label">Declined</div><div class="stat-value" id="guNo" style="color:var(--rose)">0</div></div>
-        <div class="stat"><div class="stat-label">Awaiting reply</div><div class="stat-value gold" id="guPending">0</div></div>
+        <div class="stat"><div class="stat-label">Attending</div><div class="stat-value sage" id="guYes">0</div></div>
+        <div class="stat"><div class="stat-label">Declined</div><div class="stat-value rose" id="guNo">0</div></div>
+        <div class="stat"><div class="stat-label">Awaiting</div><div class="stat-value gold" id="guPending">0</div></div>
       </div>
+
       <div class="card">
         <div class="card-head">
           <span class="card-title">Couple access</span>
@@ -346,13 +344,17 @@ body{
         <div class="card-body">
           <div class="inline-form">
             <div class="fg"><label class="fl">Name</label><input class="fi" id="guName" placeholder="e.g., Aunt Mary"></div>
-            <div class="fg"><label class="fl">Email (optional)</label><input class="fi" id="guEmail" type="email" placeholder="name@email.com"></div>
+            <div class="fg"><label class="fl">Email</label><input class="fi" id="guEmail" type="email" placeholder="name@email.com"></div>
+            <div class="fg"><label class="fl">Phone</label><input class="fi" id="guPhone" placeholder="+44…"></div>
             <button class="btn primary" onclick="addGuest()">Add guest</button>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-head"><span class="card-title">Guest list</span><span style="font-size:11.5px;color:var(--muted)">tap the pill to cycle RSVP</span></div>
+        <div class="card-head">
+          <span class="card-title">Guest list</span>
+          <span style="font-size:11px;color:var(--muted)">tap the pill to change RSVP · 🔗 copies the invite link</span>
+        </div>
         <div class="card-body" id="guestList"></div>
       </div>
     </section>
@@ -360,51 +362,107 @@ body{
     <!-- CHECKLIST -->
     <section class="tab" id="tab-checklist">
       <h2 class="section-h">Checklist</h2>
-      <div class="card">
-        <div class="card-body">
-          <div class="inline-form" style="margin-bottom:14px">
-            <div class="fg"><input class="fi" id="taskInput" placeholder="Add a task, e.g., Confirm menu tasting…" onkeydown="if(event.key==='Enter')addTask()"></div>
-            <button class="btn primary" onclick="addTask()">Add</button>
-          </div>
-          <div id="taskList"></div>
+      <div class="card"><div class="card-body">
+        <div class="inline-form" style="margin-bottom:14px">
+          <div class="fg"><input class="fi" id="taskInput" placeholder="Add a task, e.g., Confirm menu tasting…" onkeydown="if(event.key==='Enter')addTask()"></div>
+          <button class="btn primary" onclick="addTask()">Add</button>
         </div>
-      </div>
+        <div id="taskList"></div>
+      </div></div>
     </section>
 
     <!-- DETAILS -->
     <section class="tab" id="tab-details">
       <h2 class="section-h">Wedding details</h2>
-      <div class="card">
-        <div class="card-body">
-          <div class="form-grid">
-            <div class="fg"><label class="fl">Couple's names</label><input class="fi" id="dCouple"></div>
-            <div class="fg"><label class="fl">Wedding date</label><input class="fi" id="dDate" type="date"></div>
-            <div class="fg"><label class="fl">Venue</label><input class="fi" id="dVenue"></div>
-            <div class="fg"><label class="fl">Currency</label>
-              <select class="fs" id="dCurrency">
-                <option value="GBP">🇬🇧 British Pound (£)</option>
-                <option value="USD">🇺🇸 US Dollar ($)</option>
-                <option value="EUR">🇪🇺 Euro (€)</option>
-                <option value="AUD">🇦🇺 Australian Dollar (A$)</option>
-                <option value="LKR">🇱🇰 Sri Lankan Rupee (Rs)</option>
-              </select>
-            </div>
-            <div class="fg"><label class="fl">Cover emoji</label>
-              <select class="fs" id="dEmoji">
-                <option>💍</option><option>💒</option><option>👰</option><option>🤵</option><option>💐</option>
-                <option>🎊</option><option>🍾</option><option>💝</option><option>✨</option><option>💕</option>
-              </select>
-            </div>
+      <div class="card"><div class="card-body">
+        <div class="form-grid">
+          <div class="fg"><label class="fl">Couple's names</label><input class="fi" id="dCouple"></div>
+          <div class="fg"><label class="fl">Wedding date</label><input class="fi" id="dDate" type="date"></div>
+          <div class="fg"><label class="fl">Venue</label><input class="fi" id="dVenue"></div>
+          <div class="fg"><label class="fl">Currency</label>
+            <select class="fs" id="dCurrency">
+              <option value="GBP">🇬🇧 British Pound (£)</option>
+              <option value="USD">🇺🇸 US Dollar ($)</option>
+              <option value="EUR">🇪🇺 Euro (€)</option>
+              <option value="AUD">🇦🇺 Australian Dollar (A$)</option>
+              <option value="LKR">🇱🇰 Sri Lankan Rupee (Rs)</option>
+            </select>
           </div>
-          <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-            <button class="btn primary" onclick="saveDetails()">Save changes</button>
-            <button class="btn danger" onclick="archiveThis()">Archive this wedding</button>
+          <div class="fg"><label class="fl">Cover emoji</label>
+            <select class="fs" id="dEmoji">
+              <option>💍</option><option>💒</option><option>👰</option><option>🤵</option><option>💐</option>
+              <option>🎊</option><option>🍾</option><option>💝</option><option>✨</option><option>💕</option>
+            </select>
           </div>
         </div>
-      </div>
+        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+          <button class="btn primary" onclick="saveDetails()">Save changes</button>
+          <button class="btn danger" onclick="archiveThis()">Archive this wedding</button>
+        </div>
+      </div></div>
     </section>
 
   </main>
+</div>
+
+<!-- VENDOR MODAL (add / edit) -->
+<div class="overlay" id="vendorModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="vmTitle">Add vendor</span>
+      <button class="modal-close" onclick="closeM('vendorModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label class="fl">Name *</label><input class="fi" id="vmName" placeholder="e.g., Bloom &amp; Bay"></div>
+      <div class="fg"><label class="fl">Category</label>
+        <select class="fs" id="vmCat">
+          <option value="Hotel / Venue">🏨 Hotel / Venue</option>
+          <option value="Catering">🍽️ Catering</option>
+          <option value="Wedding Planner">📋 Wedding Planner</option>
+          <option value="Photographer">📷 Photographer</option>
+          <option value="Videographer">🎬 Videographer</option>
+          <option value="Florist">💐 Florist</option>
+          <option value="Band / DJ">🎵 Band / DJ</option>
+          <option value="Makeup Artist">💄 Makeup Artist</option>
+          <option value="Hair Dresser">💇 Hair Dresser</option>
+          <option value="Attire">👗 Attire</option>
+          <option value="Cake">🎂 Cake</option>
+          <option value="Transport">🚗 Transport</option>
+          <option value="Decor">🎀 Decor</option>
+          <option value="Other">📦 Other</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Total cost</label><input class="fi" id="vmCost" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      <div class="form-grid">
+        <div class="fg"><label class="fl">Next payment due</label><input class="fi" id="vmDueDate" type="date"></div>
+        <div class="fg"><label class="fl">Due amount</label><input class="fi" id="vmDueAmt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="fg"><label class="fl">Notes</label><input class="fi" id="vmNotes" placeholder="Contract details, contact person…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeM('vendorModal')">Cancel</button>
+      <button class="btn primary" id="vmSave" onclick="saveVendor()">Save vendor</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="overlay" id="payModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="pmTitle">Add payment</span>
+      <button class="modal-close" onclick="closeM('payModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label class="fl">Amount *</label><input class="fi" id="pmAmount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      <div class="fg"><label class="fl">Date</label><input class="fi" id="pmDate" type="date"></div>
+      <div class="fg"><label class="fl">Note</label><input class="fi" id="pmNote" placeholder="e.g., Deposit, balance…"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeM('payModal')">Cancel</button>
+      <button class="btn primary" onclick="savePayment()">Add payment</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
@@ -413,24 +471,26 @@ body{
 <script>
 const SB = DB.SUPABASE_URL;
 const SK = DB.ANON_KEY;
-const SYM = { GBP:'£', USD:'$', EUR:'€', AUD:'A$', LKR:'Rs ' };
+const SYM = { GBP:'£', USD:'$', EUR:'€', AUD:'A$', LKR:'LKR' };
+const CAT_ICON = {'Hotel / Venue':'🏨','Catering':'🍽️','Wedding Planner':'📋','Photographer':'📷','Videographer':'🎬','Florist':'💐','Band / DJ':'🎵','Makeup Artist':'💄','Hair Dresser':'💇','Attire':'👗','Cake':'🎂','Transport':'🚗','Decor':'🎀','Other':'📦'};
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+const PASS_WORDS = ['Rose','Gold','Ivory','Pearl','Bloom','Amber','Willow','Velvet','Lily','Aster','Fern','Opal','Hazel','Clover','Iris','Jade'];
 
 let uid = localStorage.getItem('wl_uid') || '';
 let wid = localStorage.getItem('wl_wedding_id') || '';
 let wedding = null, allWeddings = [];
 let vendors = [], payments = [], guests = [], tasks = [];
+let editingVendor = null, payingVendor = null, cdTimer = null;
+const openHistories = new Set();
 
 function cur(n){
   const s = SYM[(wedding && wedding.currency) || 'GBP'] || '£';
-  return s + (Number(n)||0).toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});
+  const v = (Number(n)||0).toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0});
+  return s + (s.length > 1 ? ' ' : '') + v;
 }
-
 async function H(){
   const tok = await DB.getValidToken(DB.getToken());
-  return {
-    'Content-Type':'application/json','apikey':SK,
-    'Authorization':'Bearer '+tok,'Prefer':'return=representation'
-  };
+  return {'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+tok,'Prefer':'return=representation'};
 }
 async function get(path){ const r = await fetch(`${SB}/rest/v1/${path}`, {headers:await H()}); return r.ok ? r.json() : []; }
 
@@ -460,11 +520,11 @@ async function init(){
 }
 
 function renderAll(){
-  renderHeader(); renderSwitcher(); renderOverview();
-  renderBudget(); renderVendors(); renderGuests(); renderTasks(); fillDetails();
+  renderHeader(); renderSwitcher(); startCountdown();
+  renderOverview(); renderVendors(); renderGuests(); renderTasks(); fillDetails();
 }
 
-/* ── Header & switcher ─────────────────────────────── */
+/* ── Header, switcher, countdown ───────────────────── */
 function renderHeader(){
   document.getElementById('tbEmoji').textContent = wedding.cover_emoji || '💍';
   document.getElementById('tbNames').textContent = wedding.couple_name || 'Wedding';
@@ -472,11 +532,31 @@ function renderHeader(){
   if(wedding.wedding_date){
     const d = new Date(wedding.wedding_date + 'T00:00:00');
     document.getElementById('tbDate').textContent = d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-    const days = Math.ceil((d - new Date())/(86400000));
+    const days = Math.ceil((d - new Date())/86400000);
     const pill = document.getElementById('daysPill');
     pill.style.display='inline-block';
     pill.textContent = days > 0 ? `✨ ${days} days to go` : (days === 0 ? '🎉 Today!' : 'Celebrated 💛');
   }
+}
+function startCountdown(){
+  if(cdTimer) clearInterval(cdTimer);
+  if(!wedding.wedding_date) return;
+  const target = new Date(wedding.wedding_date + 'T00:00:00').getTime();
+  const box = document.getElementById('countdown');
+  const tick = () => {
+    let ms = target - Date.now();
+    if(ms <= 0){ box.style.display='none'; clearInterval(cdTimer); return; }
+    box.style.display='flex';
+    const d = Math.floor(ms/86400000); ms -= d*86400000;
+    const h = Math.floor(ms/3600000);  ms -= h*3600000;
+    const m = Math.floor(ms/60000);    ms -= m*60000;
+    const s = Math.floor(ms/1000);
+    document.getElementById('cdD').textContent = d;
+    document.getElementById('cdH').textContent = String(h).padStart(2,'0');
+    document.getElementById('cdM').textContent = String(m).padStart(2,'0');
+    document.getElementById('cdS').textContent = String(s).padStart(2,'0');
+  };
+  tick(); cdTimer = setInterval(tick, 1000);
 }
 function renderSwitcher(){
   document.getElementById('switchMenu').innerHTML = allWeddings.map(w=>{
@@ -488,124 +568,176 @@ function renderSwitcher(){
   }).join('');
 }
 function toggleSwitcher(e){ e.stopPropagation(); document.getElementById('switchMenu').classList.toggle('show'); }
-document.addEventListener('click', ()=>document.getElementById('switchMenu').classList.remove('show'));
-function switchWedding(id){
-  if(id===wid) return;
-  localStorage.setItem('wl_wedding_id', id);
-  location.reload();
-}
+document.addEventListener('click', ()=>{ const m=document.getElementById('switchMenu'); if(m) m.classList.remove('show'); });
+function switchWedding(id){ if(id===wid) return; localStorage.setItem('wl_wedding_id', id); location.reload(); }
 
-/* ── Overview ──────────────────────────────────────── */
+/* ── Totals / overview ─────────────────────────────── */
 function totals(){
   const total = vendors.reduce((s,v)=>s+(Number(v.total_cost)||0),0);
   const paid  = payments.reduce((s,p)=>s+(Number(p.amount)||0),0);
   return { total, paid, left: Math.max(0,total-paid) };
 }
+function vendorPaid(vid){ return payments.filter(p=>p.vendor_id===vid).reduce((s,p)=>s+(Number(p.amount)||0),0); }
+
 function renderOverview(){
   const t = totals();
-  document.getElementById('ovTitle').textContent = 'Overview';
   document.getElementById('stBudget').textContent = cur(t.total);
+  document.getElementById('stVendorsSub').textContent = 'across ' + vendors.length + ' vendor' + (vendors.length===1?'':'s');
   document.getElementById('stPaid').textContent = cur(t.paid);
   document.getElementById('stPaidSub').textContent = payments.length + ' payment' + (payments.length===1?'':'s');
   document.getElementById('stLeft').textContent = cur(t.left);
-  document.getElementById('stVendors').textContent = vendors.length;
   const yes = guests.filter(g=>g.rsvp_status==='yes').length;
   document.getElementById('stGuests').textContent = guests.length;
-  document.getElementById('stGuestsSub').textContent = yes + ' confirmed';
-  const done = tasks.filter(t=>t.done).length;
+  document.getElementById('stGuestsSub').textContent = yes + ' attending';
+  const done = tasks.filter(x=>x.done).length;
   document.getElementById('stTasks').textContent = done + '/' + tasks.length;
+
+  const pct = t.total > 0 ? Math.round((t.paid/t.total)*100) : 0;
+  for(const [pctEl, fillEl] of [['bbPct','bbFill'],['bbPct2','bbFill2']]){
+    document.getElementById(pctEl).textContent = pct + '%';
+    const f = document.getElementById(fillEl);
+    f.style.width = Math.min(100,pct) + '%';
+    f.className = 'bb-fill' + (pct >= 100 ? ' over' : pct >= 75 ? ' warn' : '');
+  }
 
   const due = vendors.filter(v=>v.due_date && v.due_amount)
     .sort((a,b)=>a.due_date.localeCompare(b.due_date)).slice(0,5);
   document.getElementById('ovDue').innerHTML = due.length ? due.map(v=>`
     <div class="row-item">
-      <span class="row-ic">${v.icon||'📦'}</span>
+      <span class="row-ic">${v.icon||CAT_ICON[v.category]||'📦'}</span>
       <div class="row-main">
         <div class="row-name">${esc(v.name)}</div>
-        <div class="row-sub">due ${new Date(v.due_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+        <div class="row-sub">due ${new Date(v.due_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}${v.due_note?' · '+esc(v.due_note):''}</div>
       </div>
       <span class="row-amount">${cur(v.due_amount)}</span>
     </div>`).join('')
-    : `<div class="empty-mini">No upcoming vendor payments recorded. Set due dates on vendors to see them here.</div>`;
+    : `<div class="empty-mini">No upcoming vendor payments. Set a due date on a vendor to see it here.</div>`;
 }
 
-/* ── Budget & payments ─────────────────────────────── */
-function renderBudget(){
+/* ── Vendors (regular-dashboard style) ─────────────── */
+function sortedVendors(){
+  const s = document.getElementById('sortSel').value;
+  const list = [...vendors];
+  if(s==='name') list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  else if(s==='cost') list.sort((a,b)=>(Number(b.total_cost)||0)-(Number(a.total_cost)||0));
+  else if(s==='remaining') list.sort((a,b)=>((Number(b.total_cost)||0)-vendorPaid(b.id))-((Number(a.total_cost)||0)-vendorPaid(a.id)));
+  return list;
+}
+function renderVendors(){
   const t = totals();
   document.getElementById('bgTotal').textContent = cur(t.total);
   document.getElementById('bgPaid').textContent = cur(t.paid);
   document.getElementById('bgLeft').textContent = cur(t.left);
+  document.getElementById('bgVendors').textContent = vendors.length;
 
-  document.getElementById('payVendor').innerHTML =
-    vendors.length ? vendors.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join('')
-                   : `<option value="">— add a vendor first —</option>`;
-
-  document.getElementById('payList').innerHTML = payments.length ? payments.map(p=>{
-    const v = vendors.find(x=>x.id===p.vendor_id);
-    const d = p.payment_date ? new Date(p.payment_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
-    return `<div class="row-item">
-      <span class="row-ic">💸</span>
-      <div class="row-main"><div class="row-name">${esc(v?v.name:'Payment')}</div><div class="row-sub">${d}</div></div>
-      <span class="row-amount">${cur(p.amount)}</span>
-      <button class="row-del" onclick="delPayment('${p.id}')">🗑</button>
-    </div>`;
-  }).join('') : `<div class="empty-mini">No payments recorded yet.</div>`;
-}
-async function addPayment(){
-  const vendor_id = document.getElementById('payVendor').value;
-  const amount = parseFloat(document.getElementById('payAmount').value);
-  if(!vendor_id){ toast('Add a vendor first', true); return; }
-  if(!amount || amount<=0){ toast('Enter an amount', true); return; }
-  const payment_date = document.getElementById('payDate').value || new Date().toISOString().slice(0,10);
-  try{
-    const r = await fetch(`${SB}/rest/v1/payments`, {method:'POST',headers:await H(),
-      body:JSON.stringify({user_id:uid, wedding_id:wid, vendor_id, amount, payment_date})});
-    const rows = await r.json();
-    if(!r.ok) throw new Error(rows.message||'error');
-    payments.unshift(rows[0]);
-    document.getElementById('payAmount').value=''; document.getElementById('payDate').value='';
-    renderBudget(); renderOverview(); toast('Payment recorded ✓');
-  }catch(e){ console.error(e); toast('Could not save payment', true); }
-}
-async function delPayment(id){
-  if(!confirm('Delete this payment?')) return;
-  try{
-    await fetch(`${SB}/rest/v1/payments?id=eq.${id}`, {method:'DELETE',headers:await H()});
-    payments = payments.filter(p=>p.id!==id);
-    renderBudget(); renderOverview(); toast('Payment deleted');
-  }catch(e){ toast('Could not delete', true); }
-}
-
-/* ── Vendors ───────────────────────────────────────── */
-const CAT_ICON = {'Hotel / Venue':'🏨','Catering':'🍽️','Photographer':'📷','Videographer':'🎬','Florist':'💐','Music / DJ':'🎵','Attire':'👗','Cake':'🎂','Transport':'🚗','Decor':'🎀','Other':'📦'};
-function renderVendors(){
-  document.getElementById('vendorList').innerHTML = vendors.length ? vendors.map(v=>{
-    const paid = payments.filter(p=>p.vendor_id===v.id).reduce((s,p)=>s+(Number(p.amount)||0),0);
-    return `<div class="row-item">
-      <span class="row-ic">${v.icon||CAT_ICON[v.category]||'📦'}</span>
-      <div class="row-main">
-        <div class="row-name">${esc(v.name)}</div>
-        <div class="row-sub">${esc(v.category||'')} · paid ${cur(paid)} of ${cur(v.total_cost)}</div>
+  const grid = document.getElementById('vendorGrid');
+  const list = sortedVendors();
+  if(!list.length){
+    grid.innerHTML = `<div class="empty-mini" style="grid-column:1/-1;padding:44px 0">No vendors yet — add the venue, caterer, florist… 🏛️</div>`;
+    renderOverview(); return;
+  }
+  grid.innerHTML = list.map(v=>{
+    const total = Number(v.total_cost)||0;
+    const paid = vendorPaid(v.id);
+    const remaining = Math.max(0, total - paid);
+    const status = total>0 && paid>=total ? 'paid' : (paid>0 ? 'partial' : 'unpaid');
+    const statusLbl = status==='paid' ? '✓ Paid' : (status==='partial' ? '◐ Partial' : '○ Unpaid');
+    const hist = payments.filter(p=>p.vendor_id===v.id);
+    const open = openHistories.has(v.id);
+    const dueTxt = (v.due_date && v.due_amount)
+      ? `<div class="vc-due">⏰ ${cur(v.due_amount)} due ${new Date(v.due_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}${v.due_note?' — '+esc(v.due_note):''}</div>` : '';
+    return `
+    <div class="vcard">
+      <div class="vc-head">
+        <div class="vc-ic">${v.icon||CAT_ICON[v.category]||'📦'}</div>
+        <div style="min-width:0">
+          <div class="vc-cat">${esc(v.category||'Vendor')}</div>
+          <div class="vc-name">${esc(v.name)}</div>
+        </div>
+        <div class="vc-actions">
+          <button class="vc-abtn" title="Edit" onclick="openVendorModal('${v.id}')">✎</button>
+          <button class="vc-abtn del" title="Delete" onclick="delVendor('${v.id}','${esc(v.name).replace(/'/g,"\\'")}')">🗑</button>
+        </div>
       </div>
-      <span class="row-amount">${cur(v.total_cost)}</span>
-      <button class="row-del" onclick="delVendor('${v.id}','${esc(v.name).replace(/'/g,"\\'")}')">🗑</button>
+      <div class="vc-nums">
+        <div class="vc-cell">
+          <div class="vc-cell-lbl">Total</div>
+          <div class="vc-cell-val">${cur(total)}</div>
+        </div>
+        <div class="vc-cell">
+          <div class="vc-cell-lbl">Remaining</div>
+          <div class="vc-cell-val ${remaining>0?'due':''}">${cur(remaining)}</div>
+          <div class="vc-cell-sub">paid ${cur(paid)}</div>
+        </div>
+      </div>
+      ${dueTxt}
+      <div class="vc-foot">
+        <span class="chip ${status}">${statusLbl}</span>
+        <button class="vc-pay" onclick="openPayModal('${v.id}')">+ Add Payment</button>
+      </div>
+      <div class="vc-history">
+        <button class="vc-htoggle" onclick="toggleHistory('${v.id}')">
+          <span>💳 Payment History (${hist.length})</span><span>${open?'▴':'▾'}</span>
+        </button>
+        <div class="vc-hlist${open?' open':''}">
+          ${hist.length ? hist.map(p=>`
+            <div class="vc-hrow">
+              <span class="vc-hdate">${p.payment_date ? new Date(p.payment_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}) : ''}</span>
+              <span class="vc-hnote">${esc(p.note||'')}</span>
+              <span class="vc-hamt">${cur(p.amount)}</span>
+              <button class="vc-hdel" onclick="delPayment('${p.id}')">🗑</button>
+            </div>`).join('')
+          : `<div class="vc-hrow" style="color:var(--muted)">No payments yet</div>`}
+        </div>
+      </div>
     </div>`;
-  }).join('') : `<div class="empty-mini">No vendors yet — add the venue, caterer, florist…</div>`;
+  }).join('');
+  renderOverview();
 }
-async function addVendor(){
-  const name = document.getElementById('venName').value.trim();
+function toggleHistory(id){
+  openHistories.has(id) ? openHistories.delete(id) : openHistories.add(id);
+  renderVendors();
+}
+
+function openVendorModal(id){
+  editingVendor = id ? vendors.find(v=>v.id===id) : null;
+  document.getElementById('vmTitle').textContent = editingVendor ? 'Edit vendor' : 'Add vendor';
+  document.getElementById('vmSave').textContent = editingVendor ? 'Save changes' : 'Add vendor';
+  document.getElementById('vmName').value = editingVendor?.name || '';
+  document.getElementById('vmCat').value = editingVendor?.category && CAT_ICON[editingVendor.category] ? editingVendor.category : 'Other';
+  document.getElementById('vmCost').value = editingVendor?.total_cost ?? '';
+  document.getElementById('vmDueDate').value = editingVendor?.due_date || '';
+  document.getElementById('vmDueAmt').value = editingVendor?.due_amount ?? '';
+  document.getElementById('vmNotes').value = editingVendor?.notes || '';
+  openM('vendorModal');
+}
+async function saveVendor(){
+  const name = document.getElementById('vmName').value.trim();
   if(!name){ toast('Enter the vendor name', true); return; }
-  const category = document.getElementById('venCat').value;
-  const total_cost = parseFloat(document.getElementById('venCost').value)||0;
+  const category = document.getElementById('vmCat').value;
+  const body = {
+    name, category, icon: CAT_ICON[category]||'📦',
+    total_cost: parseFloat(document.getElementById('vmCost').value)||0,
+    due_date: document.getElementById('vmDueDate').value || null,
+    due_amount: parseFloat(document.getElementById('vmDueAmt').value)||null,
+    notes: document.getElementById('vmNotes').value.trim() || null
+  };
   try{
-    const r = await fetch(`${SB}/rest/v1/vendors`, {method:'POST',headers:await H(),
-      body:JSON.stringify({user_id:uid, wedding_id:wid, name, category, icon:CAT_ICON[category]||'📦', total_cost})});
-    const rows = await r.json();
-    if(!r.ok) throw new Error(rows.message||'error');
-    vendors.unshift(rows[0]);
-    document.getElementById('venName').value=''; document.getElementById('venCost').value='';
-    renderVendors(); renderBudget(); renderOverview(); toast('Vendor added ✓');
-  }catch(e){ console.error(e); toast('Could not add vendor', true); }
+    if(editingVendor){
+      const r = await fetch(`${SB}/rest/v1/vendors?id=eq.${editingVendor.id}`, {method:'PATCH',headers:await H(),body:JSON.stringify(body)});
+      if(!r.ok) throw 0;
+      Object.assign(editingVendor, body);
+      toast('Vendor updated ✓');
+    } else {
+      const r = await fetch(`${SB}/rest/v1/vendors`, {method:'POST',headers:await H(),
+        body:JSON.stringify({user_id:uid, wedding_id:wid, ...body})});
+      const rows = await r.json();
+      if(!r.ok) throw 0;
+      vendors.unshift(rows[0]);
+      toast('Vendor added ✓');
+    }
+    closeM('vendorModal'); renderVendors();
+  }catch(e){ toast('Could not save vendor', true); }
 }
 async function delVendor(id, name){
   if(!confirm(`Delete "${name}" and its payments?`)) return;
@@ -614,11 +746,45 @@ async function delVendor(id, name){
     await fetch(`${SB}/rest/v1/vendors?id=eq.${id}`, {method:'DELETE',headers:await H()});
     vendors = vendors.filter(v=>v.id!==id);
     payments = payments.filter(p=>p.vendor_id!==id);
-    renderVendors(); renderBudget(); renderOverview(); toast('Vendor deleted');
+    renderVendors(); toast('Vendor deleted');
   }catch(e){ toast('Could not delete', true); }
 }
 
-/* ── Guests ────────────────────────────────────────── */
+function openPayModal(vid){
+  payingVendor = vendors.find(v=>v.id===vid); if(!payingVendor) return;
+  document.getElementById('pmTitle').textContent = 'Add payment — ' + payingVendor.name;
+  document.getElementById('pmAmount').value = '';
+  document.getElementById('pmDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('pmNote').value = '';
+  openM('payModal');
+}
+async function savePayment(){
+  const amount = parseFloat(document.getElementById('pmAmount').value);
+  if(!amount || amount<=0){ toast('Enter an amount', true); return; }
+  try{
+    const r = await fetch(`${SB}/rest/v1/payments`, {method:'POST',headers:await H(),
+      body:JSON.stringify({
+        user_id:uid, wedding_id:wid, vendor_id:payingVendor.id, amount,
+        payment_date: document.getElementById('pmDate').value || new Date().toISOString().slice(0,10),
+        note: document.getElementById('pmNote').value.trim() || null
+      })});
+    const rows = await r.json();
+    if(!r.ok) throw 0;
+    payments.unshift(rows[0]);
+    openHistories.add(payingVendor.id);
+    closeM('payModal'); renderVendors(); toast('Payment recorded ✓');
+  }catch(e){ toast('Could not save payment', true); }
+}
+async function delPayment(id){
+  if(!confirm('Delete this payment?')) return;
+  try{
+    await fetch(`${SB}/rest/v1/payments?id=eq.${id}`, {method:'DELETE',headers:await H()});
+    payments = payments.filter(p=>p.id!==id);
+    renderVendors(); toast('Payment deleted');
+  }catch(e){ toast('Could not delete', true); }
+}
+
+/* ── Guests + couple access ────────────────────────── */
 function renderGuests(){
   const yes = guests.filter(g=>g.rsvp_status==='yes').length;
   const no  = guests.filter(g=>g.rsvp_status==='no').length;
@@ -630,12 +796,14 @@ function renderGuests(){
   document.getElementById('guestList').innerHTML = guests.length ? guests.map(g=>{
     const st = g.rsvp_status==='yes'?'yes':(g.rsvp_status==='no'?'no':'pending');
     const label = st==='yes'?'✓ Attending':(st==='no'?'✗ Declined':'⋯ Pending');
-    const sub = [g.email, g.phone, g.plus_one ? ('+1' + (g.plus_one_name ? ': '+g.plus_one_name : '')) : null, g.dietary]
+    const sub = [g.email, g.phone, g.plus_one ? ('+1'+(g.plus_one_name?': '+g.plus_one_name:'')) : null, g.dietary]
       .filter(Boolean).join(' · ');
+    const wa = g.phone ? `<button class="mini-btn" onclick="whatsApp('${g.id}')">💬 WhatsApp</button>` : '';
     return `<div class="row-item">
       <span class="row-ic">👤</span>
       <div class="row-main"><div class="row-name">${esc(g.name)}</div><div class="row-sub">${esc(sub||'—')}</div></div>
       <button class="rsvp-pill ${st}" onclick="cycleRsvp('${g.id}')">${label}</button>
+      ${wa}
       <button class="mini-btn" onclick="copyGuestLink('${g.id}')">🔗 RSVP link</button>
       <button class="row-del" onclick="delGuest('${g.id}')">🗑</button>
     </div>`;
@@ -644,9 +812,6 @@ function renderGuests(){
   renderShareCard();
 }
 
-/* ── Couple access sharing ─────────────────────────── */
-const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-const PASS_WORDS = ['Rose','Gold','Ivory','Pearl','Bloom','Amber','Willow','Velvet','Lily','Aster','Fern','Opal','Hazel','Clover','Iris','Jade'];
 function randChars(n){ let s=''; for(let i=0;i<n;i++) s+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; return s; }
 function genPassword(){
   const w1 = PASS_WORDS[Math.floor(Math.random()*PASS_WORDS.length)];
@@ -663,7 +828,7 @@ function renderShareCard(){
     el.innerHTML = `
       <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:14px">
         Create a private link + password for <b style="color:var(--charcoal)">${esc(wedding.couple_name||'the couple')}</b>.
-        They'll be able to add guests, track RSVPs, and copy each guest's personal invite link — no account needed.
+        They'll manage guests, meals &amp; RSVPs themselves — no account needed. Everything they do appears here instantly.
       </p>
       <button class="btn primary" onclick="createShare()">Create couple access</button>`;
     return;
@@ -687,16 +852,14 @@ function renderShareCard(){
       <button class="mini-btn" onclick="disableShare()" style="color:var(--rose)">Disable access</button>
     </div>`;
 }
-
 async function createShare(){
   try{
     const patch = { share_code: randChars(8), share_password: genPassword() };
     const r = await fetch(`${SB}/rest/v1/weddings?id=eq.${wid}`, {method:'PATCH',headers:await H(),body:JSON.stringify(patch)});
-    if(!r.ok) throw new Error('patch failed');
+    if(!r.ok) throw 0;
     Object.assign(wedding, patch);
-    renderShareCard();
-    toast('Couple access created ✓');
-  }catch(e){ console.error(e); toast('Could not create access — run the couple-access SQL migration first', true); }
+    renderShareCard(); toast('Couple access created ✓');
+  }catch(e){ toast('Could not create access — run the couple-access SQL migration first', true); }
 }
 async function regenSharePassword(){
   if(!confirm('Generate a new password? The old one will stop working.')) return;
@@ -704,34 +867,28 @@ async function regenSharePassword(){
     const patch = { share_password: genPassword() };
     await fetch(`${SB}/rest/v1/weddings?id=eq.${wid}`, {method:'PATCH',headers:await H(),body:JSON.stringify(patch)});
     Object.assign(wedding, patch);
-    renderShareCard();
-    toast('New password generated — reshare it with the couple');
+    renderShareCard(); toast('New password generated — reshare it with the couple');
   }catch(e){ toast('Could not update password', true); }
 }
 async function disableShare(){
-  if(!confirm('Disable couple access? Their link and password will stop working. You can create a new one any time.')) return;
+  if(!confirm('Disable couple access? Their link and password will stop working.')) return;
   try{
     await fetch(`${SB}/rest/v1/weddings?id=eq.${wid}`, {method:'PATCH',headers:await H(),body:JSON.stringify({share_code:null, share_password:null})});
     wedding.share_code = null; wedding.share_password = null;
-    renderShareCard();
-    toast('Couple access disabled');
+    renderShareCard(); toast('Couple access disabled');
   }catch(e){ toast('Could not disable access', true); }
 }
 function copyShareMessage(){
   const d = wedding.wedding_date
     ? new Date(wedding.wedding_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '';
-  const msg = `Hi ${wedding.couple_name || ''}! 💍\n\nHere's your private guest-list page for your wedding${d ? ' on '+d : ''}:\n\n${shareUrl()}\nPassword: ${wedding.share_password}\n\nYou can add guests, track RSVPs, and send each guest their personal invitation link. Any questions, just message me!`;
+  const msg = `Hi ${wedding.couple_name || ''}! 💍\n\nHere's your private guest-list page for your wedding${d ? ' on '+d : ''}:\n\n${shareUrl()}\nPassword: ${wedding.share_password}\n\nYou can add guests, set meal choices, track RSVPs, and send each guest their personal invitation link. Any questions, just message me!`;
   copyText(msg, 'Message copied — paste it to the couple 💌');
 }
-function copyText(t, okMsg){
-  navigator.clipboard.writeText(t).then(()=>toast(okMsg)).catch(()=>prompt('Copy this:', t));
-}
+function copyText(t, okMsg){ navigator.clipboard.writeText(t).then(()=>toast(okMsg)).catch(()=>prompt('Copy this:', t)); }
 
-/* ── Per-guest RSVP links ──────────────────────────── */
 async function copyGuestLink(id){
   const g = guests.find(x=>x.id===id); if(!g) return;
   if(!g.link_code){
-    // generate a unique 6-char code (retry on collision)
     for(let tries=0; tries<6; tries++){
       const codeTry = randChars(6);
       const r = await fetch(`${SB}/rest/v1/guests?id=eq.${id}`, {method:'PATCH',headers:await H(),body:JSON.stringify({link_code:codeTry})});
@@ -741,26 +898,38 @@ async function copyGuestLink(id){
   }
   copyText(location.origin + '/rsvp.html?c=' + g.link_code, 'RSVP link copied — send it to ' + g.name + ' 💌');
 }
+async function whatsApp(id){
+  const g = guests.find(x=>x.id===id); if(!g || !g.phone) return;
+  if(!g.link_code){ await copyGuestLink(id); }
+  const link = location.origin + '/rsvp.html?c=' + g.link_code;
+  const msg = `Hi ${g.name}! 💍 You're invited to ${wedding.couple_name}'s wedding${wedding.wedding_date ? ' on ' + new Date(wedding.wedding_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : ''}. Please RSVP here: ${link}`;
+  window.open('https://wa.me/' + g.phone.replace(/[^0-9]/g,'') + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
 async function addGuest(){
   const name = document.getElementById('guName').value.trim();
   if(!name){ toast('Enter the guest name', true); return; }
-  const email = document.getElementById('guEmail').value.trim() || null;
   try{
     const r = await fetch(`${SB}/rest/v1/guests`, {method:'POST',headers:await H(),
-      body:JSON.stringify({user_id:uid, wedding_id:wid, name, email, rsvp_status:'pending'})});
+      body:JSON.stringify({
+        user_id:uid, wedding_id:wid, name,
+        email: document.getElementById('guEmail').value.trim() || null,
+        phone: document.getElementById('guPhone').value.trim() || null,
+        rsvp_status:'pending'
+      })});
     const rows = await r.json();
-    if(!r.ok) throw new Error(rows.message||'error');
+    if(!r.ok) throw 0;
     guests.unshift(rows[0]);
-    document.getElementById('guName').value=''; document.getElementById('guEmail').value='';
-    renderGuests(); renderOverview(); toast('Guest added ✓');
-  }catch(e){ console.error(e); toast('Could not add guest', true); }
+    ['guName','guEmail','guPhone'].forEach(i=>document.getElementById(i).value='');
+    renderGuests(); toast('Guest added ✓');
+  }catch(e){ toast('Could not add guest', true); }
 }
 async function cycleRsvp(id){
   const g = guests.find(x=>x.id===id); if(!g) return;
-  const next = g.rsvp_status==='pending'||!g.rsvp_status ? 'yes' : (g.rsvp_status==='yes' ? 'no' : 'pending');
+  const next = (g.rsvp_status==='pending'||!g.rsvp_status) ? 'yes' : (g.rsvp_status==='yes' ? 'no' : 'pending');
   try{
     await fetch(`${SB}/rest/v1/guests?id=eq.${id}`, {method:'PATCH',headers:await H(),body:JSON.stringify({rsvp_status:next})});
-    g.rsvp_status = next; renderGuests(); renderOverview();
+    g.rsvp_status = next; renderGuests();
   }catch(e){ toast('Could not update RSVP', true); }
 }
 async function delGuest(id){
@@ -768,7 +937,7 @@ async function delGuest(id){
   try{
     await fetch(`${SB}/rest/v1/guests?id=eq.${id}`, {method:'DELETE',headers:await H()});
     guests = guests.filter(g=>g.id!==id);
-    renderGuests(); renderOverview(); toast('Guest removed');
+    renderGuests(); toast('Guest removed');
   }catch(e){ toast('Could not remove', true); }
 }
 
@@ -788,7 +957,7 @@ async function addTask(){
     const r = await fetch(`${SB}/rest/v1/tasks`, {method:'POST',headers:await H(),
       body:JSON.stringify({user_id:uid, wedding_id:wid, text, done:false})});
     const rows = await r.json();
-    if(!r.ok) throw new Error(rows.message||'error');
+    if(!r.ok) throw 0;
     tasks.push(rows[0]);
     document.getElementById('taskInput').value='';
     renderTasks(); renderOverview();
@@ -832,7 +1001,7 @@ async function saveDetails(){
   }catch(e){ toast('Could not save', true); }
 }
 async function archiveThis(){
-  if(!confirm(`Archive "${wedding.couple_name}"?\n\nIt will be hidden from your studio.`)) return;
+  if(!confirm(`Archive "${wedding.couple_name}"?`)) return;
   try{
     await fetch(`${SB}/rest/v1/weddings?id=eq.${wid}`, {method:'PATCH',headers:await H(),body:JSON.stringify({archived:true})});
     localStorage.removeItem('wl_wedding_id');
@@ -848,6 +1017,9 @@ function switchTab(name, el){
   el.classList.add('active');
   window.scrollTo({top:0});
 }
+function openM(id){ document.getElementById(id).classList.add('show'); }
+function closeM(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.overlay').forEach(ov=>ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('show'); }));
 function toast(msg, isErr){
   const el = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
