@@ -252,12 +252,32 @@ body{
 
   <!-- Shown after returning from a Stripe payment -->
   <div class="pay-banner" id="payBanner">
-    <span id="payBannerText">Did you complete your payment?</span>
-    <button class="pay-banner-btn yes" onclick="confirmPayment()">Yes — activate</button>
-    <button class="pay-banner-btn no" onclick="dismissPayment()">Not yet</button>
+    <span id="payBannerText">Checking your payment…</span>
   </div>
 
   <div class="loading" id="loadingState">Loading your weddings…</div>
+
+  <!-- PAYWALL: shown until the £40 Planner plan is paid -->
+  <div id="paywall" style="display:none">
+    <div class="billing-card" style="border-color:var(--gold-bd);background:linear-gradient(170deg,#fffdf8,var(--gold-pale));text-align:center;padding:40px 30px">
+      <div style="font-size:38px;margin-bottom:14px">💍</div>
+      <h2 style="font-family:'Fraunces',serif;font-weight:300;font-size:27px;color:var(--charcoal);margin-bottom:10px">Activate your Planner Studio</h2>
+      <p style="font-size:14px;color:var(--muted);max-width:440px;margin:0 auto 26px;line-height:1.65">
+        One payment of <b style="color:var(--charcoal)">£40</b> unlocks your studio with <b style="color:var(--charcoal)">3 client weddings</b>
+        and every Pro feature. No subscription — it's yours for good.
+      </p>
+      <div style="display:grid;gap:9px;max-width:330px;margin:0 auto 26px;text-align:left;font-size:13.5px;color:var(--charcoal)">
+        <div>✓&nbsp; 3 client weddings included</div>
+        <div>✓&nbsp; Budgets, vendors &amp; payment tracking</div>
+        <div>✓&nbsp; Guest lists, RSVPs &amp; invitations</div>
+        <div>✓&nbsp; A real login for each couple</div>
+        <div>✓&nbsp; Reports &amp; exports</div>
+        <div>✓&nbsp; Extra weddings any time at £12 each</div>
+      </div>
+      <button class="btn primary" style="font-size:14px;padding:14px 30px" onclick="startPayment('starter')">Pay £40 &amp; unlock →</button>
+      <p style="font-size:11.5px;color:var(--muted);margin-top:14px">💳 Secure one-time payment via Stripe</p>
+    </div>
+  </div>
 
   <div id="content" style="display:none">
     <div class="quota-card">
@@ -385,7 +405,8 @@ const EMOJIS = ['💍','💒','👰','🤵','💐','🎊','🍾','💝','✨','�
 let uid = localStorage.getItem('wl_uid') || '';
 let profile = null;
 let weddings = [];
-let allowance = 3;
+let allowance = 0;
+let isPaid = false;
 let selectedEmoji = '💍';
 
 async function authedHeaders(){
@@ -425,7 +446,9 @@ async function init(){
     // Clean up any stale workspace stash once we're back as the planner
     ['wl_planner_uid','wl_planner_token','wl_planner_refresh'].forEach(k=>localStorage.removeItem(k));
 
-    allowance = 3 + (parseInt(profile.extra_weddings_paid,10) || 0);
+    // No trial: nothing is unlocked until the £40 plan is paid.
+    isPaid = profile.planner_paid === true;
+    allowance = isPaid ? 3 + (parseInt(profile.extra_weddings_paid,10) || 0) : 0;
 
     // 2) Weddings (RLS returns only this planner's weddings)
     const wr = await fetch(`${SB}/rest/v1/weddings?select=*&archived=eq.false&order=created_at.desc`, { headers: h });
@@ -433,8 +456,14 @@ async function init(){
     if(!Array.isArray(weddings)) weddings = [];
 
     document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
-    renderAll();
+    if(isPaid){
+      document.getElementById('content').style.display = 'block';
+      document.getElementById('paywall').style.display = 'none';
+      renderAll();
+    } else {
+      document.getElementById('paywall').style.display = 'block';
+      document.getElementById('content').style.display = 'none';
+    }
     checkPaymentReturn();
   }catch(e){
     console.error('[Planner]', e);
@@ -510,7 +539,7 @@ function renderBilling(){
   document.getElementById('billingGrid').innerHTML = `
     <div class="billing-item">
       <span class="billing-item-label">Current plan</span>
-      <div class="billing-item-value">${paid ? 'Planner' : 'Planner (trial)'}</div>
+      <div class="billing-item-value">${paid ? 'Planner' : 'Not activated'}</div>
     </div>
     <div class="billing-item">
       <span class="billing-item-label">Weddings used</span>
@@ -627,10 +656,11 @@ async function archiveWedding(id, name){
 function startPayment(kind){
   const link = kind === 'starter' ? PAY_LINK_STARTER : PAY_LINK_EXTRA;
   if(!link){
-    toast('Payments aren\'t configured yet — please contact support to upgrade.', true);
+    toast('Payments aren\'t set up yet — see the setup guide, or contact support.', true);
     return;
   }
   localStorage.setItem('wl_pending_pay', kind);
+  // client_reference_id is how the Stripe webhook knows which account paid.
   const url = link + (link.includes('?') ? '&' : '?')
     + 'client_reference_id=' + encodeURIComponent(uid)
     + '&prefilled_email=' + encodeURIComponent(profile.email || '');
@@ -641,31 +671,56 @@ function checkPaymentReturn(){
   const pending = localStorage.getItem('wl_pending_pay');
   if(!pending) return;
   document.getElementById('payBannerText').textContent =
-    pending === 'starter'
-      ? 'Did you complete your £40 Planner plan payment?'
-      : 'Did you complete your £12 additional-wedding payment?';
+    'Checking your payment with Stripe…';
   document.getElementById('payBanner').classList.add('show');
+  // Stripe's webhook usually lands within a couple of seconds.
+  pollForActivation(pending, 0);
 }
 
-async function confirmPayment(){
-  const pending = localStorage.getItem('wl_pending_pay');
-  if(!pending) return;
+// Ask the database (not the browser) whether the payment was verified.
+async function pollForActivation(kind, attempt){
   try{
     const h = await authedHeaders();
-    const patch = pending === 'starter'
-      ? { planner_paid: true }
-      : { extra_weddings_paid: (parseInt(profile.extra_weddings_paid,10)||0) + 1 };
-    await fetch(`${SB}/rest/v1/profiles?user_id=eq.${uid}`, {
-      method:'PATCH', headers:h, body: JSON.stringify(patch)
-    });
-    Object.assign(profile, patch);
-    allowance = 3 + (parseInt(profile.extra_weddings_paid,10)||0);
-    localStorage.removeItem('wl_pending_pay');
-    document.getElementById('payBanner').classList.remove('show');
-    renderAll();
-    toast(pending === 'starter' ? '🎉 Planner plan active!' : '🎉 Extra wedding added!');
-  }catch(e){
-    console.error(e); toast('Could not activate — please contact support', true);
+    const r = await fetch(`${SB}/rest/v1/rpc/planner_billing_status`, { method:'POST', headers: h, body: '{}' });
+    const s = await r.json();
+
+    const nowPaid   = s && s.paid === true;
+    const nowExtra  = s ? (parseInt(s.extra,10) || 0) : 0;
+    const wasExtra  = parseInt(profile.extra_weddings_paid,10) || 0;
+    const activated = (kind === 'starter' && nowPaid && !isPaid)
+                   || (kind === 'extra' && nowExtra > wasExtra);
+
+    if(activated){
+      localStorage.removeItem('wl_pending_pay');
+      profile.planner_paid = nowPaid;
+      profile.extra_weddings_paid = nowExtra;
+      isPaid = nowPaid;
+      allowance = nowPaid ? 3 + nowExtra : 0;
+      document.getElementById('payBanner').classList.remove('show');
+      document.getElementById('paywall').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+      renderAll();
+      toast(kind === 'starter' ? '🎉 Your Planner Studio is unlocked!' : '🎉 Extra wedding added!');
+      return;
+    }
+  }catch(e){ console.error('[billing]', e); }
+
+  if(attempt < 12){                       // keep checking for ~60 seconds
+    setTimeout(()=>pollForActivation(kind, attempt + 1), 5000);
+  } else {
+    document.getElementById('payBannerText').textContent =
+      'We haven\'t seen your payment yet. If you completed it, refresh in a moment — or contact support and we\'ll sort it.';
+    const b = document.getElementById('payBanner');
+    b.querySelectorAll('.pay-banner-btn').forEach(el=>el.style.display='none');
+    const again = document.createElement('button');
+    again.className = 'pay-banner-btn yes';
+    again.textContent = 'Check again';
+    again.onclick = ()=>{ b.querySelectorAll('.pay-banner-btn').forEach(el=>el.remove()); pollForActivation(kind, 0); };
+    const stop = document.createElement('button');
+    stop.className = 'pay-banner-btn no';
+    stop.textContent = 'Dismiss';
+    stop.onclick = dismissPayment;
+    b.appendChild(again); b.appendChild(stop);
   }
 }
 
