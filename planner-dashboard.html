@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Wedding Planner Dashboard — WeddingLedger</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   WeddingLedger — Wedding Planner Dashboard (Professional v1)
+   Modern, elegant interface for managing multiple weddings
+═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #faf7f2;
+  --bg2: #f4efe6;
+  --surface: #ffffff;
+  --surface2: #fdf9f4;
+  --ink: #1a1612;
+  --muted: #665a49;
+  --muted2: #98876f;
+  --gold: #a07828;
+  --gold2: #c49a3a;
+  --gold-pale: #fdf3dc;
+  --gold-bd: rgba(160, 120, 40, 0.22);
+  --border: rgba(26, 22, 18, 0.14);
+  --border2: rgba(26, 22, 18, 0.08);
+  --charcoal: #1a1612;
+  --sage: #2a6a3a;
+  --rose: #b83030;
+  --shadow: 0 1px 4px rgba(26, 22, 18, 0.06), 0 4px 24px rgba(26, 22, 18, 0.07);
+  --shadow-lg: 0 8px 40px rgba(26, 22, 18, 0.11);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'Instrument Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  overflow-x: hidden;
+  padding-top: 60px;
+  background-image:
+    linear-gradient(rgba(26, 22, 18, 0.016) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 22, 18, 0.016) 1px, transparent 1px);
+  background-size: 52px 52px;
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar {
+  width: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gold-bd);
+  border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TOPBAR (Fixed Navigation)
+───────────────────────────────────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 60px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(250, 247, 242, 0.94);
+  backdrop-filter: blur(24px) saturate(1.8);
+  border-bottom: 1px solid var(--border);
+  transition: box-shadow 0.3s;
+}
+
+.topbar.scrolled {
+  box-shadow: 0 2px 20px rgba(26, 22, 18, 0.08);
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.topbar-back-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--gold);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: 0.17s;
+  display: none;
+}
+
+.topbar-back-btn:hover {
+  background: var(--gold-pale);
+  color: var(--charcoal);
+}
+
+.topbar-back-btn.show {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--charcoal);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.topbar-logo em {
+  color: var(--gold);
+}
+
+.topbar-wedding-name {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  white-space: nowrap;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: 0.17s;
+  text-decoration: none;
+}
+
+.topbar-btn:hover {
+  background: var(--bg2);
+  color: var(--charcoal);
+}
+
+.topbar-btn.primary {
+  background: var(--gold);
+  color: #fff;
+}
+
+.topbar-btn.primary:hover {
+  background: var(--gold2);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WEDDING SWITCHER DROPDOWN
+───────────────────────────────────────────────────────────────── */
+.wedding-switcher-wrap {
+  position: relative;
+}
+
+.wedding-switcher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--gold-bd);
+  background: var(--gold-pale);
+  color: var(--charcoal);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.17s;
+  white-space: nowrap;
+}
+
+.wedding-switcher-btn:hover {
+  background: var(--gold);
+  color: #fff;
+  border-color: var(--gold);
+}
+
+.wedding-switcher-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  min-width: 280px;
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 300;
+  display: none;
+}
+
+.wedding-switcher-dropdown.show {
+  display: block;
+}
+
+.wedding-switcher-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.15s;
+  border-bottom: 1px solid var(--border2);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+}
+
+.wedding-switcher-item:last-child {
+  border-bottom: none;
+}
+
+.wedding-switcher-item:hover {
+  background: var(--bg2);
+}
+
+.wedding-switcher-item.active {
+  background: var(--gold-pale);
+  font-weight: 600;
+}
+
+.wedding-item-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  color: var(--charcoal);
+  font-size: 13px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.wedding-item-date {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.wedding-switcher-divider {
+  height: 1px;
+  background: var(--border2);
+  margin: 8px 0;
+}
+
+.wedding-switcher-add {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.15s;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.wedding-switcher-add:hover {
+  background: var(--gold-pale);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MAIN CONTENT
+───────────────────────────────────────────────────────────────── */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WEDDING GRID (Cards for each wedding)
+───────────────────────────────────────────────────────────────── */
+.weddings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.wedding-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.wedding-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold2));
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.wedding-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--gold-bd);
+}
+
+.wedding-card:hover::before {
+  opacity: 1;
+}
+
+.wedding-card-header {
+  margin-bottom: 16px;
+}
+
+.wedding-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--charcoal);
+  margin-bottom: 6px;
+}
+
+.wedding-card-date {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.wedding-card-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.info-item {
+  font-size: 12px;
+}
+
+.info-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.info-value {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--charcoal);
+}
+
+.wedding-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.card-action-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.17s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.card-action-btn.primary {
+  background: var(--gold);
+  color: #fff;
+}
+
+.card-action-btn.primary:hover {
+  background: var(--gold2);
+}
+
+.card-action-btn.secondary {
+  background: var(--bg2);
+  color: var(--charcoal);
+  border: 1px solid var(--border);
+}
+
+.card-action-btn.secondary:hover {
+  background: var(--gold-pale);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ADD WEDDING CARD
+───────────────────────────────────────────────────────────────── */
+.add-wedding-card {
+  background: var(--surface);
+  border: 2px dashed var(--gold-bd);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: center;
+}
+
+.add-wedding-card:hover {
+  border-color: var(--gold);
+  background: var(--gold-pale);
+}
+
+.add-wedding-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.add-wedding-text {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--charcoal);
+  margin-bottom: 8px;
+}
+
+.add-wedding-subtext {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.add-wedding-btn {
+  padding: 8px 16px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.17s;
+}
+
+.add-wedding-btn:hover {
+  background: var(--gold2);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BILLING SECTION
+───────────────────────────────────────────────────────────────── */
+.billing-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-top: 32px;
+}
+
+.billing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.billing-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--charcoal);
+}
+
+.billing-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--sage-pale);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sage);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.billing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.billing-item {
+  background: var(--bg2);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.billing-item-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.billing-item-value {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--charcoal);
+}
+
+.billing-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.billing-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.17s;
+}
+
+.billing-btn.primary {
+  background: var(--gold);
+  color: #fff;
+}
+
+.billing-btn.primary:hover {
+  background: var(--gold2);
+}
+
+.billing-btn.secondary {
+  background: var(--bg2);
+  color: var(--charcoal);
+  border: 1px solid var(--border);
+}
+
+.billing-btn.secondary:hover {
+  background: var(--gold-pale);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MODAL
+───────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.44);
+  z-index: 400;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--charcoal);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: 0.15s;
+}
+
+.modal-close:hover {
+  background: var(--bg2);
+  color: var(--charcoal);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  color: var(--charcoal);
+  background: var(--surface);
+  outline: none;
+  transition: 0.17s;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(160, 120, 40, 0.1);
+}
+
+.form-input::placeholder {
+  color: var(--muted);
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border2);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-footer-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.17s;
+}
+
+.modal-footer-btn.primary {
+  background: var(--gold);
+  color: #fff;
+}
+
+.modal-footer-btn.primary:hover {
+  background: var(--gold2);
+}
+
+.modal-footer-btn.secondary {
+  background: var(--bg2);
+  color: var(--charcoal);
+}
+
+.modal-footer-btn.secondary:hover {
+  background: var(--border2);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────────────────────────── */
+@media (max-width: 680px) {
+  body {
+    padding-top: 56px;
+  }
+
+  .topbar {
+    height: 56px;
+    padding: 0 12px;
+  }
+
+  .topbar-wedding-name {
+    display: none;
+  }
+
+  .main-content {
+    padding: 20px 12px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .weddings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .billing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    max-width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="topbar-back-btn" id="topbarBackBtn" title="Back to planner home">
+      ← Back
+    </button>
+    <a href="/" class="topbar-logo">Wedding<em>Ledger</em></a>
+    <div class="topbar-wedding-name" id="topbarWeddingName"></div>
+  </div>
+
+  <div class="topbar-right">
+    <!-- WEDDING SWITCHER -->
+    <div class="wedding-switcher-wrap">
+      <button class="wedding-switcher-btn" id="weddingSwitcherBtn">
+        👰 Switch Wedding
+      </button>
+      <div class="wedding-switcher-dropdown" id="weddingSwitcherDropdown"></div>
+    </div>
+
+    <button class="topbar-btn" id="topbarSettingsBtn">⚙️ Settings</button>
+    <button class="topbar-btn" id="topbarSignoutBtn">Sign Out</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <h1 class="page-title">Wedding Planning Dashboard</h1>
+    <p class="page-subtitle">Manage multiple weddings and track your wedding planning business.</p>
+  </div>
+
+  <!-- WEDDINGS GRID -->
+  <div id="weddingsContainer"></div>
+
+  <!-- BILLING SECTION -->
+  <div class="billing-section">
+    <div class="billing-header">
+      <h2 class="billing-title">Your Plan & Billing</h2>
+      <span class="billing-status" id="billingStatus">Active</span>
+    </div>
+
+    <div class="billing-grid" id="billingGrid"></div>
+
+    <div class="billing-actions">
+      <button class="billing-btn primary" id="upgradePlanBtn">Upgrade Plan</button>
+      <button class="billing-btn secondary" id="viewInvoicesBtn">View Invoices</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CREATE WEDDING -->
+<div class="modal-overlay" id="addWeddingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Add New Wedding</h2>
+      <button class="modal-close" onclick="closeModal('addWeddingModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Couple Name 1</label>
+        <input class="form-input" id="coupleName1Input" placeholder="E.g., Sarah">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Couple Name 2</label>
+        <input class="form-input" id="coupleName2Input" placeholder="E.g., James">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wedding Date</label>
+        <input class="form-input" id="weddingDateInput" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Venue Name</label>
+        <input class="form-input" id="venueNameInput" placeholder="E.g., The Grand Hotel">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-footer-btn secondary" onclick="closeModal('addWeddingModal')">Cancel</button>
+      <button class="modal-footer-btn primary" id="createWeddingBtn">Create Wedding</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PRICING INFO -->
+<div class="modal-overlay" id="pricingModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Upgrade Your Plan</h2>
+      <button class="modal-close" onclick="closeModal('pricingModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; color: var(--charcoal); margin-bottom: 8px;">Wedding Planner Pricing</h3>
+        <p style="font-size: 13px; color: var(--muted);">Scale your wedding planning business with flexible pricing.</p>
+      </div>
+
+      <!-- STARTER TIER -->
+      <div style="background: var(--gold-pale); border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+        <div style="font-weight: 700; font-size: 14px; color: var(--charcoal); margin-bottom: 4px;">Starter Plan</div>
+        <div style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">Perfect for small businesses</div>
+        <div style="font-family: 'Fraunces', serif; font-size: 24px; font-weight: 300; color: var(--gold); margin-bottom: 8px;">£40<span style="font-size: 14px; color: var(--muted);">/3 weddings</span></div>
+        <div style="font-size: 12px; color: var(--charcoal); line-height: 1.6; margin-bottom: 12px;">
+          ✓ 3 weddings included<br>
+          ✓ All Pro features<br>
+          ✓ Lifetime access
+        </div>
+        <button class="modal-footer-btn primary" onclick="upgradeToStarter()" style="width: 100%;">Upgrade to Starter</button>
+      </div>
+
+      <!-- ADDITIONAL WEDDINGS -->
+      <div style="background: var(--surface2); border-radius: 12px; padding: 16px;">
+        <div style="font-weight: 700; font-size: 14px; color: var(--charcoal); margin-bottom: 4px;">Additional Weddings</div>
+        <div style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">After Starter Plan</div>
+        <div style="font-family: 'Fraunces', serif; font-size: 24px; font-weight: 300; color: var(--gold); margin-bottom: 8px;">£12<span style="font-size: 14px; color: var(--muted);">/each</span></div>
+        <div style="font-size: 12px; color: var(--charcoal); line-height: 1.6;">
+          ✓ Full Pro features<br>
+          ✓ Pay as you go<br>
+          ✓ No long-term commitment
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="db.js"></script>
+<script src="planner-dashboard.js"></script>
+
+</body>
+</html>
