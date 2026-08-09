@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Your Wedding — WeddingLedger</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#faf7f2; --bg2:#f4efe6; --surface:#ffffff; --ink:#1a1612; --muted:#665a49;
+  --gold:#a07828; --gold2:#c49a3a; --gold-pale:#fdf3dc; --gold-bd:rgba(160,120,40,.22);
+  --border:rgba(26,22,18,.14); --charcoal:#1a1612; --sage:#2a6a3a; --rose:#b83030;
+  --shadow:0 1px 4px rgba(26,22,18,.06),0 4px 24px rgba(26,22,18,.07);
+  --shadow-lg:0 8px 40px rgba(26,22,18,.11);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{
+  font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;
+  background-image:linear-gradient(rgba(26,22,18,.016) 1px,transparent 1px),linear-gradient(90deg,rgba(26,22,18,.016) 1px,transparent 1px);
+  background-size:52px 52px;background-attachment:fixed;
+}
+
+/* ── Password gate ── */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  box-shadow:var(--shadow-lg);padding:40px 34px;max-width:400px;width:100%;text-align:center;
+}
+.gate-orn{color:var(--gold);letter-spacing:.6em;font-size:12px;margin-bottom:18px}
+.gate-logo{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:20px;margin-bottom:6px}
+.gate-logo em{color:var(--gold)}
+.gate-title{font-family:'Fraunces',serif;font-weight:300;font-size:26px;color:var(--charcoal);margin:16px 0 6px}
+.gate-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px}
+.gate-input{
+  width:100%;padding:13px 15px;border:1.5px solid var(--border);border-radius:11px;text-align:center;
+  font-family:'Instrument Sans',sans-serif;font-size:15px;letter-spacing:.06em;color:var(--charcoal);
+  outline:none;transition:.17s;margin-bottom:12px;
+}
+.gate-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(160,120,40,.1)}
+.gate-btn{
+  width:100%;padding:13px;border:none;border-radius:11px;background:var(--gold);color:#fff;
+  font-family:'Instrument Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:.17s;
+}
+.gate-btn:hover{background:var(--gold2)}
+.gate-err{display:none;color:var(--rose);font-size:12.5px;margin-top:12px}
+.gate-err.show{display:block}
+.gate-note{font-size:11.5px;color:var(--muted);margin-top:18px}
+
+/* ── Portal ── */
+.topbar{
+  position:sticky;top:0;z-index:100;height:60px;padding:0 22px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:rgba(250,247,242,.94);backdrop-filter:blur(24px) saturate(1.8);
+  border-bottom:1px solid var(--border);
+}
+.tb-left{display:flex;align-items:center;gap:11px;min-width:0}
+.tb-emoji{font-size:21px}
+.tb-names{font-family:'Fraunces',serif;font-size:17px;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-sub{font-size:11px;color:var(--muted)}
+.tb-btn{
+  padding:8px 13px;border-radius:8px;border:none;background:none;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:500;color:var(--muted);transition:.17s;
+}
+.tb-btn:hover{background:var(--bg2);color:var(--charcoal)}
+
+.wrap{max-width:860px;margin:0 auto;padding:30px 18px 70px}
+.hero{
+  text-align:center;padding:26px 20px 30px;
+}
+.hero .orn{color:var(--gold);letter-spacing:.55em;font-size:11px;margin-bottom:14px}
+.hero h1{font-family:'Fraunces',serif;font-weight:300;font-size:34px;color:var(--charcoal)}
+.hero .meta{font-size:13px;color:var(--muted);margin-top:9px}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:15px 16px;box-shadow:var(--shadow);text-align:center}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.stat-value{font-family:'Fraunces',serif;font-size:23px;font-weight:300;color:var(--charcoal)}
+.stat-value.sage{color:var(--sage)} .stat-value.rose{color:var(--rose)} .stat-value.gold{color:var(--gold)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:15px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.card-title{font-family:'Fraunces',serif;font-size:17.5px;font-weight:300;font-style:italic;color:var(--charcoal)}
+.card-body{padding:18px 20px}
+
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.fi{
+  padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);
+  font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--charcoal);outline:none;transition:.17s;width:100%;
+}
+.fi:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(160,120,40,.1)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.form-grid{grid-template-columns:1fr}}
+.check-row{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--charcoal);padding-top:6px}
+.check-row input{width:16px;height:16px;accent-color:var(--gold)}
+.btn{
+  padding:11px 18px;border:none;border-radius:9px;cursor:pointer;transition:.17s;
+  font-family:'Instrument Sans',sans-serif;font-size:12.5px;font-weight:600;
+}
+.btn.primary{background:var(--gold);color:#fff}
+.btn.primary:hover{background:var(--gold2)}
+.btn.ghost{background:var(--bg2);color:var(--charcoal);border:1px solid var(--border)}
+.btn.ghost:hover{background:var(--gold-pale)}
+
+.row-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.row-item:last-child{border-bottom:none}
+.row-ic{width:36px;height:36px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.row-main{flex:1;min-width:150px}
+.row-name{font-size:13.5px;font-weight:600;color:var(--charcoal)}
+.row-sub{font-size:11.5px;color:var(--muted)}
+.rsvp-pill{
+  border:none;border-radius:99px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;transition:.15s;white-space:nowrap;
+}
+.rsvp-pill.yes{background:#eaf6ec;color:var(--sage)}
+.rsvp-pill.no{background:#fbeaea;color:var(--rose)}
+.rsvp-pill.pending{background:var(--bg2);color:var(--muted)}
+.mini-btn{
+  background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;color:var(--charcoal);transition:.15s;white-space:nowrap;
+}
+.mini-btn:hover{border-color:var(--gold);background:var(--gold-pale)}
+.row-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:6px 8px;border-radius:7px;transition:.15s;opacity:.55}
+.row-del:hover{background:#fbeaea;color:var(--rose);opacity:1}
+.empty-mini{padding:24px 0;text-align:center;color:var(--muted);font-size:13px}
+
+/* Edit modal */
+.overlay{position:fixed;inset:0;background:rgba(20,16,10,.46);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:18px;box-shadow:var(--shadow-lg);max-width:440px;width:100%;max-height:92vh;overflow-y:auto}
+.modal-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Fraunces',serif;font-size:19px;font-weight:300;font-style:italic}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:2px 8px;border-radius:7px}
+.modal-close:hover{background:var(--bg2)}
+.modal-body{padding:20px 22px;display:grid;gap:13px}
+.modal-footer{padding:15px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+.toast{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--charcoal);color:#fff;padding:11px 22px;border-radius:99px;
+  font-size:13px;font-weight:500;z-index:999;box-shadow:var(--shadow-lg);transition:transform .3s ease;
+  max-width:calc(100vw - 40px);text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--rose)}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="gate-orn">✦ ✦ ✦</div>
+    <div class="gate-logo">Wedding<em>Ledger</em></div>
+    <h1 class="gate-title" id="gateTitle">Your wedding</h1>
+    <p class="gate-sub">Your wedding planner has shared this private page with you. Enter the password they gave you to manage your guest list.</p>
+    <input class="gate-input" id="gatePass" type="text" placeholder="Password" autocomplete="off"
+           onkeydown="if(event.key==='Enter')unlock()">
+    <button class="gate-btn" onclick="unlock()">Open our wedding →</button>
+    <div class="gate-err" id="gateErr">That password doesn't match — please check with your planner.</div>
+    <p class="gate-note">Lost the password? Ask your wedding planner to resend it.</p>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div id="portal" style="display:none">
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-emoji" id="tbEmoji">💍</span>
+      <div style="min-width:0">
+        <div class="tb-names" id="tbNames"></div>
+        <div class="tb-sub">Guest list · shared by your planner</div>
+      </div>
+    </div>
+    <button class="tb-btn" onclick="lock()">Lock page</button>
+  </div>
+
+  <div class="wrap">
+    <div class="hero">
+      <div class="orn">✦ ✦ ✦</div>
+      <h1 id="heroNames"></h1>
+      <div class="meta" id="heroMeta"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-label">Invited</div><div class="stat-value" id="stTotal">0</div></div>
+      <div class="stat"><div class="stat-label">Attending</div><div class="stat-value sage" id="stYes">0</div></div>
+      <div class="stat"><div class="stat-label">Declined</div><div class="stat-value rose" id="stNo">0</div></div>
+      <div class="stat"><div class="stat-label">Awaiting</div><div class="stat-value gold" id="stPending">0</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">Add a guest</span></div>
+      <div class="card-body">
+        <div class="form-grid" style="margin-bottom:12px">
+          <div class="fg"><label class="fl">Name *</label><input class="fi" id="aName" placeholder="e.g., Aunt Mary"></div>
+          <div class="fg"><label class="fl">Email</label><input class="fi" id="aEmail" type="email" placeholder="name@email.com"></div>
+          <div class="fg"><label class="fl">Phone</label><input class="fi" id="aPhone" placeholder="+44…"></div>
+          <div class="fg"><label class="fl">Dietary needs</label><input class="fi" id="aDietary" placeholder="e.g., vegetarian"></div>
+        </div>
+        <div class="check-row" style="margin-bottom:14px">
+          <input type="checkbox" id="aPlus"><label for="aPlus">Allowed a plus one</label>
+        </div>
+        <button class="btn primary" onclick="addGuest()">Add guest</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Guest list</span>
+        <span style="font-size:11px;color:var(--muted)">tap the pill to change RSVP · 🔗 copies their personal invite link</span>
+      </div>
+      <div class="card-body" id="guestList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT GUEST MODAL -->
+<div class="overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Edit guest</span>
+      <button class="modal-close" onclick="closeEdit()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg"><label class="fl">Name</label><input class="fi" id="eName"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="eEmail" type="email"></div>
+      <div class="fg"><label class="fl">Phone</label><input class="fi" id="ePhone"></div>
+      <div class="fg"><label class="fl">Dietary needs</label><input class="fi" id="eDietary"></div>
+      <div class="check-row"><input type="checkbox" id="ePlus"><label for="ePlus">Allowed a plus one</label></div>
+      <div class="fg"><label class="fl">Plus one's name</label><input class="fi" id="ePlusName"></div>
+      <div class="fg"><label class="fl">Notes</label><input class="fi" id="eNotes"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" onclick="closeEdit()">Cancel</button>
+      <button class="btn primary" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script>
+const SB  = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+
+const code = new URLSearchParams(location.search).get('w') || '';
+let pass = '';
+let wedding = null;
+let guests = [];
+let editing = null;
+
+async function rpc(fn, args){
+  const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
+    body: JSON.stringify(args)
+  });
+  return r.json();
+}
+
+async function boot(){
+  if(!code){
+    document.querySelector('.gate-sub').textContent = 'This link is missing its code — please ask your wedding planner for a fresh link.';
+    document.getElementById('gatePass').style.display='none';
+    document.querySelector('.gate-btn').style.display='none';
+    return;
+  }
+  const saved = sessionStorage.getItem('wl_couple_' + code);
+  if(saved){ pass = saved; await unlock(true); }
+}
+
+async function unlock(silent){
+  if(!silent) pass = document.getElementById('gatePass').value.trim();
+  if(!pass) return;
+  try{
+    const res = await rpc('couple_portal_login', { p_code: code, p_pass: pass });
+    if(!res || res.ok !== true){
+      sessionStorage.removeItem('wl_couple_' + code);
+      if(!silent) document.getElementById('gateErr').classList.add('show');
+      return;
+    }
+    wedding = res.wedding;
+    sessionStorage.setItem('wl_couple_' + code, pass);
+    document.getElementById('gate').style.display='none';
+    document.getElementById('portal').style.display='block';
+    renderHeader();
+    await loadGuests();
+  }catch(e){
+    console.error(e);
+    if(!silent) toast('Could not connect — please try again', true);
+  }
+}
+
+function lock(){
+  sessionStorage.removeItem('wl_couple_' + code);
+  location.reload();
+}
+
+function renderHeader(){
+  const names = wedding.couple_name || 'Your Wedding';
+  document.getElementById('tbEmoji').textContent = wedding.cover_emoji || '💍';
+  document.getElementById('tbNames').textContent = names;
+  document.getElementById('heroNames').textContent = names;
+  document.title = names + ' — Guest List';
+  const bits = [];
+  if(wedding.wedding_date){
+    bits.push(new Date(wedding.wedding_date + 'T00:00:00')
+      .toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+  }
+  if(wedding.venue) bits.push(wedding.venue);
+  document.getElementById('heroMeta').textContent = bits.join(' · ');
+}
+
+async function loadGuests(){
+  const res = await rpc('couple_guests', { p_code: code, p_pass: pass });
+  guests = (res && res.ok) ? res.guests : [];
+  renderGuests();
+}
+
+function renderGuests(){
+  const yes = guests.filter(g=>g.rsvp_status==='yes').length;
+  const no  = guests.filter(g=>g.rsvp_status==='no').length;
+  document.getElementById('stTotal').textContent = guests.length;
+  document.getElementById('stYes').textContent = yes;
+  document.getElementById('stNo').textContent = no;
+  document.getElementById('stPending').textContent = guests.length - yes - no;
+
+  document.getElementById('guestList').innerHTML = guests.length ? guests.map(g=>{
+    const st = g.rsvp_status==='yes'?'yes':(g.rsvp_status==='no'?'no':'pending');
+    const label = st==='yes'?'✓ Attending':(st==='no'?'✗ Declined':'⋯ Pending');
+    const sub = [g.email, g.phone, g.plus_one ? ('+1' + (g.plus_one_name ? ': '+g.plus_one_name : '')) : null, g.dietary]
+      .filter(Boolean).join(' · ');
+    return `<div class="row-item">
+      <span class="row-ic">👤</span>
+      <div class="row-main">
+        <div class="row-name">${esc(g.name)}</div>
+        <div class="row-sub">${esc(sub || '—')}</div>
+      </div>
+      <button class="rsvp-pill ${st}" onclick="cycleRsvp('${g.id}')">${label}</button>
+      <button class="mini-btn" onclick="copyLink('${g.id}')">🔗 Invite link</button>
+      <button class="mini-btn" onclick="openEdit('${g.id}')">✎ Edit</button>
+      <button class="row-del" onclick="delGuest('${g.id}','${esc(g.name).replace(/'/g,"\\'")}')">🗑</button>
+    </div>`;
+  }).join('') : `<div class="empty-mini">No guests yet — add your first guest above. 💌</div>`;
+}
+
+async function addGuest(){
+  const name = document.getElementById('aName').value.trim();
+  if(!name){ toast('Please enter the guest\'s name', true); return; }
+  const res = await rpc('couple_guest_add', {
+    p_code: code, p_pass: pass, p_name: name,
+    p_email: document.getElementById('aEmail').value.trim() || null,
+    p_phone: document.getElementById('aPhone').value.trim() || null,
+    p_plus_one: document.getElementById('aPlus').checked,
+    p_dietary: document.getElementById('aDietary').value.trim() || null
+  });
+  if(!res || res.ok !== true){ toast('Could not add guest', true); return; }
+  guests.unshift(res.guest);
+  ['aName','aEmail','aPhone','aDietary'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('aPlus').checked = false;
+  renderGuests();
+  toast('Guest added ✓');
+}
+
+async function cycleRsvp(id){
+  const g = guests.find(x=>x.id===id); if(!g) return;
+  const next = (g.rsvp_status==='pending'||!g.rsvp_status) ? 'yes' : (g.rsvp_status==='yes' ? 'no' : 'pending');
+  const res = await rpc('couple_guest_update', { p_code: code, p_pass: pass, p_gid: id, p_patch: { rsvp_status: next } });
+  if(res && res.ok){ g.rsvp_status = next; renderGuests(); }
+  else toast('Could not update RSVP', true);
+}
+
+function copyLink(id){
+  const g = guests.find(x=>x.id===id); if(!g || !g.link_code){ toast('No link for this guest yet', true); return; }
+  const url = location.origin + '/rsvp.html?c=' + g.link_code;
+  navigator.clipboard.writeText(url)
+    .then(()=>toast('Invite link copied — send it to ' + g.name + ' 💌'))
+    .catch(()=>prompt('Copy this link:', url));
+}
+
+function openEdit(id){
+  editing = guests.find(x=>x.id===id); if(!editing) return;
+  document.getElementById('eName').value = editing.name || '';
+  document.getElementById('eEmail').value = editing.email || '';
+  document.getElementById('ePhone').value = editing.phone || '';
+  document.getElementById('eDietary').value = editing.dietary || '';
+  document.getElementById('ePlus').checked = !!editing.plus_one;
+  document.getElementById('ePlusName').value = editing.plus_one_name || '';
+  document.getElementById('eNotes').value = editing.notes || '';
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEdit(){ document.getElementById('editModal').classList.remove('show'); editing = null; }
+
+async function saveEdit(){
+  if(!editing) return;
+  const patch = {
+    name: document.getElementById('eName').value.trim(),
+    email: document.getElementById('eEmail').value.trim(),
+    phone: document.getElementById('ePhone').value.trim(),
+    dietary: document.getElementById('eDietary').value.trim(),
+    plus_one: document.getElementById('ePlus').checked,
+    plus_one_name: document.getElementById('ePlusName').value.trim(),
+    notes: document.getElementById('eNotes').value.trim()
+  };
+  const res = await rpc('couple_guest_update', { p_code: code, p_pass: pass, p_gid: editing.id, p_patch: patch });
+  if(!res || res.ok !== true){ toast('Could not save', true); return; }
+  Object.assign(editing, patch, {
+    email: patch.email || null, phone: patch.phone || null,
+    dietary: patch.dietary || null, plus_one_name: patch.plus_one_name || null, notes: patch.notes || null
+  });
+  closeEdit(); renderGuests(); toast('Saved ✓');
+}
+
+async function delGuest(id, name){
+  if(!confirm(`Remove ${name} from the guest list?`)) return;
+  const res = await rpc('couple_guest_delete', { p_code: code, p_pass: pass, p_gid: id });
+  if(!res || res.ok !== true){ toast('Could not remove guest', true); return; }
+  guests = guests.filter(g=>g.id!==id);
+  renderGuests(); toast('Guest removed');
+}
+
+document.getElementById('editModal').addEventListener('click', e=>{
+  if(e.target.id==='editModal') closeEdit();
+});
+
+function toast(msg, isErr){
+  const el = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  el.classList.toggle('err', !!isErr);
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+boot();
+</script>
+</body>
+</html>

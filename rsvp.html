@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're Invited 💍</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200;0,9..144,300;0,9..144,400;1,9..144,200;1,9..144,300;1,9..144,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dark:#171106; --dark2:#241a09; --gold:#c9a84c; --gold-soft:rgba(201,168,76,.55);
+  --cream:#fdf9f0; --ink:#1a1612; --muted:#665a49;
+  --sage:#2a6a3a; --rose:#b83030; --border:rgba(26,22,18,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:'Instrument Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+
+/* Invitation hero */
+.hero{
+  background:radial-gradient(120% 90% at 50% 0%, #2a1f0b 0%, var(--dark) 70%);
+  color:#fdf9f0;text-align:center;padding:64px 22px 56px;position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:linear-gradient(to right,transparent,var(--gold-soft),transparent);
+}
+.orn{color:var(--gold);letter-spacing:.6em;font-size:12px;margin-bottom:22px;opacity:.9}
+.together{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:rgba(253,249,240,.66);margin-bottom:18px}
+.names{font-family:'Fraunces',serif;font-weight:200;font-style:italic;font-size:clamp(34px,8vw,52px);line-height:1.15;color:#fdf9f0}
+.hero-emoji{font-size:30px;margin-bottom:16px}
+.divider{display:flex;align-items:center;gap:16px;max-width:300px;margin:24px auto}
+.divider-line{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold-soft),transparent)}
+.divider span{color:var(--gold);font-size:13px}
+.hero-date{font-size:14px;letter-spacing:.14em;color:rgba(253,249,240,.85)}
+.hero-venue{font-size:12.5px;color:rgba(253,249,240,.6);margin-top:8px}
+
+/* Card */
+.wrap{max-width:480px;margin:-26px auto 60px;padding:0 18px;position:relative;z-index:2}
+.card{
+  background:#fff;border-radius:22px;padding:32px 28px;
+  box-shadow:0 14px 50px rgba(23,17,6,.16);border:1px solid var(--border);
+}
+.greet{
+  display:flex;align-items:center;gap:13px;background:var(--cream);
+  border:1px solid rgba(201,168,76,.3);border-radius:14px;padding:13px 16px;margin-bottom:22px;
+}
+.greet-ic{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#f0e8d0,#e4d4a0);display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.greet b{font-size:14px;color:var(--ink)}
+.greet span{display:block;font-size:11.5px;color:var(--muted)}
+.q{font-family:'Fraunces',serif;font-weight:300;font-size:19px;text-align:center;color:var(--ink);margin-bottom:16px}
+.att-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
+.att-btn{
+  padding:16px 10px;border:2px solid #e8e0d0;border-radius:14px;background:#fff;cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;font-size:13.5px;font-weight:600;color:var(--muted);transition:.18s;
+}
+.att-btn:hover{border-color:var(--gold);background:var(--cream)}
+.att-btn.yes.on{border-color:var(--sage);background:#f0faf0;color:var(--sage)}
+.att-btn.no.on{border-color:var(--rose);background:#fff0f0;color:var(--rose)}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.fi{
+  width:100%;padding:12px 14px;border:1.5px solid #e8e0d0;border-radius:11px;background:#fff;
+  font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;transition:.17s;
+}
+.fi:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.14)}
+.send{
+  width:100%;padding:15px;border:none;border-radius:12px;cursor:pointer;margin-top:6px;
+  background:linear-gradient(135deg,#9a7535,var(--gold));color:#fff;
+  font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;letter-spacing:.03em;transition:.2s;
+}
+.send:hover{filter:brightness(1.06)}
+.send:disabled{opacity:.6;cursor:default}
+.note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* Thank you / states */
+.state{display:none;text-align:center;padding:14px 4px}
+.state.show{display:block}
+.state .big{font-size:44px;margin-bottom:14px}
+.state h2{font-family:'Fraunces',serif;font-weight:300;font-size:24px;color:var(--ink);margin-bottom:8px}
+.state p{font-size:13.5px;color:var(--muted);line-height:1.65}
+.change{
+  background:none;border:none;color:var(--gold);font-size:12.5px;font-weight:600;cursor:pointer;
+  margin-top:14px;font-family:'Instrument Sans',sans-serif;text-decoration:underline;
+}
+.loading{text-align:center;padding:80px 20px;color:var(--muted);font-size:13.5px}
+.footer{text-align:center;padding:0 20px 40px;font-size:11.5px;color:var(--muted)}
+.footer a{color:var(--gold);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loadingState">Opening your invitation…</div>
+
+<div id="page" style="display:none">
+  <div class="hero">
+    <div class="orn">✦ ✦ ✦</div>
+    <div class="hero-emoji" id="hEmoji">💍</div>
+    <div class="together">Together with their families</div>
+    <div class="names" id="hNames"></div>
+    <div class="divider"><div class="divider-line"></div><span>❦</span><div class="divider-line"></div></div>
+    <div class="hero-date" id="hDate"></div>
+    <div class="hero-venue" id="hVenue"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+
+      <div id="formState">
+        <div class="greet">
+          <div class="greet-ic">💌</div>
+          <div><b id="gName"></b><span>this invitation is just for you</span></div>
+        </div>
+
+        <div class="q">Will you be joining us?</div>
+        <div class="att-row">
+          <button class="att-btn yes" id="btnYes" onclick="pick('yes')">🎉 Joyfully accept</button>
+          <button class="att-btn no" id="btnNo" onclick="pick('no')">💐 Regretfully decline</button>
+        </div>
+
+        <div id="extraFields" style="display:none">
+          <div class="fg" id="plusWrap" style="display:none">
+            <label class="fl">Your plus one's name</label>
+            <input class="fi" id="fPlus" placeholder="Who will you bring?">
+          </div>
+          <div class="fg">
+            <label class="fl">Dietary requirements (optional)</label>
+            <input class="fi" id="fDiet" placeholder="e.g., vegetarian, allergies…">
+          </div>
+        </div>
+
+        <button class="send" id="sendBtn" onclick="send()" disabled>Send RSVP</button>
+        <div class="note">You can come back to this link and change your reply any time.</div>
+      </div>
+
+      <div class="state" id="doneYes">
+        <div class="big">🥂</div>
+        <h2>We can't wait to see you!</h2>
+        <p>Your RSVP has been sent to <span id="dyNames"></span>.<br>Thank you for being part of their day.</p>
+        <button class="change" onclick="reopen()">Change my reply</button>
+      </div>
+
+      <div class="state" id="doneNo">
+        <div class="big">💐</div>
+        <h2>You'll be missed</h2>
+        <p>Your reply has been sent to <span id="dnNames"></span>.<br>Thank you for letting them know.</p>
+        <button class="change" onclick="reopen()">Change my reply</button>
+      </div>
+
+      <div class="state" id="broken">
+        <div class="big">🕊️</div>
+        <h2>This link doesn't look right</h2>
+        <p>Please ask the couple or their planner for a fresh invitation link.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">Guest list managed with <a href="https://wedding-ledger.com">WeddingLedger</a></div>
+</div>
+
+<script>
+const SB  = 'https://bqggtyguhedlyfffjkkw.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZ2d0eWd1aGVkbHlmZmZqa2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzYsImV4cCI6MjA4ODMyNjQ3Nn0.x3tpbzhI-W4kR7MPFexPW-MZ5Ei_bkE7Nw5Q00Tx7J4';
+
+const code = new URLSearchParams(location.search).get('c') || '';
+let guest = null, wedding = null, choice = null;
+
+async function rpc(fn, args){
+  const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY},
+    body: JSON.stringify(args)
+  });
+  return r.json();
+}
+
+async function init(){
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('page').style.display='block';
+  if(!code){ showState('broken'); return; }
+  try{
+    const res = await rpc('rsvp_guest_wedding', { p_code: code });
+    if(!res || res.ok !== true){ showState('broken'); return; }
+    guest = res.guest; wedding = res.wedding;
+    render();
+  }catch(e){ console.error(e); showState('broken'); }
+}
+
+function render(){
+  const names = wedding.couple_name || 'The happy couple';
+  document.getElementById('hEmoji').textContent = wedding.cover_emoji || '💍';
+  document.getElementById('hNames').textContent = names;
+  document.title = names + ' — You\'re Invited 💍';
+  document.getElementById('dyNames').textContent = names;
+  document.getElementById('dnNames').textContent = names;
+  document.getElementById('hDate').textContent = wedding.wedding_date
+    ? new Date(wedding.wedding_date + 'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+    : 'Date to be announced';
+  document.getElementById('hVenue').textContent = wedding.venue || '';
+  document.getElementById('gName').textContent = guest.name || 'Dear guest';
+  document.getElementById('plusWrap').style.display = guest.plus_one ? 'block' : 'none';
+  if(guest.plus_one_name) document.getElementById('fPlus').value = guest.plus_one_name;
+  if(guest.dietary) document.getElementById('fDiet').value = guest.dietary;
+
+  if(guest.rsvp_status === 'yes'){ showState('doneYes'); }
+  else if(guest.rsvp_status === 'no'){ showState('doneNo'); }
+}
+
+function pick(v){
+  choice = v;
+  document.getElementById('btnYes').classList.toggle('on', v==='yes');
+  document.getElementById('btnNo').classList.toggle('on', v==='no');
+  document.getElementById('extraFields').style.display = v==='yes' ? 'block' : 'none';
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('sendBtn').textContent = v==='yes' ? 'Send RSVP — I\'ll be there 🎉' : 'Send RSVP';
+}
+
+async function send(){
+  if(!choice) return;
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try{
+    const res = await rpc('rsvp_submit_v2', {
+      p_code: code, p_status: choice,
+      p_dietary: document.getElementById('fDiet').value.trim() || null,
+      p_plus_one_name: document.getElementById('fPlus').value.trim() || null
+    });
+    if(!res || res.ok !== true) throw new Error('failed');
+    guest.rsvp_status = choice;
+    showState(choice === 'yes' ? 'doneYes' : 'doneNo');
+  }catch(e){
+    console.error(e);
+    btn.disabled = false; btn.textContent = 'Send RSVP';
+    alert('Sorry — your reply could not be sent. Please try again.');
+  }
+}
+
+function showState(id){
+  document.getElementById('formState').style.display = 'none';
+  document.querySelectorAll('.state').forEach(s=>s.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+}
+function reopen(){
+  document.querySelectorAll('.state').forEach(s=>s.classList.remove('show'));
+  document.getElementById('formState').style.display = 'block';
+  if(guest.rsvp_status) pick(guest.rsvp_status);
+}
+
+init();
+</script>
+</body>
+</html>
