@@ -232,6 +232,9 @@ body{
 </head>
 <body>
 
+<div id="testBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:300;background:#2a5aaa;color:#fff;font-size:12px;font-weight:600;text-align:center;padding:6px 12px">
+  🧪 TEST MODE — payments use Stripe test cards, no real money. <a href="?test=0" style="color:#fff;text-decoration:underline">Turn off</a>
+</div>
 <div class="topbar">
   <div class="topbar-left">
     <a href="/" class="topbar-logo">Wedding<em>Ledger</em></a>
@@ -395,8 +398,24 @@ body{
    Until you paste the links, the buttons show a friendly
    "payment not configured" message instead of breaking.
    ═════════════════════════════════════════════════════════════════ */
-const PAY_LINK_STARTER = 'https://buy.stripe.com/eVqcN5fXw4615oCa6c67S01';   // e.g. 'https://buy.stripe.com/xxxx'
-const PAY_LINK_EXTRA   = 'https://buy.stripe.com/eVqcN5fXw4615oCa6c67S01';   // e.g. 'https://buy.stripe.com/yyyy'
+const PAY_LINK_STARTER = '';   // LIVE  £40  e.g. 'https://buy.stripe.com/xxxx'
+const PAY_LINK_EXTRA   = '';   // LIVE  £12  e.g. 'https://buy.stripe.com/yyyy'
+
+// ── TEST MODE (optional) ───────────────────────────────────────────
+// Paste your Stripe TEST-mode payment links here, then visit
+//    /planner.html?test=1
+// to pay with test cards instead of real money. A banner shows while
+// test mode is on; add ?test=0 (or sign out) to turn it off.
+// Leave these blank when you're done testing.
+const PAY_LINK_STARTER_TEST = '';   // TEST £40
+const PAY_LINK_EXTRA_TEST   = '';   // TEST £12
+
+(function(){
+  const p = new URLSearchParams(location.search).get('test');
+  if(p === '1') sessionStorage.setItem('wl_test_pay','1');
+  if(p === '0') sessionStorage.removeItem('wl_test_pay');
+})();
+function testMode(){ return sessionStorage.getItem('wl_test_pay') === '1'; }
 
 const SB  = DB.SUPABASE_URL;
 const SK  = DB.ANON_KEY;
@@ -420,6 +439,10 @@ async function authedHeaders(){
 }
 
 async function init(){
+  if(testMode()){
+    document.getElementById('testBanner').style.display = 'block';
+    document.body.style.paddingTop = '86px';
+  }
   if(!uid || !DB.getToken()){ location.href = 'login.html'; return; }
   try{
     const h = await authedHeaders();
@@ -654,9 +677,14 @@ async function archiveWedding(id, name){
 /* ── Payments (Stripe Payment Links) ─────────────────────────── */
 
 function startPayment(kind){
-  const link = kind === 'starter' ? PAY_LINK_STARTER : PAY_LINK_EXTRA;
+  const test = testMode();
+  const link = kind === 'starter'
+    ? (test ? PAY_LINK_STARTER_TEST : PAY_LINK_STARTER)
+    : (test ? PAY_LINK_EXTRA_TEST   : PAY_LINK_EXTRA);
   if(!link){
-    toast('Payments aren\'t set up yet — see the setup guide, or contact support.', true);
+    toast(test
+      ? 'No TEST payment link set — paste one into PAY_LINK_STARTER_TEST / PAY_LINK_EXTRA_TEST.'
+      : 'Payments aren\'t set up yet — see the setup guide, or contact support.', true);
     return;
   }
   localStorage.setItem('wl_pending_pay', kind);
