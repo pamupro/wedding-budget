@@ -246,6 +246,7 @@ body{
     <button class="switch-btn" onclick="toggleSwitcher(event)">👰 Switch wedding ▾</button>
     <div class="switch-menu" id="switchMenu"></div>
   </div>
+  <button class="tb-btn" id="syncBtn" onclick="refreshData(false)" title="Refresh now">↻ <span id="syncTxt">Live</span></button>
   <button class="tb-btn" onclick="signOut()">Sign out</button>
 </div>
 
@@ -272,6 +273,14 @@ body{
         <div class="cd-unit"><div class="cd-num" id="cdM">00</div><div class="cd-lbl">Mins</div></div>
         <div class="cd-sep">:</div>
         <div class="cd-unit"><div class="cd-num" id="cdS">00</div><div class="cd-lbl">Secs</div></div>
+      </div>
+
+      <div class="card" style="border-color:var(--gold-bd)">
+        <div class="card-head" style="background:linear-gradient(160deg,#fffdf8,var(--gold-pale))">
+          <span class="card-title">💍 Couple login</span>
+          <span style="font-size:11.5px;color:var(--muted)">step one — hand this wedding to the couple</span>
+        </div>
+        <div class="card-body" id="shareCard"></div>
       </div>
 
       <div class="stats-row">
@@ -345,14 +354,6 @@ body{
         <div class="stat"><div class="stat-label">Attending</div><div class="stat-value sage" id="guYes">0</div></div>
         <div class="stat"><div class="stat-label">Declined</div><div class="stat-value rose" id="guNo">0</div></div>
         <div class="stat"><div class="stat-label">Awaiting</div><div class="stat-value gold" id="guPending">0</div></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">Couple login</span>
-          <span style="font-size:11.5px;color:var(--muted)">give the couple the full WeddingLedger experience</span>
-        </div>
-        <div class="card-body" id="shareCard"></div>
       </div>
 
       <div class="card">
@@ -526,9 +527,11 @@ async function init(){
       get(`tasks?wedding_id=eq.${wid}&order=created_at.asc&select=*`)
     ]);
 
+    lastSig = dataSig();
     document.getElementById('loadingState').style.display='none';
     document.getElementById('layout').style.display='flex';
     renderAll();
+    startLiveSync();
   }catch(e){
     console.error(e);
     document.getElementById('loadingState').textContent = 'Could not load this wedding. Go back to the studio and try again.';
@@ -536,6 +539,7 @@ async function init(){
 }
 
 function renderAll(){
+  lastSig = dataSig();
   renderHeader(); renderSwitcher(); startCountdown();
   renderOverview(); renderVendors(); renderGuests(); renderTasks(); fillDetails();
 }
@@ -587,6 +591,52 @@ function renderSwitcher(){
 function toggleSwitcher(e){ e.stopPropagation(); document.getElementById('switchMenu').classList.toggle('show'); }
 document.addEventListener('click', ()=>{ const m=document.getElementById('switchMenu'); if(m) m.classList.remove('show'); });
 function switchWedding(id){ if(id===wid) return; localStorage.setItem('wl_wedding_id', id); location.reload(); }
+
+/* ── Live sync: reflect the couple's changes automatically ── */
+let lastSig = '', syncTimer = null, syncing = false;
+function dataSig(){ return JSON.stringify([vendors, payments, guests, tasks]); }
+
+function startLiveSync(){
+  if(syncTimer) clearInterval(syncTimer);
+  syncTimer = setInterval(()=>refreshData(true), 15000);          // every 15s
+  window.addEventListener('focus', ()=>refreshData(true));        // + when tab refocused
+}
+
+async function refreshData(silent){
+  if(syncing) return;
+  if(document.querySelector('.overlay.show')) return;             // don't disturb open modals
+  syncing = true;
+  const btn = document.getElementById('syncTxt');
+  if(!silent && btn) btn.textContent = '…';
+  try{
+    const [v, p, g, tk, ws] = await Promise.all([
+      get(`vendors?wedding_id=eq.${wid}&order=created_at.desc&select=*`),
+      get(`payments?wedding_id=eq.${wid}&order=payment_date.desc&select=*`),
+      get(`guests?wedding_id=eq.${wid}&order=created_at.desc&select=id,name,email,phone,rsvp_status,plus_one,plus_one_name,dietary,link_code,group_label,starter,main,dessert,invited_at,family_members`),
+      get(`tasks?wedding_id=eq.${wid}&order=created_at.asc&select=*`),
+      get(`weddings?id=eq.${wid}&select=*`)
+    ]);
+    if(ws && ws[0]){
+      const coupleChanged = ws[0].couple_user_id !== wedding.couple_user_id
+                         || ws[0].share_password !== wedding.share_password;
+      Object.assign(wedding, ws[0]);
+      if(coupleChanged){ renderHeader(); renderShareCard(); }
+    }
+    const sig = JSON.stringify([v, p, g, tk]);
+    if(sig !== lastSig){
+      vendors = v; payments = p; guests = g; tasks = tk;
+      lastSig = sig;
+      renderVendors();   // also refreshes overview stats + budget bar
+      renderGuests();
+      renderTasks();
+      if(!silent) toast('Updated with the latest changes ✓');
+    } else if(!silent){
+      toast('Everything is up to date ✓');
+    }
+  }catch(e){ console.error('[sync]', e); }
+  if(btn) btn.textContent = 'Live';
+  syncing = false;
+}
 
 /* ── Totals / overview ─────────────────────────────── */
 function totals(){
