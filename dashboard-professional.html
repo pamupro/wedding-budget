@@ -241,6 +241,7 @@ body{
   </div>
   <div class="tb-spacer"></div>
   <span class="days-pill" id="daysPill" style="display:none"></span>
+  <button class="switch-btn" id="workspaceBtn" onclick="openCoupleWorkspace()" style="display:none">🔓 Open couple workspace</button>
   <div class="switcher">
     <button class="switch-btn" onclick="toggleSwitcher(event)">👰 Switch wedding ▾</button>
     <div class="switch-menu" id="switchMenu"></div>
@@ -289,6 +290,21 @@ body{
       <div class="card">
         <div class="card-head"><span class="card-title">Upcoming vendor payments</span></div>
         <div class="card-body" id="ovDue"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Reports &amp; exports</span>
+          <span style="font-size:11.5px;color:var(--muted)">everything for this wedding, ready to share</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn ghost" onclick="printSummary()">🖨 Full summary (print / PDF)</button>
+            <button class="btn ghost" onclick="dlGuestsCsv()">⬇ Guest list (CSV)</button>
+            <button class="btn ghost" onclick="dlBudgetCsv()">⬇ Budget &amp; vendors (CSV)</button>
+            <button class="btn ghost" onclick="dlPaymentsCsv()">⬇ Payments (CSV)</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -506,7 +522,7 @@ async function init(){
       get(`weddings?archived=eq.false&order=created_at.desc&select=id,couple_name,wedding_date,cover_emoji`),
       get(`vendors?wedding_id=eq.${wid}&order=created_at.desc&select=*`),
       get(`payments?wedding_id=eq.${wid}&order=payment_date.desc&select=*`),
-      get(`guests?wedding_id=eq.${wid}&order=created_at.desc&select=id,name,email,phone,rsvp_status,plus_one,plus_one_name,dietary,link_code`),
+      get(`guests?wedding_id=eq.${wid}&order=created_at.desc&select=id,name,email,phone,rsvp_status,plus_one,plus_one_name,dietary,link_code,group_label,starter,main,dessert,invited_at,family_members`),
       get(`tasks?wedding_id=eq.${wid}&order=created_at.asc&select=*`)
     ]);
 
@@ -526,6 +542,7 @@ function renderAll(){
 
 /* ── Header, switcher, countdown ───────────────────── */
 function renderHeader(){
+  document.getElementById('workspaceBtn').style.display = wedding.couple_user_id ? 'inline-flex' : 'none';
   document.getElementById('tbEmoji').textContent = wedding.cover_emoji || '💍';
   document.getElementById('tbNames').textContent = wedding.couple_name || 'Wedding';
   document.title = (wedding.couple_name || 'Wedding') + ' — WeddingLedger';
@@ -1056,6 +1073,127 @@ function toast(msg, isErr){
   setTimeout(()=>el.classList.remove('show'), 3000);
 }
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+/* ── Open the couple's real workspace (planner signs in as the couple) ── */
+async function openCoupleWorkspace(){
+  if(!wedding.couple_user_id || !wedding.couple_email || !wedding.share_password){
+    toast('Create the couple login first (Guests tab)', true); return;
+  }
+  if(!confirm(`Open ${wedding.couple_name}'s workspace?\n\nYou'll be signed in AS the couple, with their full dashboard, guest list, invitation editor and photos.\n\nTo return to your Planner Studio afterwards, just go to /planner.html — you'll be switched back automatically.`)) return;
+  try{
+    const r = await fetch(`${SB}/auth/v1/token?grant_type=password`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SK},
+      body: JSON.stringify({ email: wedding.couple_email, password: wedding.share_password })
+    });
+    const d = await r.json();
+    if(!r.ok || !d.access_token){ toast('Could not open workspace — try Reset password first', true); return; }
+    // Stash the planner session so planner.html can restore it later
+    localStorage.setItem('wl_planner_uid', localStorage.getItem('wl_uid') || '');
+    localStorage.setItem('wl_planner_token', localStorage.getItem('wl_token') || '');
+    localStorage.setItem('wl_planner_refresh', localStorage.getItem('wl_refresh') || '');
+    // Become the couple
+    localStorage.setItem('wl_uid', d.user.id);
+    localStorage.setItem('wl_token', d.access_token);
+    localStorage.setItem('wl_refresh', d.refresh_token || '');
+    location.href = 'dashboard.html';
+  }catch(e){ console.error(e); toast('Could not open workspace', true); }
+}
+
+/* ── Reports & exports ─────────────────────────────── */
+function csvCell(v){ v = v==null ? '' : String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function dlCsv(rows, filename){
+  const csv = rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+function fnBase(){ return (wedding.couple_name||'wedding').replace(/[^a-z0-9]+/gi,'-').toLowerCase(); }
+function famCount(g){
+  let f = g.family_members;
+  try{ f = Array.isArray(f) ? f : (f ? JSON.parse(f) : []); }catch(e){ f = []; }
+  return f ? f.length : 0;
+}
+function dlGuestsCsv(){
+  const rows = [['Name','Email','Phone','Group','RSVP','Invited','Plus one','Plus one name','Family members','Dietary','Starter','Main','Dessert']];
+  guests.forEach(g=>rows.push([
+    g.name, g.email, g.phone, g.group_label,
+    g.rsvp_status || 'pending', g.invited_at ? 'yes' : 'no',
+    g.plus_one ? 'yes' : 'no', g.plus_one_name, famCount(g),
+    g.dietary, g.starter, g.main, g.dessert
+  ]));
+  dlCsv(rows, fnBase()+'-guest-list.csv');
+  toast('Guest list downloaded ✓');
+}
+function dlBudgetCsv(){
+  const rows = [['Vendor','Category','Total cost','Paid','Remaining','Next due date','Due amount','Notes']];
+  vendors.forEach(v=>{
+    const paid = vendorPaid(v.id);
+    rows.push([v.name, v.category, Number(v.total_cost)||0, paid,
+               Math.max(0,(Number(v.total_cost)||0)-paid), v.due_date, v.due_amount, v.notes]);
+  });
+  const t2 = totals();
+  rows.push([]); rows.push(['TOTAL','', t2.total, t2.paid, t2.left]);
+  dlCsv(rows, fnBase()+'-budget.csv');
+  toast('Budget report downloaded ✓');
+}
+function dlPaymentsCsv(){
+  const rows = [['Date','Vendor','Amount','Note']];
+  [...payments].sort((a,b)=>(a.payment_date||'').localeCompare(b.payment_date||'')).forEach(p=>{
+    const v = vendors.find(x=>x.id===p.vendor_id);
+    rows.push([p.payment_date, v?v.name:'', Number(p.amount)||0, p.note]);
+  });
+  dlCsv(rows, fnBase()+'-payments.csv');
+  toast('Payments downloaded ✓');
+}
+function printSummary(){
+  const t2 = totals();
+  const yes = guests.filter(g=>g.rsvp_status==='yes').length;
+  const no = guests.filter(g=>g.rsvp_status==='no').length;
+  const dateStr = wedding.wedding_date
+    ? new Date(wedding.wedding_date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : 'Date TBD';
+  const vRows = vendors.map(v=>{
+    const paid = vendorPaid(v.id);
+    return `<tr><td>${esc(v.name)}</td><td>${esc(v.category||'')}</td><td class="r">${cur(v.total_cost)}</td><td class="r">${cur(paid)}</td><td class="r">${cur(Math.max(0,(Number(v.total_cost)||0)-paid))}</td></tr>`;
+  }).join('');
+  const gRows = guests.map(g=>{
+    const extra = [g.plus_one?('+1'+(g.plus_one_name?' '+g.plus_one_name:'')):null, famCount(g)?famCount(g)+' family':null, g.dietary].filter(Boolean).join(' · ');
+    return `<tr><td>${esc(g.name)}</td><td>${esc(g.group_label||'')}</td><td>${esc(g.rsvp_status||'pending')}</td><td>${esc(extra)}</td></tr>`;
+  }).join('');
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${esc(wedding.couple_name)} — Wedding Summary</title>
+  <style>
+    body{font-family:Georgia,serif;color:#1a1612;max-width:800px;margin:30px auto;padding:0 20px}
+    h1{font-weight:normal;font-style:italic;margin-bottom:2px} .sub{color:#665a49;margin-bottom:26px}
+    h2{font-weight:normal;border-bottom:1px solid #ddd;padding-bottom:6px;margin:30px 0 12px}
+    table{width:100%;border-collapse:collapse;font-size:13px;font-family:Arial,sans-serif}
+    th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #eee} th{color:#665a49;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+    .r{text-align:right} .stats{display:flex;gap:26px;flex-wrap:wrap;font-family:Arial,sans-serif;font-size:13px}
+    .stats b{display:block;font-size:20px;font-weight:normal;font-family:Georgia,serif}
+    .foot{margin-top:34px;color:#8a7a60;font-size:11px;font-family:Arial,sans-serif}
+    @media print{.noprint{display:none}}
+  </style></head><body>
+  <h1>${wedding.cover_emoji||'💍'} ${esc(wedding.couple_name||'Wedding')}</h1>
+  <div class="sub">${esc(dateStr)}${wedding.venue?' · '+esc(wedding.venue):''}</div>
+  <div class="stats">
+    <div><b>${cur(t2.total)}</b>Total budget</div>
+    <div><b>${cur(t2.paid)}</b>Paid</div>
+    <div><b>${cur(t2.left)}</b>Remaining</div>
+    <div><b>${guests.length}</b>Guests (${yes} yes · ${no} no)</div>
+    <div><b>${tasks.filter(x=>x.done).length}/${tasks.length}</b>Checklist</div>
+  </div>
+  <h2>Vendors &amp; budget</h2>
+  <table><tr><th>Vendor</th><th>Category</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Remaining</th></tr>${vRows||'<tr><td colspan=5>No vendors yet</td></tr>'}</table>
+  <h2>Guest list</h2>
+  <table><tr><th>Name</th><th>Group</th><th>RSVP</th><th>Details</th></tr>${gRows||'<tr><td colspan=4>No guests yet</td></tr>'}</table>
+  <div class="foot">Prepared with WeddingLedger · ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+  <p class="noprint" style="margin-top:20px"><button onclick="window.print()" style="padding:10px 20px;font-size:14px;cursor:pointer">Print / Save as PDF</button></p>
+  </body></html>`);
+  w.document.close();
+}
+
 function signOut(){
   if(!confirm('Sign out of WeddingLedger?')) return;
   ['wl_uid','wl_token','wl_refresh','wl_wedding_id'].forEach(k=>localStorage.removeItem(k));

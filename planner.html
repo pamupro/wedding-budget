@@ -409,10 +409,21 @@ async function init(){
     profile = pRows[0] || null;
 
     if(!profile || profile.is_planner !== true){
+      // Returning from a couple workspace? Restore the stashed planner session.
+      if(localStorage.getItem('wl_planner_uid')){
+        localStorage.setItem('wl_uid', localStorage.getItem('wl_planner_uid'));
+        localStorage.setItem('wl_token', localStorage.getItem('wl_planner_token') || '');
+        localStorage.setItem('wl_refresh', localStorage.getItem('wl_planner_refresh') || '');
+        ['wl_planner_uid','wl_planner_token','wl_planner_refresh'].forEach(k=>localStorage.removeItem(k));
+        location.reload();
+        return;
+      }
       // Not a planner account — send to the couples dashboard
       location.href = 'dashboard.html';
       return;
     }
+    // Clean up any stale workspace stash once we're back as the planner
+    ['wl_planner_uid','wl_planner_token','wl_planner_refresh'].forEach(k=>localStorage.removeItem(k));
 
     allowance = 3 + (parseInt(profile.extra_weddings_paid,10) || 0);
 
