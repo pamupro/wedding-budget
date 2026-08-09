@@ -2052,26 +2052,35 @@ function buildCard(g) {
 }
 
 function updateStats() {
+  // Every stat counts PEOPLE (the named guest + each family member on their card),
+  // so all the pills always add up to the same total.
   function countAll(status) {
     let total = 0;
     guests.forEach(g => {
       if((g.rsvp_status||'pending') === status) total++;
-      const fam = getFam(g);
-      fam.forEach(m => { if((m.rsvp||'pending') === status) total++; });
+      getFam(g).forEach(m => { if((m.rsvp||g.rsvp_status||'pending') === status) total++; });
     });
     return total;
   }
+  // A party's family members share the primary guest's invited state.
+  function headcount(list){ return list.reduce((n,g) => n + 1 + familyCount(g), 0); }
+
   document.getElementById('sAll').textContent   = totalGuestCount();
   document.getElementById('sYes').textContent   = countAll('yes');
   document.getElementById('sNo').textContent    = countAll('no');
   document.getElementById('sPend').textContent  = countAll('pending');
   document.getElementById('sMaybe').textContent = countAll('maybe');
-  const invCount = guests.filter(g=>isInvited(g.id)).length;
+
+  const invited    = guests.filter(g => isInvited(g.id));
+  const notInvited = guests.filter(g => !isInvited(g.id));
   const invEl = document.getElementById('sInvited');
   const notEl = document.getElementById('sNotInvited');
-  if(invEl) invEl.textContent = invCount;
-  if(notEl) notEl.textContent = guests.length - invCount;
-  document.getElementById('sPlus').textContent  = guests.filter(g=>familyCount(g)>0).length;
+  if(invEl) invEl.textContent = headcount(invited);
+  if(notEl) notEl.textContent = headcount(notInvited);
+
+  // "Family" = the number of family members, not the number of cards that have them.
+  document.getElementById('sPlus').textContent =
+    guests.reduce((n,g) => n + familyCount(g), 0);
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────

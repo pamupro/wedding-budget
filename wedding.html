@@ -1215,9 +1215,12 @@ async function submitRsvp() {
     phone,
     rsvp_status:   rsvpChoice,
     dietary:       rsvpChoice==='yes' ? (document.getElementById('rDietary')?.value.trim()||null) : null,
-    family_members: rsvpChoice==='yes' ? rsvpFamily.filter(m=>m.first||m.last).map(m=>({...m,rsvp:m.rsvp||'yes'})) : [],
-    plus_one:       rsvpChoice==='yes' && rsvpFamily.filter(m=>m.first||m.last).length > 0,
-    plus_one_name:  rsvpChoice==='yes' ? rsvpFamily.filter(m=>m.first||m.last).map(m=>[m.first,m.last].filter(Boolean).join(' ')).join(', ')||null : null,
+    // Keep the party intact when someone declines — mark each member declined
+    // instead of deleting them, so headcounts and the declined total stay right.
+    family_members: rsvpFamily.filter(m=>m.first||m.last)
+                      .map(m=>({...m, rsvp: rsvpChoice==='yes' ? (m.rsvp||'yes') : rsvpChoice})),
+    plus_one:       rsvpFamily.filter(m=>m.first||m.last).length > 0,
+    plus_one_name:  rsvpFamily.filter(m=>m.first||m.last).map(m=>[m.first,m.last].filter(Boolean).join(' ')).join(', ')||null,
     notes:         document.getElementById('rMsg').value.trim() || null,
     responded_at:  new Date().toISOString(),
     ...mealData

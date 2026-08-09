@@ -654,9 +654,14 @@ function renderOverview(){
   document.getElementById('stPaid').textContent = cur(t.paid);
   document.getElementById('stPaidSub').textContent = payments.length + ' payment' + (payments.length===1?'':'s');
   document.getElementById('stLeft').textContent = cur(t.left);
-  const yes = guests.filter(g=>g.rsvp_status==='yes').length;
-  document.getElementById('stGuests').textContent = guests.length;
-  document.getElementById('stGuestsSub').textContent = yes + ' attending';
+  const headcount = guests.reduce((n,g) => n + 1 + famCount(g), 0);
+  const yesPeople = guests.reduce((n,g) => {
+    let c = g.rsvp_status==='yes' ? 1 : 0;
+    famList(g).forEach(m => { if((m.rsvp||g.rsvp_status||'pending')==='yes') c++; });
+    return n + c;
+  }, 0);
+  document.getElementById('stGuests').textContent = headcount;
+  document.getElementById('stGuestsSub').textContent = yesPeople + ' attending';
   const done = tasks.filter(x=>x.done).length;
   document.getElementById('stTasks').textContent = done + '/' + tasks.length;
 
@@ -855,12 +860,19 @@ async function delPayment(id){
 
 /* ── Guests + couple access ────────────────────────── */
 function renderGuests(){
-  const yes = guests.filter(g=>g.rsvp_status==='yes').length;
-  const no  = guests.filter(g=>g.rsvp_status==='no').length;
-  document.getElementById('guTotal').textContent = guests.length;
+  // Count PEOPLE: the named guest + every family member on their card.
+  const countPeople = (status) => guests.reduce((n,g) => {
+    let c = (g.rsvp_status||'pending') === status ? 1 : 0;
+    famList(g).forEach(m => { if((m.rsvp||g.rsvp_status||'pending') === status) c++; });
+    return n + c;
+  }, 0);
+  const total = guests.reduce((n,g) => n + 1 + famCount(g), 0);
+  const yes = countPeople('yes');
+  const no  = countPeople('no');
+  document.getElementById('guTotal').textContent = total;
   document.getElementById('guYes').textContent = yes;
   document.getElementById('guNo').textContent = no;
-  document.getElementById('guPending').textContent = guests.length - yes - no;
+  document.getElementById('guPending').textContent = Math.max(0, total - yes - no);
 
   document.getElementById('guestList').innerHTML = guests.length ? guests.map(g=>{
     const st = g.rsvp_status==='yes'?'yes':(g.rsvp_status==='no'?'no':'pending');
@@ -1161,11 +1173,12 @@ function dlCsv(rows, filename){
   setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
 }
 function fnBase(){ return (wedding.couple_name||'wedding').replace(/[^a-z0-9]+/gi,'-').toLowerCase(); }
-function famCount(g){
+function famList(g){
   let f = g.family_members;
   try{ f = Array.isArray(f) ? f : (f ? JSON.parse(f) : []); }catch(e){ f = []; }
-  return f ? f.length : 0;
+  return Array.isArray(f) ? f : [];
 }
+function famCount(g){ return famList(g).length; }
 function dlGuestsCsv(){
   const rows = [['Name','Email','Phone','Group','RSVP','Invited','Plus one','Plus one name','Family members','Dietary','Starter','Main','Dessert']];
   guests.forEach(g=>rows.push([
