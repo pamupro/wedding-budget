@@ -333,8 +333,8 @@ body{
 
       <div class="card">
         <div class="card-head">
-          <span class="card-title">Couple access</span>
-          <span style="font-size:11.5px;color:var(--muted)">let the couple manage their own guest list</span>
+          <span class="card-title">Couple login</span>
+          <span style="font-size:11.5px;color:var(--muted)">give the couple the full WeddingLedger experience</span>
         </div>
         <div class="card-body" id="shareCard"></div>
       </div>
@@ -577,6 +577,7 @@ function totals(){
   const paid  = payments.reduce((s,p)=>s+(Number(p.amount)||0),0);
   return { total, paid, left: Math.max(0,total-paid) };
 }
+function ownerUid(){ return wedding.couple_user_id || uid; }
 function vendorPaid(vid){ return payments.filter(p=>p.vendor_id===vid).reduce((s,p)=>s+(Number(p.amount)||0),0); }
 
 function renderOverview(){
@@ -720,24 +721,25 @@ async function saveVendor(){
     total_cost: parseFloat(document.getElementById('vmCost').value)||0,
     due_date: document.getElementById('vmDueDate').value || null,
     due_amount: parseFloat(document.getElementById('vmDueAmt').value)||null,
-    notes: document.getElementById('vmNotes').value.trim() || null
+    notes: document.getElementById('vmNotes').value.trim()
   };
   try{
     if(editingVendor){
       const r = await fetch(`${SB}/rest/v1/vendors?id=eq.${editingVendor.id}`, {method:'PATCH',headers:await H(),body:JSON.stringify(body)});
-      if(!r.ok) throw 0;
+      const rows = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(rows.message || ('HTTP '+r.status));
       Object.assign(editingVendor, body);
       toast('Vendor updated ✓');
     } else {
       const r = await fetch(`${SB}/rest/v1/vendors`, {method:'POST',headers:await H(),
-        body:JSON.stringify({user_id:uid, wedding_id:wid, ...body})});
-      const rows = await r.json();
-      if(!r.ok) throw 0;
+        body:JSON.stringify({user_id:ownerUid(), wedding_id:wid, ...body})});
+      const rows = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(rows.message || ('HTTP '+r.status));
       vendors.unshift(rows[0]);
       toast('Vendor added ✓');
     }
     closeM('vendorModal'); renderVendors();
-  }catch(e){ toast('Could not save vendor', true); }
+  }catch(e){ toast('Could not save vendor — ' + e.message, true); }
 }
 async function delVendor(id, name){
   if(!confirm(`Delete "${name}" and its payments?`)) return;
@@ -764,16 +766,16 @@ async function savePayment(){
   try{
     const r = await fetch(`${SB}/rest/v1/payments`, {method:'POST',headers:await H(),
       body:JSON.stringify({
-        user_id:uid, wedding_id:wid, vendor_id:payingVendor.id, amount,
+        user_id:ownerUid(), wedding_id:wid, vendor_id:payingVendor.id, amount,
         payment_date: document.getElementById('pmDate').value || new Date().toISOString().slice(0,10),
-        note: document.getElementById('pmNote').value.trim() || null
+        note: document.getElementById('pmNote').value.trim()
       })});
-    const rows = await r.json();
-    if(!r.ok) throw 0;
+    const rows = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(rows.message || ('HTTP '+r.status));
     payments.unshift(rows[0]);
     openHistories.add(payingVendor.id);
     closeM('payModal'); renderVendors(); toast('Payment recorded ✓');
-  }catch(e){ toast('Could not save payment', true); }
+  }catch(e){ toast('Could not save payment — ' + e.message, true); }
 }
 async function delPayment(id){
   if(!confirm('Delete this payment?')) return;
@@ -824,66 +826,92 @@ function shareUrl(){ return location.origin + '/couple-access.html?w=' + wedding
 function renderShareCard(){
   const el = document.getElementById('shareCard');
   if(!el) return;
-  if(!wedding.share_code || !wedding.share_password){
+  if(!wedding.couple_user_id){
     el.innerHTML = `
       <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:14px">
-        Create a private link + password for <b style="color:var(--charcoal)">${esc(wedding.couple_name||'the couple')}</b>.
-        They'll manage guests, meals &amp; RSVPs themselves — no account needed. Everything they do appears here instantly.
+        One click creates a real WeddingLedger login for <b style="color:var(--charcoal)">${esc(wedding.couple_name||'the couple')}</b>.
+        They sign in like any couple and get the <b style="color:var(--charcoal)">exact same experience</b> — full guest list with
+        family members &amp; meal choices, the invitation page editor with photos, personal RSVP links, seating, everything.
+        All their changes appear here in your studio instantly.
       </p>
-      <button class="btn primary" onclick="createShare()">Create couple access</button>`;
+      <button class="btn primary" onclick="createCoupleLogin()">Create couple login</button>`;
     return;
   }
   el.innerHTML = `
     <div style="display:grid;gap:10px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);width:74px">Link</span>
-        <code style="flex:1;min-width:180px;background:var(--bg2);border-radius:8px;padding:9px 12px;font-size:12px;overflow-x:auto;white-space:nowrap">${esc(shareUrl())}</code>
-        <button class="mini-btn" onclick="copyText(shareUrl(),'Link copied')">Copy</button>
+        <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);width:74px">Sign in at</span>
+        <code style="flex:1;min-width:180px;background:var(--bg2);border-radius:8px;padding:9px 12px;font-size:12px;overflow-x:auto;white-space:nowrap">${esc(location.origin + '/login.html')}</code>
+        <button class="mini-btn" onclick="copyText(location.origin+'/login.html','Link copied')">Copy</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);width:74px">Email</span>
+        <code style="flex:1;min-width:180px;background:var(--bg2);border-radius:8px;padding:9px 12px;font-size:12px;overflow-x:auto;white-space:nowrap">${esc(wedding.couple_email||'')}</code>
+        <button class="mini-btn" onclick="copyText(wedding.couple_email,'Email copied')">Copy</button>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);width:74px">Password</span>
-        <code style="background:var(--bg2);border-radius:8px;padding:9px 12px;font-size:13px;letter-spacing:.04em">${esc(wedding.share_password)}</code>
-        <button class="mini-btn" onclick="copyText(wedding.share_password,'Password copied')">Copy</button>
+        <code style="background:var(--bg2);border-radius:8px;padding:9px 12px;font-size:13px;letter-spacing:.04em">${esc(wedding.share_password||'(set when created)')}</code>
+        ${wedding.share_password?`<button class="mini-btn" onclick="copyText(wedding.share_password,'Password copied')">Copy</button>`:''}
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn primary" onclick="copyShareMessage()">📋 Copy message for couple</button>
-      <button class="mini-btn" onclick="regenSharePassword()">↻ New password</button>
-      <button class="mini-btn" onclick="disableShare()" style="color:var(--rose)">Disable access</button>
-    </div>`;
+      <button class="btn primary" onclick="copyCoupleMessage()">📋 Copy message for couple</button>
+      <button class="mini-btn" onclick="resetCouplePassword()">↻ Reset password</button>
+    </div>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:12px">
+      The couple's account is Pro-unlocked and permanently linked to this wedding — everything they
+      add (guests, family members, photos, invitation page) shows up here for you too.
+    </p>`;
 }
-async function createShare(){
+
+async function createCoupleLogin(){
+  const pass = genPassword();
   try{
-    const patch = { share_code: randChars(8), share_password: genPassword() };
-    const r = await fetch(`${SB}/rest/v1/weddings?id=eq.${wid}`, {method:'PATCH',headers:await H(),body:JSON.stringify(patch)});
-    if(!r.ok) throw 0;
-    Object.assign(wedding, patch);
-    renderShareCard(); toast('Couple access created ✓');
-  }catch(e){ toast('Could not create access — run the couple-access SQL migration first', true); }
+    const tok = await DB.getValidToken(DB.getToken());
+    const r = await fetch(`${SB}/rest/v1/rpc/create_couple_login`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+tok},
+      body: JSON.stringify({ p_wedding: wid, p_password: pass })
+    });
+    const res = await r.json();
+    if(!res || res.ok !== true){
+      toast('Could not create login — ' + (res?.error || 'run migration_couple_login.sql first'), true);
+      return;
+    }
+    wedding.couple_user_id = res.user_id;
+    wedding.couple_email = res.email;
+    wedding.share_password = res.password;
+    renderShareCard();
+    toast('Couple login created ✓ — send them the message');
+  }catch(e){ console.error(e); toast('Could not create login', true); }
 }
-async function regenSharePassword(){
-  if(!confirm('Generate a new password? The old one will stop working.')) return;
+
+async function resetCouplePassword(){
+  if(!confirm('Generate a new password for the couple? Their old one will stop working.')) return;
+  const pass = genPassword();
   try{
-    const patch = { share_password: genPassword() };
-    await fetch(`${SB}/rest/v1/weddings?id=eq.${wid}`, {method:'PATCH',headers:await H(),body:JSON.stringify(patch)});
-    Object.assign(wedding, patch);
-    renderShareCard(); toast('New password generated — reshare it with the couple');
-  }catch(e){ toast('Could not update password', true); }
+    const tok = await DB.getValidToken(DB.getToken());
+    const r = await fetch(`${SB}/rest/v1/rpc/create_couple_login`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer '+tok},
+      body: JSON.stringify({ p_wedding: wid, p_password: pass })
+    });
+    const res = await r.json();
+    if(!res || res.ok !== true){ toast('Could not reset — ' + (res?.error||'error'), true); return; }
+    wedding.share_password = res.password;
+    renderShareCard();
+    toast('New password set — reshare it with the couple');
+  }catch(e){ toast('Could not reset password', true); }
 }
-async function disableShare(){
-  if(!confirm('Disable couple access? Their link and password will stop working.')) return;
-  try{
-    await fetch(`${SB}/rest/v1/weddings?id=eq.${wid}`, {method:'PATCH',headers:await H(),body:JSON.stringify({share_code:null, share_password:null})});
-    wedding.share_code = null; wedding.share_password = null;
-    renderShareCard(); toast('Couple access disabled');
-  }catch(e){ toast('Could not disable access', true); }
-}
-function copyShareMessage(){
+
+function copyCoupleMessage(){
   const d = wedding.wedding_date
     ? new Date(wedding.wedding_date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '';
-  const msg = `Hi ${wedding.couple_name || ''}! 💍\n\nHere's your private guest-list page for your wedding${d ? ' on '+d : ''}:\n\n${shareUrl()}\nPassword: ${wedding.share_password}\n\nYou can add guests, set meal choices, track RSVPs, and send each guest their personal invitation link. Any questions, just message me!`;
+  const msg = `Hi ${wedding.couple_name || ''}! 💍\n\nYour wedding${d ? ' on '+d : ''} now has its own WeddingLedger account — your guest list, invitations, photos and RSVPs, all in one place.\n\nSign in: ${location.origin}/login.html\nEmail: ${wedding.couple_email}\nPassword: ${wedding.share_password}\n\nFrom the Guests page you can add everyone (with family members and meal choices), design your invitation page with photos, and send each guest their personal RSVP link. I'll see everything on my side too — any questions, just message me!`;
   copyText(msg, 'Message copied — paste it to the couple 💌');
 }
+
 function copyText(t, okMsg){ navigator.clipboard.writeText(t).then(()=>toast(okMsg)).catch(()=>prompt('Copy this:', t)); }
 
 async function copyGuestLink(id){
@@ -912,13 +940,13 @@ async function addGuest(){
   try{
     const r = await fetch(`${SB}/rest/v1/guests`, {method:'POST',headers:await H(),
       body:JSON.stringify({
-        user_id:uid, wedding_id:wid, name,
+        user_id:ownerUid(), wedding_id:wid, name,
         email: document.getElementById('guEmail').value.trim() || null,
         phone: document.getElementById('guPhone').value.trim() || null,
         rsvp_status:'pending'
       })});
-    const rows = await r.json();
-    if(!r.ok) throw 0;
+    const rows = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(rows.message || ('HTTP '+r.status));
     guests.unshift(rows[0]);
     ['guName','guEmail','guPhone'].forEach(i=>document.getElementById(i).value='');
     renderGuests(); toast('Guest added ✓');
@@ -955,9 +983,9 @@ async function addTask(){
   if(!text) return;
   try{
     const r = await fetch(`${SB}/rest/v1/tasks`, {method:'POST',headers:await H(),
-      body:JSON.stringify({user_id:uid, wedding_id:wid, text, done:false})});
-    const rows = await r.json();
-    if(!r.ok) throw 0;
+      body:JSON.stringify({user_id:ownerUid(), wedding_id:wid, text, done:false})});
+    const rows = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(rows.message || ('HTTP '+r.status));
     tasks.push(rows[0]);
     document.getElementById('taskInput').value='';
     renderTasks(); renderOverview();
